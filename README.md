@@ -1,75 +1,11 @@
-<!-- markdownlint-disable MD033 MD041 MD002 -->
-<!-- markdownlint-disable commands-show-output no-duplicate-heading -->
-<!-- spell-checker:ignore markdownlint ; (options) DESTDIR UTILNAME manpages reimplementation oranda libclang -->
-<div class="oranda-hide">
-<div align="center">
-
-![uutils logo](docs/src/logo.svg)
-
-# uutils coreutils
-
-[![Crates.io](https://img.shields.io/crates/v/coreutils.svg)](https://crates.io/crates/coreutils)
-[![Discord](https://img.shields.io/badge/discord-join-7289DA.svg?logo=discord&longCache=true&style=flat)](https://discord.gg/wQVJbvJ)
-[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/uutils/coreutils/blob/main/LICENSE)
-[![dependency status](https://deps.rs/repo/github/uutils/coreutils/status.svg)](https://deps.rs/repo/github/uutils/coreutils)
-
-[![CodeCov](https://codecov.io/gh/uutils/coreutils/branch/main/graph/badge.svg)](https://codecov.io/gh/uutils/coreutils)
-![MSRV](https://img.shields.io/badge/MSRV-1.85.0-brightgreen)
-[![Weblate](https://hosted.weblate.org/widget/rust-coreutils/svg-badge.svg)](https://hosted.weblate.org/projects/rust-coreutils/)
-
-</div>
-
----
-
-</div>
-
-uutils coreutils is a cross-platform reimplementation of the GNU coreutils in
-[Rust](http://www.rust-lang.org). While all programs have been implemented, some
-options might be missing or different behavior might be experienced.
-
-<div class="oranda-hide">
-
-To install it:
-
-```shell
-cargo install coreutils
-~/.cargo/bin/coreutils
-```
-
-</div>
-
-<!-- markdownlint-disable-next-line MD026 -->
-
-## Goals
-
-uutils coreutils aims to be a drop-in replacement for the GNU utils. Differences with GNU
-are treated as bugs.
-
-Our key objectives include:
-- Matching GNU's output (stdout and error code) exactly
-- Better error messages
-- Providing comprehensive internationalization support (UTF-8)
-- Improved performances
-- [Extensions](docs/src/extensions.md) when relevant (example: --progress)
-
-uutils aims to work on as many platforms as possible, to be able to use the same
-utils on Linux, macOS, Windows and other platforms. This ensures, for example,
-that scripts can be easily transferred between platforms.
-
-<div class="oranda-hide">
-
-## Documentation
-uutils has both user and developer documentation available:
-
-- [User Manual](https://uutils.github.io/coreutils/docs/)
-- [Developer Documentation](https://docs.rs/crate/coreutils/)
-
-Both can also be generated locally, the instructions for that can be found in
-the [coreutils docs](https://github.com/uutils/uutils.github.io) repository.
-
-Use [weblate/rust-coreutils](https://hosted.weblate.org/projects/rust-coreutils/) to translate the Rust coreutils into your language.
-
-<!-- ANCHOR: build (this mark is needed for mdbook) -->
+Stargate (Rust implementation of Dreamland):
+--------------------------------------------
+- [UNIX userland was always as mess, you're just used to it](https://www.linkedin.com/pulse/unix-userland-always-mess-youre-just-used-dmitry-kalashnikov-2k6sc)
+- ever wondered why its rm -rf, yet its chown -Rf dvk:dvk? ls ("list" what? I think you mean directory files .. etc)
+- standardizing UNIX "userland" (commands you type) naming with verb-noun and their parameters (-h always means help, -v verbose and so on). Its obvious that some parameters are common, some unique per command. Needs a thin parameter parsing
+ layer. And structured (command) output for selection instead of searching through text streams (super slow, big-O). This is also a common parameter.
+- some commands are focused on doing one thing and doing it well, and can be expressed as a verb-noun: ls is list-directory. Other commands (already) handle multiple verbs: hostname (hostname: "set or print name of current host system"). They can be split into set-hostname and get-hostname commands (disk space is not a concern in 2025). Or they need to be noun verb instead of verb noun: freebsd-update fetch (already does that .. that what we want). Another good example: "pkg update". There is going to be a noun and a verb (or vise-versa).
+- aliases are two different things: (1) short names for longer commands and (2) their default params: some-long-command is slc. Convention over configuration.
 
 ## Requirements
 
@@ -336,27 +272,4 @@ To uninstall from a custom parent directory:
 make PREFIX=/my/path uninstall
 ```
 
-<!-- ANCHOR_END: build (this mark is needed for mdbook) -->
 
-## GNU test suite compatibility
-
-Below is the evolution of how many GNU tests uutils passes. A more detailed
-breakdown of the GNU test results of the main branch can be found
-[in the user manual](https://uutils.github.io/coreutils/docs/test_coverage.html).
-
-See <https://github.com/orgs/uutils/projects/1> for the main meta bugs
-(many are missing).
-
-![Evolution over time](https://github.com/uutils/coreutils-tracking/blob/main/gnu-results.svg?raw=true)
-
-</div> <!-- close oranda-hide div -->
-
-## Contributing
-
-To contribute to uutils, please see [CONTRIBUTING](CONTRIBUTING.md).
-
-## License
-
-uutils is licensed under the MIT License - see the `LICENSE` file for details
-
-GNU Coreutils is licensed under the GPL 3.0 or later.
