@@ -1,0 +1,28 @@
+[package]
+name = "uu_logname"
+description = "logname ~ (uutils) display the login name of the current user"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/logname"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/logname.rs"
+
+[dependencies]
+libc = { workspace = true }
+clap = { workspace = true }
+uucore = { workspace = true }
+fluent = { workspace = true }
+
+[[bin]]
+name = "logname"
+path = "src/main.rs"

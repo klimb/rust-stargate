@@ -1,0 +1,29 @@
+[package]
+name = "uu_timeout"
+description = "timeout ~ (uutils) run COMMAND with a DURATION time limit"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/timeout"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/timeout.rs"
+
+[dependencies]
+clap = { workspace = true }
+libc = { workspace = true }
+nix = { workspace = true, features = ["signal"] }
+uucore = { workspace = true, features = ["parser", "process", "signals"] }
+fluent = { workspace = true }
+
+[[bin]]
+name = "timeout"
+path = "src/main.rs"

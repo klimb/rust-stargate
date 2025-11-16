@@ -1,0 +1,29 @@
+[package]
+name = "uu_nohup"
+description = "nohup ~ (uutils) run COMMAND, ignoring hangup signals"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/nohup"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/nohup.rs"
+
+[dependencies]
+clap = { workspace = true }
+libc = { workspace = true }
+uucore = { workspace = true, features = ["fs"] }
+thiserror = { workspace = true }
+fluent = { workspace = true }
+
+[[bin]]
+name = "nohup"
+path = "src/main.rs"

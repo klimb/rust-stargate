@@ -1,0 +1,29 @@
+[package]
+name = "uu_od"
+description = "od ~ (uutils) display formatted representation of input"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/od"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/od.rs"
+
+[dependencies]
+byteorder = { workspace = true }
+clap = { workspace = true }
+half = { workspace = true }
+uucore = { workspace = true, features = ["parser"] }
+fluent = { workspace = true }
+
+[[bin]]
+name = "od"
+path = "src/main.rs"

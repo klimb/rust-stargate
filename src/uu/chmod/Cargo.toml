@@ -1,0 +1,34 @@
+[package]
+name = "uu_chmod"
+description = "chmod ~ (uutils) change mode of FILE"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chmod"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/chmod.rs"
+
+[dependencies]
+clap = { workspace = true }
+thiserror = { workspace = true }
+uucore = { workspace = true, features = [
+  "entries",
+  "fs",
+  "mode",
+  "perms",
+  "safe-traversal",
+] }
+fluent = { workspace = true }
+
+[[bin]]
+name = "chmod"
+path = "src/main.rs"

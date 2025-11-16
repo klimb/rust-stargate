@@ -1,0 +1,43 @@
+# spell-checker:ignore datetime tzdb zoneinfo
+[package]
+name = "uu_date"
+description = "date ~ (uutils) display or set the current time"
+repository = "https://github.com/uutils/coreutils/tree/main/src/date"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/date.rs"
+
+[dependencies]
+clap = { workspace = true }
+fluent = { workspace = true }
+jiff = { workspace = true, features = [
+  "tzdb-bundle-platform",
+  "tzdb-zoneinfo",
+  "tzdb-concatenated",
+] }
+parse_datetime = { workspace = true }
+uucore = { workspace = true, features = ["parser"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = [
+  "Win32_Foundation",
+  "Win32_System_SystemInformation",
+] }
+
+[[bin]]
+name = "date"
+path = "src/main.rs"

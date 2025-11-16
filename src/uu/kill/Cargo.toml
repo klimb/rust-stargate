@@ -1,0 +1,28 @@
+[package]
+name = "uu_kill"
+description = "kill ~ (uutils) send a signal to a process"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/kill"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/kill.rs"
+
+[dependencies]
+clap = { workspace = true }
+nix = { workspace = true, features = ["signal"] }
+uucore = { workspace = true, features = ["signals"] }
+fluent = { workspace = true }
+
+[[bin]]
+name = "kill"
+path = "src/main.rs"

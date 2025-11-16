@@ -1,0 +1,37 @@
+[package]
+name = "uu_stat"
+description = "stat ~ (uutils) display FILE status"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/stat"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/stat.rs"
+
+[dependencies]
+clap = { workspace = true }
+uucore = { workspace = true, features = [
+  "entries",
+  "libc",
+  "fs",
+  "fsext",
+  "time",
+] }
+thiserror = { workspace = true }
+fluent = { workspace = true }
+
+[features]
+selinux = ["uucore/selinux"]
+
+[[bin]]
+name = "stat"
+path = "src/main.rs"

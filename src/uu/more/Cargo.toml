@@ -1,0 +1,37 @@
+[package]
+name = "uu_more"
+description = "more ~ (uutils) input perusal filter"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/more"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/more.rs"
+
+[dependencies]
+clap = { workspace = true }
+uucore = { workspace = true }
+crossterm = { workspace = true }
+fluent = { workspace = true }
+
+[target.'cfg(all(unix, not(target_os = "fuchsia")))'.dependencies]
+nix = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { workspace = true, features = ["use-dev-tty"] }
+
+[[bin]]
+name = "more"
+path = "src/main.rs"
+
+[dev-dependencies]
+tempfile = { workspace = true }

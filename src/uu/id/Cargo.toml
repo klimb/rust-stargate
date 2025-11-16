@@ -1,0 +1,31 @@
+[package]
+name = "uu_id"
+description = "id ~ (uutils) display user and group information for USER"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/id"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/id.rs"
+
+[dependencies]
+clap = { workspace = true }
+uucore = { workspace = true, features = ["entries", "process"] }
+selinux = { workspace = true, optional = true }
+fluent = { workspace = true }
+
+[[bin]]
+name = "id"
+path = "src/main.rs"
+
+[features]
+feat_selinux = ["selinux"]

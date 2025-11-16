@@ -1,0 +1,31 @@
+[package]
+name = "uu_mkfifo"
+description = "mkfifo ~ (uutils) create FIFOs (named pipes)"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/mkfifo"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/mkfifo.rs"
+
+[dependencies]
+clap = { workspace = true }
+libc = { workspace = true }
+uucore = { workspace = true, features = ["fs", "mode"] }
+fluent = { workspace = true }
+
+[features]
+selinux = ["uucore/selinux"]
+
+[[bin]]
+name = "mkfifo"
+path = "src/main.rs"

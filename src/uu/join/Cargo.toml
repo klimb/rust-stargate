@@ -1,0 +1,29 @@
+[package]
+name = "uu_join"
+description = "join ~ (uutils) merge lines from inputs with matching join fields"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/join"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/join.rs"
+
+[dependencies]
+clap = { workspace = true }
+uucore = { workspace = true }
+memchr = { workspace = true }
+thiserror = { workspace = true }
+fluent = { workspace = true }
+
+[[bin]]
+name = "join"
+path = "src/main.rs"
