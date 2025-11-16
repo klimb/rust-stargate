@@ -8,6 +8,9 @@ Stargate (Rust implementation of Dreamland):
 - aliases are two different things: (1) short names for longer commands and (2) their default params: some-long-command is slc. Convention over configuration.
 - Rust is infinitely superior to C for implementing UNIX userland. C is an ancient procedural language for working with bare metal -- it requires higher level abstractions, memory safety, OO, functional idioms, ability to leverage design patterns, ddd, built-in support for unit testing, etc.
 
+## Non-Goals
+- supporting POSIX compatibility (legacy ways of interacting with UNIX through a command-line interface)
+
 ## Requirements
 
 - Rust (`cargo`, `rustc`)
