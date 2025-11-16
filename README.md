@@ -10,7 +10,7 @@ Stargate (Rust implementation of Dreamland):
 
 ## Non-Goals
 - supporting POSIX compatibility (legacy ways of interacting with UNIX through a command-line interface)
-- supporting Windows compatibility (just use WindowsPowershell instead)
+- supporting Windows compatibility (just use Windows Powershell instead)
 
 ## Requirements
 
