@@ -18,6 +18,8 @@ lib*.a
 *.iml
 ### macOS ###
 .DS_Store
+.idea/
+.vscode/
 
 ### direnv ###
 /.direnv/
