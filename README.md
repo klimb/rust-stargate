@@ -9,8 +9,8 @@ Stargate (Rust implementation of Dreamland):
 - Rust is infinitely superior to C for implementing UNIX userland. C is an ancient procedural language for working with bare metal -- it requires higher level abstractions, memory safety, OO, functional idioms, ability to leverage design patterns, ddd, built-in support for unit testing, internationalization, etc.
 
 ## Non-Goals
-- supporting POSIX compatibility (legacy ways of interacting with UNIX through a command-line interface)
-- supporting Windows compatibility (just use Windows Powershell instead)
+- supporting UNIX POSIX compatibility (legacy ways of interacting with UNIX through a command-line interface)
+- supporting Windows compatibility (just use Windows Powershell instead). Its kind of ridiculous that every command in (rust) coreutils was handling how Windows works. No one that runs Windows cares about coreutils. 
 
 ## Requirements
 
