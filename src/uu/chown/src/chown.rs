@@ -121,7 +121,7 @@ pub fn uu_app() -> Command {
         )
         .arg(
             Arg::new(options::RECURSIVE)
-                .short('R')
+                .short('r')
                 .long(options::RECURSIVE)
                 .help(translate!("chown-help-recursive"))
                 .action(ArgAction::SetTrue),

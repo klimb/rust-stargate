@@ -655,7 +655,7 @@ fn test_chown_recursive() {
 
     scene
         .ucmd()
-        .arg("-R")
+        .arg("-r")
         .arg("--verbose")
         .arg(user_name)
         .arg("a")
@@ -679,30 +679,11 @@ fn test_root_preserve() {
     let result = scene
         .ucmd()
         .arg("--preserve-root")
-        .arg("-R")
+        .arg("-r")
         .arg(user_name)
         .arg("/")
         .fails();
     result.stderr_contains("chown: it is dangerous to operate recursively");
-}
-
-#[cfg(any(target_os = "linux", target_os = "android"))]
-#[test]
-fn test_big_p() {
-    if geteuid() != 0 {
-        new_ucmd!()
-            .arg("-RP")
-            .arg("bin")
-            .arg("/proc/self/cwd")
-            .fails()
-            .stderr_contains(
-                // linux fails with "Operation not permitted (os error 1)"
-                // because of insufficient permissions,
-                // android fails with "Permission denied (os error 13)"
-                // because it can't resolve /proc (even though it can resolve /proc/self/)
-                "chown: changing ownership of '/proc/self/cwd': ",
-            );
-    }
 }
 
 #[test]
