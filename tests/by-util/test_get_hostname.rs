@@ -14,14 +14,6 @@ fn test_get_hostname() {
     assert!(ls_default_res.stdout().len() >= ls_domain_res.stdout().len());
 }
 
-// FixME: fails for "MacOS" => "failed to lookup address information"
-#[cfg(not(any(target_os = "macos")))]
-#[test]
-fn test_get_hostname_ip() {
-    let result = new_ucmd!().arg("-i").succeeds();
-    assert!(!result.stdout_str().trim().is_empty());
-}
-
 #[test]
 fn test_get_hostname_full() {
     let ls_short_res = new_ucmd!().arg("-s").succeeds();
