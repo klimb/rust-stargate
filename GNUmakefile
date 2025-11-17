@@ -68,11 +68,6 @@ TOYBOX_SRC  := $(TOYBOX_ROOT)/toybox-$(TOYBOX_VER)
 #------------------------------------------------------------------------
 OS ?= $(shell uname -s)
 
-# Windows does not allow symlink by default.
-# Allow to override LN for AppArmor.
-ifeq ($(OS),Windows_NT)
-	LN ?= ln -f
-endif
 LN ?= ln -sf
 
 # Possible programs
@@ -91,7 +86,6 @@ PROGS       := \
 	date \
 	dd \
 	df \
-	dir \
 	dircolors \
 	dirname \
 	du \
@@ -181,10 +175,6 @@ UNIX_PROGS := \
 	users \
 	who
 
-SELINUX_PROGS := \
-	chcon \
-	runcon
-
 HASHSUM_PROGS := \
 	b2sum \
 	md5sum \
@@ -196,12 +186,8 @@ HASHSUM_PROGS := \
 
 $(info Detected OS = $(OS))
 
-ifneq ($(OS),Windows_NT)
-	PROGS += $(UNIX_PROGS)
-endif
-ifeq ($(SELINUX_ENABLED),1)
-	PROGS += $(SELINUX_PROGS)
-endif
+
+PROGS += $(UNIX_PROGS)
 
 UTILS ?= $(filter-out $(SKIP_UTILS),$(PROGS))
 ifneq ($(filter hashsum,$(UTILS)),hashsum)
@@ -260,7 +246,6 @@ TEST_PROGS  := \
 	realpath \
 	rm \
 	rmdir \
-	runcon \
 	seq \
 	sleep \
 	sort \
@@ -292,10 +277,6 @@ TEST_SPEC_FEATURE :=
 ifneq ($(SPEC),)
 TEST_NO_FAIL_FAST :=--no-fail-fast
 TEST_SPEC_FEATURE := test_unimplemented
-else ifeq ($(SELINUX_ENABLED),1)
-TEST_NO_FAIL_FAST :=
-TEST_SPEC_FEATURE := selinux
-BUILD_SPEC_FEATURE := selinux
 endif
 
 define TEST_BUSYBOX

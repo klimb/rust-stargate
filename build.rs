@@ -32,7 +32,7 @@ pub fn main() {
             // Allow this as we have a bunch of info in the comments
             #[allow(clippy::match_same_arms)]
             match krate.as_ref() {
-                "default" | "macos" | "unix" | "windows" | "selinux" | "zip" | "clap_complete"
+                "default" | "macos" | "unix"| "zip" | "clap_complete"
                 | "clap_mangen" | "fluent_syntax" => continue, // common/standard feature names
                 "nightly" | "test_unimplemented" | "expensive_tests" | "test_risky_names" => {
                     continue;

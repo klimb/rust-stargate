@@ -62,10 +62,7 @@ macro_rules! cstr2cow {
 }
 
 fn get_context_help_text() -> String {
-    #[cfg(not(feature = "selinux"))]
     return translate!("id-context-help-disabled");
-    #[cfg(feature = "selinux")]
-    return translate!("id-context-help-enabled");
 }
 
 mod options {
@@ -137,14 +134,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         cflag: matches.get_flag(options::OPT_CONTEXT),
 
         selinux_supported: {
-            #[cfg(feature = "selinux")]
-            {
-                uucore::selinux::is_selinux_enabled()
-            }
-            #[cfg(not(feature = "selinux"))]
-            {
                 false
-            }
         },
         user_specified: !users.is_empty(),
         ids: None,
@@ -179,26 +169,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let line_ending = LineEnding::from_zero_flag(state.zflag);
 
     if state.cflag {
-        return if state.selinux_supported {
-            // print SElinux context and exit
-            #[cfg(all(any(target_os = "linux", target_os = "android"), feature = "selinux"))]
-            if let Ok(context) = selinux::SecurityContext::current(false) {
-                let bytes = context.as_bytes();
-                print!("{}{line_ending}", String::from_utf8_lossy(bytes));
-            } else {
-                // print error because `cflag` was explicitly requested
-                return Err(USimpleError::new(
-                    1,
-                    translate!("id-error-cannot-get-context"),
-                ));
-            }
-            Ok(())
-        } else {
-            Err(USimpleError::new(
+        return Err(USimpleError::new(
                 1,
                 translate!("id-error-context-selinux-only"),
             ))
-        };
     }
 
     for i in 0..=users.len() {
@@ -649,18 +623,6 @@ fn id_print(state: &State, groups: &[u32]) {
             .collect::<Vec<_>>()
             .join(",")
     );
-
-    #[cfg(all(any(target_os = "linux", target_os = "android"), feature = "selinux"))]
-    if state.selinux_supported
-        && !state.user_specified
-        && std::env::var_os("POSIXLY_CORRECT").is_none()
-    {
-        // print SElinux context (does not depend on "-Z")
-        if let Ok(context) = selinux::SecurityContext::current(false) {
-            let bytes = context.as_bytes();
-            print!(" context={}", String::from_utf8_lossy(bytes));
-        }
-    }
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "openbsd")))]

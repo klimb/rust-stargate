@@ -10,8 +10,6 @@
 // * feature-gated external crates (re-shared as public internal modules)
 #[cfg(feature = "libc")]
 pub extern crate libc;
-#[cfg(all(feature = "windows-sys", target_os = "windows"))]
-pub extern crate windows_sys;
 
 //## internal modules
 
@@ -114,9 +112,6 @@ pub use crate::features::fsext;
 
 #[cfg(all(unix, feature = "fsxattr"))]
 pub use crate::features::fsxattr;
-
-#[cfg(all(target_os = "linux", feature = "selinux"))]
-pub use crate::features::selinux;
 
 //## core functions
 

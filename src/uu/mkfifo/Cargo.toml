@@ -23,9 +23,6 @@ libc = { workspace = true }
 uucore = { workspace = true, features = ["fs", "mode"] }
 fluent = { workspace = true }
 
-[features]
-selinux = ["uucore/selinux"]
-
 [[bin]]
 name = "mkfifo"
 path = "src/main.rs"

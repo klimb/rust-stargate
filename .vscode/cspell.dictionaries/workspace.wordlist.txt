@@ -118,7 +118,6 @@ readlink
 realpath
 relpath
 rmdir
-runcon
 shuf
 sprintf
 stdbuf

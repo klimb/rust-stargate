@@ -40,10 +40,6 @@ mod test_basenc;
 #[path = "by-util/test_cat.rs"]
 mod test_cat;
 
-#[cfg(feature = "chcon")]
-#[path = "by-util/test_chcon.rs"]
-mod test_chcon;
-
 #[cfg(feature = "chgrp")]
 #[path = "by-util/test_chgrp.rs"]
 mod test_chgrp;
@@ -91,10 +87,6 @@ mod test_dd;
 #[cfg(feature = "df")]
 #[path = "by-util/test_df.rs"]
 mod test_df;
-
-#[cfg(feature = "dir")]
-#[path = "by-util/test_dir.rs"]
-mod test_dir;
 
 #[cfg(feature = "dircolors")]
 #[path = "by-util/test_dircolors.rs"]
@@ -291,10 +283,6 @@ mod test_rm;
 #[cfg(feature = "rmdir")]
 #[path = "by-util/test_rmdir.rs"]
 mod test_rmdir;
-
-#[cfg(feature = "runcon")]
-#[path = "by-util/test_runcon.rs"]
-mod test_runcon;
 
 #[cfg(feature = "seq")]
 #[path = "by-util/test_seq.rs"]

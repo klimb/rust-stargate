@@ -365,7 +365,6 @@ pub struct Config {
     time_format_recent: String,        // Time format for recent dates
     time_format_older: Option<String>, // Time format for older dates (optional, if not present, time_format_recent is used)
     context: bool,
-    selinux_supported: bool,
     group_directories_first: bool,
     line_ending: LineEnding,
     dired: bool,
@@ -1159,16 +1158,6 @@ impl Config {
             time_format_recent,
             time_format_older,
             context,
-            selinux_supported: {
-                #[cfg(all(feature = "selinux", target_os = "linux"))]
-                {
-                    uucore::selinux::is_selinux_enabled()
-                }
-                #[cfg(not(all(feature = "selinux", target_os = "linux")))]
-                {
-                    false
-                }
-            },
             group_directories_first: options.get_flag(options::GROUP_DIRECTORIES_FIRST),
             line_ending: LineEnding::from_zero_flag(options.get_flag(options::ZERO)),
             dired,
@@ -3386,37 +3375,6 @@ fn get_security_context<'a>(
                 show!(LsError::IOErrorContext(path.to_path_buf(), err, false));
             }
             return Cow::Borrowed(SUBSTITUTE_STRING);
-        }
-    }
-
-    if config.selinux_supported {
-        #[cfg(all(feature = "selinux", target_os = "linux"))]
-        {
-            match selinux::SecurityContext::of_path(path, must_dereference, false) {
-                Err(_r) => {
-                    // TODO: show the actual reason why it failed
-                    show_warning!("failed to get security context of: {}", path.quote());
-                    return Cow::Borrowed(SUBSTITUTE_STRING);
-                }
-                Ok(None) => return Cow::Borrowed(SUBSTITUTE_STRING),
-                Ok(Some(context)) => {
-                    let context = context.as_bytes();
-
-                    let context = context.strip_suffix(&[0]).unwrap_or(context);
-
-                    let res: String = String::from_utf8(context.to_vec()).unwrap_or_else(|e| {
-                        show_warning!(
-                            "getting security context of: {}: {}",
-                            path.quote(),
-                            e.to_string()
-                        );
-
-                        String::from_utf8_lossy(context).to_string()
-                    });
-
-                    return Cow::Owned(res);
-                }
-            }
         }
     }
 

@@ -69,8 +69,6 @@ static PATH_PROGRAMS: &[&str] = &[
     "change_owner",
     "chgrp",
     "install",
-    "chcon",
-    "runcon",
     "comm",
     "join",
     "paste",
@@ -181,22 +179,7 @@ fn test_program_with_non_utf8_path(program: &str, path: &PathBuf) -> CommandResu
             OsString::from("root"),
             path_os.to_owned(),
         ],
-        "chcon" => vec![
-            OsString::from(program),
-            OsString::from("system_u:object_r:admin_home_t:s0"),
-            path_os.to_owned(),
-        ],
-        "runcon" => {
-            let coreutils_binary = std::env::var("CARGO_BIN_FILE_COREUTILS")
-                .unwrap_or_else(|_| "target/release/coreutils".to_string());
-            vec![
-                OsString::from(program),
-                OsString::from("system_u:object_r:admin_home_t:s0"),
-                OsString::from(coreutils_binary),
-                OsString::from("cat"),
-                path_os.to_owned(),
-            ]
-        }
+
         // Programs that need source and destination
         "cp" | "mv" | "ln" | "link" => {
             let dest_path = path.with_extension("dest");

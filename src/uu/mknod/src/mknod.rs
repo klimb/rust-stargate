@@ -90,21 +90,7 @@ fn mknod(file_name: &str, config: Config) -> i32 {
             // shows the error from the mknod syscall
             libc::perror(c_str.as_ptr());
         }
-
-        // Apply SELinux context if requested
-        #[cfg(feature = "selinux")]
-        if config.set_selinux_context {
-            if let Err(e) = uucore::selinux::set_selinux_security_context(
-                std::path::Path::new(file_name),
-                config.context,
-            ) {
-                // if it fails, delete the file
-                let _ = std::fs::remove_dir(file_name);
-                eprintln!("{}: {}", uucore::util_name(), e);
-                return 1;
-            }
-        }
-
+        
         errno
     }
 }

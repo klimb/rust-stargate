@@ -1,7 +1,7 @@
 # coreutils (uutils)
 # * see the repository LICENSE, README, and CONTRIBUTING files for more information
 
-# spell-checker:ignore (libs) bigdecimal datetime serde bincode gethostid kqueue libselinux mangen memmap uuhelp startswith constness expl unnested logind cfgs
+# spell-checker:ignore (libs) bigdecimal datetime serde bincode gethostid kqueue mangen memmap uuhelp startswith constness expl unnested logind cfgs
 
 [package]
 name = "coreutils"
@@ -44,30 +44,7 @@ feat_systemd_logind = [
   "uucore/feat_systemd_logind",
   "who/feat_systemd_logind",
 ]
-# "feat_acl" == enable support for ACLs (access control lists; by using`--features feat_acl`)
-# NOTE:
-# * On linux, the posix-acl/acl-sys crate requires `libacl` headers and shared library to be accessible in the C toolchain at compile time.
-# * On FreeBSD and macOS this is not required.
-feat_acl = ["cp/feat_acl"]
-# "feat_selinux" == enable support for SELinux Security Context (by using `--features feat_selinux`)
-# NOTE:
-# * The selinux(-sys) crate requires `libselinux` headers and shared library to be accessible in the C toolchain at compile time.
-# * Running a uutils compiled with `feat_selinux` requires an SELinux enabled Kernel at run time.
-feat_selinux = [
-  "cp/selinux",
-  "feat_require_selinux",
-  "id/selinux",
-  "install/selinux",
-  "ls/selinux",
-  "mkdir/selinux",
-  "mkfifo/selinux",
-  "mknod/selinux",
-  "selinux",
-  "stat/selinux",
-]
-##
-## feature sets
-## (common/core and Tier1) feature sets
+
 # "feat_common_core" == baseline core set of utilities which can be built/run on most targets
 feat_common_core = [
   "base32",
@@ -83,7 +60,6 @@ feat_common_core = [
   "date",
   "dd",
   "df",
-  "dir",
   "dircolors",
   "dirname",
   "du",
@@ -177,7 +153,6 @@ feat_os_unix_musl = [
   "feat_require_unix_hostid",
   "feat_require_unix_utmpx",
 ]
-# "feat_os_windows" == set of utilities which can be built/run on modern/usual windows platforms
 feat_os_windows = [
   "feat_Tier1", ## == "feat_os_windows_legacy" + "hostname"
 ]
@@ -229,47 +204,7 @@ feat_require_unix_core = [
 feat_require_unix_utmpx = ["pinky", "uptime", "users", "who"]
 # "feat_require_unix_hostid" == set of utilities requiring gethostid in libc (only some unixes provide)
 feat_require_unix_hostid = ["hostid"]
-# "feat_require_selinux" == set of utilities depending on SELinux.
-feat_require_selinux = ["chcon", "runcon"]
-## (alternate/newer/smaller platforms) feature sets
-# "feat_os_unix_fuchsia" == set of utilities which can be built/run on the "Fuchsia" OS (refs: <https://fuchsia.dev>; <https://en.wikipedia.org/wiki/Google_Fuchsia>)
-feat_os_unix_fuchsia = [
-  "feat_common_core",
-  #
-  "chgrp",
-  "chmod",
-  "change_owner",
-  "du",
-  "groups",
-  "hostid",
-  "install",
-  "logname",
-  "mkfifo",
-  "mknod",
-  "nice",
-  "pathchk",
-  "tty",
-  "uname",
-  "unlink",
-]
-# "feat_os_unix_redox" == set of utilities which can be built/run on "Redox OS" (refs: <https://www.redox-os.org>; <https://en.wikipedia.org/wiki/Redox_(operating_system)>)
-feat_os_unix_redox = [
-  "feat_common_core",
-  #
-  "chmod",
-  "stat",
-  "uname",
-]
-# "feat_os_windows_legacy" == slightly restricted set of utilities which can be built/run on early windows platforms (eg, "WinXP")
-feat_os_windows_legacy = [
-  "feat_common_core",
-  #
-  "arch",
-  "nproc",
-  "sync",
-  "whoami",
-]
-##
+
 # * bypass/override ~ translate 'test' feature name to avoid dependency collision with rust core 'test' crate (o/w surfaces as compiler errors during testing)
 test = ["uu_test"]
 
@@ -367,7 +302,7 @@ rust-ini = "0.21.0"
 same-file = "1.0.6"
 self_cell = "1.0.4"
 # FIXME we use the exact version because the new 0.5.3 requires an MSRV of 1.88
-selinux = "=0.5.2"
+
 signal-hook = "0.3.17"
 tempfile = "3.15.0"
 terminal_size = "0.4.0"
@@ -412,7 +347,7 @@ clap_complete = { workspace = true, optional = true }
 clap_mangen = { workspace = true, optional = true }
 fluent-syntax = { workspace = true, optional = true }
 phf.workspace = true
-selinux = { workspace = true, optional = true }
+
 textwrap.workspace = true
 uucore.workspace = true
 zip = { workspace = true, optional = true }
@@ -427,7 +362,6 @@ base64 = { optional = true, version = "0.4.0", package = "uu_base64", path = "sr
 basename = { optional = true, version = "0.4.0", package = "uu_basename", path = "src/uu/basename" }
 basenc = { optional = true, version = "0.4.0", package = "uu_basenc", path = "src/uu/basenc" }
 cat = { optional = true, version = "0.4.0", package = "uu_cat", path = "src/uu/cat" }
-chcon = { optional = true, version = "0.4.0", package = "uu_chcon", path = "src/uu/chcon" }
 chgrp = { optional = true, version = "0.4.0", package = "uu_chgrp", path = "src/uu/chgrp" }
 chmod = { optional = true, version = "0.4.0", package = "uu_chmod", path = "src/uu/chmod" }
 change_owner = { optional = true, version = "0.4.0", package = "uu_change_owner", path = "src/uu/change_owner" }
@@ -440,7 +374,6 @@ cut = { optional = true, version = "0.4.0", package = "uu_cut", path = "src/uu/c
 date = { optional = true, version = "0.4.0", package = "uu_date", path = "src/uu/date" }
 dd = { optional = true, version = "0.4.0", package = "uu_dd", path = "src/uu/dd" }
 df = { optional = true, version = "0.4.0", package = "uu_df", path = "src/uu/df" }
-dir = { optional = true, version = "0.4.0", package = "uu_dir", path = "src/uu/dir" }
 dircolors = { optional = true, version = "0.4.0", package = "uu_dircolors", path = "src/uu/dircolors" }
 dirname = { optional = true, version = "0.4.0", package = "uu_dirname", path = "src/uu/dirname" }
 du = { optional = true, version = "0.4.0", package = "uu_du", path = "src/uu/du" }
@@ -490,7 +423,7 @@ readlink = { optional = true, version = "0.4.0", package = "uu_readlink", path =
 realpath = { optional = true, version = "0.4.0", package = "uu_realpath", path = "src/uu/realpath" }
 rm = { optional = true, version = "0.4.0", package = "uu_rm", path = "src/uu/rm" }
 rmdir = { optional = true, version = "0.4.0", package = "uu_rmdir", path = "src/uu/rmdir" }
-runcon = { optional = true, version = "0.4.0", package = "uu_runcon", path = "src/uu/runcon" }
+
 seq = { optional = true, version = "0.4.0", package = "uu_seq", path = "src/uu/seq" }
 shred = { optional = true, version = "0.4.0", package = "uu_shred", path = "src/uu/shred" }
 shuf = { optional = true, version = "0.4.0", package = "uu_shuf", path = "src/uu/shuf" }

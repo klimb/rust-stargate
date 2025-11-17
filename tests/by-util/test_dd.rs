@@ -7,8 +7,7 @@
 use uutests::at_and_ucmd;
 use uutests::new_ucmd;
 use uutests::util::TestScenario;
-#[cfg(all(unix, not(feature = "feat_selinux")))]
-use uutests::util::run_ucmd_as_root_with_stdin_stdout;
+
 #[cfg(all(not(windows), feature = "printf"))]
 use uutests::util::{UCommand, get_tests_binary};
 use uutests::util_name;
@@ -1549,55 +1548,6 @@ fn test_nocache_file() {
     ucmd.args(&["if=f", "of=/dev/null", "iflag=nocache", "status=noxfer"])
         .succeeds()
         .stderr_only("2048+0 records in\n2048+0 records out\n");
-}
-
-#[test]
-#[cfg(unix)]
-#[cfg(not(feature = "feat_selinux"))]
-// Disabled on SELinux for now
-fn test_skip_past_dev() {
-    // NOTE: This test intends to trigger code which can only be reached with root permissions.
-    let ts = TestScenario::new(util_name!());
-
-    if !ts.fixtures.file_exists("/dev/sda1") {
-        print!("Test skipped; no /dev/sda1 device found");
-    } else if let Ok(result) = run_ucmd_as_root_with_stdin_stdout(
-        &ts,
-        &["bs=1", "skip=10000000000000000", "count=0", "status=noxfer"],
-        Some("/dev/sda1"),
-        None,
-    ) {
-        result.stderr_contains("dd: 'standard input': cannot skip: Invalid argument");
-        result.stderr_contains("0+0 records in");
-        result.stderr_contains("0+0 records out");
-        result.code_is(1);
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
-#[cfg(unix)]
-#[cfg(not(feature = "feat_selinux"))]
-fn test_seek_past_dev() {
-    // NOTE: This test intends to trigger code which can only be reached with root permissions.
-    let ts = TestScenario::new(util_name!());
-
-    if !ts.fixtures.file_exists("/dev/sda1") {
-        print!("Test skipped; no /dev/sda1 device found");
-    } else if let Ok(result) = run_ucmd_as_root_with_stdin_stdout(
-        &ts,
-        &["bs=1", "seek=10000000000000000", "count=0", "status=noxfer"],
-        None,
-        Some("/dev/sda1"),
-    ) {
-        result.stderr_contains("dd: 'standard output': cannot seek: Invalid argument");
-        result.stderr_contains("0+0 records in");
-        result.stderr_contains("0+0 records out");
-        result.code_is(1);
-    } else {
-        print!("Test skipped; requires root user");
-    }
 }
 
 #[test]

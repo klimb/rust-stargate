@@ -1030,23 +1030,6 @@ impl Stater {
                     'B' => OutputType::Unsigned(512),
                     // SELinux security context string
                     'C' => {
-                        #[cfg(feature = "selinux")]
-                        {
-                            if uucore::selinux::is_selinux_enabled() {
-                                match uucore::selinux::get_selinux_security_context(
-                                    Path::new(file),
-                                    _follow_symbolic_links,
-                                ) {
-                                    Ok(ctx) => OutputType::Str(ctx),
-                                    Err(_) => OutputType::Str(translate!(
-                                        "stat-selinux-failed-get-context"
-                                    )),
-                                }
-                            } else {
-                                OutputType::Str(translate!("stat-selinux-unsupported-system"))
-                            }
-                        }
-                        #[cfg(not(feature = "selinux"))]
                         {
                             OutputType::Str(translate!("stat-selinux-unsupported-os"))
                         }

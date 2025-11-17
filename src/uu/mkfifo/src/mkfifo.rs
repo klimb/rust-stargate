@@ -58,23 +58,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             ));
         }
 
-        // Apply SELinux context if requested
-        #[cfg(feature = "selinux")]
-        {
-            // Extract the SELinux related flags and options
-            let set_selinux_context = matches.get_flag(options::SELINUX);
-            let context = matches.get_one::<String>(options::CONTEXT);
-
-            if set_selinux_context || context.is_some() {
-                use std::path::Path;
-                if let Err(e) =
-                    uucore::selinux::set_selinux_security_context(Path::new(&f), context)
-                {
-                    let _ = fs::remove_file(f);
-                    return Err(USimpleError::new(1, e.to_string()));
-                }
-            }
-        }
     }
 
     Ok(())

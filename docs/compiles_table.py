@@ -21,12 +21,6 @@ TARGETS = [
     "powerpc64-unknown-linux-gnu",
     "riscv64gc-unknown-linux-gnu",
     "x86_64-unknown-linux-gnu",
-    # Windows
-    "aarch64-pc-windows-msvc",
-    "i686-pc-windows-gnu",
-    "i686-pc-windows-msvc",
-    "x86_64-pc-windows-gnu",
-    "x86_64-pc-windows-msvc",
     # Apple
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
@@ -35,20 +29,6 @@ TARGETS = [
     # BSDs
     "x86_64-unknown-freebsd",
     "x86_64-unknown-netbsd",
-    # Android
-    "aarch64-linux-android",
-    "x86_64-linux-android",
-    # Solaris
-    "x86_64-sun-solaris",
-    # Illumos
-    "x86_64-unknown-illumos",
-    # WASM
-    "wasm32-wasi",
-    # Redox
-    "x86_64-unknown-redox",
-    # Fuchsia
-    "aarch64-fuchsia",
-    "x86_64-fuchsia",
 ]
 
 
@@ -65,10 +45,6 @@ class Target(str):
             arch, platform, os = elem[0], "n/a", elem[1]
         else:
             arch, platform, os = elem[0], elem[1], "-".join(elem[2:])
-        if os == "ios":
-            os = "apple IOS"
-        if os == "darwin":
-            os = "apple MacOS"
         return (arch, platform, os)
 
     @staticmethod

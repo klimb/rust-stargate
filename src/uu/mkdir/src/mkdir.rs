@@ -298,17 +298,7 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             let new_mode = config.mode;
 
             chmod(path, new_mode)?;
-
-            // Apply SELinux context if requested
-            #[cfg(feature = "selinux")]
-            if config.set_selinux_context && uucore::selinux::is_selinux_enabled() {
-                if let Err(e) = uucore::selinux::set_selinux_security_context(path, config.context)
-                {
-                    let _ = std::fs::remove_dir(path);
-                    return Err(USimpleError::new(1, e.to_string()));
-                }
-            }
-
+            
             Ok(())
         }
 

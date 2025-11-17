@@ -26,7 +26,7 @@ glob = { workspace = true }
 hostname = { workspace = true }
 fnv = { workspace = true }
 lscolors = { workspace = true }
-selinux = { workspace = true, optional = true }
+
 terminal_size = { workspace = true }
 thiserror = { workspace = true }
 uucore = { workspace = true, features = [
@@ -57,5 +57,3 @@ uucore = { workspace = true, features = ["benchmark"] }
 name = "ls_bench"
 harness = false
 
-[features]
-feat_selinux = ["selinux", "uucore/selinux"]

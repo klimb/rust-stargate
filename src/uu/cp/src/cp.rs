@@ -868,11 +868,6 @@ impl Attributes {
         mode: Preserve::Yes { required: true },
         timestamps: Preserve::Yes { required: true },
         context: {
-            #[cfg(feature = "feat_selinux")]
-            {
-                Preserve::Yes { required: false }
-            }
-            #[cfg(not(feature = "feat_selinux"))]
             {
                 Preserve::No { explicit: false }
             }
@@ -1115,18 +1110,6 @@ impl Options {
             }
         }
 
-        #[cfg(not(feature = "selinux"))]
-        if let Preserve::Yes { required } = attributes.context {
-            let selinux_disabled_error = CpError::Error(translate!("cp-error-selinux-not-enabled"));
-            if required {
-                return Err(selinux_disabled_error);
-            }
-            show_error_if_needed(&selinux_disabled_error);
-        }
-
-        // Extract the SELinux related flags and options
-        let set_selinux_context = matches.get_flag(options::SELINUX);
-
         let context = if matches.contains_id(options::CONTEXT) {
             matches.get_one::<String>(options::CONTEXT).cloned()
         } else {
@@ -1192,7 +1175,7 @@ impl Options {
             recursive,
             target_dir,
             progress_bar: matches.get_flag(options::PROGRESS_BAR),
-            set_selinux_context: set_selinux_context || context.is_some(),
+            set_selinux_context:  context.is_some(),
             context,
         };
 
@@ -1703,11 +1686,6 @@ pub(crate) fn copy_attributes(
         if !dest.is_symlink() {
             fs::set_permissions(dest, source_metadata.permissions())
                 .map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
-            // FIXME: Implement this for windows as well
-            #[cfg(feature = "feat_acl")]
-            exacl::getfacl(source, None)
-                .and_then(|acl| exacl::setfacl(&[dest], &acl, None))
-                .map_err(|err| CpError::Error(err.to_string()))?;
         }
 
         Ok(())
@@ -1725,24 +1703,6 @@ pub(crate) fn copy_attributes(
         Ok(())
     })?;
 
-    #[cfg(feature = "selinux")]
-    handle_preserve(&attributes.context, || -> CopyResult<()> {
-        // Get the source context and apply it to the destination
-        if let Ok(context) = selinux::SecurityContext::of_path(source, false, false) {
-            if let Some(context) = context {
-                if let Err(e) = context.set_for_path(dest, false, false) {
-                    return Err(CpError::Error(
-                        translate!("cp-error-selinux-set-context", "path" => dest.display(), "error" => e),
-                    ));
-                }
-            }
-        } else {
-            return Err(CpError::Error(
-                translate!("cp-error-selinux-get-context", "path" => source.display()),
-            ));
-        }
-        Ok(())
-    })?;
 
     handle_preserve(&attributes.xattr, || -> CopyResult<()> {
         #[cfg(all(unix, not(target_os = "android")))]
@@ -2506,18 +2466,6 @@ fn copy_file(
         // copy function (see `copy_stream` under platform/linux.rs).
     } else {
         copy_attributes(source, dest, &options.attributes)?;
-    }
-
-    #[cfg(feature = "selinux")]
-    if options.set_selinux_context && uucore::selinux::is_selinux_enabled() {
-        // Set the given selinux permissions on the copied file.
-        if let Err(e) =
-            uucore::selinux::set_selinux_security_context(dest, options.context.as_ref())
-        {
-            return Err(CpError::Error(
-                translate!("cp-error-selinux-error", "error" => e),
-            ));
-        }
     }
 
     copied_files.insert(

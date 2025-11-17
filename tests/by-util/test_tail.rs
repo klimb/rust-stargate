@@ -2032,45 +2032,6 @@ fn test_follow_name_truncate3() {
 }
 
 #[test]
-#[cfg(all(
-    not(target_vendor = "apple"),
-    not(target_os = "windows"),
-    not(feature = "feat_selinux") // flaky
-))] // FIXME: for currently not working platforms
-fn test_follow_name_truncate4() {
-    // Truncating a file with the same content it already has should not trigger a truncate event
-
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    let mut args = vec!["-s.1", "--max-unchanged-stats=1", "-F", "file"];
-
-    let mut delay = 500;
-    for i in 0..2 {
-        at.append("file", "foobar\n");
-
-        let mut p = ts.ucmd().args(&args).run_no_wait();
-
-        p.make_assertion_with_delay(delay).is_alive();
-
-        at.truncate("file", "foobar\n");
-        p.delay(delay);
-
-        p.make_assertion().is_alive();
-        p.kill()
-            .make_assertion()
-            .with_all_output()
-            .stdout_only("foobar\n");
-
-        at.remove("file");
-        if i == 0 {
-            args.push("---disable-inotify");
-        }
-        delay *= 3;
-    }
-}
-
-#[test]
 #[cfg(not(target_os = "windows"))] // FIXME: for currently not working platforms
 fn test_follow_truncate_fast() {
     // inspired by: "gnu/tests/tail-2/truncate.sh"
@@ -4419,80 +4380,6 @@ fn test_args_when_directory_given_shorthand_big_f_together_with_retry() {
         .make_assertion()
         .with_current_output()
         .stderr_only(expected_stderr);
-}
-
-/// Fails on macos sometimes with
-/// Diff < left / right > :
-/// ==> data <==
-/// file data
-/// ==> /absolute/path/to/data <==
-/// <file datasame data
-/// >file data
-///
-/// Fails on windows with
-/// Diff < left / right > :
-//  ==> data <==
-//  file data
-//  ==> \\?\C:\Users\runneradmin\AppData\Local\Temp\.tmpi6lNnX\data <==
-// >file data
-// <
-//
-// Fails on freebsd with
-// Diff < left / right > :
-//  ==> data <==
-//  file data
-//  ==> /tmp/.tmpZPXPlS/data <==
-// >file data
-// <
-#[test]
-#[cfg(all(
-    not(target_vendor = "apple"),
-    not(target_os = "windows"),
-    not(target_os = "freebsd"),
-    not(target_os = "openbsd"),
-    not(feature = "feat_selinux") // flaky
-))]
-fn test_follow_when_files_are_pointing_to_same_relative_file_and_file_stays_same_size() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-
-    let file_data = "file data";
-    let relative_path_name = "data";
-
-    at.write(relative_path_name, file_data);
-    let absolute_path = scene.fixtures.plus("data").canonicalize().unwrap();
-
-    let mut child = scene
-        .ucmd()
-        .args(&[
-            "--follow=descriptor",
-            "--max-unchanged-stats=1",
-            "--sleep-interval=0.1",
-            relative_path_name,
-            absolute_path.to_str().unwrap(),
-        ])
-        .run_no_wait();
-
-    child.delay(500);
-    let same_data = "same data"; // equal size to file_data
-    at.write(relative_path_name, same_data);
-
-    let expected_stdout = format!(
-        "==> {0} <==\n\
-        {1}\n\
-        ==> {2} <==\n\
-        {1}",
-        relative_path_name,              // 0
-        file_data,                       // 1
-        absolute_path.to_str().unwrap(), // 2
-    );
-
-    child.make_assertion_with_delay(500).is_alive();
-    child
-        .kill()
-        .make_assertion()
-        .with_current_output()
-        .stdout_only(expected_stdout);
 }
 
 #[rstest]

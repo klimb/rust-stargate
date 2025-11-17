@@ -10,8 +10,7 @@ mod mode;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use file_diff::diff;
 use filetime::{FileTime, set_file_times};
-#[cfg(feature = "selinux")]
-use selinux::SecurityContext;
+
 use std::ffi::OsString;
 use std::fmt::Debug;
 use std::fs::File;
@@ -27,11 +26,7 @@ use uucore::error::{FromIo, UError, UResult, UUsageError};
 use uucore::fs::dir_strip_dot_for_creation;
 use uucore::perms::{Verbosity, VerbosityLevel, wrap_chown};
 use uucore::process::{getegid, geteuid};
-#[cfg(feature = "selinux")]
-use uucore::selinux::{
-    SeLinuxError, contexts_differ, get_selinux_security_context, is_selinux_enabled,
-    selinux_error_description, set_selinux_security_context,
-};
+
 use uucore::translate;
 use uucore::{format_usage, show, show_error, show_if_err};
 
@@ -117,9 +112,6 @@ enum InstallError {
     #[error("{}", translate!("install-error-extra-operand", "operand" => .0.quote(), "usage" => .1.clone()))]
     ExtraOperand(String, String),
 
-    #[cfg(feature = "selinux")]
-    #[error("{}", .0)]
-    SelinuxContextFailed(String),
 }
 
 impl UError for InstallError {
@@ -477,13 +469,6 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
                     continue;
                 }
 
-                // Set SELinux context for all created directories if needed
-                #[cfg(feature = "selinux")]
-                if b.context.is_some() || b.default_context {
-                    let context = get_context_for_selinux(b);
-                    set_selinux_context_for_directories_install(path_to_create.as_path(), context);
-                }
-
                 if b.verbose {
                     println!(
                         "{}",
@@ -500,14 +485,6 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
 
             show_if_err!(chown_optional_user_group(path, b));
 
-            // Set SELinux context for directory if needed
-            #[cfg(feature = "selinux")]
-            if b.default_context {
-                show_if_err!(set_selinux_default_context(path));
-            } else if b.context.is_some() {
-                let context = get_context_for_selinux(b);
-                show_if_err!(set_selinux_security_context(path, context));
-            }
         }
         // If the exit code was set, or show! has been called at least once
         // (which sets the exit code as well), function execution will end after
@@ -624,13 +601,6 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
 
                 if let Err(e) = fs::create_dir_all(to_create) {
                     return Err(InstallError::CreateDirFailed(to_create.to_path_buf(), e).into());
-                }
-
-                // Set SELinux context for all created directories if needed
-                #[cfg(feature = "selinux")]
-                if b.context.is_some() || b.default_context {
-                    let context = get_context_for_selinux(b);
-                    set_selinux_context_for_directories_install(to_create, context);
                 }
             }
         }
@@ -987,19 +957,6 @@ fn copy(from: &Path, to: &Path, b: &Behavior) -> UResult<()> {
         preserve_timestamps(from, to)?;
     }
 
-    #[cfg(feature = "selinux")]
-    if b.preserve_context {
-        uucore::selinux::preserve_security_context(from, to)
-            .map_err(|e| InstallError::SelinuxContextFailed(e.to_string()))?;
-    } else if b.default_context {
-        set_selinux_default_context(to)
-            .map_err(|e| InstallError::SelinuxContextFailed(e.to_string()))?;
-    } else if b.context.is_some() {
-        let context = get_context_for_selinux(b);
-        set_selinux_security_context(to, context)
-            .map_err(|e| InstallError::SelinuxContextFailed(e.to_string()))?;
-    }
-
     if b.verbose {
         print!(
             "{}",
@@ -1017,14 +974,6 @@ fn copy(from: &Path, to: &Path, b: &Behavior) -> UResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "selinux")]
-fn get_context_for_selinux(b: &Behavior) -> Option<&String> {
-    if b.default_context {
-        None
-    } else {
-        b.context.as_ref()
-    }
-}
 
 /// Check if a file needs to be copied due to ownership differences when no explicit group is specified.
 /// Returns true if the destination file's ownership would differ from what it should be after installation.
@@ -1116,11 +1065,6 @@ fn need_copy(from: &Path, to: &Path, b: &Behavior) -> bool {
         return true;
     }
 
-    #[cfg(feature = "selinux")]
-    if b.preserve_context && contexts_differ(from, to) {
-        return true;
-    }
-
     // TODO: if -P (#1809) and from/to contexts mismatch, return true.
 
     // Check if the owner ID is specified and differs from the destination file's owner.
@@ -1145,365 +1089,4 @@ fn need_copy(from: &Path, to: &Path, b: &Behavior) -> bool {
     }
 
     false
-}
-
-#[cfg(feature = "selinux")]
-/// Sets the `SELinux` security context for install's -Z flag behavior.
-///
-/// This function implements the specific behavior needed for install's -Z flag,
-/// which attempts to derive an appropriate context based on policy rules.
-/// If derivation fails, it falls back to the system default.
-///
-/// # Arguments
-///
-/// * `path` - Filesystem path for which to set the `SELinux` context.
-///
-/// # Returns
-///
-/// Returns `Ok(())` if the context was successfully set, or a `SeLinuxError` if the operation failed.
-pub fn set_selinux_default_context(path: &Path) -> Result<(), SeLinuxError> {
-    if !is_selinux_enabled() {
-        return Err(SeLinuxError::SELinuxNotEnabled);
-    }
-
-    // Try to get the correct context based on file type and policy, then set it
-    match get_default_context_for_path(path) {
-        Ok(Some(default_ctx)) => {
-            // Set the context we determined from policy
-            set_selinux_security_context(path, Some(&default_ctx))
-        }
-        Ok(None) | Err(_) => {
-            // Fall back to set_default_for_path if we can't determine the correct context
-            SecurityContext::set_default_for_path(path).map_err(|e| {
-                SeLinuxError::ContextSetFailure(String::new(), selinux_error_description(&e))
-            })
-        }
-    }
-}
-
-#[cfg(feature = "selinux")]
-/// Gets the default `SELinux` context for a path based on the system's security policy.
-///
-/// This function attempts to determine what the "correct" `SELinux` context should be
-/// for a given path by consulting the `SELinux` policy database. This is similar to
-/// what `matchpathcon` or `restorecon` would determine.
-///
-/// The function traverses up the directory tree to find the first existing parent
-/// directory, gets its `SELinux` context, and then derives the appropriate context
-/// for the target path based on `SELinux` policy rules.
-///
-/// # Arguments
-///
-/// * `path` - The filesystem path to get the default context for
-///
-/// # Returns
-///
-/// * `Ok(Some(String))` - The default context string if successfully determined
-/// * `Ok(None)` - No default context could be determined
-/// * `Err(SeLinuxError)` - An error occurred while determining the context
-fn get_default_context_for_path(path: &Path) -> Result<Option<String>, SeLinuxError> {
-    if !is_selinux_enabled() {
-        return Err(SeLinuxError::SELinuxNotEnabled);
-    }
-
-    // Find the first existing parent directory to get its context
-    let mut current_path = path;
-    loop {
-        if current_path.exists() {
-            if let Ok(parent_context) = get_selinux_security_context(current_path, false) {
-                if !parent_context.is_empty() {
-                    // Found a context - derive the appropriate context for our target
-                    return Ok(Some(derive_context_from_parent(&parent_context)));
-                }
-            }
-        }
-
-        // Move up to parent
-        if let Some(parent) = current_path.parent() {
-            if parent == current_path {
-                break; // Reached root
-            }
-            current_path = parent;
-        } else {
-            break;
-        }
-
-        if current_path == Path::new("/") || current_path == Path::new("") {
-            break;
-        }
-    }
-
-    // If we can't determine from any parent, return None to fall back to default behavior
-    Ok(None)
-}
-
-#[cfg(feature = "selinux")]
-/// Derives an appropriate `SELinux` context based on a parent directory context.
-///
-/// This is a heuristic function that attempts to generate an appropriate
-/// context for a file based on its parent directory's context and file type.
-/// The goal is to mimic what `restorecon` would do based on `SELinux` policy.
-fn derive_context_from_parent(parent_context: &str) -> String {
-    // Parse the parent context (format: user:role:type:level)
-    let parts: Vec<&str> = parent_context.split(':').collect();
-    if parts.len() >= 3 {
-        let user = parts[0];
-        let role = parts[1];
-        let parent_type = parts[2];
-        let level = if parts.len() > 3 { parts[3] } else { "" };
-
-        // Based on the GNU test expectations, when creating files in tmp-related directories,
-        // `install -Z` should create files with user_home_t context (like restorecon would).
-        // This is a specific policy behavior that the test expects.
-        let derived_type = if parent_type.contains("tmp") {
-            // tmp-related types should resolve to user_home_t
-            // This matches the behavior expected by the GNU test and restorecon
-            "user_home_t"
-        } else {
-            // For other parent types, preserve the type
-            parent_type
-        };
-
-        if level.is_empty() {
-            format!("{user}:{role}:{derived_type}")
-        } else {
-            format!("{user}:{role}:{derived_type}:{level}")
-        }
-    } else {
-        // Fallback if we can't parse the parent context
-        parent_context.to_string()
-    }
-}
-
-#[cfg(feature = "selinux")]
-/// Helper function to collect paths that need `SELinux` context setting.
-///
-/// Traverses from the given starting path up to existing parent directories.
-/// Returns a vector of paths in reverse order (from parent to child).
-fn collect_paths_for_context_setting(starting_path: &Path) -> Vec<&Path> {
-    let mut paths: Vec<&Path> = starting_path
-        .ancestors()
-        .take_while(|p| p.exists())
-        .collect();
-    paths.reverse();
-    paths
-}
-
-#[cfg(feature = "selinux")]
-/// Sets the `SELinux` security context for a directory hierarchy.
-///
-/// This function traverses from the given starting path up to existing parent directories
-/// and sets the `SELinux` context on each directory in the hierarchy (from parent to child).
-/// This is useful when creating directory structures and needing to set contexts on all
-/// created directories.
-///
-/// # Arguments
-///
-/// * `target_path` - The target path (typically the deepest directory in a hierarchy)
-/// * `context` - Optional `SELinux` context string to set. If None, sets default context.
-///
-/// # Behavior
-///
-/// - Traverses from `target_path` upward to find existing parent directories
-/// - Sets the context on each directory in reverse order (parent to child)
-/// - Uses `show_if_err!` to handle errors gracefully without panicking
-/// - Stops at filesystem root ("/") or empty path to prevent infinite loops
-/// - Only processes paths that exist on the filesystem
-/// - Silently handles `SELinux` context setting failures
-///
-/// # Examples
-///
-/// ```no_run
-/// use std::path::Path;
-///
-/// // Set default context on directory hierarchy
-/// // set_selinux_context_for_directories(Path::new("/tmp/new/deep/dir"), None);
-///
-/// // Set specific context on directory hierarchy
-/// // let context = String::from("user_u:object_r:tmp_t:s0");
-/// // set_selinux_context_for_directories(Path::new("/tmp/new/deep/dir"), Some(&context));
-/// ```
-fn set_selinux_context_for_directories(target_path: &Path, context: Option<&String>) {
-    for path in collect_paths_for_context_setting(target_path) {
-        show_if_err!(set_selinux_security_context(path, context));
-    }
-}
-
-#[cfg(feature = "selinux")]
-/// Sets `SELinux` context for created directories using install's -Z default behavior.
-///
-/// Similar to `set_selinux_context_for_directories` but uses install's
-/// specific default context derivation when no context is provided.
-///
-/// # Arguments
-///
-/// * `target_path` - The target path (typically the deepest directory in a hierarchy)
-/// * `context` - Optional `SELinux` context string to set. If None, uses install's default derivation.
-pub fn set_selinux_context_for_directories_install(target_path: &Path, context: Option<&String>) {
-    if context.is_some() {
-        // Use the standard function for explicit contexts
-        set_selinux_context_for_directories(target_path, context);
-    } else {
-        // For default context, we need our custom install behavior
-        for path in collect_paths_for_context_setting(target_path) {
-            show_if_err!(set_selinux_default_context(path));
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[cfg(feature = "selinux")]
-    use super::derive_context_from_parent;
-
-    #[cfg(feature = "selinux")]
-    #[test]
-    fn test_derive_context_from_parent() {
-        // Test cases: (input_context, file_type, expected_output, description)
-        let test_cases = [
-            // Core tmp_t transformation (matches GNU behavior)
-            (
-                "unconfined_u:object_r:tmp_t:s0",
-                "regular_file",
-                "unconfined_u:object_r:user_home_t:s0",
-                "tmp_t transformation",
-            ),
-            (
-                "unconfined_u:object_r:tmp_t:s0",
-                "directory",
-                "unconfined_u:object_r:user_home_t:s0",
-                "tmp_t directory transformation",
-            ),
-            (
-                "unconfined_u:object_r:tmp_t:s0",
-                "other",
-                "unconfined_u:object_r:user_home_t:s0",
-                "tmp_t other file type transformation",
-            ),
-            // Tmp variants transformation
-            (
-                "unconfined_u:object_r:user_tmp_t:s0",
-                "regular_file",
-                "unconfined_u:object_r:user_home_t:s0",
-                "user_tmp_t transformation",
-            ),
-            (
-                "root:object_r:admin_tmp_t:s0",
-                "directory",
-                "root:object_r:user_home_t:s0",
-                "admin_tmp_t transformation",
-            ),
-            // Non-tmp contexts (should be preserved)
-            (
-                "unconfined_u:object_r:user_home_t:s0",
-                "regular_file",
-                "unconfined_u:object_r:user_home_t:s0",
-                "user_home_t preservation",
-            ),
-            (
-                "system_u:object_r:bin_t:s0",
-                "directory",
-                "system_u:object_r:bin_t:s0",
-                "bin_t preservation",
-            ),
-            (
-                "system_u:object_r:lib_t:s0",
-                "regular_file",
-                "system_u:object_r:lib_t:s0",
-                "lib_t preservation",
-            ),
-            // Contexts without MLS level
-            (
-                "unconfined_u:object_r:tmp_t",
-                "regular_file",
-                "unconfined_u:object_r:user_home_t",
-                "tmp_t no level transformation",
-            ),
-            (
-                "unconfined_u:object_r:user_home_t",
-                "directory",
-                "unconfined_u:object_r:user_home_t",
-                "user_home_t no level preservation",
-            ),
-            // Different users and roles
-            (
-                "root:system_r:tmp_t:s0",
-                "regular_file",
-                "root:system_r:user_home_t:s0",
-                "root user tmp transformation",
-            ),
-            (
-                "staff_u:staff_r:tmp_t:s0-s0:c0.c1023",
-                "directory",
-                "staff_u:staff_r:user_home_t:s0-s0",
-                "complex MLS level truncation with tmp transformation",
-            ),
-            // Real-world examples
-            (
-                "unconfined_u:unconfined_r:tmp_t:s0-s0:c0.c1023",
-                "regular_file",
-                "unconfined_u:unconfined_r:user_home_t:s0-s0",
-                "user session tmp context transformation",
-            ),
-            (
-                "system_u:system_r:tmp_t:s0",
-                "directory",
-                "system_u:system_r:user_home_t:s0",
-                "system tmp context transformation",
-            ),
-            (
-                "unconfined_u:unconfined_r:user_home_t:s0",
-                "regular_file",
-                "unconfined_u:unconfined_r:user_home_t:s0",
-                "already correct home context",
-            ),
-            // Edge cases and malformed contexts
-            (
-                "invalid",
-                "regular_file",
-                "invalid",
-                "invalid context passthrough",
-            ),
-            ("", "regular_file", "", "empty context passthrough"),
-            (
-                "user:role",
-                "regular_file",
-                "user:role",
-                "insufficient parts passthrough",
-            ),
-            (
-                "user:role:type:level:extra:parts",
-                "regular_file",
-                "user:role:type:level",
-                "extra parts truncation",
-            ),
-            (
-                "user:role:tmp_t:s0:extra",
-                "regular_file",
-                "user:role:user_home_t:s0",
-                "tmp transformation with extra parts",
-            ),
-        ];
-
-        for (input_context, file_type, expected_output, description) in test_cases {
-            let result = derive_context_from_parent(input_context);
-            assert_eq!(
-                result, expected_output,
-                "Failed test case: {description} - Input: '{input_context}', File type: '{file_type}', Expected: '{expected_output}', Got: '{result}'"
-            );
-        }
-
-        // Test file type independence (since current implementation ignores file_type)
-        let tmp_context = "unconfined_u:object_r:tmp_t:s0";
-        let expected = "unconfined_u:object_r:user_home_t:s0";
-        let file_types = ["regular_file", "directory", "other", "custom_type"];
-
-        for file_type in file_types {
-            let result = derive_context_from_parent(tmp_context);
-            assert_eq!(
-                result, expected,
-                "File type independence test failed - file_type: '{file_type}', Expected: '{expected}', Got: '{result}'"
-            );
-        }
-    }
 }

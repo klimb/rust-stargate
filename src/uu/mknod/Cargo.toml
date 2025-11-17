@@ -24,9 +24,6 @@ libc = { workspace = true }
 uucore = { workspace = true, features = ["mode"] }
 fluent = { workspace = true }
 
-[features]
-selinux = ["uucore/selinux"]
-
 [[bin]]
 name = "mknod"
 path = "src/main.rs"
