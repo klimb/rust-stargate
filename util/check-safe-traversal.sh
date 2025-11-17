@@ -156,7 +156,7 @@ if [ "$USE_MULTICALL" -eq 1 ]; then
     AVAILABLE_UTILS=$($COREUTILS_BIN --list)
 else
     AVAILABLE_UTILS=""
-    for util in rm chmod chown chgrp du mv; do
+    for util in rm chmod change-owner chgrp du mv; do
         if [ -f "$PROJECT_ROOT/target/release/$util" ]; then
             AVAILABLE_UTILS="$AVAILABLE_UTILS $util"
         fi
@@ -175,7 +175,7 @@ if echo "$AVAILABLE_UTILS" | grep -q "chmod"; then
     check_utility "chmod" "openat,fchmodat,newfstatat,chmod" "openat fchmodat" "-R 755 test_chmod" "recursive_chmod"
 fi
 
-# Test chown - should use openat, fchownat, newfstatat
+# Test change_owner - should use openat, fchownat, newfstatat
 if echo "$AVAILABLE_UTILS" | grep -q "chown"; then
     cp -r test_dir test_chown
     USER_ID=$(id -u)

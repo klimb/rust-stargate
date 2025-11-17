@@ -170,6 +170,6 @@ pub fn uu_app() -> Command {
                 .help(translate!("chgrp-help-recursive"))
                 .action(ArgAction::SetTrue),
         )
-        // Add common arguments with chgrp, chown & chmod
+        // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())
 }

@@ -252,7 +252,7 @@ pub fn uu_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString)),
         )
-        // Add common arguments with chgrp, chown & chmod
+        // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())
 }
 

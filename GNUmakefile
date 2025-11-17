@@ -158,7 +158,7 @@ PROGS       := \
 UNIX_PROGS := \
 	chgrp \
 	chmod \
-	chown \
+	change_owner \
 	chroot \
 	groups \
 	hostid \
@@ -222,7 +222,7 @@ TEST_PROGS  := \
 	chcon \
 	chgrp \
 	chmod \
-	chown \
+	change_owner \
 	cksum \
 	comm \
 	cp \

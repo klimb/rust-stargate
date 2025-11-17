@@ -566,7 +566,7 @@ fn process_file(
 
         fts_sys::FTS_NS => {
             // For a top-level file or directory, this FTS_NS (stat failed) indicator is determined
-            // at the time of the initial fts_open call. With programs like chmod, chown, and chgrp,
+            // at the time of the initial fts_open call. With programs like chmod, change_owner, and chgrp,
             // that modify permissions, it is possible that the file in question is accessible when
             // control reaches this point. So, if this is the first time we've seen the FTS_NS for
             // this file, tell fts_read to stat it "again".

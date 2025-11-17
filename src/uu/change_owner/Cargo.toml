@@ -1,6 +1,6 @@
 [package]
-name = "uu_chown"
-description = "chown ~ (uutils) change the ownership of FILE"
+name = "uu_change_owner"
+description = "change owner"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chown"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/chown.rs"
+path = "src/change_owner.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -28,5 +28,5 @@ uucore = { workspace = true, features = [
 fluent = { workspace = true }
 
 [[bin]]
-name = "chown"
+name = "change-owner"
 path = "src/main.rs"

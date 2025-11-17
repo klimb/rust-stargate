@@ -580,10 +580,10 @@ dependencies = [
  "uu_basename",
  "uu_basenc",
  "uu_cat",
+ "uu_change_owner",
  "uu_chcon",
  "uu_chgrp",
  "uu_chmod",
- "uu_chown",
  "uu_chroot",
  "uu_cksum",
  "uu_comm",
@@ -3138,6 +3138,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "uu_change_owner"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "uucore",
+]
+
+[[package]]
 name = "uu_chcon"
 version = "0.4.0"
 dependencies = [
@@ -3166,15 +3175,6 @@ dependencies = [
  "clap",
  "fluent",
  "thiserror 2.0.17",
- "uucore",
-]
-
-[[package]]
-name = "uu_chown"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
  "uucore",
 ]
 

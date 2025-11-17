@@ -43,7 +43,7 @@ const ROOT_GROUP: &str = "wheel";
 
 #[cfg(test)]
 mod test_passgrp {
-    use chown::entries::{gid2grp, grp2gid, uid2usr, usr2uid};
+    use change_owner::entries::{gid2grp, grp2gid, uid2usr, usr2uid};
 
     #[test]
     fn test_usr2uid() {
@@ -84,7 +84,7 @@ fn test_invalid_arg() {
 
 #[test]
 fn test_chown_only_owner() {
-    // test chown username file.txt
+    // test change_owner username file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -120,7 +120,7 @@ fn test_chown_only_owner() {
 
 #[test]
 fn test_chown_only_owner_colon() {
-    // test chown username: file.txt
+    // test change_owner username: file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -162,7 +162,7 @@ fn test_chown_only_owner_colon() {
 
 #[test]
 fn test_chown_only_colon() {
-    // test chown : file.txt
+    // test change_owner : file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -171,20 +171,20 @@ fn test_chown_only_colon() {
     at.touch(file1);
 
     // expected:
-    // $ chown -v : file.txt 2>out_err ; echo $? ; cat out_err
+    // $ change_owner -v : file.txt 2>out_err ; echo $? ; cat out_err
     // ownership of 'file.txt' retained
     // 0
     let result = scene.ucmd().arg(":").arg("--verbose").arg(file1).run();
     if skipping_test_is_okay(&result, "No such id") {
         return;
     }
-    result.stderr_contains("retained as"); // TODO: verbose is not printed to stderr in GNU chown
+    result.stderr_contains("retained as"); // TODO: verbose is not printed to stderr in GNU change_owner
 
-    // test chown : file.txt
+    // test change_owner : file.txt
     // expected:
-    // $ chown -v :: file.txt 2>out_err ; echo $? ; cat out_err
+    // $ change_owner -v :: file.txt 2>out_err ; echo $? ; cat out_err
     // 1
-    // chown: invalid group: '::'
+    // change_owner: invalid group: '::'
     scene
         .ucmd()
         .arg("::")
@@ -204,20 +204,20 @@ fn test_chown_only_colon() {
 
 #[test]
 fn test_chown_failed_stdout() {
-    // test chown root file.txt
+    // test change_owner root file.txt
 
     // TODO: implement once output "failed to change" to stdout is fixed
     // expected:
-    // $ chown -v root file.txt 2>out_err ; echo $? ; cat out_err
+    // $ change_owner -v root file.txt 2>out_err ; echo $? ; cat out_err
     // failed to change ownership of 'file.txt' from jhs to root
     // 1
-    // chown: changing ownership of 'file.txt': Operation not permitted
+    // change_owner: changing ownership of 'file.txt': Operation not permitted
 }
 
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_chown_owner_group() {
-    // test chown username:group file.txt
+    // test change_owner username:group file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -246,7 +246,7 @@ fn test_chown_owner_group() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "chown: invalid group:") {
+    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -279,7 +279,7 @@ fn test_chown_owner_group() {
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_chown_various_input() {
-    // test chown username:group file.txt
+    // test change_owner username:group file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -308,7 +308,7 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "chown: invalid group:") {
+    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -320,7 +320,7 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "chown: invalid group:") {
+    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -333,13 +333,13 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .fails()
-        .stderr_contains("chown: invalid user: 'user.name:groupname'");
+        .stderr_contains("change_owner: invalid user: 'user.name:groupname'");
 }
 
 #[test]
 #[cfg(any(windows, all(unix, not(target_os = "openbsd"))))]
 fn test_chown_only_group() {
-    // test chown :group file.txt
+    // test change_owner :group file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -377,7 +377,7 @@ fn test_chown_only_group() {
 
 #[test]
 fn test_chown_only_user_id() {
-    // test chown 1111 file.txt
+    // test change_owner 1111 file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -395,7 +395,7 @@ fn test_chown_only_user_id() {
     let result = scene.ucmd().arg(user_id).arg("--verbose").arg(file1).run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "chown: invalid user: '1001'
+        // stderr: "change_owner: invalid user: '1001'
         return;
     }
     result.stderr_contains("retained as");
@@ -411,7 +411,7 @@ fn test_chown_only_user_id() {
 
 #[test]
 fn test_chown_fail_id() {
-    // test chown 1111. file.txt
+    // test change_owner 1111. file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -445,7 +445,7 @@ fn test_chown_fail_id() {
 ///
 /// For example:
 ///
-///     $ touch f && chown 12345 f
+///     $ touch f && change_owner 12345 f
 ///
 /// succeeds with exit status 0 and outputs nothing. The owner of the
 /// file is set to 12345, even though no user with that ID exists.
@@ -467,7 +467,7 @@ fn test_chown_only_user_id_nonexistent_user() {
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_chown_only_group_id() {
-    // test chown :1111 file.txt
+    // test change_owner :1111 file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -488,7 +488,7 @@ fn test_chown_only_group_id() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "chown: invalid group:") {
+    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
         // With mac into the CI, we can get this answer
         return;
     }
@@ -513,7 +513,7 @@ fn test_chown_only_group_id() {
 ///
 /// For example:
 ///
-///     $ touch f && chown :12345 f
+///     $ touch f && change_owner :12345 f
 ///
 /// succeeds with exit status 0 and outputs nothing. The group of the
 /// file is set to 12345, even though no group with that ID exists.
@@ -535,7 +535,7 @@ fn test_chown_only_group_id_nonexistent_group() {
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_chown_owner_group_id() {
-    // test chown 1111:1111 file.txt
+    // test change_owner 1111:1111 file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -565,7 +565,7 @@ fn test_chown_owner_group_id() {
         .run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "chown: invalid user: '1001:116'
+        // stderr: "change_owner: invalid user: '1001:116'
         return;
     }
     result.stderr_contains("retained as");
@@ -578,7 +578,7 @@ fn test_chown_owner_group_id() {
         .run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "chown: invalid user: '1001.116'
+        // stderr: "change_owner: invalid user: '1001.116'
         return;
     }
     result.stderr_contains("retained as");
@@ -595,7 +595,7 @@ fn test_chown_owner_group_id() {
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_chown_owner_group_mix() {
-    // test chown 1111:group file.txt
+    // test change_owner 1111:group file.txt
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -683,12 +683,12 @@ fn test_root_preserve() {
         .arg(user_name)
         .arg("/")
         .fails();
-    result.stderr_contains("chown: it is dangerous to operate recursively");
+    result.stderr_contains("change_owner: it is dangerous to operate recursively");
 }
 
 #[test]
 fn test_chown_file_notexisting() {
-    // test chown username not_existing
+    // test change_owner username not_existing
 
     let scene = TestScenario::new(util_name!());
 

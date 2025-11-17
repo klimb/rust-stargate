@@ -75,7 +75,7 @@ enum InstallError {
     #[error("{}", translate!("install-error-chmod-failed", "path" => .0.quote()))]
     ChmodFailed(PathBuf),
 
-    #[error("{}", translate!("install-error-chown-failed", "path" => .0.quote(), "error" => .1.clone()))]
+    #[error("{}", translate!("install-error-change_owner-failed", "path" => .0.quote(), "error" => .1.clone()))]
     ChownFailed(PathBuf, String),
 
     #[error("{}", translate!("install-error-invalid-target", "path" => .0.quote()))]
@@ -711,7 +711,7 @@ fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> UR
     Ok(())
 }
 
-/// Handle incomplete user/group parings for chown.
+/// Handle incomplete user/group parings for change_owner.
 ///
 /// Returns a Result type with the Err variant containing the error message.
 /// If the user is root, revert the uid & gid
@@ -726,20 +726,20 @@ fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> UR
 /// return an empty error value.
 ///
 fn chown_optional_user_group(path: &Path, b: &Behavior) -> UResult<()> {
-    // GNU coreutils doesn't print chown operations during install with verbose flag.
+    // GNU coreutils doesn't print change_owner operations during install with verbose flag.
     let verbosity = Verbosity {
         groups_only: b.owner_id.is_none(),
         level: VerbosityLevel::Normal,
     };
 
-    // Determine the owner and group IDs to be used for chown.
+    // Determine the owner and group IDs to be used for change_owner.
     let (owner_id, group_id) = if b.owner_id.is_some() || b.group_id.is_some() {
         (b.owner_id, b.group_id)
     } else if geteuid() == 0 {
         // Special case for root user.
         (Some(0), Some(0))
     } else {
-        // No chown operation needed.
+        // No change_owner operation needed.
         return Ok(());
     };
 
@@ -748,7 +748,7 @@ fn chown_optional_user_group(path: &Path, b: &Behavior) -> UResult<()> {
         Err(e) => return Err(InstallError::MetadataFailed(e).into()),
     };
     match wrap_chown(path, &meta, owner_id, group_id, false, verbosity) {
-        Ok(msg) if b.verbose && !msg.is_empty() => println!("chown: {msg}"),
+        Ok(msg) if b.verbose && !msg.is_empty() => println!("change_owner: {msg}"),
         Ok(_) => {}
         Err(e) => return Err(InstallError::ChownFailed(path.to_path_buf(), e).into()),
     }

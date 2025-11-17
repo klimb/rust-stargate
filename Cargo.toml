@@ -207,7 +207,7 @@ feat_require_unix_musl = ["feat_require_unix_core"]
 feat_require_unix_core = [
   "chgrp",
   "chmod",
-  "chown",
+  "change_owner",
   "chroot",
   "groups",
   "id",
@@ -238,7 +238,7 @@ feat_os_unix_fuchsia = [
   #
   "chgrp",
   "chmod",
-  "chown",
+  "change_owner",
   "du",
   "groups",
   "hostid",
@@ -430,7 +430,7 @@ cat = { optional = true, version = "0.4.0", package = "uu_cat", path = "src/uu/c
 chcon = { optional = true, version = "0.4.0", package = "uu_chcon", path = "src/uu/chcon" }
 chgrp = { optional = true, version = "0.4.0", package = "uu_chgrp", path = "src/uu/chgrp" }
 chmod = { optional = true, version = "0.4.0", package = "uu_chmod", path = "src/uu/chmod" }
-chown = { optional = true, version = "0.4.0", package = "uu_chown", path = "src/uu/chown" }
+change_owner = { optional = true, version = "0.4.0", package = "uu_change_owner", path = "src/uu/change_owner" }
 chroot = { optional = true, version = "0.4.0", package = "uu_chroot", path = "src/uu/chroot" }
 cksum = { optional = true, version = "0.4.0", package = "uu_cksum", path = "src/uu/cksum" }
 comm = { optional = true, version = "0.4.0", package = "uu_comm", path = "src/uu/comm" }

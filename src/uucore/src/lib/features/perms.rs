@@ -210,7 +210,7 @@ pub fn check_root(path: &Path, would_recurse_symlink: bool) -> bool {
     is_root(path, would_recurse_symlink)
 }
 
-/// In the context of chown and chgrp, check whether we are in a "preserve-root" scenario.
+/// In the context of change_owner and chgrp, check whether we are in a "preserve-root" scenario.
 ///
 /// In particular, we want to prohibit further traversal only if:
 ///     (--preserve-root and -R present) &&
@@ -244,7 +244,7 @@ fn is_root(path: &Path, would_traverse_symlink: bool) -> bool {
 
     // FIXME: TOCTOU bug! canonicalize() runs at a different time than WalkDir's recursion decision.
     // However, we're forced to make the decision whether to warn about --preserve-root
-    // *before* even attempting to chown the path, let alone doing the stat inside WalkDir.
+    // *before* even attempting to change_owner the path, let alone doing the stat inside WalkDir.
     if let Ok(p) = path.canonicalize() {
         let path_buf = path.to_path_buf();
         if p.parent().is_none() {
@@ -501,7 +501,7 @@ impl ChownExecutor {
                 return;
             }
 
-            // Check if we should chown this entry
+            // Check if we should change_owner this entry
             if self.matched(meta.uid(), meta.gid()) {
                 // Use fchownat for the actual ownership change
                 let follow_symlinks =
@@ -848,7 +848,7 @@ pub fn configure_symlink_and_recursion(
     Ok((recursive, dereference.unwrap_or(true), traverse_symlinks))
 }
 
-/// Base implementation for `chgrp` and `chown`.
+/// Base implementation for `chgrp` and `change_owner`.
 ///
 /// An argument called `add_arg_if_not_reference` will be added to `command` if
 /// `args` does not contain the `--reference` option.
@@ -1024,13 +1024,13 @@ mod tests {
         // Must return true, we're about to "accidentally" recurse on "/",
         // since "symlink/" always counts as an already-entered directory
         // Output from GNU:
-        //   $ chown --preserve-root -RH --dereference $(id -u) slink-to-root/
-        //   chown: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
-        //   chown: use --no-preserve-root to override this failsafe
+        //   $ change_owner --preserve-root -RH --dereference $(id -u) slink-to-root/
+        //   change_owner: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
+        //   change_owner: use --no-preserve-root to override this failsafe
         //   [$? = 1]
-        //   $ chown --preserve-root -RH --no-dereference $(id -u) slink-to-root/
-        //   chown: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
-        //   chown: use --no-preserve-root to override this failsafe
+        //   $ change_owner --preserve-root -RH --no-dereference $(id -u) slink-to-root/
+        //   change_owner: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
+        //   change_owner: use --no-preserve-root to override this failsafe
         //   [$? = 1]
         assert!(is_root(&symlink_path_slash, false));
         assert!(is_root(&symlink_path_slash, true));

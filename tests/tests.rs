@@ -52,9 +52,9 @@ mod test_chgrp;
 #[path = "by-util/test_chmod.rs"]
 mod test_chmod;
 
-#[cfg(feature = "chown")]
-#[path = "by-util/test_chown.rs"]
-mod test_chown;
+#[cfg(feature = "change_owner")]
+#[path = "by-util/test_change_owner.rs"]
+mod test_change_owner;
 
 #[cfg(feature = "chroot")]
 #[path = "by-util/test_chroot.rs"]

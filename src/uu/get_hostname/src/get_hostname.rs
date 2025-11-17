@@ -8,13 +8,9 @@
 #[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
 use std::net::ToSocketAddrs;
 use std::str;
-use std::{collections::hash_set::HashSet, ffi::OsString};
 
-use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
-#[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
-use dns_lookup::lookup_host;
 use uucore::translate;
 
 use uucore::{

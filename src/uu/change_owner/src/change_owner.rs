@@ -35,7 +35,7 @@ fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> 
     let raw_owner: String;
     if let Some(file) = matches.get_one::<String>(options::REFERENCE) {
         let meta = fs::metadata(file).map_err_context(
-            || translate!("chown-error-failed-to-get-attributes", "file" => file.quote()),
+            || translate!("change_owner-error-failed-to-get-attributes", "file" => file.quote()),
         )?;
         let gid = meta.gid();
         let uid = meta.uid();
@@ -78,58 +78,58 @@ pub fn uu_app() -> Command {
     Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
-        .about(translate!("chown-about"))
-        .override_usage(format_usage(&translate!("chown-usage")))
+        .about(translate!("change_owner-about"))
+        .override_usage(format_usage(&translate!("change_owner-usage")))
         .infer_long_args(true)
         .disable_help_flag(true)
         .arg(
             Arg::new(options::HELP)
                 .long(options::HELP)
-                .help(translate!("chown-help-print-help"))
+                .help(translate!("change_owner-help-print-help"))
                 .action(ArgAction::Help),
         )
         .arg(
             Arg::new(options::verbosity::CHANGES)
                 .short('c')
                 .long(options::verbosity::CHANGES)
-                .help(translate!("chown-help-changes"))
+                .help(translate!("change_owner-help-changes"))
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::FROM)
                 .long(options::FROM)
-                .help(translate!("chown-help-from"))
+                .help(translate!("change_owner-help-from"))
                 .value_name("CURRENT_OWNER:CURRENT_GROUP"),
         )
         .arg(
             Arg::new(options::preserve_root::PRESERVE)
                 .long(options::preserve_root::PRESERVE)
-                .help(translate!("chown-help-preserve-root"))
+                .help(translate!("change_owner-help-preserve-root"))
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::preserve_root::NO_PRESERVE)
                 .long(options::preserve_root::NO_PRESERVE)
-                .help(translate!("chown-help-no-preserve-root"))
+                .help(translate!("change_owner-help-no-preserve-root"))
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::verbosity::QUIET)
                 .long(options::verbosity::QUIET)
-                .help(translate!("chown-help-quiet"))
+                .help(translate!("change_owner-help-quiet"))
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::RECURSIVE)
                 .short('r')
                 .long(options::RECURSIVE)
-                .help(translate!("chown-help-recursive"))
+                .help(translate!("change_owner-help-recursive"))
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::REFERENCE)
                 .long(options::REFERENCE)
-                .help(translate!("chown-help-reference"))
+                .help(translate!("change_owner-help-reference"))
                 .value_name("RFILE")
                 .value_hint(clap::ValueHint::FilePath),
         )
@@ -143,10 +143,10 @@ pub fn uu_app() -> Command {
             Arg::new(options::verbosity::VERBOSE)
                 .long(options::verbosity::VERBOSE)
                 .short('v')
-                .help(translate!("chown-help-verbose"))
+                .help(translate!("change_owner-help-verbose"))
                 .action(ArgAction::SetTrue),
         )
-        // Add common arguments with chgrp, chown & chmod
+        // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())
 }
 
@@ -172,7 +172,7 @@ fn parse_uid(user: &str, spec: &str, sep: char) -> UResult<Option<u32>> {
                     Ok(uid) => Ok(Some(uid)),
                     Err(_) => Err(USimpleError::new(
                         1,
-                        translate!("chown-error-invalid-user", "user" => spec.quote()),
+                        translate!("change_owner-error-invalid-user", "user" => spec.quote()),
                     )),
                 }
             }
@@ -191,7 +191,7 @@ fn parse_gid(group: &str, spec: &str) -> UResult<Option<u32>> {
             Ok(gid) => Ok(Some(gid)),
             Err(_) => Err(USimpleError::new(
                 1,
-                translate!("chown-error-invalid-group", "group" => spec.quote()),
+                translate!("change_owner-error-invalid-group", "group" => spec.quote()),
             )),
         },
     }
@@ -223,7 +223,7 @@ fn parse_spec(spec: &str, sep: char) -> UResult<(Option<u32>, Option<u32>)> {
         // we should fail with an error
         return Err(USimpleError::new(
             1,
-            translate!("chown-error-invalid-spec", "spec" => spec.quote()),
+            translate!("change_owner-error-invalid-spec", "spec" => spec.quote()),
         ));
     }
 
@@ -241,7 +241,7 @@ mod test {
         unsafe {
             env::set_var("LANG", "C");
         }
-        let _ = locale::setup_localization("chown");
+        let _ = locale::setup_localization("change_owner");
         assert!(matches!(parse_spec(":", ':'), Ok((None, None))));
         assert!(matches!(parse_spec(".", ':'), Ok((None, None))));
         assert!(matches!(parse_spec(".", '.'), Ok((None, None))));

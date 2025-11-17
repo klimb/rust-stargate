@@ -66,7 +66,7 @@ static PATH_PROGRAMS: &[&str] = &[
     "tsort",
     // Text processing with files
     "chmod",
-    "chown",
+    "change_owner",
     "chgrp",
     "install",
     "chcon",
@@ -171,7 +171,7 @@ fn test_program_with_non_utf8_path(program: &str, path: &PathBuf) -> CommandResu
             OsString::from("644"),
             path_os.to_owned(),
         ],
-        "chown" => vec![
+        "change_owner" => vec![
             OsString::from(program),
             OsString::from("root:root"),
             path_os.to_owned(),
