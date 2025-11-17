@@ -105,6 +105,7 @@ PROGS       := \
 	fold \
 	hashsum \
 	head \
+	get_hostname \
 	hostname \
 	join \
 	link \

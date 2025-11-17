@@ -160,6 +160,10 @@ mod test_hostid;
 #[path = "by-util/test_hostname.rs"]
 mod test_hostname;
 
+#[cfg(feature = "get_hostname")]
+#[path = "by-util/test_get_hostname.rs"]
+mod test_get_hostname;
+
 #[cfg(feature = "id")]
 #[path = "by-util/test_id.rs"]
 mod test_id;
