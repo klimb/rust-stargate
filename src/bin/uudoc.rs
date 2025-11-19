@@ -216,7 +216,7 @@ fn main() -> io::Result<()> {
     println!("Gathering utils per platform");
     let utils_per_platform = {
         let mut map = HashMap::new();
-        for platform in ["unix", "macos", "windows", "unix_android"] {
+        for platform in ["unix", "macos"] {
             let platform_utils: Vec<String> = String::from_utf8(
                 std::process::Command::new("./util/show-utils.sh")
                     .arg(format!("--features=feat_os_{platform}"))

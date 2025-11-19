@@ -946,7 +946,6 @@ fn copy(from: &Path, to: &Path, b: &Behavior) -> UResult<()> {
 
     copy_file(from, to)?;
 
-    #[cfg(not(windows))]
     if b.strip {
         strip_file(to, b)?;
     }

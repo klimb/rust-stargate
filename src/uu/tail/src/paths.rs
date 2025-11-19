@@ -180,23 +180,7 @@ impl MetadataExtTail for Metadata {
     }
 
     fn file_id_eq(&self, _other: &Metadata) -> bool {
-        #[cfg(unix)]
-        {
-            self.ino().eq(&_other.ino())
-        }
-        #[cfg(windows)]
-        {
-            // TODO: `file_index` requires unstable library feature `windows_by_handle`
-            // use std::os::windows::prelude::*;
-            // if let Some(self_id) = self.file_index() {
-            //     if let Some(other_id) = other.file_index() {
-            //     // TODO: not sure this is the equivalent of comparing inode numbers
-            //
-            //         return self_id.eq(&other_id);
-            //     }
-            // }
-            false
-        }
+        self.ino().eq(&_other.ino())
     }
 }
 

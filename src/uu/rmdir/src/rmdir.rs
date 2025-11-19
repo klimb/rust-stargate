@@ -120,26 +120,13 @@ fn remove_single(path: &Path, opts: Opts) -> Result<(), Error<'_>> {
 }
 
 // POSIX: https://pubs.opengroup.org/onlinepubs/009696799/functions/rmdir.html
-#[cfg(not(windows))]
 const NOT_EMPTY_CODES: &[i32] = &[libc::ENOTEMPTY, libc::EEXIST];
-
-// 145 is ERROR_DIR_NOT_EMPTY, determined experimentally.
-#[cfg(windows)]
-const NOT_EMPTY_CODES: &[i32] = &[145];
 
 // Other error codes you might get for directories that could be found and are
 // not empty.
 // This is a subset of the error codes listed in rmdir(2) from the Linux man-pages
 // project. Maybe other systems have additional codes that apply?
-#[cfg(not(windows))]
 const PERHAPS_EMPTY_CODES: &[i32] = &[libc::EACCES, libc::EBUSY, libc::EPERM, libc::EROFS];
-
-// Probably incomplete, I can't find a list of possible errors for
-// RemoveDirectory anywhere.
-#[cfg(windows)]
-const PERHAPS_EMPTY_CODES: &[i32] = &[
-    5, // ERROR_ACCESS_DENIED, found experimentally.
-];
 
 fn dir_not_empty(error: &io::Error, path: &Path) -> bool {
     if let Some(code) = error.raw_os_error() {

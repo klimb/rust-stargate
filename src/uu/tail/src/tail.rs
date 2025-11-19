@@ -44,7 +44,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
     // default action here.
-    #[cfg(not(target_os = "windows"))]
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
@@ -501,16 +500,9 @@ fn unbounded_tail<T: Read>(reader: &mut BufReader<T>, settings: &Settings) -> UR
         }
         _ => {}
     }
-    #[cfg(not(target_os = "windows"))]
     writer.flush()?;
 
     // SIGPIPE is not available on Windows.
-    #[cfg(target_os = "windows")]
-    writer.flush().inspect_err(|err| {
-        if err.kind() == ErrorKind::BrokenPipe {
-            std::process::exit(13);
-        }
-    })?;
     Ok(())
 }
 

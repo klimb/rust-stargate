@@ -139,23 +139,6 @@ pub fn get_uptime(boot_time: Option<time_t>) -> UResult<i64> {
     Err(UptimeError::SystemUptime)?
 }
 
-/// Get the system uptime
-///
-/// # Arguments
-///
-/// boot_time will be ignored, pass None.
-///
-/// # Returns
-///
-/// Returns a UResult with the uptime in seconds if successful, otherwise an UptimeError.
-#[cfg(windows)]
-pub fn get_uptime(_boot_time: Option<time_t>) -> UResult<i64> {
-    use windows_sys::Win32::System::SystemInformation::GetTickCount;
-    // SAFETY: always return u32
-    let uptime = unsafe { GetTickCount() };
-    Ok(uptime as i64 / 1000)
-}
-
 /// Get the system uptime in a human-readable format
 ///
 /// # Arguments
@@ -231,69 +214,6 @@ pub fn get_nusers(file: &str) -> usize {
         .count()
 }
 
-/// Get the number of users currently logged in
-///
-/// # Returns
-///
-/// Returns the number of users currently logged in if successful, otherwise 0
-#[cfg(target_os = "windows")]
-pub fn get_nusers() -> usize {
-    use std::ptr;
-    use windows_sys::Win32::System::RemoteDesktop::*;
-
-    let mut num_user = 0;
-
-    // SAFETY: WTS_CURRENT_SERVER_HANDLE is a valid handle
-    unsafe {
-        let mut session_info_ptr = ptr::null_mut();
-        let mut session_count = 0;
-
-        let result = WTSEnumerateSessionsW(
-            WTS_CURRENT_SERVER_HANDLE,
-            0,
-            1,
-            &mut session_info_ptr,
-            &mut session_count,
-        );
-        if result == 0 {
-            return 0;
-        }
-
-        let sessions = std::slice::from_raw_parts(session_info_ptr, session_count as usize);
-
-        for session in sessions {
-            let mut buffer: *mut u16 = ptr::null_mut();
-            let mut bytes_returned = 0;
-
-            let result = WTSQuerySessionInformationW(
-                WTS_CURRENT_SERVER_HANDLE,
-                session.SessionId,
-                5,
-                &mut buffer,
-                &mut bytes_returned,
-            );
-            if result == 0 || buffer.is_null() {
-                continue;
-            }
-
-            let username = if !buffer.is_null() {
-                let cstr = std::ffi::CStr::from_ptr(buffer as *const i8);
-                cstr.to_string_lossy().to_string()
-            } else {
-                String::new()
-            };
-            if !username.is_empty() {
-                num_user += 1;
-            }
-
-            WTSFreeMemory(buffer as _);
-        }
-
-        WTSFreeMemory(session_info_ptr as _);
-    }
-
-    num_user
-}
 
 /// Format the number of users to a human-readable string
 ///
@@ -342,17 +262,6 @@ pub fn get_loadavg() -> UResult<(f64, f64, f64)> {
     } else {
         Ok((avg[0], avg[1], avg[2]))
     }
-}
-
-/// Get the system load average
-/// Windows does not have an equivalent to the load average on Unix-like systems.
-///
-/// # Returns
-///
-/// Returns a UResult with an UptimeError.
-#[cfg(windows)]
-pub fn get_loadavg() -> UResult<(f64, f64, f64)> {
-    Err(UptimeError::WindowsLoadavg)?
 }
 
 /// Get the system load average in a human-readable format

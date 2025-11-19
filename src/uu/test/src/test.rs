@@ -18,7 +18,6 @@ use std::os::unix::fs::MetadataExt;
 use uucore::display::Quotable;
 use uucore::error::{UResult, USimpleError};
 use uucore::format_usage;
-#[cfg(not(windows))]
 use uucore::process::{getegid, geteuid};
 
 use uucore::translate;
@@ -256,7 +255,6 @@ enum PathCondition {
     Executable,
 }
 
-#[cfg(not(windows))]
 fn path(path: &OsStr, condition: &PathCondition) -> bool {
     use std::fs::Metadata;
     use std::os::unix::fs::FileTypeExt;
@@ -314,36 +312,6 @@ fn path(path: &OsStr, condition: &PathCondition) -> bool {
         PathCondition::UserIdFlag => metadata.mode() & S_ISUID != 0,
         PathCondition::Writable => perm(metadata, Permission::Write),
         PathCondition::Executable => perm(metadata, Permission::Execute),
-    }
-}
-
-#[cfg(windows)]
-fn path(path: &OsStr, condition: &PathCondition) -> bool {
-    use std::fs::metadata;
-
-    let Ok(stat) = metadata(path) else {
-        return false;
-    };
-
-    match condition {
-        PathCondition::BlockSpecial => false,
-        PathCondition::CharacterSpecial => false,
-        PathCondition::Directory => stat.is_dir(),
-        PathCondition::Exists => true,
-        PathCondition::ExistsModifiedLastRead => unimplemented!(),
-        PathCondition::Regular => stat.is_file(),
-        PathCondition::GroupIdFlag => false,
-        PathCondition::GroupOwns => unimplemented!(),
-        PathCondition::SymLink => false,
-        PathCondition::Sticky => false,
-        PathCondition::UserOwns => unimplemented!(),
-        PathCondition::Fifo => false,
-        PathCondition::Readable => false, // TODO
-        PathCondition::Socket => false,
-        PathCondition::NonEmpty => stat.len() > 0,
-        PathCondition::UserIdFlag => false,
-        PathCondition::Writable => false,   // TODO
-        PathCondition::Executable => false, // TODO
     }
 }
 

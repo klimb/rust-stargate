@@ -354,7 +354,7 @@ pub struct Config {
     alloc_size: bool,
     file_size_block_size: u64,
     #[allow(dead_code)]
-    block_size: u64, // is never read on Windows
+    block_size: u64,
     width: u16,
     // Dir and vdir needs access to this field
     pub quoting_style: QuotingStyle,
@@ -3301,10 +3301,7 @@ fn create_hyperlink(name: &OsStr, path: &PathData) -> OsString {
     let absolute_path = fs::canonicalize(path.path()).unwrap_or_default();
     let absolute_path = absolute_path.to_string_lossy();
 
-    #[cfg(not(target_os = "windows"))]
     let unencoded_chars = "_-.:~/";
-    #[cfg(target_os = "windows")]
-    let unencoded_chars = "_-.:~/\\";
 
     // percentage encoding of path
     let absolute_path: String = absolute_path

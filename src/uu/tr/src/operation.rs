@@ -755,17 +755,7 @@ where
 /// Platform-specific flush operation
 #[inline]
 pub fn flush_output<W: Write>(output: &mut W) -> UResult<()> {
-    #[cfg(not(target_os = "windows"))]
     return output
         .flush()
         .map_err_context(|| translate!("tr-error-write-error"));
-
-    #[cfg(target_os = "windows")]
-    match output.flush() {
-        Ok(()) => Ok(()),
-        Err(err) if err.kind() == std::io::ErrorKind::BrokenPipe => {
-            std::process::exit(13);
-        }
-        Err(err) => Err(err.map_err_context(|| translate!("tr-error-write-error"))),
-    }
 }

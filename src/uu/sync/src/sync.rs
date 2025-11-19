@@ -60,117 +60,6 @@ mod platform {
     }
 }
 
-#[cfg(windows)]
-mod platform {
-    use std::fs::OpenOptions;
-    use std::os::windows::prelude::*;
-    use std::path::Path;
-    use uucore::error::{UResult, USimpleError};
-    use uucore::translate;
-    use uucore::wide::{FromWide, ToWide};
-    use windows_sys::Win32::Foundation::{
-        ERROR_NO_MORE_FILES, GetLastError, HANDLE, INVALID_HANDLE_VALUE, MAX_PATH,
-    };
-    use windows_sys::Win32::Storage::FileSystem::{
-        FindFirstVolumeW, FindNextVolumeW, FindVolumeClose, FlushFileBuffers, GetDriveTypeW,
-    };
-    use windows_sys::Win32::System::WindowsProgramming::DRIVE_FIXED;
-
-    fn get_last_error() -> u32 {
-        // SAFETY: `GetLastError` has no safety preconditions
-        unsafe { GetLastError() as u32 }
-    }
-
-    fn flush_volume(name: &str) -> UResult<()> {
-        let name_wide = name.to_wide_null();
-        // SAFETY: `name` is a valid `str`, so `name_wide` is valid null-terminated UTF-16
-        if unsafe { GetDriveTypeW(name_wide.as_ptr()) } == DRIVE_FIXED {
-            let sliced_name = &name[..name.len() - 1]; // eliminate trailing backslash
-            match OpenOptions::new().write(true).open(sliced_name) {
-                Ok(file) => {
-                    // SAFETY: `file` is a valid `File`
-                    if unsafe { FlushFileBuffers(file.as_raw_handle() as HANDLE) } == 0 {
-                        Err(USimpleError::new(
-                            get_last_error() as i32,
-                            translate!("sync-error-flush-file-buffer"),
-                        ))
-                    } else {
-                        Ok(())
-                    }
-                }
-                Err(e) => Err(USimpleError::new(
-                    e.raw_os_error().unwrap_or(1),
-                    translate!("sync-error-create-volume-handle"),
-                )),
-            }
-        } else {
-            Ok(())
-        }
-    }
-
-    fn find_first_volume() -> UResult<(String, HANDLE)> {
-        let mut name: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
-        // SAFETY: `name` was just constructed and in scope, `len()` is its length by definition
-        let handle = unsafe { FindFirstVolumeW(name.as_mut_ptr(), name.len() as u32) };
-        if handle == INVALID_HANDLE_VALUE {
-            return Err(USimpleError::new(
-                get_last_error() as i32,
-                translate!("sync-error-find-first-volume"),
-            ));
-        }
-        Ok((String::from_wide_null(&name), handle))
-    }
-
-    fn find_all_volumes() -> UResult<Vec<String>> {
-        let (first_volume, next_volume_handle) = find_first_volume()?;
-        let mut volumes = vec![first_volume];
-        loop {
-            let mut name: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
-            // SAFETY: `next_volume_handle` was returned by `find_first_volume`,
-            // `name` was just constructed and in scope, `len()` is its length by definition
-            if unsafe { FindNextVolumeW(next_volume_handle, name.as_mut_ptr(), name.len() as u32) }
-                == 0
-            {
-                return match get_last_error() {
-                    ERROR_NO_MORE_FILES => {
-                        // SAFETY: `next_volume_handle` was returned by `find_first_volume`
-                        unsafe { FindVolumeClose(next_volume_handle) };
-                        Ok(volumes)
-                    }
-                    err => Err(USimpleError::new(
-                        err as i32,
-                        translate!("sync-error-find-next-volume"),
-                    )),
-                };
-            }
-            volumes.push(String::from_wide_null(&name));
-        }
-    }
-
-    pub fn do_sync() -> UResult<()> {
-        let volumes = find_all_volumes()?;
-        for vol in &volumes {
-            flush_volume(vol)?;
-        }
-        Ok(())
-    }
-
-    pub fn do_syncfs(files: Vec<String>) -> UResult<()> {
-        for path in files {
-            flush_volume(
-                Path::new(&path)
-                    .components()
-                    .next()
-                    .unwrap()
-                    .as_os_str()
-                    .to_str()
-                    .unwrap(),
-            )?;
-        }
-        Ok(())
-    }
-}
-
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
@@ -212,11 +101,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
     #[allow(clippy::if_same_then_else)]
     if matches.get_flag(options::FILE_SYSTEM) {
-        #[cfg(any(target_os = "linux", target_os = "android", target_os = "windows"))]
+        #[cfg(any(target_os = "linux"))]
         syncfs(files)?;
-    } else if matches.get_flag(options::DATA) {
-        #[cfg(any(target_os = "linux", target_os = "android"))]
-        fdatasync(files)?;
     } else {
         sync()?;
     }
@@ -257,12 +143,12 @@ fn sync() -> UResult<()> {
     platform::do_sync()
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "windows"))]
+#[cfg(any(target_os = "linux"))]
 fn syncfs(files: Vec<String>) -> UResult<()> {
     platform::do_syncfs(files)
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn fdatasync(files: Vec<String>) -> UResult<()> {
     platform::do_fdatasync(files)
 }

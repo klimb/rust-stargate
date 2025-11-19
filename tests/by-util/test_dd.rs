@@ -8,7 +8,6 @@ use uutests::at_and_ucmd;
 use uutests::new_ucmd;
 use uutests::util::TestScenario;
 
-#[cfg(all(not(windows), feature = "printf"))]
 use uutests::util::{UCommand, get_tests_binary};
 use uutests::util_name;
 
@@ -25,9 +24,9 @@ use std::path::PathBuf;
     feature = "printf"
 ))]
 use std::process::{Command, Stdio};
-#[cfg(not(windows))]
+
 use std::thread::sleep;
-#[cfg(not(windows))]
+
 use std::time::Duration;
 use tempfile::tempfile;
 
@@ -996,7 +995,6 @@ fn test_random_73k_test_obs_lt_not_a_multiple_ibs() {
         .stdout_is_fixture_bytes("random-5828891cb1230748e146f34223bbd3b5.test");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_random_73k_test_lazy_fullblock() {
     let (at, mut ucmd) = at_and_ucmd!();

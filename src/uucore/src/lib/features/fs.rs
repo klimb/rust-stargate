@@ -29,8 +29,6 @@ use std::os::fd::AsFd;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
-#[cfg(target_os = "windows")]
-use winapi_util::AsHandleRef;
 
 /// Used to check if the `mode` has its `perm` bit set.
 ///
@@ -45,8 +43,7 @@ macro_rules! has {
 
 /// Information to uniquely identify a file
 pub struct FileInformation(
-    #[cfg(unix)] nix::sys::stat::FileStat,
-    #[cfg(windows)] winapi_util::file::Information,
+    nix::sys::stat::FileStat,
 );
 
 impl FileInformation {

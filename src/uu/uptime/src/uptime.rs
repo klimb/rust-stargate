@@ -48,11 +48,7 @@ impl UError for UptimeError {
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
-
-    #[cfg(unix)]
     let file_path = matches.get_one::<OsString>(options::PATH);
-    #[cfg(windows)]
-    let file_path = None;
 
     if matches.get_flag(options::SINCE) {
         uptime_since()
@@ -193,7 +189,7 @@ fn uptime_since() -> UResult<()> {
         let (boot_time, _) = process_utmpx(None);
         get_uptime(boot_time)?
     };
-    #[cfg(any(windows, target_os = "openbsd"))]
+    #[cfg(any(target_os = "openbsd"))]
     let uptime = get_uptime(None)?;
 
     let since_date = Local

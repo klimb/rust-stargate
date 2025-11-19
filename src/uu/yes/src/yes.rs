@@ -74,18 +74,6 @@ fn args_into_buffer<'a>(
         }
     }
 
-    // But, on Windows, we must hop through a String.
-    #[cfg(not(any(unix, target_os = "wasi")))]
-    {
-        for part in itertools::intersperse(i.map(|a| a.to_str()), Some(" ")) {
-            let bytes = match part {
-                Some(part) => part.as_bytes(),
-                None => return Err(translate!("yes-error-invalid-utf8").into()),
-            };
-            buf.extend_from_slice(bytes);
-        }
-    }
-
     buf.push(b'\n');
 
     Ok(())

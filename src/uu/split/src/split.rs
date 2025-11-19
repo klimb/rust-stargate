@@ -440,11 +440,6 @@ enum SettingsError {
     /// Invalid IO block size
     #[error("{}", translate!("split-error-invalid-io-block-size", "size" => .0.quote()))]
     InvalidIOBlockSize(String),
-
-    /// The `--filter` option is not supported on Windows.
-    #[cfg(windows)]
-    #[error("{}", translate!("split-error-not-supported"))]
-    NotSupported,
 }
 
 impl SettingsError {
@@ -504,12 +499,6 @@ impl Settings {
             elide_empty_files: matches.get_flag(OPT_ELIDE_EMPTY_FILES),
             io_blksize,
         };
-
-        #[cfg(windows)]
-        if result.filter.is_some() {
-            // see https://github.com/rust-lang/rust/issues/29494
-            return Err(SettingsError::NotSupported);
-        }
 
         // Return an error if `--filter` option is used with any of the
         // Kth chunk sub-strategies of `--number` option

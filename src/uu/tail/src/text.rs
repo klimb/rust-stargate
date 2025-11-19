@@ -16,5 +16,4 @@ pub const DEV_PTMX: &str = "/dev/ptmx";
 pub const BACKEND: &str = "inotify";
 #[cfg(all(unix, not(target_os = "linux")))]
 pub const BACKEND: &str = "kqueue";
-#[cfg(target_os = "windows")]
-pub const BACKEND: &str = "ReadDirectoryChanges";
+

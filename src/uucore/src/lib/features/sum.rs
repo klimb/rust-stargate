@@ -15,9 +15,6 @@
 use std::io::Write;
 
 use hex::encode;
-#[cfg(windows)]
-use memchr::memmem;
-
 pub trait Digest {
     fn new() -> Self
     where
@@ -418,61 +415,9 @@ impl<'a> DigestWriter<'a> {
 }
 
 impl Write for DigestWriter<'_> {
-    #[cfg(not(windows))]
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.digest.hash_update(buf);
         Ok(buf.len())
-    }
-
-    #[cfg(windows)]
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        if self.binary {
-            self.digest.hash_update(buf);
-            return Ok(buf.len());
-        }
-
-        // The remaining code handles Windows text mode, where we must
-        // replace each occurrence of "\r\n" with "\n".
-        //
-        // First, if the last character written was "\r" and the first
-        // character in the current buffer to write is not "\n", then we
-        // need to write the "\r" that we buffered from the previous
-        // call to `write()`.
-        let n = buf.len();
-        if self.was_last_character_carriage_return && n > 0 && buf[0] != b'\n' {
-            self.digest.hash_update(b"\r");
-        }
-
-        // Next, find all occurrences of "\r\n", inputting the slice
-        // just before the "\n" in the previous instance of "\r\n" and
-        // the beginning of this "\r\n".
-        let mut i_prev = 0;
-        for i in memmem::find_iter(buf, b"\r\n") {
-            self.digest.hash_update(&buf[i_prev..i]);
-            i_prev = i + 1;
-        }
-
-        // Finally, check whether the last character is "\r". If so,
-        // buffer it until we know that the next character is not "\n",
-        // which can only be known on the next call to `write()`.
-        //
-        // This all assumes that `write()` will be called on adjacent
-        // blocks of the input.
-        if n > 0 && buf[n - 1] == b'\r' {
-            self.was_last_character_carriage_return = true;
-            self.digest.hash_update(&buf[i_prev..n - 1]);
-        } else {
-            self.was_last_character_carriage_return = false;
-            self.digest.hash_update(&buf[i_prev..n]);
-        }
-
-        // Even though we dropped a "\r" for each "\r\n" we found, we
-        // still report the number of bytes written as `n`. This is
-        // because the meaning of the returned number is supposed to be
-        // the number of bytes consumed by the writer, so that if the
-        // calling code were calling `write()` in a loop, it would know
-        // where the next contiguous slice of the buffer starts.
-        Ok(n)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -486,33 +431,6 @@ mod tests {
     /// Test for replacing a "\r\n" sequence with "\n" when the "\r" is
     /// at the end of one block and the "\n" is at the beginning of the
     /// next block, when reading in blocks.
-    #[cfg(windows)]
-    #[test]
-    fn test_crlf_across_blocks() {
-        use std::io::Write;
-
-        use super::Digest;
-        use super::DigestWriter;
-        use super::Md5;
-
-        // Writing "\r" in one call to `write()`, and then "\n" in another.
-        let mut digest = Box::new(Md5::new()) as Box<dyn Digest>;
-        let mut writer_crlf = DigestWriter::new(&mut digest, false);
-        writer_crlf.write_all(b"\r").unwrap();
-        writer_crlf.write_all(b"\n").unwrap();
-        writer_crlf.finalize();
-        let result_crlf = digest.result_str();
-
-        // We expect "\r\n" to be replaced with "\n" in text mode on Windows.
-        let mut digest = Box::new(Md5::new()) as Box<dyn Digest>;
-        let mut writer_lf = DigestWriter::new(&mut digest, false);
-        writer_lf.write_all(b"\n").unwrap();
-        writer_lf.finalize();
-        let result_lf = digest.result_str();
-
-        assert_eq!(result_crlf, result_lf);
-    }
-
     use super::{Crc, Digest};
 
     #[test]

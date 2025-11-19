@@ -9,6 +9,3 @@ pub use self::unix::paths_refer_to_same_file;
 
 #[cfg(unix)]
 mod unix;
-
-#[cfg(windows)]
-mod windows;

@@ -14,10 +14,7 @@
 //! Even though they are distinct classes, they share common functionality.
 //! Access to this common functionality is provided in `OwnedFileDescriptorOrHandle`.
 
-#[cfg(not(windows))]
 use std::os::fd::{AsFd, OwnedFd};
-#[cfg(windows)]
-use std::os::windows::io::{AsHandle, OwnedHandle};
 use std::{
     fs::{File, OpenOptions},
     io,
@@ -25,9 +22,6 @@ use std::{
     process::Stdio,
 };
 
-#[cfg(windows)]
-type NativeType = OwnedHandle;
-#[cfg(not(windows))]
 type NativeType = OwnedFd;
 
 /// abstraction wrapper for native file handle / file descriptor
@@ -47,20 +41,8 @@ impl OwnedFileDescriptorOrHandle {
         Self::from(f)
     }
 
-    /// conversion from borrowed native type
-    ///
-    /// e.g. `std::io::stdout()`, `std::fs::File`, ...
-    #[cfg(windows)]
-    pub fn from<T: AsHandle>(t: T) -> io::Result<Self> {
-        Ok(Self {
-            fx: t.as_handle().try_clone_to_owned()?,
-        })
-    }
 
     /// conversion from borrowed native type
-    ///
-    /// e.g. `std::io::stdout()`, `std::fs::File`, ...
-    #[cfg(not(windows))]
     pub fn from<T: AsFd>(t: T) -> io::Result<Self> {
         Ok(Self {
             fx: t.as_fd().try_clone_to_owned()?,
