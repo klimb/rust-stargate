@@ -1,7 +1,7 @@
 # coreutils (uutils)
 # * see the repository LICENSE, README, and CONTRIBUTING files for more information
 
-# spell-checker:ignore (libs) bigdecimal datetime serde bincode gethostid kqueue mangen memmap uuhelp startswith constness expl unnested logind cfgs
+# spell-checker:ignore (libs) bigdecimal datetime serde bincode kqueue mangen memmap uuhelp startswith constness expl unnested logind cfgs
 
 [package]
 name = "coreutils"
@@ -134,14 +134,12 @@ feat_Tier1 = [
 feat_os_macos = [
   "feat_os_unix", ## == a modern/usual *nix platform
   #
-  "feat_require_unix_hostid",
 ]
 # "feat_os_unix" == set of utilities which can be built/run on modern/usual *nix platforms.
 feat_os_unix = [
   "feat_Tier1",
   #
   "feat_require_unix",
-  "feat_require_unix_hostid",
   "feat_require_unix_utmpx",
 ]
 # "feat_os_unix_musl" == set of utilities which can be built/run on targets binding to the "musl" library (ref: <https://musl.libc.org/about.html>)
@@ -150,7 +148,6 @@ feat_os_unix_musl = [
   "feat_Tier1",
   #
   "feat_require_unix_musl",
-  "feat_require_unix_hostid",
   "feat_require_unix_utmpx",
 ]
 feat_os_windows = [
@@ -162,7 +159,6 @@ feat_os_unix_gnueabihf = [
   "feat_Tier1",
   #
   "feat_require_unix",
-  "feat_require_unix_hostid",
   "feat_require_unix_utmpx",
 ]
 feat_os_unix_android = [
@@ -202,8 +198,6 @@ feat_require_unix_core = [
 # "feat_require_unix_utmpx" == set of utilities requiring unix utmp/utmpx support
 # * ref: <https://wiki.musl-libc.org/faq.html#Q:-Why-is-the-utmp/wtmp-functionality-only-implemented-as-stubs?>
 feat_require_unix_utmpx = ["pinky", "uptime", "users", "who"]
-# "feat_require_unix_hostid" == set of utilities requiring gethostid in libc (only some unixes provide)
-feat_require_unix_hostid = ["hostid"]
 
 # * bypass/override ~ translate 'test' feature name to avoid dependency collision with rust core 'test' crate (o/w surfaces as compiler errors during testing)
 test = ["uu_test"]
@@ -388,7 +382,6 @@ fold = { optional = true, version = "0.4.0", package = "uu_fold", path = "src/uu
 groups = { optional = true, version = "0.4.0", package = "uu_groups", path = "src/uu/groups" }
 hashsum = { optional = true, version = "0.4.0", package = "uu_hashsum", path = "src/uu/hashsum" }
 head = { optional = true, version = "0.4.0", package = "uu_head", path = "src/uu/head" }
-hostid = { optional = true, version = "0.4.0", package = "uu_hostid", path = "src/uu/hostid" }
 hostname = { optional = true, version = "0.4.0", package = "uu_hostname", path = "src/uu/hostname" }
 get_hostname = { optional = true, version = "0.4.0", package = "uu_get_hostname", path = "src/uu/get_hostname" }
 id = { optional = true, version = "0.4.0", package = "uu_id", path = "src/uu/id" }

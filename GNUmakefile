@@ -155,7 +155,6 @@ UNIX_PROGS := \
 	change_owner \
 	chroot \
 	groups \
-	hostid \
 	id \
 	install \
 	kill \

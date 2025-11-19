@@ -1057,7 +1057,6 @@ pub fn pretty_fstype<'a>(fstype: i64) -> Cow<'a, str> {
         0x7275 => "romfs".into(),
         0x6759_6969 => "rpc_pipefs".into(),
         0x7363_6673 => "securityfs".into(),
-        0xF97C_FF8C => "selinux".into(),
         0x4341_5D53 => "smackfs".into(),
         0x517B => "smb".into(),
         0xFE53_4D42 => "smb2".into(),

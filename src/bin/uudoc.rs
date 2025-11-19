@@ -231,19 +231,11 @@ fn main() -> io::Result<()> {
             map.insert(platform, platform_utils);
         }
 
-        // Linux is a special case because it can support selinux
-        let platform_utils: Vec<String> = String::from_utf8(
-            std::process::Command::new("./util/show-utils.sh")
-                .arg("--features=feat_os_unix feat_selinux")
-                .output()?
-                .stdout,
-        )
         .unwrap()
         .trim()
         .split(' ')
         .map(ToString::to_string)
         .collect();
-        map.insert("linux", platform_utils);
 
         map
     };

@@ -144,10 +144,6 @@ mod test_hashsum;
 #[path = "by-util/test_head.rs"]
 mod test_head;
 
-#[cfg(feature = "hostid")]
-#[path = "by-util/test_hostid.rs"]
-mod test_hostid;
-
 #[cfg(feature = "hostname")]
 #[path = "by-util/test_hostname.rs"]
 mod test_hostname;

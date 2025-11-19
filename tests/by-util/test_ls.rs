@@ -11,7 +11,7 @@
 )]
 
 #[cfg(all(unix, feature = "chmod"))]
-use nix::unistd::{close, dup};dup
+use nix::unistd::{close, dup};
 use regex::Regex;
 #[cfg(not(target_os = "openbsd"))]
 use std::collections::HashMap;

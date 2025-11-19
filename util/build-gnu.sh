@@ -79,9 +79,6 @@ echo "UU_BUILD_DIR='${UU_BUILD_DIR}'"
 
 cd "${path_UUTILS}" && echo "[ pwd:'${PWD}' ]"
 
-export SELINUX_ENABLED # Run this script with=1 for testing SELinux
-[ "${SELINUX_ENABLED}" = 1 ] && CARGO_FEATURE_FLAGS="${CARGO_FEATURE_FLAGS} selinux"
-
 # Trim leading whitespace from feature flags
 CARGO_FEATURE_FLAGS="$(echo "${CARGO_FEATURE_FLAGS}" | sed -e 's/^[[:space:]]*//')"
 
@@ -316,11 +313,6 @@ sed -i -e "s|44 45|48 49|" tests/ls/stat-failed.sh
     -e "s/Valid arguments are:/Possible values are:/" \
     -e "s/Try 'ls --help' for more information./\nFor more information try --help/" \
     tests/ls/time-style-diag.sh
-
-# disable two kind of tests:
-# "hostid BEFORE --help" doesn't fail for GNU. we fail. we are probably doing better
-# "hostid BEFORE --help AFTER " same for this
-sed -i -e "s/env \$prog \$BEFORE \$opt > out2/env \$prog \$BEFORE \$opt > out2 #/" -e "s/env \$prog \$BEFORE \$opt AFTER > out3/env \$prog \$BEFORE \$opt AFTER > out3 #/" -e "s/compare exp out2/compare exp out2 #/" -e "s/compare exp out3/compare exp out3 #/" tests/help/help-version-getopt.sh
 
 # Add debug info + we have less syscall then GNU's. Adjust our check.
 # Use GNU sed for /c command
