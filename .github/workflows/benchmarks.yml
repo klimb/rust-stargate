@@ -34,7 +34,6 @@ jobs:
           - { package: uu_ls }
           - { package: uu_mv }
           - { package: uu_nl }
-          - { package: uu_numfmt }
           - { package: uu_rm }
           - { package: uu_seq }
           - { package: uu_sort }

@@ -44,10 +44,6 @@ fn get_utilities_to_skip() -> HashSet<&'static str> {
     skip_set.insert("["); // Special test utility syntax
     skip_set.insert("test"); // By design, doesn't show --help (use [ --help instead)
 
-    // Alias for ls
-    skip_set.insert("dir");
-    skip_set.insert("vdir");
-
     // Utilities that don't show standard clap error messages by design
     skip_set.insert("echo"); // Prints arguments as-is, doesn't use clap for validation
     skip_set.insert("printf"); // Uses custom argument parsing, doesn't show clap errors

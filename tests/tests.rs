@@ -223,11 +223,6 @@ mod test_nohup;
 #[cfg(feature = "nproc")]
 #[path = "by-util/test_nproc.rs"]
 mod test_nproc;
-
-#[cfg(feature = "numfmt")]
-#[path = "by-util/test_numfmt.rs"]
-mod test_numfmt;
-
 #[cfg(feature = "od")]
 #[path = "by-util/test_od.rs"]
 mod test_od;
@@ -395,11 +390,6 @@ mod test_uudoc;
 #[cfg(feature = "users")]
 #[path = "by-util/test_users.rs"]
 mod test_users;
-
-#[cfg(feature = "vdir")]
-#[path = "by-util/test_vdir.rs"]
-mod test_vdir;
-
 #[cfg(feature = "wc")]
 #[path = "by-util/test_wc.rs"]
 mod test_wc;

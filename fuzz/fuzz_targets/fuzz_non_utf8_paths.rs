@@ -78,7 +78,6 @@ static PATH_PROGRAMS: &[&str] = &[
     "expand",
     "unexpand",
     "dir",
-    "vdir",
     "mkfifo",
     "mknod",
     "hashsum",

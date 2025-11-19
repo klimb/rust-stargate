@@ -110,7 +110,6 @@ PROGS       := \
 	more \
 	mv \
 	nl \
-	numfmt \
 	nproc \
 	od \
 	paste \
@@ -144,7 +143,6 @@ PROGS       := \
 	unexpand \
 	uniq \
 	unlink \
-	vdir \
 	wc \
 	whoami \
 	yes
@@ -232,7 +230,6 @@ TEST_PROGS  := \
 	mktemp \
 	mv \
 	nl \
-	numfmt \
 	od \
 	paste \
 	pathchk \

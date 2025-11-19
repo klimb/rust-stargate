@@ -82,7 +82,6 @@ feat_common_core = [
   "more",
   "mv",
   "nl",
-  "numfmt",
   "od",
   "paste",
   "pr",
@@ -113,7 +112,6 @@ feat_common_core = [
   "unexpand",
   "uniq",
   "unlink",
-  "vdir",
   "wc",
   "yes",
 ]
@@ -402,7 +400,6 @@ nice = { optional = true, version = "0.4.0", package = "uu_nice", path = "src/uu
 nl = { optional = true, version = "0.4.0", package = "uu_nl", path = "src/uu/nl" }
 nohup = { optional = true, version = "0.4.0", package = "uu_nohup", path = "src/uu/nohup" }
 nproc = { optional = true, version = "0.4.0", package = "uu_nproc", path = "src/uu/nproc" }
-numfmt = { optional = true, version = "0.4.0", package = "uu_numfmt", path = "src/uu/numfmt" }
 od = { optional = true, version = "0.4.0", package = "uu_od", path = "src/uu/od" }
 paste = { optional = true, version = "0.4.0", package = "uu_paste", path = "src/uu/paste" }
 pathchk = { optional = true, version = "0.4.0", package = "uu_pathchk", path = "src/uu/pathchk" }
@@ -444,7 +441,6 @@ uniq = { optional = true, version = "0.4.0", package = "uu_uniq", path = "src/uu
 unlink = { optional = true, version = "0.4.0", package = "uu_unlink", path = "src/uu/unlink" }
 uptime = { optional = true, version = "0.4.0", package = "uu_uptime", path = "src/uu/uptime" }
 users = { optional = true, version = "0.4.0", package = "uu_users", path = "src/uu/users" }
-vdir = { optional = true, version = "0.4.0", package = "uu_vdir", path = "src/uu/vdir" }
 wc = { optional = true, version = "0.4.0", package = "uu_wc", path = "src/uu/wc" }
 who = { optional = true, version = "0.4.0", package = "uu_who", path = "src/uu/who" }
 whoami = { optional = true, version = "0.4.0", package = "uu_whoami", path = "src/uu/whoami" }

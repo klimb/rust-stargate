@@ -37,9 +37,6 @@ sed -i -e "s|= { optional=true, version=\"$FROM\", package=\"uu_|= { optional=tr
 # Update the base32 dependency for basenc and base64
 sed -i -e "s|uu_base32 = { version=\">=$FROM\"|uu_base32 = { version=\">=$TO\"|" src/uu/base64/Cargo.toml src/uu/basenc/Cargo.toml
 
-# Update the ls dependency for dir and vdir
-sed -i -e "s|uu_ls = { version = \">=$FROM\"|uu_ls = { version = \">=$TO\"|" src/uu/dir/Cargo.toml src/uu/vdir/Cargo.toml
-
 # Update uucore itself
 sed -i -e "s|version = \"$FROM\"|version = \"$TO\"|" src/uucore/Cargo.toml
 # Update crates using uucore

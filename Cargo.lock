@@ -585,7 +585,6 @@ dependencies = [
  "uu_nl",
  "uu_nohup",
  "uu_nproc",
- "uu_numfmt",
  "uu_od",
  "uu_paste",
  "uu_pathchk",
@@ -627,7 +626,6 @@ dependencies = [
  "uu_unlink",
  "uu_uptime",
  "uu_users",
- "uu_vdir",
  "uu_wc",
  "uu_who",
  "uu_whoami",
@@ -3536,18 +3534,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "uu_numfmt"
-version = "0.4.0"
-dependencies = [
- "clap",
- "codspeed-divan-compat",
- "fluent",
- "tempfile",
- "thiserror 2.0.17",
- "uucore",
-]
-
-[[package]]
 name = "uu_od"
 version = "0.4.0"
 dependencies = [
@@ -4012,15 +3998,6 @@ dependencies = [
  "clap",
  "fluent",
  "utmp-classic",
- "uucore",
-]
-
-[[package]]
-name = "uu_vdir"
-version = "0.4.0"
-dependencies = [
- "clap",
- "uu_ls",
  "uucore",
 ]
 
