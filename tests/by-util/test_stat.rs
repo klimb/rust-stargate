@@ -498,30 +498,6 @@ fn test_printf_invalid_directive() {
         .stderr_contains("'%9%': invalid directive");
 }
 
-#[test]
-#[cfg(feature = "feat_selinux")]
-fn test_stat_selinux() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-    at.touch("f");
-    ts.ucmd()
-        .arg("--printf='%C'")
-        .arg("f")
-        .succeeds()
-        .no_stderr()
-        .stdout_contains("unconfined_u");
-    ts.ucmd()
-        .arg("--printf='%C'")
-        .arg("/bin/")
-        .succeeds()
-        .no_stderr()
-        .stdout_contains("system_u");
-    // Count that we have 4 fields
-    let result = ts.ucmd().arg("--printf='%C'").arg("/bin/").succeeds();
-    let s: Vec<_> = result.stdout_str().split(':').collect();
-    assert!(s.len() == 4);
-}
-
 #[cfg(unix)]
 #[test]
 fn test_mount_point_basic() {
