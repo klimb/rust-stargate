@@ -980,10 +980,6 @@ impl Options {
     #[allow(clippy::cognitive_complexity)]
     fn from_matches(matches: &ArgMatches) -> CopyResult<Self> {
         let not_implemented_opts = vec![
-            #[cfg(not(any(windows, unix)))]
-            options::ONE_FILE_SYSTEM,
-            #[cfg(windows)]
-            options::FORCE,
         ];
 
         for not_implemented_opt in not_implemented_opts {
@@ -1734,7 +1730,6 @@ fn symlink_file(
     dest: &Path,
     symlinked_files: &mut HashSet<FileInformation>,
 ) -> CopyResult<()> {
-    #[cfg(not(windows))]
     {
         std::os::unix::fs::symlink(source, dest).map_err(|e| {
             CpError::IoErrContext(
@@ -1745,17 +1740,7 @@ fn symlink_file(
             )
         })?;
     }
-    #[cfg(windows)]
-    {
-        std::os::windows::fs::symlink_file(source, dest).map_err(|e| {
-            CpError::IoErrContext(
-                e,
-                translate!("cp-error-cannot-create-symlink",
-                           "dest" => get_filename(dest).unwrap_or("?").quote(),
-                           "source" => get_filename(source).unwrap_or("?").quote()),
-            )
-        })?;
-    }
+    
     if let Ok(file_info) = FileInformation::from_path(dest, false) {
         symlinked_files.insert(file_info);
     }

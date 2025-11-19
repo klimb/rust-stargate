@@ -1525,10 +1525,6 @@ fn test_directory_input_file() {
     ucmd.args(&["test_directory", "1"])
         .fails_with_code(1)
         .stderr_only("csplit: read error: Is a directory\n");
-    #[cfg(windows)]
-    ucmd.args(&["test_directory", "1"])
-        .fails_with_code(1)
-        .stderr_only("csplit: cannot open 'test_directory' for reading: Permission denied\n");
 }
 
 #[test]

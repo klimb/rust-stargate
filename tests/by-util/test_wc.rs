@@ -390,11 +390,7 @@ fn test_file_bytes_dictate_width() {
         "      0       0       0 .\n",
         "      0       0       0 total\n",
     );
-    #[cfg(windows)]
-    const STDOUT: &str = concat!(
-        "      0       0       0 emptyfile.txt\n",
-        "      0       0       0 total\n",
-    );
+
 
     // This file has 10,001 bytes. Five digits are required to
     // represent that. Even though the number of lines is 1 and the

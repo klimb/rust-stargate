@@ -56,7 +56,6 @@ fn test_deleted_dir() {
 
 struct Env {
     ucmd: UCommand,
-    #[cfg(not(windows))]
     root: String,
     subdir: String,
     symdir: String,

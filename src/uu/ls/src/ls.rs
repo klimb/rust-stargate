@@ -10,10 +10,7 @@ use fnv::FnvHashMap as HashMap;
 use fnv::FnvHashSet as HashSet;
 use std::borrow::Cow;
 use std::cell::RefCell;
-#[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
-#[cfg(windows)]
-use std::os::windows::fs::MetadataExt;
 use std::{
     cell::{LazyCell, OnceCell},
     cmp::Reverse,
@@ -2244,19 +2241,10 @@ fn sort_entries(entries: &mut [PathData], config: &Config) {
 }
 
 fn is_hidden(file_path: &DirEntry) -> bool {
-    #[cfg(windows)]
-    {
-        let metadata = file_path.metadata().unwrap();
-        let attr = metadata.file_attributes();
-        (attr & 0x2) > 0
-    }
-    #[cfg(not(windows))]
-    {
         file_path
             .file_name()
             .to_str()
             .is_some_and(|res| res.starts_with('.'))
-    }
 }
 
 fn should_display(entry: &DirEntry, config: &Config) -> bool {

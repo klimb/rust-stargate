@@ -6,8 +6,6 @@
 //! Recursively copy the contents of a directory.
 //!
 //! See the [`copy_directory`] function for more information.
-#[cfg(windows)]
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::convert::identity;
 use std::env;
@@ -31,29 +29,6 @@ use crate::{
     CopyResult, CpError, Options, aligned_ancestors, context_for, copy_attributes, copy_file,
 };
 
-/// Ensure a Windows path starts with a `\\?`.
-#[cfg(target_os = "windows")]
-fn adjust_canonicalization(p: &Path) -> Cow<'_, Path> {
-    // In some cases, \\? can be missing on some Windows paths.  Add it at the
-    // beginning unless the path is prefixed with a device namespace.
-    const VERBATIM_PREFIX: &str = r"\\?";
-    const DEVICE_NS_PREFIX: &str = r"\\.";
-
-    let has_prefix = p
-        .components()
-        .next()
-        .and_then(|comp| comp.as_os_str().to_str())
-        .is_some_and(|p_str| {
-            p_str.starts_with(VERBATIM_PREFIX) || p_str.starts_with(DEVICE_NS_PREFIX)
-        });
-
-    if has_prefix {
-        p.into()
-    } else {
-        Path::new(VERBATIM_PREFIX).join(p).into()
-    }
-}
-
 /// Get a descendant path relative to the given parent directory.
 ///
 /// If `root_parent` is `None`, then this just returns the `path`
@@ -66,14 +41,6 @@ fn get_local_to_root_parent(
 ) -> Result<PathBuf, StripPrefixError> {
     match root_parent {
         Some(parent) => {
-            // On Windows, some paths are starting with \\?
-            // but not always, so, make sure that we are consistent for strip_prefix
-            // See https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file for more info
-            #[cfg(windows)]
-            let (path, parent) = (
-                adjust_canonicalization(path),
-                adjust_canonicalization(parent),
-            );
             let path = path.strip_prefix(parent)?;
             Ok(path.to_path_buf())
         }

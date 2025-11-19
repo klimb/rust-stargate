@@ -887,32 +887,6 @@ fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata
     }
 }
 
-// For windows we can use windows metadata trait and file attributes to see if a directory is readonly
-#[cfg(windows)]
-fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata) -> bool {
-    use std::os::windows::prelude::MetadataExt;
-    use windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_READONLY;
-    let not_user_writable = (metadata.file_attributes() & FILE_ATTRIBUTE_READONLY) != 0;
-    let stdin_ok = options.__presume_input_tty.unwrap_or(false) || stdin().is_terminal();
-    match (stdin_ok, not_user_writable, options.interactive) {
-        (false, _, InteractiveMode::PromptProtected) => true,
-        (_, true, _) => prompt_yes!("remove write-protected directory {}?", path.quote()),
-        (_, _, InteractiveMode::Always) => prompt_yes!("remove directory {}?", path.quote()),
-        (_, _, _) => true,
-    }
-}
-
-// I have this here for completeness but it will always return "remove directory {}" because metadata.permissions().readonly() only works for file not directories
-#[cfg(not(windows))]
-#[cfg(not(unix))]
-fn handle_writable_directory(path: &Path, options: &Options, _metadata: &Metadata) -> bool {
-    if options.interactive == InteractiveMode::Always {
-        prompt_yes!("remove directory {}?", path.quote())
-    } else {
-        true
-    }
-}
-
 /// Removes trailing slashes, for example 'd/../////' yield 'd/../' required to fix rm-r4 GNU test
 fn clean_trailing_slashes(path: &Path) -> &Path {
     let path_str = os_str_as_bytes(path.as_os_str());

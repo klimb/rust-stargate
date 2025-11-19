@@ -39,10 +39,7 @@ static OPT_T: &str = "t";
 
 static ARG_TEMPLATE: &str = "template";
 
-#[cfg(not(windows))]
 const TMPDIR_ENV_VAR: &str = "TMPDIR";
-#[cfg(windows)]
-const TMPDIR_ENV_VAR: &str = "TMP";
 
 #[derive(Error, Debug)]
 enum MkTempError {
@@ -515,7 +512,6 @@ fn make_temp_dir(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult
     // The directory is created with these permission at creation time, using mkdir(3) syscall.
     // This is not relevant on Windows systems. See: https://docs.rs/tempfile/latest/tempfile/#security
     // `fs` is not imported on Windows anyways.
-    #[cfg(not(windows))]
     builder.permissions(fs::Permissions::from_mode(0o700));
 
     match builder.tempdir_in(dir) {

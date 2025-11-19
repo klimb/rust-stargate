@@ -3004,8 +3004,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "uucore",
- "winapi-util",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3178,7 +3176,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]

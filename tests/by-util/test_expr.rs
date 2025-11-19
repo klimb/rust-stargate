@@ -593,12 +593,6 @@ fn test_long_input() {
     #[cfg(target_os = "openbsd")]
     const RESULT: &str = "50005000\n";
 
-    // On windows there is 8192 characters input limit
-    #[cfg(windows)]
-    const MAX_NUMBER: usize = 1300; // 7993 characters (with spaces)
-    #[cfg(windows)]
-    const RESULT: &str = "845650\n";
-
     let mut args: Vec<String> = vec!["1".to_string()];
 
     for i in 2..=MAX_NUMBER {

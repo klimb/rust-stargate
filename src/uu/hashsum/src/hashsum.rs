@@ -226,7 +226,6 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
     if check {
         // on Windows, allow --binary/--text to be used with --check
         // and keep the behavior of defaulting to binary
-        #[cfg(not(windows))]
         let binary = {
             let text_flag = matches.get_flag("text");
             let binary_flag = matches.get_flag("binary");
@@ -325,14 +324,7 @@ pub fn uu_app_common() -> Command {
                 .short('b')
                 .long("binary")
                 .help({
-                    #[cfg(windows)]
-                    {
-                        translate!("hashsum-help-binary-windows")
-                    }
-                    #[cfg(not(windows))]
-                    {
-                        translate!("hashsum-help-binary-other")
-                    }
+                    translate!("hashsum-help-binary-other")
                 })
                 .action(ArgAction::SetTrue),
         )
@@ -356,14 +348,7 @@ pub fn uu_app_common() -> Command {
                 .short('t')
                 .long("text")
                 .help({
-                    #[cfg(windows)]
-                    {
-                        translate!("hashsum-help-text-windows")
-                    }
-                    #[cfg(not(windows))]
-                    {
-                        translate!("hashsum-help-text-other")
-                    }
+                    translate!("hashsum-help-text-other")
                 })
                 .conflicts_with("binary")
                 .action(ArgAction::SetTrue),

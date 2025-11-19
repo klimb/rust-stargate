@@ -20,8 +20,7 @@ use thiserror::Error;
 
 #[cfg(any(unix, target_os = "redox"))]
 use std::os::unix::fs::symlink;
-#[cfg(windows)]
-use std::os::windows::fs::{symlink_dir, symlink_file};
+
 use std::path::{Path, PathBuf};
 use uucore::backup_control::{self, BackupMode};
 use uucore::fs::{MissingHandling, ResolveMode, canonicalize};
@@ -302,18 +301,6 @@ fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) 
                     );
                 }
             }
-            #[cfg(windows)]
-            if target_dir.is_dir() {
-                // Not sure why but on Windows, the symlink can be
-                // considered as a dir
-                // See test_ln::test_symlink_no_deref_dir
-                if let Err(e) = fs::remove_dir(target_dir) {
-                    show_error!(
-                        "{}",
-                        translate!("ln-error-could-not-update", "target" => target_dir.quote(), "error" => e)
-                    );
-                }
-            }
             target_dir.to_path_buf()
         } else {
             match srcpath.as_os_str().to_str() {
@@ -478,13 +465,4 @@ fn existing_backup_path(path: &Path, suffix: &OsString) -> PathBuf {
         return numbered_backup_path(path);
     }
     simple_backup_path(path, suffix)
-}
-
-#[cfg(windows)]
-pub fn symlink<P1: AsRef<Path>, P2: AsRef<Path>>(src: P1, dst: P2) -> std::io::Result<()> {
-    if src.as_ref().is_dir() {
-        symlink_dir(src, dst)
-    } else {
-        symlink_file(src, dst)
-    }
 }

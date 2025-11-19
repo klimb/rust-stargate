@@ -21,12 +21,8 @@ use std::env;
 use std::ffi::OsString;
 use std::fs;
 use std::io;
-#[cfg(unix)]
 use std::os::unix;
-#[cfg(unix)]
 use std::os::unix::fs::FileTypeExt;
-#[cfg(windows)]
-use std::os::windows;
 use std::path::{Path, PathBuf, absolute};
 
 #[cfg(unix)]
@@ -813,8 +809,6 @@ fn rename_with_fallback(
     #[cfg(not(unix))] _hardlink_scanner: Option<()>,
 ) -> io::Result<()> {
     fs::rename(from, to).or_else(|err| {
-        #[cfg(windows)]
-        const EXDEV: i32 = windows_sys::Win32::Foundation::ERROR_NOT_SAME_DEVICE as _;
         #[cfg(unix)]
         const EXDEV: i32 = libc::EXDEV as _;
 
@@ -893,33 +887,6 @@ fn rename_fifo_fallback(_from: &Path, _to: &Path) -> io::Result<()> {
 fn rename_symlink_fallback(from: &Path, to: &Path) -> io::Result<()> {
     let path_symlink_points_to = fs::read_link(from)?;
     unix::fs::symlink(path_symlink_points_to, to).and_then(|_| fs::remove_file(from))
-}
-
-#[cfg(windows)]
-fn rename_symlink_fallback(from: &Path, to: &Path) -> io::Result<()> {
-    let path_symlink_points_to = fs::read_link(from)?;
-    if path_symlink_points_to.exists() {
-        if path_symlink_points_to.is_dir() {
-            windows::fs::symlink_dir(&path_symlink_points_to, to)?;
-        } else {
-            windows::fs::symlink_file(&path_symlink_points_to, to)?;
-        }
-        fs::remove_file(from)
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            translate!("mv-error-dangling-symlink"),
-        ))
-    }
-}
-
-#[cfg(not(any(windows, unix)))]
-fn rename_symlink_fallback(from: &Path, to: &Path) -> io::Result<()> {
-    let path_symlink_points_to = fs::read_link(from)?;
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        translate!("mv-error-no-symlink-support"),
-    ))
 }
 
 fn rename_dir_fallback(
@@ -1190,50 +1157,6 @@ fn is_empty_dir(path: &Path) -> bool {
     fs::read_dir(path).is_ok_and(|mut contents| contents.next().is_none())
 }
 
-/// Checks if a file can be deleted by attempting to open it with delete permissions.
-#[cfg(windows)]
-fn can_delete_file(path: &Path) -> bool {
-    use std::{
-        os::windows::ffi::OsStrExt as _,
-        ptr::{null, null_mut},
-    };
-
-    use windows_sys::Win32::{
-        Foundation::{CloseHandle, INVALID_HANDLE_VALUE},
-        Storage::FileSystem::{
-            CreateFileW, DELETE, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_SHARE_READ,
-            FILE_SHARE_WRITE, OPEN_EXISTING,
-        },
-    };
-
-    let wide_path = path
-        .as_os_str()
-        .encode_wide()
-        .chain([0])
-        .collect::<Vec<u16>>();
-
-    let handle = unsafe {
-        CreateFileW(
-            wide_path.as_ptr(),
-            DELETE,
-            FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
-            null(),
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            null_mut(),
-        )
-    };
-
-    if handle == INVALID_HANDLE_VALUE {
-        return false;
-    }
-
-    unsafe { CloseHandle(handle) };
-
-    true
-}
-
-#[cfg(not(windows))]
 fn can_delete_file(_: &Path) -> bool {
     // On non-Windows platforms, always return false to indicate that we don't need
     // to try the copy+delete fallback. This is because on Unix-like systems,

@@ -161,14 +161,6 @@ fn test_echo() {
     assert_eq!(result.stdout_str().trim(), "FOO-bar");
 }
 
-#[cfg(target_os = "windows")]
-#[test]
-fn test_if_windows_batch_files_can_be_executed() {
-    let result = new_ucmd!().arg("./runBat.bat").succeeds();
-
-    assert!(result.stdout_str().contains("Hello Windows World!"));
-}
-
 #[cfg(feature = "echo")]
 #[test]
 fn test_debug_1() {

@@ -1688,8 +1688,7 @@ fn test_check_directory_error() {
     );
     #[cfg(not(windows))]
     let err_msg = "cksum: d: Is a directory\n";
-    #[cfg(windows)]
-    let err_msg = "cksum: d: Permission denied\n";
+
     ucmd.arg("--check")
         .arg(at.subdir.join("f"))
         .fails()
@@ -1822,9 +1821,6 @@ fn test_check_comment_leading_space() {
         .stderr_contains("WARNING: 1 line is improperly formatted");
 }
 
-/// This test checks alignment with GNU's error handling.
-/// Windows has a different logic and is guarded by [`test_check_directory_error`].
-#[cfg(not(windows))]
 #[test]
 fn test_check_failed_to_read() {
     // check `cksum`'s behavior when encountering directories or non existing files

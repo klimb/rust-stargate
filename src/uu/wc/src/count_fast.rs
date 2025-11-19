@@ -20,60 +20,8 @@ use nix::sys::stat;
 use std::io::{Seek, SeekFrom};
 #[cfg(unix)]
 use std::os::fd::{AsFd, AsRawFd};
-#[cfg(windows)]
-use std::os::windows::fs::MetadataExt;
-#[cfg(windows)]
-const FILE_ATTRIBUTE_ARCHIVE: u32 = 32;
-#[cfg(windows)]
-const FILE_ATTRIBUTE_NORMAL: u32 = 128;
-
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use libc::S_IFIFO;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use uucore::pipes::{pipe, splice, splice_exact};
 
 const BUF_SIZE: usize = 256 * 1024;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-const SPLICE_SIZE: usize = 128 * 1024;
-
-/// This is a Linux-specific function to count the number of bytes using the
-/// `splice` system call, which is faster than using `read`.
-///
-/// On error it returns the number of bytes it did manage to read, since the
-/// caller will fall back to a simpler method.
-#[inline]
-#[cfg(any(target_os = "linux", target_os = "android"))]
-fn count_bytes_using_splice(fd: &impl AsFd) -> Result<usize, usize> {
-    let null_file = OpenOptions::new()
-        .write(true)
-        .open("/dev/null")
-        .map_err(|_| 0_usize)?;
-    let null_rdev = stat::fstat(null_file.as_fd()).map_err(|_| 0_usize)?.st_rdev as libc::dev_t;
-    if (libc::major(null_rdev), libc::minor(null_rdev)) != (1, 3) {
-        // This is not a proper /dev/null, writing to it is probably bad
-        // Bit of an edge case, but it has been known to happen
-        return Err(0);
-    }
-    let (pipe_rd, pipe_wr) = pipe().map_err(|_| 0_usize)?;
-
-    let mut byte_count = 0;
-    loop {
-        match splice(fd, &pipe_wr, SPLICE_SIZE) {
-            Ok(0) => break,
-            Ok(res) => {
-                byte_count += res;
-                // Silent the warning as we want to the error message
-                #[allow(clippy::question_mark)]
-                if splice_exact(&pipe_rd, &null_file, res).is_err() {
-                    return Err(byte_count);
-                }
-            }
-            Err(_) => return Err(byte_count),
-        }
-    }
-
-    Ok(byte_count)
-}
 
 /// In the special case where we only need to count the number of bytes. There
 /// are several optimizations we can do:
@@ -153,32 +101,6 @@ pub(crate) fn count_bytes_fast<T: WordCountable>(handle: &mut T) -> (usize, Opti
                     if let Ok(n) = file.seek(SeekFrom::Start(offset as u64)) {
                         byte_count = n as usize;
                     }
-                }
-            }
-            #[cfg(any(target_os = "linux", target_os = "android"))]
-            {
-                // Else, if we're on Linux and our file is a FIFO pipe
-                // (or stdin), we use splice to count the number of bytes.
-                if (stat.st_mode as libc::mode_t & S_IFIFO) != 0 {
-                    match count_bytes_using_splice(handle) {
-                        Ok(n) => return (n, None),
-                        Err(n) => byte_count = n,
-                    }
-                }
-            }
-        }
-    }
-
-    #[cfg(windows)]
-    {
-        if let Some(file) = handle.inner_file() {
-            if let Ok(metadata) = file.metadata() {
-                let attributes = metadata.file_attributes();
-
-                if (attributes & FILE_ATTRIBUTE_ARCHIVE) != 0
-                    || (attributes & FILE_ATTRIBUTE_NORMAL) != 0
-                {
-                    return (metadata.file_size() as usize, None);
                 }
             }
         }

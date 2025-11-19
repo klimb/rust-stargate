@@ -37,25 +37,6 @@ fn physical_path() -> io::Result<PathBuf> {
 }
 
 fn logical_path() -> io::Result<PathBuf> {
-    // getcwd() on Windows seems to include symlinks, so this is easy.
-    #[cfg(windows)]
-    {
-        env::current_dir()
-    }
-
-    // If we're not on Windows we do things Unix-style.
-    //
-    // Typical Unix-like kernels don't actually keep track of the logical working
-    // directory. They know the precise directory a process is in, and the getcwd()
-    // syscall reconstructs a path from that.
-    //
-    // The logical working directory is maintained by the shell, in the $PWD
-    // environment variable. So we check carefully if that variable looks
-    // reasonable, and if not then we fall back to the physical path.
-    //
-    // POSIX: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pwd.html
-    #[cfg(not(windows))]
-    {
         use std::path::Path;
         fn looks_reasonable(path: &Path) -> bool {
             // First, check if it's an absolute path.
@@ -104,7 +85,7 @@ fn logical_path() -> io::Result<PathBuf> {
             Some(value) if looks_reasonable(&value) => Ok(value),
             _ => env::current_dir(),
         }
-    }
+
 }
 
 #[uucore::main]

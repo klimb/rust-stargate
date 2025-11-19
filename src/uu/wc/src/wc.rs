@@ -298,13 +298,6 @@ fn is_stdin_small_file() -> bool {
     matches!(f.metadata(), Ok(meta) if meta.is_file() && meta.len() <= (10 << 20))
 }
 
-#[cfg(not(unix))]
-/// Windows presents a piped stdin as a "normal file" with a length equal to however many bytes
-/// have been buffered at the time it's checked. To be safe, we must never assume it's a file.
-fn is_stdin_small_file() -> bool {
-    false
-}
-
 /// When to show the "total" line
 #[derive(Clone, Copy, Default, PartialEq)]
 enum TotalWhen {

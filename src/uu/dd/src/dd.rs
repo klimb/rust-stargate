@@ -40,8 +40,7 @@ use std::os::unix::{
     fs::FileTypeExt,
     io::{AsRawFd, FromRawFd},
 };
-#[cfg(windows)]
-use std::os::windows::{fs::MetadataExt, io::AsHandle};
+
 use std::path::Path;
 use std::sync::atomic::AtomicU8;
 use std::sync::{Arc, atomic::Ordering::Relaxed, mpsc};
@@ -326,25 +325,6 @@ struct Input<'a> {
 impl<'a> Input<'a> {
     /// Instantiate this struct with stdin as a source.
     fn new_stdin(settings: &'a Settings) -> UResult<Self> {
-        #[cfg(not(unix))]
-        let mut src = {
-            let f = File::from(io::stdin().as_handle().try_clone_to_owned()?);
-            let is_file = if let Ok(metadata) = f.metadata() {
-                // this hack is needed as there is no other way on windows
-                // to differentiate between the case where `seek` works
-                // on a file handle or not. i.e. when the handle is no real
-                // file but a pipe, `seek` is still successful, but following
-                // `read`s are not affected by the seek.
-                metadata.creation_time() != 0
-            } else {
-                false
-            };
-            if is_file {
-                Source::File(f)
-            } else {
-                Source::Stdin(io::stdin())
-            }
-        };
         #[cfg(unix)]
         let mut src = Source::stdin_as_file();
         #[cfg(unix)]

@@ -4,7 +4,6 @@
 // file that was distributed with this source code.
 use std::fs;
 use std::path::Path;
-#[cfg(not(windows))]
 use uucore::mode;
 use uucore::translate;
 
@@ -31,14 +30,4 @@ pub fn chmod(path: &Path, mode: u32) -> Result<(), ()> {
             translate!("install-error-chmod-failed-detailed", "path" => path.maybe_quote(), "error" => err)
         );
     })
-}
-
-/// chmod a file or directory on Windows.
-///
-/// Adapted from mkdir.rs.
-///
-#[cfg(windows)]
-pub fn chmod(path: &Path, mode: u32) -> Result<(), ()> {
-    // chmod on Windows only sets the readonly flag, which isn't even honored on directories
-    Ok(())
 }

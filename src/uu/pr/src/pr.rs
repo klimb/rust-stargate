@@ -148,7 +148,6 @@ enum PrError {
     EncounteredErrors { msg: String },
     #[error("{}", translate!("pr-error-is-directory", "file" => file.clone()))]
     IsDirectory { file: String },
-    #[cfg(not(windows))]
     #[error("{}", translate!("pr-error-socket-not-supported", "file" => file.clone()))]
     IsSocket { file: String },
     #[error("{}", translate!("pr-error-no-such-file", "file" => file.clone()))]

@@ -22,9 +22,6 @@ use uucore::error::FromIo;
 use uucore::error::{UResult, USimpleError};
 use uucore::translate;
 use uucore::{format_usage, show};
-#[cfg(windows)]
-use windows_sys::Win32::{Foundation::SYSTEMTIME, System::SystemInformation::SetSystemTime};
-
 use uucore::parser::shortcut_value_parser::ShortcutValueParser;
 
 // Options
@@ -694,11 +691,6 @@ fn parse_date<S: AsRef<str> + Clone>(
     }
 }
 
-#[cfg(not(any(unix, windows)))]
-fn get_clock_resolution() -> Timestamp {
-    unimplemented!("getting clock resolution not implemented (unsupported target)");
-}
-
 #[cfg(all(unix, not(target_os = "redox")))]
 fn get_clock_resolution() -> Timestamp {
     let mut timespec = timespec {
@@ -727,20 +719,6 @@ fn get_clock_resolution() -> Timestamp {
     // internally it uses a resolution of 1ns to represent timestamps.
     // https://gitlab.redox-os.org/redox-os/kernel/-/blob/master/src/time.rs
     Timestamp::constant(0, 1)
-}
-
-#[cfg(windows)]
-fn get_clock_resolution() -> Timestamp {
-    // Windows does not expose a system call for getting the resolution of the
-    // clock, however the FILETIME struct returned by GetSystemTimeAsFileTime,
-    // and GetSystemTimePreciseAsFileTime has a resolution of 100ns.
-    // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime
-    Timestamp::constant(0, 100)
-}
-
-#[cfg(not(any(unix, windows)))]
-fn set_system_datetime(_date: Zoned) -> UResult<()> {
-    unimplemented!("setting date not implemented (unsupported target)");
 }
 
 #[cfg(target_os = "macos")]
@@ -779,35 +757,6 @@ fn set_system_datetime(date: Zoned) -> UResult<()> {
     } else {
         Err(std::io::Error::last_os_error()
             .map_err_context(|| translate!("date-error-cannot-set-date")))
-    }
-}
-
-#[cfg(windows)]
-/// System call to set date (Windows).
-/// See here for more:
-/// * <https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-setsystemtime>
-/// * <https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-systemtime>
-fn set_system_datetime(date: Zoned) -> UResult<()> {
-    let system_time = SYSTEMTIME {
-        wYear: date.year() as u16,
-        wMonth: date.month() as u16,
-        // Ignored
-        wDayOfWeek: 0,
-        wDay: date.day() as u16,
-        wHour: date.hour() as u16,
-        wMinute: date.minute() as u16,
-        wSecond: date.second() as u16,
-        // TODO: be careful of leap seconds - valid range is [0, 999] - how to handle?
-        wMilliseconds: ((date.subsec_nanosecond() / 1_000_000) % 1000) as u16,
-    };
-
-    let result = unsafe { SetSystemTime(&raw const system_time) };
-
-    if result == 0 {
-        Err(std::io::Error::last_os_error()
-            .map_err_context(|| translate!("date-error-cannot-set-date")))
-    } else {
-        Ok(())
     }
 }
 

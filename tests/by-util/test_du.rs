@@ -57,18 +57,6 @@ fn du_basics(s: &str) {
     assert_eq!(s, answer);
 }
 
-#[cfg(target_os = "windows")]
-fn du_basics(s: &str) {
-    let answer = concat!(
-        "0\t.\\subdir\\deeper\\deeper_dir\n",
-        "0\t.\\subdir\\deeper\n",
-        "8\t.\\subdir\\links\n",
-        "8\t.\\subdir\n",
-        "8\t.\n"
-    );
-    assert_eq!(s, answer);
-}
-
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
@@ -112,10 +100,7 @@ fn test_du_basics_subdir() {
 fn du_basics_subdir(s: &str) {
     assert_eq!(s, "4\tsubdir/deeper/deeper_dir\n8\tsubdir/deeper\n");
 }
-#[cfg(target_os = "windows")]
-fn du_basics_subdir(s: &str) {
-    assert_eq!(s, "0\tsubdir/deeper\\deeper_dir\n0\tsubdir/deeper\n");
-}
+
 #[cfg(target_os = "freebsd")]
 fn du_basics_subdir(s: &str) {
     assert_eq!(s, "8\tsubdir/deeper/deeper_dir\n16\tsubdir/deeper\n");
@@ -395,10 +380,7 @@ fn test_du_hard_link() {
 fn du_hard_link(s: &str) {
     assert_eq!(s, "12\tsubdir/links\n");
 }
-#[cfg(target_os = "windows")]
-fn du_hard_link(s: &str) {
-    assert_eq!(s, "8\tsubdir/links\n");
-}
+
 #[cfg(target_os = "freebsd")]
 fn du_hard_link(s: &str) {
     assert_eq!(s, "16\tsubdir/links\n");

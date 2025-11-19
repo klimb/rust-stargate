@@ -25,7 +25,6 @@ use std::os::unix::net::UnixStream;
 use thiserror::Error;
 use uucore::display::Quotable;
 use uucore::error::UResult;
-#[cfg(not(target_os = "windows"))]
 use uucore::libc;
 use uucore::translate;
 use uucore::{fast_inc::fast_inc_one, format_usage};
@@ -226,7 +225,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
     // default action here.
-    #[cfg(not(target_os = "windows"))]
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
@@ -729,8 +727,7 @@ fn write_end_of_line<W: Write>(
 }
 
 fn handle_broken_pipe(error: &io::Error) {
-    // SIGPIPE is not available on Windows.
-    if cfg!(target_os = "windows") && error.kind() == ErrorKind::BrokenPipe {
+    if error.kind() == ErrorKind::BrokenPipe {
         std::process::exit(13);
     }
 }

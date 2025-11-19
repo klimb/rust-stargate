@@ -62,9 +62,6 @@ TOYBOX_SRC  := $(TOYBOX_ROOT)/toybox-$(TOYBOX_VER)
 
 #------------------------------------------------------------------------
 # Detect the host system.
-# On Windows the environment already sets  OS = Windows_NT.
-# Otherwise let it default to the kernel name returned by uname -s
-# (Linux, Darwin, FreeBSD, …).
 #------------------------------------------------------------------------
 OS ?= $(shell uname -s)
 

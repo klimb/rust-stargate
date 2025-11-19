@@ -6,7 +6,6 @@
 #[cfg(target_os = "linux")]
 use uutests::at_and_ucmd;
 use uutests::new_ucmd;
-#[cfg(not(target_os = "windows"))]
 use uutests::util::TestScenario;
 use uutests::util_name;
 
@@ -37,7 +36,6 @@ fn test_no_such() {
 // does not provide musl-compiled system utilities (like head), leading to dynamic linker errors
 // when preloading musl-compiled libstdbuf.so into glibc-compiled binaries. Same thing for FreeBSD.
 #[cfg(all(
-    not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd"),
     not(all(target_arch = "x86_64", target_env = "musl"))
@@ -91,7 +89,6 @@ fn test_stdbuf_no_buffer_option_fails() {
 // does not provide musl-compiled system utilities (like tail), leading to dynamic linker errors
 // when preloading musl-compiled libstdbuf.so into glibc-compiled binaries. Same thing for FreeBSD.
 #[cfg(all(
-    not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd"),
     not(all(target_arch = "x86_64", target_env = "musl"))

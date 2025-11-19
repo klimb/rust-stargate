@@ -13,10 +13,7 @@ use std::ffi::OsString;
 use std::fs::Metadata;
 use std::fs::{self, DirEntry, File};
 use std::io::{BufRead, BufReader, stdout};
-#[cfg(not(windows))]
 use std::os::unix::fs::MetadataExt;
-#[cfg(windows)]
-use std::os::windows::io::AsRawHandle;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::mpsc;
@@ -35,13 +32,6 @@ use uucore::parser::parse_size::{ParseSizeError, parse_size_non_zero_u64, parse_
 use uucore::parser::shortcut_value_parser::ShortcutValueParser;
 use uucore::time::{FormatSystemTimeFallback, format, format_system_time};
 use uucore::{format_usage, show, show_error, show_warning};
-#[cfg(windows)]
-use windows_sys::Win32::Foundation::HANDLE;
-#[cfg(windows)]
-use windows_sys::Win32::Storage::FileSystem::{
-    FILE_ID_128, FILE_ID_INFO, FILE_STANDARD_INFO, FileIdInfo, FileStandardInfo,
-    GetFileInformationByHandleEx,
-};
 
 mod options {
     pub const HELP: &str = "help";
@@ -199,76 +189,15 @@ impl Stat {
     }
 }
 
-#[cfg(not(windows))]
 fn get_blocks(_path: &Path, metadata: &Metadata) -> u64 {
     metadata.blocks()
 }
 
-#[cfg(windows)]
-fn get_blocks(path: &Path, _metadata: &Metadata) -> u64 {
-    let mut size_on_disk = 0;
-
-    // bind file so it stays in scope until end of function
-    // if it goes out of scope the handle below becomes invalid
-    let Ok(file) = File::open(path) else {
-        return size_on_disk; // opening directories will fail
-    };
-
-    unsafe {
-        let mut file_info: FILE_STANDARD_INFO = core::mem::zeroed();
-        let file_info_ptr: *mut FILE_STANDARD_INFO = &raw mut file_info;
-
-        let success = GetFileInformationByHandleEx(
-            file.as_raw_handle() as HANDLE,
-            FileStandardInfo,
-            file_info_ptr.cast(),
-            size_of::<FILE_STANDARD_INFO>() as u32,
-        );
-
-        if success != 0 {
-            size_on_disk = file_info.AllocationSize as u64;
-        }
-    }
-
-    size_on_disk / 1024 * 2
-}
-
-#[cfg(not(windows))]
 fn get_file_info(_path: &Path, metadata: &Metadata) -> Option<FileInfo> {
     Some(FileInfo {
         file_id: metadata.ino() as u128,
         dev_id: metadata.dev(),
     })
-}
-
-#[cfg(windows)]
-fn get_file_info(path: &Path, _metadata: &Metadata) -> Option<FileInfo> {
-    let mut result = None;
-
-    let Ok(file) = File::open(path) else {
-        return result;
-    };
-
-    unsafe {
-        let mut file_info: FILE_ID_INFO = core::mem::zeroed();
-        let file_info_ptr: *mut FILE_ID_INFO = &raw mut file_info;
-
-        let success = GetFileInformationByHandleEx(
-            file.as_raw_handle() as HANDLE,
-            FileIdInfo,
-            file_info_ptr.cast(),
-            size_of::<FILE_ID_INFO>() as u32,
-        );
-
-        if success != 0 {
-            result = Some(FileInfo {
-                file_id: std::mem::transmute::<FILE_ID_128, u128>(file_info.FileId),
-                dev_id: file_info.VolumeSerialNumber,
-            });
-        }
-    }
-
-    result
 }
 
 fn block_size_from_env() -> Option<u64> {

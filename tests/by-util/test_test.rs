@@ -434,13 +434,11 @@ fn test_file_exists_and_is_regular() {
 }
 
 #[test]
-#[cfg(not(windows))] // FIXME: implement on Windows
 fn test_file_is_readable() {
     new_ucmd!().args(&["-r", "regular_file"]).succeeds();
 }
 
 #[test]
-#[cfg(not(windows))] // FIXME: implement on Windows
 fn test_file_is_not_readable() {
     let scenario = TestScenario::new(util_name!());
     let mut ucmd = scenario.ucmd();

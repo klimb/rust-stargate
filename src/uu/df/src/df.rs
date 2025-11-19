@@ -291,17 +291,6 @@ fn is_best(previous: &[MountInfo], mi: &MountInfo) -> bool {
 /// `opt` excludes certain filesystems from consideration and allows for the synchronization of filesystems before running; see
 /// [`Options`] for more information.
 fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
-    // Run a sync call before any operation if so instructed.
-    if opt.sync {
-        #[cfg(not(any(windows, target_os = "redox")))]
-        unsafe {
-            #[cfg(not(target_os = "android"))]
-            uucore::libc::sync();
-            #[cfg(target_os = "android")]
-            uucore::libc::syscall(uucore::libc::SYS_sync);
-        }
-    }
-
     let mut mounts = vec![];
     for mut mi in read_fs_list()? {
         // TODO The running time of the `is_best()` function is linear
@@ -327,20 +316,10 @@ fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
 
     // Convert each `MountInfo` into a `Filesystem`, which contains
     // both the mount information and usage information.
-    #[cfg(not(windows))]
     {
         let maybe_mount = |m| Filesystem::from_mount(&mounts, &m, None).ok();
         Ok(mounts
             .clone()
-            .into_iter()
-            .filter_map(maybe_mount)
-            .filter(|fs| opt.show_all_fs || fs.usage.blocks > 0)
-            .collect())
-    }
-    #[cfg(windows)]
-    {
-        let maybe_mount = |m| Filesystem::from_mount(&m, None).ok();
-        Ok(mounts
             .into_iter()
             .filter_map(maybe_mount)
             .filter(|fs| opt.show_all_fs || fs.usage.blocks > 0)
@@ -379,7 +358,7 @@ where
                     translate!("df-error-no-file-systems-processed")
                 ));
             }
-            #[cfg(not(windows))]
+
             Err(FsError::OverMounted) => {
                 show!(USimpleError::new(
                     1,
@@ -415,17 +394,6 @@ impl UError for DfError {
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
-
-    #[cfg(windows)]
-    {
-        if matches.get_flag(OPT_INODES) {
-            println!(
-                "{}",
-                translate!("df-error-inodes-not-supported-windows", "program" => uucore::util_name())
-            );
-            return Ok(());
-        }
-    }
 
     let opt = Options::from(&matches).map_err(DfError::OptionsError)?;
     // Get the list of filesystems to display in the output table.

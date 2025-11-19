@@ -39,7 +39,6 @@ pub(crate) struct Filesystem {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum FsError {
-    #[cfg(not(windows))]
     OverMounted,
     InvalidPath,
     MountMissing,
@@ -49,7 +48,7 @@ pub(crate) enum FsError {
 ///
 /// `mount` is considered over-mounted if it there is an element in
 /// `mounts` after mount that has the same `mount_dir`.
-#[cfg(not(windows))]
+
 fn is_over_mounted(mounts: &[MountInfo], mount: &MountInfo) -> bool {
     let last_mount_for_dir = mounts.iter().rfind(|m| m.mount_dir == mount.mount_dir);
 
@@ -126,18 +125,12 @@ impl Filesystem {
             {
                 mount_info.dev_name.clone().into()
             }
-            #[cfg(windows)]
-            {
-                // On windows, we expect the volume id
-                mount_info.dev_id.clone().into()
-            }
         } else {
             mount_info.mount_dir.clone()
         };
         #[cfg(unix)]
         let usage = FsUsage::new(statfs(&_stat_path).ok()?);
-        #[cfg(windows)]
-        let usage = FsUsage::new(Path::new(&_stat_path)).ok()?;
+
         Some(Self {
             file,
             mount_info,
@@ -147,7 +140,6 @@ impl Filesystem {
 
     /// Find and create the filesystem from the given mount
     /// after checking that the it hasn't been over-mounted
-    #[cfg(not(windows))]
     pub(crate) fn from_mount(
         mounts: &[MountInfo],
         mount: &MountInfo,
@@ -158,12 +150,6 @@ impl Filesystem {
         } else {
             Self::new(mount.clone(), file).ok_or(FsError::MountMissing)
         }
-    }
-
-    /// Find and create the filesystem from the given mount.
-    #[cfg(windows)]
-    pub(crate) fn from_mount(mount: &MountInfo, file: Option<OsString>) -> Result<Self, FsError> {
-        Self::new(mount.clone(), file).ok_or(FsError::MountMissing)
     }
 
     /// Find and create the filesystem that best matches a given path.
@@ -190,9 +176,6 @@ impl Filesystem {
         let canonicalize = true;
 
         let result = mount_info_from_path(mounts, path, canonicalize);
-        #[cfg(windows)]
-        return result.and_then(|mount_info| Self::from_mount(mount_info, Some(file)));
-        #[cfg(not(windows))]
         return result.and_then(|mount_info| Self::from_mount(mounts, mount_info, Some(file)));
     }
 }
@@ -308,8 +291,7 @@ mod tests {
             assert!(mount_info_eq(actual, &mounts[0]));
         }
     }
-
-    #[cfg(not(windows))]
+    
     mod over_mount {
         use std::ffi::OsString;
 
