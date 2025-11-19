@@ -384,7 +384,7 @@ fn test_file_one_long_word() {
 #[test]
 fn test_file_bytes_dictate_width() {
     // . is a directory, so minimum_width should get set to 7
-    #[cfg(not(windows))]
+
     const STDOUT: &str = concat!(
         "      0       0       0 emptyfile.txt\n",
         "      0       0       0 .\n",
@@ -428,15 +428,11 @@ fn test_file_bytes_dictate_width() {
 /// Test that getting counts from a directory is an error.
 #[test]
 fn test_read_from_directory_error() {
-    #[cfg(not(windows))]
-    const STDERR: &str = ".: Is a directory";
-    #[cfg(windows)]
-    const STDERR: &str = ".: Permission denied";
 
-    #[cfg(not(windows))]
+    const STDERR: &str = ".: Is a directory";
+
+
     const STDOUT: &str = "      0       0       0 .\n";
-    #[cfg(windows)]
-    const STDOUT: &str = "";
 
     new_ucmd!()
         .args(&["."])
@@ -746,21 +742,12 @@ fn test_files0_progressive_stream() {
 fn files0_from_dir() {
     // On Unix, `read(open("."))` fails. On Windows, `open(".")` fails. Thus, the errors happen in
     // different contexts.
-    #[cfg(not(windows))]
     macro_rules! dir_err {
         ($p:literal) => {
             concat!("wc: ", $p, ": read error: Is a directory\n")
         };
     }
-    #[cfg(windows)]
-    macro_rules! dir_err {
-        ($p:literal) => {
-            concat!("wc: cannot open ", $p, " for reading: Permission denied\n")
-        };
-    }
-    #[cfg(windows)]
-    const DOT_ERR: &str = dir_err!("'.'");
-    #[cfg(not(windows))]
+
     const DOT_ERR: &str = dir_err!(".");
 
     new_ucmd!()
@@ -774,8 +761,6 @@ fn files0_from_dir() {
         .fails()
         .stderr_only(DOT_ERR);
 
-    // That also means you cannot `< . wc --files0-from=-` on Windows.
-    #[cfg(not(windows))]
     new_ucmd!()
         .args(&["--files0-from=-"])
         .set_stdin(std::fs::File::open(".").unwrap())

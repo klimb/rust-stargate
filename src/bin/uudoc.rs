@@ -381,7 +381,6 @@ impl MDWriter<'_, '_> {
             // freebsd is disabled for now because mdbook does not use font-awesome 5 yet.
             // ("unix", "freebsd"),
             ("macos", "apple"),
-            ("windows", "windows"),
         ] {
             if self.name.contains("sum")
                 || self.utils_per_platform[feature]

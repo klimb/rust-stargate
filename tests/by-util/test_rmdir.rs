@@ -10,19 +10,10 @@ const DIR_FILE: &str = "dir/file";
 const NESTED_DIR: &str = "dir/ect/ory";
 const NESTED_DIR_FILE: &str = "dir/ect/ory/file";
 
-#[cfg(windows)]
-const NOT_FOUND: &str = "The system cannot find the file specified.";
-#[cfg(not(windows))]
 const NOT_FOUND: &str = "No such file or directory";
 
-#[cfg(windows)]
-const NOT_EMPTY: &str = "The directory is not empty.";
-#[cfg(not(windows))]
 const NOT_EMPTY: &str = "Directory not empty";
 
-#[cfg(windows)]
-const NOT_A_DIRECTORY: &str = "The directory name is invalid.";
-#[cfg(not(windows))]
 const NOT_A_DIRECTORY: &str = "Not a directory";
 
 #[test]

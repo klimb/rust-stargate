@@ -10,10 +10,7 @@ use std::fs;
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
-#[cfg(not(windows))]
 use std::process::Command;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use std::thread::sleep;
 use uucore::process::{getegid, geteuid};
 
 use uutests::at_and_ucmd;

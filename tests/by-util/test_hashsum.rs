@@ -320,48 +320,26 @@ fn test_check_md5sum() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
 
-    #[cfg(not(windows))]
-    {
-        for f in &["a", " b", "*c", "dd", " "] {
-            at.write(f, &format!("{f}\n"));
-        }
-        at.write(
-            "check.md5sum",
-            "60b725f10c9c85c70d97880dfe8191b3  a\n\
+    for f in &["a", " b", "*c", "dd", " "] {
+        at.write(f, &format!("{f}\n"));
+    }
+    at.write(
+        "check.md5sum",
+        "60b725f10c9c85c70d97880dfe8191b3  a\n\
              bf35d7536c785cf06730d5a40301eba2   b\n\
              f5b61709718c1ecf8db1aea8547d4698  *c\n\
              b064a020db8018f18ff5ae367d01b212  dd\n\
              d784fa8b6d98d27699781bd9a7cf19f0   ",
-        );
-        scene
-            .ccmd("md5sum")
-            .arg("--strict")
-            .arg("-c")
-            .arg("check.md5sum")
-            .succeeds()
-            .stdout_is("a: OK\n b: OK\n*c: OK\ndd: OK\n : OK\n")
-            .stderr_is("");
-    }
-    #[cfg(windows)]
-    {
-        for f in &["a", " b", "dd"] {
-            at.write(f, &format!("{f}\n"));
-        }
-        at.write(
-            "check.md5sum",
-            "60b725f10c9c85c70d97880dfe8191b3  a\n\
-             bf35d7536c785cf06730d5a40301eba2   b\n\
-             b064a020db8018f18ff5ae367d01b212  dd",
-        );
-        scene
-            .ccmd("md5sum")
-            .arg("--strict")
-            .arg("-c")
-            .arg("check.md5sum")
-            .succeeds()
-            .stdout_is("a: OK\n b: OK\ndd: OK\n")
-            .stderr_is("");
-    }
+    );
+    scene
+        .ccmd("md5sum")
+        .arg("--strict")
+        .arg("-c")
+        .arg("check.md5sum")
+        .succeeds()
+        .stdout_is("a: OK\n b: OK\n*c: OK\ndd: OK\n : OK\n")
+        .stderr_is("");
+
 }
 
 // GNU also supports one line sep
@@ -393,7 +371,6 @@ fn test_check_md5sum_reverse_bsd() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
 
-    #[cfg(not(windows))]
     {
         for f in &["a", " b", "*c", "dd", " "] {
             at.write(f, &format!("{f}\n"));
@@ -415,26 +392,6 @@ fn test_check_md5sum_reverse_bsd() {
             .stdout_is("a: OK\n b: OK\n*c: OK\ndd: OK\n : OK\n")
             .stderr_is("");
     }
-    #[cfg(windows)]
-    {
-        for f in &["a", " b", "dd"] {
-            at.write(f, &format!("{f}\n"));
-        }
-        at.write(
-            "check.md5sum",
-            "60b725f10c9c85c70d97880dfe8191b3  a\n\
-             bf35d7536c785cf06730d5a40301eba2   b\n\
-             b064a020db8018f18ff5ae367d01b212  dd",
-        );
-        scene
-            .ccmd("md5sum")
-            .arg("--strict")
-            .arg("-c")
-            .arg("check.md5sum")
-            .succeeds()
-            .stdout_is("a: OK\n b: OK\ndd: OK\n")
-            .stderr_is("");
-    }
 }
 
 #[test]
@@ -442,7 +399,6 @@ fn test_check_md5sum_mixed_format() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
 
-    #[cfg(not(windows))]
     {
         for f in &[" b", "*c", "dd", " "] {
             at.write(f, &format!("{f}\n"));
@@ -453,17 +409,6 @@ fn test_check_md5sum_mixed_format() {
              f5b61709718c1ecf8db1aea8547d4698 *c\n\
              b064a020db8018f18ff5ae367d01b212 dd\n\
              d784fa8b6d98d27699781bd9a7cf19f0  ",
-        );
-    }
-    #[cfg(windows)]
-    {
-        for f in &[" b", "dd"] {
-            at.write(f, &format!("{f}\n"));
-        }
-        at.write(
-            "check.md5sum",
-            "bf35d7536c785cf06730d5a40301eba2  b\n\
-             b064a020db8018f18ff5ae367d01b212 dd",
         );
     }
     scene
@@ -510,7 +455,6 @@ fn test_tag() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_with_escape_filename() {
     let scene = TestScenario::new(util_name!());
 
@@ -525,7 +469,6 @@ fn test_with_escape_filename() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_with_escape_filename_zero_text() {
     let scene = TestScenario::new(util_name!());
 
@@ -563,7 +506,6 @@ fn test_check_empty_line() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_check_with_escape_filename() {
     let scene = TestScenario::new(util_name!());
 
@@ -684,7 +626,6 @@ fn test_sha1_with_md5sum_should_fail() {
 
 #[test]
 // Disabled on Windows because of the "*"
-#[cfg(not(windows))]
 fn test_check_one_two_space_star() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -833,10 +774,8 @@ fn test_check_directory_error() {
 
     at.mkdir("d");
     at.write("in.md5", "d41d8cd98f00b204e9800998ecf8427f  d\n");
-    #[cfg(not(windows))]
     let err_msg = "md5sum: d: Is a directory\n";
-    #[cfg(windows)]
-    let err_msg = "md5sum: d: Permission denied\n";
+
     scene
         .ccmd("md5sum")
         .arg("--check")

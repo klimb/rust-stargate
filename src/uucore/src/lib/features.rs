@@ -53,7 +53,7 @@ pub mod version_cmp;
 
 // * (platform-specific) feature-gated modules
 // ** non-windows (i.e. Unix + Fuchsia)
-#[cfg(all(not(windows), feature = "mode"))]
+#[cfg(all(feature = "mode"))]
 pub mod mode;
 
 // ** unix-only
@@ -87,6 +87,4 @@ pub mod systemd_logind;
     feature = "utmpx"
 ))]
 pub mod utmpx;
-// ** windows-only
-#[cfg(all(windows, feature = "wide"))]
-pub mod wide;
+

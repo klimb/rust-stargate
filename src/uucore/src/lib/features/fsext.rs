@@ -31,7 +31,6 @@ use std::io::Error as IOError;
 #[cfg(unix)]
 use std::mem;
 use std::time::SystemTime;
-#[cfg(not(windows))]
 use std::time::UNIX_EPOCH;
 use std::{borrow::Cow, ffi::OsString};
 
@@ -418,61 +417,6 @@ impl FsUsage {
                 ffree: statvfs.f_ffree,
             };
         }
-    }
-    #[cfg(windows)]
-    pub fn new(path: &Path) -> UResult<Self> {
-        let mut root_path = [0u16; MAX_PATH];
-        let success = unsafe {
-            let path = to_nul_terminated_wide_string(path);
-            GetVolumePathNamesForVolumeNameW(
-                //path_utf8.as_ptr(),
-                path.as_ptr(),
-                root_path.as_mut_ptr(),
-                root_path.len() as u32,
-                ptr::null_mut(),
-            )
-        };
-        if 0 == success {
-            let msg = format!(
-                "GetVolumePathNamesForVolumeNameW failed: {}",
-                IOError::last_os_error()
-            );
-            return Err(USimpleError::new(EXIT_ERR, msg));
-        }
-
-        let mut sectors_per_cluster = 0;
-        let mut bytes_per_sector = 0;
-        let mut number_of_free_clusters = 0;
-        let mut total_number_of_clusters = 0;
-
-        unsafe {
-            let path = to_nul_terminated_wide_string(path);
-            GetDiskFreeSpaceW(
-                path.as_ptr(),
-                &mut sectors_per_cluster,
-                &mut bytes_per_sector,
-                &mut number_of_free_clusters,
-                &mut total_number_of_clusters,
-            );
-        }
-
-        let bytes_per_cluster = sectors_per_cluster as u64 * bytes_per_sector as u64;
-        Ok(Self {
-            // f_bsize      File system block size.
-            blocksize: bytes_per_cluster,
-            // f_blocks - Total number of blocks on the file system, in units of f_frsize.
-            // frsize =     Fundamental file system block size (fragment size).
-            blocks: total_number_of_clusters as u64,
-            //  Total number of free blocks.
-            bfree: number_of_free_clusters as u64,
-            //  Total number of free blocks available to non-privileged processes.
-            bavail: 0,
-            bavail_top_bit_set: ((bytes_per_sector as u64) & (1u64.rotate_right(1))) != 0,
-            // Total number of file nodes (inodes) on the file system.
-            files: 0, // Not available on windows
-            // Total number of free file nodes (inodes).
-            ffree: 0, // Meaningless on Windows
-        })
     }
 }
 

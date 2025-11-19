@@ -67,7 +67,6 @@ fn test_invalid_arg() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_flags_after_command() {
     new_ucmd!()
         // This would cause an error if -u=v were processed because it's malformed
@@ -151,9 +150,6 @@ fn test_env_permissions() {
 
 #[test]
 fn test_echo() {
-    #[cfg(target_os = "windows")]
-    let args = ["cmd", "/d/c", "echo"];
-    #[cfg(not(target_os = "windows"))]
     let args = ["echo"];
 
     let result = new_ucmd!().args(&args).arg("FOO-bar").succeeds();
@@ -399,7 +395,6 @@ fn test_fail_null_with_program() {
         .stderr_contains("cannot specify --null (-0) with command");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_change_directory() {
     let scene = TestScenario::new(util_name!());
@@ -415,38 +410,6 @@ fn test_change_directory() {
         .arg("--chdir")
         .arg(&temporary_path)
         .arg(pwd)
-        .succeeds()
-        .stdout_move_str();
-    assert_eq!(out.trim(), temporary_path.as_os_str());
-}
-
-#[cfg(windows)]
-#[test]
-fn test_change_directory() {
-    let scene = TestScenario::new(util_name!());
-    let temporary_directory = tempdir().unwrap();
-
-    let temporary_path = temporary_directory.path();
-    let temporary_path = temporary_path
-        .strip_prefix(r"\\?\")
-        .unwrap_or(temporary_path);
-
-    let env_cd = env::current_dir().unwrap();
-    let env_cd = env_cd.strip_prefix(r"\\?\").unwrap_or(&env_cd);
-
-    assert_ne!(env_cd, temporary_path);
-
-    // COMSPEC is a variable that contains the full path to cmd.exe
-    let cmd_path = env::var("COMSPEC").unwrap();
-
-    // command to print out current working directory
-    let pwd = [&*cmd_path, "/C", "cd"];
-
-    let out = scene
-        .ucmd()
-        .arg("--chdir")
-        .arg(temporary_path)
-        .args(&pwd)
         .succeeds()
         .stdout_move_str();
     assert_eq!(out.trim(), temporary_path.as_os_str());
@@ -481,7 +444,6 @@ fn test_split_string_into_args_one_argument_no_quotes() {
     assert_eq!(out, "hello world\n");
 }
 
-#[cfg(not(target_os = "windows"))] // windows has no executable "echo", its only supported as part of a batch-file
 #[test]
 fn test_split_string_into_args_one_argument() {
     let scene = TestScenario::new(util_name!());

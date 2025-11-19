@@ -5,15 +5,15 @@
 
 // spell-checker:ignore (paths) atim sublink subwords azerty azeaze xcwww azeaz amaz azea qzerty tazerty tsublink testfile1 testfile2 filelist fpath testdir testfile
 // spell-checker:ignore selfref ELOOP smallfile
-#[cfg(not(windows))]
+
 use regex::Regex;
 
 use uutests::at_and_ucmd;
 use uutests::new_ucmd;
-#[cfg(not(target_os = "windows"))]
+
 use uutests::unwrap_or_return;
 use uutests::util::TestScenario;
-#[cfg(not(target_os = "windows"))]
+
 use uutests::util::expected_result;
 use uutests::util_name;
 
@@ -59,7 +59,6 @@ fn du_basics(s: &str) {
 
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "windows"),
     not(target_os = "openbsd")
 ))]
 fn du_basics(s: &str) {
@@ -107,7 +106,6 @@ fn du_basics_subdir(s: &str) {
 }
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))]
@@ -306,7 +304,7 @@ fn test_du_soft_link() {
     println!("Output: {s}");
 
     // Helper closure to assert output matches one of the valid sizes
-    #[cfg(any(target_vendor = "apple", target_os = "windows", target_os = "freebsd"))]
+    #[cfg(any(target_vendor = "apple", target_os = "freebsd"))]
     let assert_valid_size = |output: &str, valid_sizes: &[&str]| {
         assert!(
             valid_sizes.contains(&output),
@@ -337,20 +335,6 @@ fn test_du_soft_link() {
         // Accept both common sizes
         let valid_sizes = ["12\tsubdir/links\n", "16\tsubdir/links\n"];
         assert_valid_size(&s, &valid_sizes);
-    }
-
-    #[cfg(all(
-        not(target_vendor = "apple"),
-        not(target_os = "windows"),
-        not(target_os = "freebsd")
-    ))]
-    {
-        // MS-WSL linux has altered expected output
-        if uucore::os::is_wsl_1() {
-            assert_eq!(s, "8\tsubdir/links\n");
-        } else {
-            assert_eq!(s, "16\tsubdir/links\n");
-        }
     }
 }
 
@@ -423,27 +407,10 @@ fn test_du_d_flag() {
 fn du_d_flag(s: &str) {
     assert_eq!(s, "20\t./subdir\n24\t.\n");
 }
-#[cfg(target_os = "windows")]
-fn du_d_flag(s: &str) {
-    assert_eq!(s, "8\t.\\subdir\n8\t.\n");
-}
+
 #[cfg(target_os = "freebsd")]
 fn du_d_flag(s: &str) {
     assert_eq!(s, "36\t./subdir\n44\t.\n");
-}
-#[cfg(all(
-    not(target_vendor = "apple"),
-    not(target_os = "windows"),
-    not(target_os = "freebsd"),
-    not(target_os = "openbsd")
-))]
-fn du_d_flag(s: &str) {
-    // MS-WSL linux has altered expected output
-    if uucore::os::is_wsl_1() {
-        assert_eq!(s, "8\t./subdir\n8\t.\n");
-    } else {
-        assert_eq!(s, "28\t./subdir\n36\t.\n");
-    }
 }
 
 #[test]
@@ -456,20 +423,9 @@ fn test_du_dereference() {
 
     let result = ts.ucmd().arg("-L").arg(SUB_DIR_LINKS).succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
-    {
-        let result_reference = unwrap_or_return!(expected_result(&ts, &["-L", SUB_DIR_LINKS]));
-
-        if result_reference.succeeded() {
-            assert_eq!(result.stdout_str(), result_reference.stdout_str());
-            return;
-        }
-    }
-
     du_dereference(result.stdout_str());
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_du_dereference_args() {
     let ts = TestScenario::new(util_name!());
@@ -667,9 +623,6 @@ fn test_du_inodes_with_count_links_all() {
         .map(|x| x.parse().unwrap())
         .collect();
     result_seq.sort_unstable();
-    #[cfg(windows)]
-    assert_eq!(result_seq, ["1\td\\d", "1\td\\f", "1\td\\h", "4\td"]);
-    #[cfg(not(windows))]
     assert_eq!(result_seq, ["1\td/d", "1\td/f", "1\td/h", "4\td"]);
 }
 

@@ -11,9 +11,6 @@ pub use self::unix::{
     supports_pid_checks,
 };
 
-#[cfg(windows)]
-pub use self::windows::{Pid, ProcessChecker, supports_pid_checks};
-
 #[cfg(unix)]
 mod unix;
 

@@ -30,9 +30,7 @@ fn test_z85_not_padded_encode() {
 
 #[test]
 fn test_invalid_input() {
-    let error_message = if cfg!(windows) {
-        "basenc: .: Permission denied\n"
-    } else {
+    let error_message = {
         "basenc: read error: Is a directory\n"
     };
     new_ucmd!()

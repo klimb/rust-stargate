@@ -295,7 +295,6 @@ fn test_float_inequality_is_error() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_invalid_utf8_integer_compare() {
     use std::ffi::OsStr;
     use std::os::unix::ffi::OsStrExt;
@@ -451,13 +450,11 @@ fn test_file_is_not_readable() {
 }
 
 #[test]
-#[cfg(not(windows))] // FIXME: implement on Windows
 fn test_file_is_writable() {
     new_ucmd!().args(&["-w", "regular_file"]).succeeds();
 }
 
 #[test]
-#[cfg(not(windows))] // FIXME: implement on Windows
 fn test_file_is_not_writable() {
     let scenario = TestScenario::new(util_name!());
     let mut ucmd = scenario.ucmd();
@@ -495,7 +492,6 @@ fn test_file_is_not_executable() {
 }
 
 #[test]
-#[cfg(not(windows))] // FIXME: implement on Windows
 fn test_file_is_executable() {
     let scenario = TestScenario::new(util_name!());
     let mut chmod = scenario.cmd("chmod");
@@ -523,7 +519,6 @@ fn test_not_is_not_empty() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_symlink_is_symlink() {
     let scenario = TestScenario::new(util_name!());
     let at = &scenario.fixtures;
@@ -662,13 +657,11 @@ fn test_parenthesized_right_parenthesis_as_literal() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_file_owned_by_euid() {
     new_ucmd!().args(&["-O", "regular_file"]).succeeds();
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_nonexistent_file_not_owned_by_euid() {
     new_ucmd!()
         .args(&["-O", "nonexistent_file"])
@@ -676,7 +669,6 @@ fn test_nonexistent_file_not_owned_by_euid() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_file_not_owned_by_euid() {
     new_ucmd!()
         .args(&["-f", "/bin/sh", "-a", "!", "-O", "/bin/sh"])
@@ -684,7 +676,6 @@ fn test_file_not_owned_by_euid() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_file_owned_by_egid() {
     // On some platforms (mostly the BSDs) the test fixture files copied to the
     // /tmp directory will have a different gid than the current egid (due to
@@ -712,7 +703,6 @@ fn test_file_owned_by_egid() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_nonexistent_file_not_owned_by_egid() {
     new_ucmd!()
         .args(&["-G", "nonexistent_file"])
@@ -720,7 +710,6 @@ fn test_nonexistent_file_not_owned_by_egid() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_file_not_owned_by_egid() {
     let target_file = if cfg!(target_os = "freebsd") {
         // The coreutils test runner user has a primary group id of "wheel",

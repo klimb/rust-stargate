@@ -54,19 +54,11 @@ impl FileInformation {
         Ok(Self(stat))
     }
 
-    /// Get information from a currently open file
-    #[cfg(target_os = "windows")]
-    pub fn from_file(file: &impl AsHandleRef) -> IOResult<Self> {
-        let info = winapi_util::file::information(file.as_handle_ref())?;
-        Ok(Self(info))
-    }
-
     /// Get information for a given path.
     ///
     /// If `path` points to a symlink and `dereference` is true, information about
     /// the link's target will be returned.
     pub fn from_path(path: impl AsRef<Path>, dereference: bool) -> IOResult<Self> {
-        #[cfg(unix)]
         {
             let stat = if dereference {
                 nix::sys::stat::stat(path.as_ref())
@@ -75,38 +67,13 @@ impl FileInformation {
             };
             Ok(Self(stat?))
         }
-        #[cfg(target_os = "windows")]
-        {
-            use std::fs::OpenOptions;
-            use std::os::windows::prelude::*;
-            let mut open_options = OpenOptions::new();
-            let mut custom_flags = 0;
-            if !dereference {
-                custom_flags |=
-                    windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT;
-            }
-            custom_flags |= windows_sys::Win32::Storage::FileSystem::FILE_FLAG_BACKUP_SEMANTICS;
-            open_options.custom_flags(custom_flags);
-            let file = open_options.read(true).open(path.as_ref())?;
-            Self::from_file(&file)
-        }
     }
 
     pub fn file_size(&self) -> u64 {
-        #[cfg(unix)]
         {
             assert!(self.0.st_size >= 0, "File size is negative");
             self.0.st_size.try_into().unwrap()
         }
-        #[cfg(target_os = "windows")]
-        {
-            self.0.file_size()
-        }
-    }
-
-    #[cfg(windows)]
-    pub fn file_index(&self) -> u64 {
-        self.0.file_index()
     }
 
     pub fn number_of_links(&self) -> u64 {
@@ -147,8 +114,6 @@ impl FileInformation {
         return self.0.st_nlink.into();
         #[cfg(target_os = "aix")]
         return self.0.st_nlink.try_into().unwrap();
-        #[cfg(windows)]
-        return self.0.number_of_links();
     }
 
     #[cfg(unix)]
@@ -174,28 +139,12 @@ impl PartialEq for FileInformation {
     }
 }
 
-#[cfg(target_os = "windows")]
-impl PartialEq for FileInformation {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.volume_serial_number() == other.0.volume_serial_number()
-            && self.0.file_index() == other.0.file_index()
-    }
-}
-
 impl Eq for FileInformation {}
 
 impl Hash for FileInformation {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        #[cfg(unix)]
-        {
-            self.0.st_dev.hash(state);
-            self.0.st_ino.hash(state);
-        }
-        #[cfg(target_os = "windows")]
-        {
-            self.0.volume_serial_number().hash(state);
-            self.0.file_index().hash(state);
-        }
+        self.0.st_dev.hash(state);
+        self.0.st_ino.hash(state);
     }
 }
 
@@ -696,15 +645,6 @@ pub fn path_ends_with_terminator(path: &Path) -> bool {
         .is_some_and(|&byte| byte == b'/')
 }
 
-#[cfg(windows)]
-pub fn path_ends_with_terminator(path: &Path) -> bool {
-    use std::os::windows::prelude::OsStrExt;
-    path.as_os_str()
-        .encode_wide()
-        .last()
-        .is_some_and(|wide| wide == b'/'.into() || wide == b'\\'.into())
-}
-
 /// Checks if the standard input (stdin) is a directory.
 ///
 /// # Arguments
@@ -723,21 +663,9 @@ pub fn is_stdin_directory(stdin: &Stdin) -> bool {
         // sockets for directories.
         mode & S_IFMT == S_IFDIR
     }
-
-    #[cfg(windows)]
-    {
-        use std::os::windows::io::AsRawHandle;
-        let handle = stdin.as_raw_handle();
-        if let Ok(metadata) = fs::metadata(format!("{}", handle as usize)) {
-            return metadata.is_dir();
-        }
-        false
-    }
 }
 
 pub mod sane_blksize {
-
-    #[cfg(not(target_os = "windows"))]
     use std::os::unix::fs::MetadataExt;
     use std::{fs::metadata, path::Path};
 
@@ -1049,21 +977,14 @@ mod tests {
         // Path ends with a forward slash
         assert!(path_ends_with_terminator(Path::new("/some/path/")));
 
-        // Path ends with a backslash
-        #[cfg(windows)]
-        assert!(path_ends_with_terminator(Path::new("C:\\some\\path\\")));
-
         // Path does not end with a terminator
         assert!(!path_ends_with_terminator(Path::new("/some/path")));
-        assert!(!path_ends_with_terminator(Path::new("C:\\some\\path")));
 
         // Empty path
         assert!(!path_ends_with_terminator(Path::new("")));
 
         // Root path
         assert!(path_ends_with_terminator(Path::new("/")));
-        #[cfg(windows)]
-        assert!(path_ends_with_terminator(Path::new("C:\\")));
     }
 
     #[test]

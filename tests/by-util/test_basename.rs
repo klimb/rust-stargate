@@ -182,7 +182,7 @@ fn test_double_slash() {
 
 #[test]
 fn test_triple_slash() {
-    let expected = if cfg!(windows) { "\\\n" } else { "/\n" };
+    let expected = "/\n";
     new_ucmd!().arg("///").succeeds().stdout_is(expected);
 }
 

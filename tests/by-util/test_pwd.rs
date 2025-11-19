@@ -68,11 +68,9 @@ fn symlinked_env() -> Env {
     at.symlink_dir("subdir", "symdir");
     let root = PathBuf::from(at.root_dir_resolved());
     ucmd.current_dir(root.join("symdir"));
-    #[cfg(not(windows))]
     ucmd.env("PWD", root.join("symdir"));
     Env {
         ucmd,
-        #[cfg(not(windows))]
         root: root.to_string_lossy().into_owned(),
         subdir: root.join("subdir").to_string_lossy().into_owned(),
         symdir: root.join("symdir").to_string_lossy().into_owned(),
@@ -126,7 +124,6 @@ fn test_symlinked_default_posix_p() {
         .stdout_is(env.subdir + "\n");
 }
 
-#[cfg(not(windows))]
 pub mod untrustworthy_pwd_var {
     use std::path::Path;
 

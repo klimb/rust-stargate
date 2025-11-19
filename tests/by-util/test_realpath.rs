@@ -8,8 +8,6 @@ use uutests::path_concat;
 use uutests::util::{TestScenario, get_root_path};
 use uutests::{at_and_ucmd, util_name};
 
-#[cfg(windows)]
-use regex::Regex;
 use std::path::{MAIN_SEPARATOR, Path};
 
 static GIBBERISH: &str = "supercalifragilisticexpialidocious";
@@ -239,15 +237,6 @@ fn test_realpath_when_symlink_is_absolute_and_enoent() {
         .stdout_contains("/dir2/bar\n")
         .stdout_contains("/dir2/baz\n")
         .stderr_is("realpath: dir1/foo2: No such file or directory\n");
-
-    #[cfg(windows)]
-    ucmd.arg("dir1/foo1")
-        .arg("dir1/foo2")
-        .arg("dir1/foo3")
-        .fails()
-        .stdout_contains("\\dir2\\bar\n")
-        .stdout_contains("\\dir2\\baz\n")
-        .stderr_is("realpath: dir1/foo2: No such file or directory\n");
 }
 
 #[test]
@@ -306,10 +295,6 @@ fn test_relative_base_not_prefix_of_relative_to() {
         ])
         .succeeds();
 
-    #[cfg(windows)]
-    result.stdout_matches(&Regex::new(r"^.*:\\usr\n.*:\\usr\\local\n$").unwrap());
-
-    #[cfg(not(windows))]
     result.stdout_is("/usr\n/usr/local\n");
 }
 
@@ -318,18 +303,15 @@ fn test_relative_string_handling() {
     let result = new_ucmd!()
         .args(&["-m", "--relative-to=prefix", "prefixed/1"])
         .succeeds();
-    #[cfg(not(windows))]
+
     result.stdout_is("../prefixed/1\n");
-    #[cfg(windows)]
-    result.stdout_is("..\\prefixed\\1\n");
+
 
     let result = new_ucmd!()
         .args(&["-m", "--relative-to=prefixed", "prefix/1"])
         .succeeds();
-    #[cfg(not(windows))]
+
     result.stdout_is("../prefix/1\n");
-    #[cfg(windows)]
-    result.stdout_is("..\\prefix\\1\n");
 
     new_ucmd!()
         .args(&["-m", "--relative-to=prefixed", "prefixed/1"])
@@ -348,10 +330,8 @@ fn test_relative() {
             "/usr",
         ])
         .succeeds();
-    #[cfg(not(windows))]
+
     result.stdout_is("/tmp\n.\n");
-    #[cfg(windows)]
-    result.stdout_matches(&Regex::new(r"^.*:\\tmp\n\.\n$").unwrap());
 
     new_ucmd!()
         .args(&["-sm", "--relative-base=/", "--relative-to=/", "/", "/usr"])
@@ -361,10 +341,8 @@ fn test_relative() {
     let result = new_ucmd!()
         .args(&["-sm", "--relative-base=/usr", "/tmp", "/usr"])
         .succeeds();
-    #[cfg(not(windows))]
+
     result.stdout_is("/tmp\n.\n");
-    #[cfg(windows)]
-    result.stdout_matches(&Regex::new(r"^.*:\\tmp\n\.\n$").unwrap());
 
     new_ucmd!()
         .args(&["-sm", "--relative-base=/", "/", "/usr"])
@@ -519,9 +497,6 @@ fn test_realpath_canonicalize_options() {
         vec!["--canonicalize"], // --canonicalize long form
     ];
 
-    #[cfg(windows)]
-    let expected_path = "existing_dir\\nonexistent";
-    #[cfg(not(windows))]
     let expected_path = "existing_dir/nonexistent";
 
     for args in test_cases {
@@ -548,9 +523,6 @@ fn test_realpath_canonicalize_vs_existing() {
         (vec!["-e", "-E"], true), // -E should override -e
     ];
 
-    #[cfg(windows)]
-    let expected_path = "existing_dir\\nonexistent";
-    #[cfg(not(windows))]
     let expected_path = "existing_dir/nonexistent";
 
     for (args, should_succeed) in test_cases {

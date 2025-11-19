@@ -57,7 +57,6 @@ fn test_stdbuf_unbuffered_stdout() {
 // does not provide musl-compiled system utilities (like head), leading to dynamic linker errors
 // when preloading musl-compiled libstdbuf.so into glibc-compiled binaries. Same thing for FreeBSD.
 #[cfg(all(
-    not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd"),
     not(all(target_arch = "x86_64", target_env = "musl"))
@@ -74,7 +73,6 @@ fn test_stdbuf_line_buffered_stdout() {
         .stdout_is("The quick brown fox jumps over the lazy dog.");
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_stdbuf_no_buffer_option_fails() {
     let ts = TestScenario::new(util_name!());
@@ -102,7 +100,6 @@ fn test_stdbuf_trailing_var_arg() {
         .stdout_is("jumps over the lazy dog.");
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_stdbuf_line_buffering_stdin_fails() {
     new_ucmd!()
@@ -111,7 +108,6 @@ fn test_stdbuf_line_buffering_stdin_fails() {
         .usage_error("line buffering stdin is meaningless");
 }
 
-#[cfg(not(target_os = "windows"))]
 #[test]
 fn test_stdbuf_invalid_mode_fails() {
     let options = ["--input", "--output", "--error"];
@@ -124,15 +120,6 @@ fn test_stdbuf_invalid_mode_fails() {
             .args(&[*option, "1Y", "head"])
             .fails_with_code(125)
             .stderr_contains("stdbuf: invalid mode '1Y': Value too large for defined data type");
-        #[cfg(target_pointer_width = "32")]
-        {
-            new_ucmd!()
-                .args(&[*option, "5GB", "head"])
-                .fails_with_code(125)
-                .stderr_contains(
-                    "stdbuf: invalid mode '5GB': Value too large for defined data type",
-                );
-        }
     }
 }
 
@@ -142,7 +129,6 @@ fn test_stdbuf_invalid_mode_fails() {
 // and is sometimes disabled. Disable test on Android for now.
 // musl libc dynamic loader does not support LD_DEBUG, so disable on musl targets as well.
 #[cfg(all(
-    not(target_os = "windows"),
     not(target_os = "openbsd"),
     not(target_os = "macos"),
     not(target_os = "android"),

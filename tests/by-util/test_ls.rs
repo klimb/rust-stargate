@@ -523,19 +523,9 @@ fn test_ls_only_dirs_formatting() {
     at.mkdir("some-dir1");
     at.mkdir("some-dir2");
     at.mkdir("some-dir3");
-
-    #[cfg(unix)]
-    {
-        scene.ucmd().arg("-1").arg("-R").succeeds().stdout_only(
-            ".:\nsome-dir1\nsome-dir2\nsome-dir3\n\n./some-dir1:\n\n./some-dir2:\n\n./some-dir3:\n",
-        );
-    }
-    #[cfg(windows)]
-    {
-        scene.ucmd().arg("-1").arg("-R").succeeds().stdout_only(
-            ".:\nsome-dir1\nsome-dir2\nsome-dir3\n\n.\\some-dir1:\n\n.\\some-dir2:\n\n.\\some-dir3:\n",
-        );
-    }
+    scene.ucmd().arg("-1").arg("-R").succeeds().stdout_only(
+        ".:\nsome-dir1\nsome-dir2\nsome-dir3\n\n./some-dir1:\n\n./some-dir2:\n\n./some-dir3:\n",
+    );
 }
 
 #[test]
@@ -771,9 +761,7 @@ fn test_ls_columns() {
             .stdout_only("test-columns-1\ttest-columns-3\ntest-columns-2\ttest-columns-4\n");
     }
 
-    // On windows we are always able to get the terminal size, so we can't simulate falling back to the
-    // environment variable.
-    #[cfg(not(windows))]
+
     {
         for option in COLUMN_ARGS {
             scene
@@ -1013,12 +1001,7 @@ fn test_ls_long() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
     at.touch(at.plus_as_string("test-long"));
-
-    #[cfg(not(windows))]
     let regex = r"[-bcCdDlMnpPsStTx?]([r-][w-][xt-]){3}.*";
-    #[cfg(windows)]
-    let regex = r"[-dl](r[w-]x){3}.*";
-
     let re = &Regex::new(regex).unwrap();
 
     for arg in LONG_ARGS {
