@@ -14,7 +14,7 @@ Stargate (Rust implementation of Dreamland):
 - supporting SELinux and Android.
 
 ## Goals
-- reduce it to OpenBSD-style crystalized essentials. The BSD userland (compared to GNU/CoreUtils, including rust rewrite) is much much smaller (by 10x if its OpenBSD).
+- reduce it to OpenBSD-style crystalized essentials. The BSD userland (compared to GNU/CoreUtils, including rust rewrite) is much much smaller (by 10x if its OpenBSD). And much cleaner, and significantly easier to read, find bugs and security problems. Smaller is better (do one thing).
 - Build from there: split all commands. So they do one thing and do it well. Right now they're doing a lot of things. Renaming all commands to verb-noun to reduce mental friction. So it sounds just like English. Shortnames are a convention (and conflict resolution rules): some-long-command is slc.
 - Standardize on input parameters (don't care about legacy POSIX): -r is always recursive, -v is always verbose ... etc. Stuff works as expected.
 - Introduce a super thin object layer (for optional object output), so piping is faster by an order of magnitude (in some cases). Instead of searching in unstructured streams of text output (such as stdout), it will be a selection, slicing and dicing. Monad / MS Powershell has awesome design ideas. They came from UNIX ideas. Some UNIX ideas: Do one thing and do it well. Everything is a file (including pipes, stdout (just a special file), stderr (its also just a special file), directories are files, pipes and sockets are also files, etc).
