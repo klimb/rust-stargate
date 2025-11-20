@@ -1,0 +1,10 @@
+get_hostname-about = Показать имя хоста системы
+get_hostname-usage = hostname [ПАРАМЕТР]... [ИМЯ_ХОСТА]
+get_hostname-help-domain = По возможности показать имя домена DNS
+get_hostname-help-fqdn = Показать FQDN (полное доменное имя) (по умолчанию)
+get_hostname-help-short = По возможности показать короткое имя хоста (часть до первой точки)
+get_hostname-error-permission = hostname: вы должны быть root для изменения имени хоста
+get_hostname-error-invalid-name = hostname: недопустимое имя хоста '{ $name }'
+get_hostname-error-resolve-failed = hostname: не удалось разрешить имя хоста '{ $name }'
+get_hostname-error-get-hostname = не удалось получить имя хоста
+get_hostname-error-resolve-socket = не удалось разрешить адреса сокетов

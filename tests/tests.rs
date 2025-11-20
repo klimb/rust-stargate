@@ -152,6 +152,10 @@ mod test_hostname;
 #[path = "by-util/test_get_hostname.rs"]
 mod test_get_hostname;
 
+#[cfg(feature = "get_domainname")]
+#[path = "by-util/test_get_domainname.rs"]
+mod test_get_domainname;
+
 #[cfg(feature = "id")]
 #[path = "by-util/test_id.rs"]
 mod test_id;

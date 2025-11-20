@@ -122,6 +122,7 @@ feat_Tier1 = [
   "arch",
   "hostname",
   "get_hostname",
+  "get_domainname",
   "nproc",
   "sync",
   "uname",
@@ -382,6 +383,7 @@ hashsum = { optional = true, version = "0.4.0", package = "uu_hashsum", path = "
 head = { optional = true, version = "0.4.0", package = "uu_head", path = "src/uu/head" }
 hostname = { optional = true, version = "0.4.0", package = "uu_hostname", path = "src/uu/hostname" }
 get_hostname = { optional = true, version = "0.4.0", package = "uu_get_hostname", path = "src/uu/get_hostname" }
+get_domainname = { optional = true, version = "0.4.0", package = "uu_get_domainname", path = "src/uu/get_domainname" }
 id = { optional = true, version = "0.4.0", package = "uu_id", path = "src/uu/id" }
 install = { optional = true, version = "0.4.0", package = "uu_install", path = "src/uu/install" }
 join = { optional = true, version = "0.4.0", package = "uu_join", path = "src/uu/join" }

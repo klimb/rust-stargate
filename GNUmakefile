@@ -97,6 +97,7 @@ PROGS       := \
 	hashsum \
 	head \
 	get_hostname \
+	get_domainname \
 	hostname \
 	join \
 	link \
@@ -219,6 +220,8 @@ TEST_PROGS  := \
 	fold \
 	hashsum \
 	head \
+	get_hostname \
+	get_domainname \
 	install \
 	link \
 	ln \

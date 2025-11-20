@@ -1,0 +1,10 @@
+get_hostname-about = Afficher le nom d'hôte du système.
+get_hostname-usage = hostname [OPTION]... [NOM_HÔTE]
+get_hostname-help-domain = Afficher le nom du domaine DNS si possible
+get_hostname-help-fqdn = Afficher le FQDN (nom de domaine pleinement qualifié) (par défaut)
+get_hostname-help-short = Afficher le nom d'hôte court (la partie avant le premier point) si possible
+get_hostname-error-permission = hostname : vous devez être root pour changer le nom d'hôte
+get_hostname-error-invalid-name = hostname : nom d'hôte invalide '{ $name }'
+get_hostname-error-resolve-failed = hostname : impossible de résoudre le nom d'hôte '{ $name }'
+get_hostname-error-get-hostname = échec de l'obtention du nom d'hôte
+get_hostname-error-resolve-socket = échec de la résolution des adresses de socket

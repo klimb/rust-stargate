@@ -562,6 +562,7 @@ dependencies = [
  "uu_false",
  "uu_fmt",
  "uu_fold",
+ "uu_get_domainname",
  "uu_get_hostname",
  "uu_groups",
  "uu_hashsum",
@@ -3272,6 +3273,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "uu_get_domainname"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "dns-lookup",
+ "fluent",
+ "hostname",
+ "uucore",
+]
+
+[[package]]
 name = "uu_get_hostname"
 version = "0.4.0"
 dependencies = [
@@ -3280,7 +3292,6 @@ dependencies = [
  "fluent",
  "hostname",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]

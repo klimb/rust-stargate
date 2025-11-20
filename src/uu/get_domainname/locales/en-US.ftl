@@ -1,0 +1,10 @@
+get_hostname-about = Display system's host name
+get_hostname-usage = hostname [OPTION]... [HOSTNAME]
+get_hostname-help-domain = Display the name of the DNS domain if possible
+get_hostname-help-fqdn = Display the FQDN (Fully Qualified Domain Name) (default)
+get_hostname-help-short = Display the short hostname (the portion before the first dot) if possible
+get_hostname-error-permission = hostname: you must be root to change the host name
+get_hostname-error-invalid-name = hostname: invalid hostname '{ $name }'
+get_hostname-error-resolve-failed = hostname: unable to resolve host name '{ $name }'
+get_hostname-error-get-hostname = failed to get hostname
+get_hostname-error-resolve-socket = failed to resolve socket addresses

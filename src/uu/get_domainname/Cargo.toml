@@ -1,6 +1,6 @@
 [package]
-name = "uu_get_hostname"
-description = "get-hostname"
+name = "uu_get_domainname"
+description = "domainname - display system domainname"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/get_hostname.rs"
+path = "src/get_domainname.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -27,7 +27,7 @@ fluent = { workspace = true }
 dns-lookup = { workspace = true }
 
 [[bin]]
-name = "get-hostname"
+name = "get-domainname"
 path = "src/main.rs"
 
 [package.metadata.cargo-udeps.ignore]
