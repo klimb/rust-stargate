@@ -663,8 +663,6 @@ fn test_check_one_two_space_star() {
 }
 
 #[test]
-// Disabled on Windows because of the "*"
-#[cfg(not(windows))]
 fn test_check_space_star_or_not() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -785,7 +783,6 @@ fn test_check_directory_error() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_continue_after_directory_error() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;

@@ -1398,7 +1398,6 @@ fn test_bytes_suffix_recursive() {
 }
 
 /// Test for "conv=sync" with a slow reader.
-#[cfg(not(windows))]
 #[test]
 fn test_sync_delayed_reader() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1501,7 +1500,7 @@ fn test_skip_input_fifo() {
 }
 
 /// Test for reading part of stdin from each of two child processes.
-#[cfg(all(not(windows), feature = "printf"))]
+#[cfg(all(feature = "printf"))]
 #[test]
 fn test_multiple_processes_reading_stdin() {
     // TODO Investigate if this is possible on Windows.

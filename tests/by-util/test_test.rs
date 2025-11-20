@@ -525,7 +525,6 @@ fn test_symlink_is_symlink() {
 
     at.symlink_file("regular_file", "symlink");
 
-    // FIXME: implement on Windows
     scenario.ucmd().args(&["-h", "symlink"]).succeeds();
     scenario.ucmd().args(&["-L", "symlink"]).succeeds();
 }
@@ -560,8 +559,7 @@ fn test_nonexistent_file_is_not_symlink() {
 
 #[test]
 // Only the superuser is allowed to set the sticky bit on files on FreeBSD/OpenBSD.
-// Windows has no concept of sticky bit
-#[cfg(not(any(windows, target_os = "freebsd", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
 fn test_file_is_sticky() {
     let scenario = TestScenario::new(util_name!());
     let mut ucmd = scenario.ucmd();

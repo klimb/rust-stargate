@@ -8,7 +8,6 @@
 use filetime::FileTime;
 use rstest::rstest;
 use std::io::Write;
-#[cfg(not(windows))]
 use std::path::Path;
 
 use uutests::new_ucmd;

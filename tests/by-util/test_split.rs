@@ -8,7 +8,6 @@ use rand::{Rng, SeedableRng, rng};
 use regex::Regex;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use rlimit::Resource;
-#[cfg(not(windows))]
 use std::env;
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
@@ -272,12 +271,6 @@ fn test_additional_suffix_dir_separator() {
         .args(&["--additional-suffix", "a/b"])
         .fails()
         .usage_error("invalid suffix 'a/b', contains directory separator");
-
-    #[cfg(windows)]
-    new_ucmd!()
-        .args(&["--additional-suffix", "a\\b"])
-        .fails()
-        .usage_error("invalid suffix 'a\\b', contains directory separator");
 }
 
 #[test]

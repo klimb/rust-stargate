@@ -693,11 +693,11 @@ fn test_install_copy_then_compare_file_with_extra_mode() {
 }
 
 const STRIP_TARGET_FILE: &str = "helloworld_installed";
-#[cfg(all(not(windows), not(target_os = "freebsd")))]
+#[cfg(not(target_os = "freebsd"))]
 const SYMBOL_DUMP_PROGRAM: &str = "objdump";
 #[cfg(target_os = "freebsd")]
 const SYMBOL_DUMP_PROGRAM: &str = "llvm-objdump";
-#[cfg(not(windows))]
+
 const STRIP_SOURCE_FILE_SYMBOL: &str = "main";
 
 fn strip_source_file() -> &'static str {
@@ -713,8 +713,6 @@ fn strip_source_file() -> &'static str {
 }
 
 #[test]
-#[cfg(not(windows))]
-// FIXME test runs in a timeout with macos-latest on x86_64 in the CI
 #[cfg(not(all(target_os = "macos", target_arch = "x86_64")))]
 fn test_install_and_strip() {
     let scene = TestScenario::new(util_name!());
@@ -738,7 +736,6 @@ fn test_install_and_strip() {
 }
 
 #[test]
-#[cfg(not(windows))]
 // FIXME test runs in a timeout with macos-latest on x86_64 in the CI
 #[cfg(not(all(target_os = "macos", target_arch = "x86_64")))]
 fn test_install_and_strip_with_program() {
@@ -861,7 +858,6 @@ fn test_install_on_invalid_link_at_destination_and_dev_null_at_source() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_install_and_strip_with_invalid_program() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -879,7 +875,6 @@ fn test_install_and_strip_with_invalid_program() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_install_and_strip_with_non_existent_program() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -1016,7 +1011,6 @@ fn test_install_creating_leading_dirs_with_multiple_sources_and_target_dir() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_install_creating_leading_dir_fails_on_long_name() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;

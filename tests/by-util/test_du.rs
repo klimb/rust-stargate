@@ -323,12 +323,6 @@ fn test_du_soft_link() {
         assert_valid_size(s, &valid_sizes);
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        let valid_sizes = ["4\tsubdir/links\n", "8\tsubdir/links\n"];
-        assert_valid_size(s, &valid_sizes);
-    }
-
     #[cfg(target_os = "freebsd")]
     {
         // FreeBSD may have different block allocations depending on filesystem
@@ -371,7 +365,6 @@ fn du_hard_link(s: &str) {
 }
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd"),
     not(target_os = "android")
@@ -453,99 +446,17 @@ fn test_du_dereference_args() {
 fn du_dereference(s: &str) {
     assert_eq!(s, "4\tsubdir/links/deeper_dir\n16\tsubdir/links\n");
 }
-#[cfg(target_os = "windows")]
-fn du_dereference(s: &str) {
-    assert_eq!(s, "0\tsubdir/links\\deeper_dir\n8\tsubdir/links\n");
-}
 #[cfg(target_os = "freebsd")]
 fn du_dereference(s: &str) {
     assert_eq!(s, "8\tsubdir/links/deeper_dir\n24\tsubdir/links\n");
-}
-#[cfg(all(
-    not(target_vendor = "apple"),
-    not(target_os = "windows"),
-    not(target_os = "freebsd"),
-    not(target_os = "openbsd")
-))]
-fn du_dereference(s: &str) {
-    // MS-WSL linux has altered expected output
-    if uucore::os::is_wsl_1() {
-        assert_eq!(s, "0\tsubdir/links/deeper_dir\n8\tsubdir/links\n");
-    } else {
-        assert_eq!(s, "8\tsubdir/links/deeper_dir\n24\tsubdir/links\n");
-    }
-}
-
-#[cfg(not(any(
-    target_os = "windows",
-    target_os = "android",
-    target_os = "freebsd",
-    target_os = "openbsd"
-)))]
-#[test]
-fn test_du_no_dereference() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-    let dir = "a_dir";
-    let symlink = "symlink";
-
-    at.mkdir(dir);
-    at.symlink_dir(dir, symlink);
-
-    for arg in ["-P", "--no-dereference"] {
-        ts.ucmd()
-            .arg(arg)
-            .succeeds()
-            .stdout_contains(dir)
-            .stdout_does_not_contain(symlink);
-
-        // ensure no-dereference "wins"
-        ts.ucmd()
-            .arg("--dereference")
-            .arg(arg)
-            .succeeds()
-            .stdout_contains(dir)
-            .stdout_does_not_contain(symlink);
-
-        // ensure dereference "wins"
-        let result = ts.ucmd().arg(arg).arg("--dereference").succeeds();
-
-        #[cfg(target_os = "linux")]
-        {
-            let result_reference = unwrap_or_return!(expected_result(&ts, &[arg, "--dereference"]));
-
-            if result_reference.succeeded() {
-                assert_eq!(result.stdout_str(), result_reference.stdout_str());
-            }
-        }
-
-        #[cfg(not(target_os = "linux"))]
-        result.stdout_contains(symlink).stdout_does_not_contain(dir);
-    }
 }
 
 #[test]
 fn test_du_inodes_basic() {
     let ts = TestScenario::new(util_name!());
     let result = ts.ucmd().arg("--inodes").succeeds();
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        let result_reference = unwrap_or_return!(expected_result(&ts, &["--inodes"]));
-        assert_eq!(result.stdout_str(), result_reference.stdout_str());
-    }
-
-    #[cfg(target_os = "windows")]
-    assert_eq!(
-        result.stdout_str(),
-        concat!(
-            "2\t.\\subdir\\deeper\\deeper_dir\n",
-            "4\t.\\subdir\\deeper\n",
-            "3\t.\\subdir\\links\n",
-            "8\t.\\subdir\n",
-            "11\t.\n",
-        )
-    );
+    let result_reference = unwrap_or_return!(expected_result(&ts, &["--inodes"]));
+    assert_eq!(result.stdout_str(), result_reference.stdout_str());
 }
 
 #[test]
@@ -560,13 +471,10 @@ fn test_du_inodes() {
 
     let result = ts.ucmd().arg("--separate-dirs").arg("--inodes").succeeds();
 
-    #[cfg(target_os = "windows")]
-    result.stdout_contains("3\t.\\subdir\\links\n");
-    #[cfg(not(target_os = "windows"))]
     result.stdout_contains("3\t./subdir/links\n");
     result.stdout_contains("3\t.\n");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference =
             unwrap_or_return!(expected_result(&ts, &["--separate-dirs", "--inodes"]));
@@ -574,7 +482,6 @@ fn test_du_inodes() {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_du_inodes_with_count_links() {
     let ts = TestScenario::new(util_name!());
@@ -810,9 +717,6 @@ fn test_du_time() {
     let re_change_birth =
         Regex::new(r"0\t[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}\tdate_test").unwrap();
     let result = ts.ucmd().arg("--time=ctime").arg("date_test").succeeds();
-    #[cfg(windows)]
-    result.stdout_only("0\t???\tdate_test\n"); // ctime not supported on Windows
-    #[cfg(not(windows))]
     result.stdout_matches(&re_change_birth);
 
     if birth_supported() {

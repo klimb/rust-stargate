@@ -1627,10 +1627,7 @@ fn test_ls_order_birthtime() {
 
     let result = scene.ucmd().arg("--time=birth").arg("-t").succeeds();
 
-    #[cfg(not(windows))]
     assert_eq!(result.stdout_str(), "test-birthtime-2\ntest-birthtime-1\n");
-    #[cfg(windows)]
-    assert_eq!(result.stdout_str(), "test-birthtime-2  test-birthtime-1\n");
 }
 
 #[test]

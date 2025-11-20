@@ -546,11 +546,6 @@ fn test_touch_set_date5() {
 
     assert!(at.file_exists(file));
 
-    // Slightly different result on Windows for nano seconds
-    // TODO: investigate
-    #[cfg(windows)]
-    let expected = FileTime::from_unix_time(67413, 23_456_700);
-    #[cfg(not(windows))]
     let expected = FileTime::from_unix_time(67413, 23_456_789);
 
     let (atime, mtime) = get_file_times(&at, file);
@@ -752,22 +747,11 @@ fn test_touch_system_fails() {
 }
 
 #[test]
-#[cfg(not(target_os = "windows"))]
 fn test_touch_trailing_slash() {
     let file = "no-file/";
     new_ucmd!().args(&[file]).fails().stderr_only(format!(
         "touch: cannot touch '{file}': No such file or directory\n"
     ));
-}
-
-#[test]
-#[cfg(target_os = "windows")]
-fn test_touch_trailing_slash_windows() {
-    let file = "no-file/";
-    new_ucmd!()
-        .args(&[file])
-        .fails()
-        .stderr_contains(format!("touch: cannot touch '{file}'"));
 }
 
 #[test]
@@ -862,7 +846,6 @@ fn test_touch_leap_second() {
 }
 
 #[test]
-#[cfg(not(windows))]
 // File::create doesn't support trailing separator in Windows
 fn test_touch_trailing_slash_no_create() {
     let (at, mut ucmd) = at_and_ucmd!();

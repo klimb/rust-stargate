@@ -167,9 +167,6 @@ fn test_non_empty_directory() {
     at.mkdir(dir);
     at.touch(file_a);
 
-    #[cfg(windows)]
-    let expected = "rm: cannot remove 'test_rm_non_empty_dir': The directory is not empty.\n";
-    #[cfg(not(windows))]
     let expected = "rm: cannot remove 'test_rm_non_empty_dir': Directory not empty\n";
     ucmd.arg("-d").arg(dir).fails().stderr_only(expected);
     assert!(at.file_exists(file_a));
@@ -248,19 +245,6 @@ fn test_directory_without_flag() {
 }
 
 #[test]
-#[cfg(windows)]
-// https://github.com/uutils/coreutils/issues/3200
-fn test_directory_with_trailing_backslash() {
-    let (at, mut ucmd) = at_and_ucmd!();
-    let dir = "dir";
-
-    at.mkdir(dir);
-
-    ucmd.arg(".\\dir\\").arg("-rf").succeeds();
-    assert!(!at.dir_exists(dir));
-}
-
-#[test]
 fn test_verbose() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file_a = "test_rm_verbose_file_a";
@@ -277,7 +261,6 @@ fn test_verbose() {
 }
 
 #[test]
-#[cfg(not(windows))]
 // on unix symlink_dir is a file
 fn test_symlink_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -289,30 +272,6 @@ fn test_symlink_dir() {
     at.symlink_dir(dir, link);
 
     ucmd.arg(link).succeeds();
-}
-
-#[test]
-#[cfg(windows)]
-// on windows removing symlink_dir requires "-r" or "-d"
-fn test_symlink_dir() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-
-    let dir = "test_rm_symlink_dir_directory";
-    let link = "test_rm_symlink_dir_link";
-
-    at.mkdir(dir);
-    at.symlink_dir(dir, link);
-
-    scene
-        .ucmd()
-        .arg(link)
-        .fails()
-        .stderr_contains(format!("cannot remove '{link}': Is a directory"));
-
-    assert!(at.dir_exists(link));
-
-    scene.ucmd().arg("-r").arg(link).succeeds();
 }
 
 #[test]

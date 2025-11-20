@@ -1686,7 +1686,7 @@ fn test_check_directory_error() {
         "f",
         "BLAKE2b (d) = 786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce\n"
     );
-    #[cfg(not(windows))]
+
     let err_msg = "cksum: d: Is a directory\n";
 
     ucmd.arg("--check")
@@ -1904,9 +1904,6 @@ fn test_check_trailing_space_fails() {
 /// These tests are excluded from Windows because it does not provide any safe
 /// conversion between `OsString` and byte sequences for non-utf-8 strings.
 mod check_encoding {
-
-    // This test should pass on linux and macos.
-    #[cfg(not(windows))]
     #[test]
     fn test_check_non_utf8_comment() {
         use super::*;

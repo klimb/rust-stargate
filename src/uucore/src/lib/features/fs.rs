@@ -689,15 +689,7 @@ pub mod sane_blksize {
     /// If the metadata contain invalid values a meaningful adaption
     /// of that value is done.
     pub fn sane_blksize_from_metadata(_metadata: &std::fs::Metadata) -> u64 {
-        #[cfg(not(target_os = "windows"))]
-        {
-            sane_blksize(_metadata.blksize())
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            DEFAULT
-        }
+        sane_blksize(_metadata.blksize())
     }
 
     /// Provides the blksize information from given file path's filesystem.
