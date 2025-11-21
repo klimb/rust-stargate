@@ -7,9 +7,8 @@
 
 #[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
 use std::net::ToSocketAddrs;
-use std::str;
 
-use clap::{Arg, ArgAction, ArgMatches, Command};
+use clap::{Command};
 
 use uucore::translate;
 
@@ -19,15 +18,14 @@ use uucore::{
 };
 
 #[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+pub fn uumain(_args: impl uucore::Args) -> UResult<()> {
     // hostname https://datatracker.ietf.org/doc/html/rfc952
     //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
     //    sign (-), and period (.)
     // in FreeBSD the hostname is the unique name for a specific server, while the domain name
     // provides a broader organizational context. Together, they form a
     // Fully Qualified Domain Name (FQDN),
-    print_domainname(&matches)
+    print_domainname()
 }
 
 pub fn uu_app() -> Command {
@@ -38,7 +36,7 @@ pub fn uu_app() -> Command {
         .override_usage(format_usage(&translate!("get_domainname-usage")))
 }
 
-fn print_domainname(matches: &ArgMatches) -> UResult<()> {
+fn print_domainname() -> UResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get domain name".to_owned())?
         .to_string_lossy()
