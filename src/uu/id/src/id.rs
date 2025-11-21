@@ -95,7 +95,6 @@ struct State {
     rflag: bool,  // --real
     zflag: bool,  // --zero
     cflag: bool,  // --context
-    selinux_supported: bool,
     ids: Option<Ids>,
     // The behavior for calling GNU's `id` and calling GNU's `id $USER` is similar but different.
     // * The SELinux context is only displayed without a specified user.
@@ -132,10 +131,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         rflag: matches.get_flag(options::OPT_REAL_ID),
         zflag: matches.get_flag(options::OPT_ZERO),
         cflag: matches.get_flag(options::OPT_CONTEXT),
-
-        selinux_supported: {
-                false
-        },
         user_specified: !users.is_empty(),
         ids: None,
     };

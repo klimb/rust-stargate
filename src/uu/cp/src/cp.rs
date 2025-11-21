@@ -342,9 +342,7 @@ pub struct Options {
     pub verbose: bool,
     /// `-g`, `--progress`
     pub progress_bar: bool,
-    /// -Z
-    pub set_selinux_context: bool,
-    // --context
+    /// --context
     pub context: Option<String>,
 }
 
@@ -372,7 +370,6 @@ impl Default for Options {
             debug: false,
             verbose: false,
             progress_bar: false,
-            set_selinux_context: false,
             context: None,
         }
     }
@@ -481,7 +478,6 @@ mod options {
     pub const RECURSIVE: &str = "recursive";
     pub const REFLINK: &str = "reflink";
     pub const REMOVE_DESTINATION: &str = "remove-destination";
-    pub const SELINUX: &str = "Z";
     pub const SPARSE: &str = "sparse";
     pub const STRIP_TRAILING_SLASHES: &str = "strip-trailing-slashes";
     pub const SYMBOLIC_LINK: &str = "symbolic-link";
@@ -734,12 +730,6 @@ pub fn uu_app() -> Command {
                 .value_name("WHEN")
                 .value_parser(ShortcutValueParser::new(["never", "auto", "always"]))
                 .help(translate!("cp-help-sparse")),
-        )
-        .arg(
-            Arg::new(options::SELINUX)
-                .short('Z')
-                .help(translate!("cp-help-selinux"))
-                .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::CONTEXT)
@@ -1171,7 +1161,6 @@ impl Options {
             recursive,
             target_dir,
             progress_bar: matches.get_flag(options::PROGRESS_BAR),
-            set_selinux_context:  context.is_some(),
             context,
         };
 
@@ -1701,24 +1690,7 @@ pub(crate) fn copy_attributes(
 
 
     handle_preserve(&attributes.xattr, || -> CopyResult<()> {
-        #[cfg(all(unix, not(target_os = "android")))]
-        {
-            copy_extended_attrs(source, dest)?;
-        }
-        #[cfg(not(all(unix, not(target_os = "android"))))]
-        {
-            // The documentation for GNU cp states:
-            //
-            // > Try to preserve SELinux security context and
-            // > extended attributes (xattr), but ignore any failure
-            // > to do that and print no corresponding diagnostic.
-            //
-            // so we simply do nothing here.
-            //
-            // TODO Silently ignore failures in the `#[cfg(unix)]`
-            // block instead of terminating immediately on errors.
-        }
-
+        copy_extended_attrs(source, dest)?;
         Ok(())
     })?;
 

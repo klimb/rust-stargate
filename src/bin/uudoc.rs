@@ -258,8 +258,8 @@ fn main() -> io::Result<()> {
         };
         writeln!(
             platform_table_file,
-            "| util             | Linux | macOS | Windows | FreeBSD | Android |\n\
-             | ---------------- | ----- | ----- | ------- | ------- | ------- |"
+            "| util             | Linux | macOS | FreeBSD |\n\
+             | ---------------- | ----- | ----- | ------- |"
         )?;
         for &(&name, _) in &utils {
             if name == "[" {
@@ -273,9 +273,7 @@ fn main() -> io::Result<()> {
                 format!("**{name}**"),
                 check_supported(name, "linux"),
                 check_supported(name, "macos"),
-                check_supported(name, "windows"),
                 check_supported(name, "unix"),
-                check_supported(name, "unix_android"),
             )?;
         }
     }

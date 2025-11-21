@@ -1028,12 +1028,6 @@ impl Stater {
                     // FIXME: blocksize differs on various platform
                     // See coreutils/gnulib/lib/stat-size.h ST_NBLOCKSIZE // spell-checker:disable-line
                     'B' => OutputType::Unsigned(512),
-                    // SELinux security context string
-                    'C' => {
-                        {
-                            OutputType::Str(translate!("stat-selinux-unsupported-os"))
-                        }
-                    }
                     // device number in decimal
                     'd' => OutputType::Unsigned(meta.dev()),
                     // device number in hex
@@ -1220,8 +1214,6 @@ impl Stater {
     }
 
     fn default_format(show_fs: bool, terse: bool, show_dev_type: bool) -> String {
-        // SELinux related format is *ignored*
-
         if show_fs {
             if terse {
                 "%n %i %l %t %s %S %b %f %a %c %d\n".into()

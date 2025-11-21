@@ -27,12 +27,10 @@ mod options {
     pub const PARENTS: &str = "parents";
     pub const VERBOSE: &str = "verbose";
     pub const DIRS: &str = "dirs";
-    pub const SELINUX: &str = "z";
-    pub const CONTEXT: &str = "context";
 }
 
 /// Configuration for directory creation.
-pub struct Config<'a> {
+pub struct Config<> {
     /// Create parent directories as needed.
     pub recursive: bool,
 
@@ -41,20 +39,8 @@ pub struct Config<'a> {
 
     /// Print message for each created directory.
     pub verbose: bool,
-
-    /// Set `SELinux` security context.
-    pub set_selinux_context: bool,
-
-    /// Specific `SELinux` context.
-    pub context: Option<&'a String>,
 }
 
-#[cfg(windows)]
-fn get_mode(_matches: &ArgMatches) -> Result<u32, String> {
-    Ok(DEFAULT_PERM)
-}
-
-#[cfg(not(windows))]
 fn get_mode(matches: &ArgMatches) -> Result<u32, String> {
     // Not tested on Windows
     let mut new_mode = DEFAULT_PERM;
@@ -87,18 +73,12 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let verbose = matches.get_flag(options::VERBOSE);
     let recursive = matches.get_flag(options::PARENTS);
 
-    // Extract the SELinux related flags and options
-    let set_selinux_context = matches.get_flag(options::SELINUX);
-    let context = matches.get_one::<String>(options::CONTEXT);
-
     match get_mode(&matches) {
         Ok(mode) => {
             let config = Config {
                 recursive,
                 mode,
                 verbose,
-                set_selinux_context: set_selinux_context || context.is_some(),
-                context,
             };
             exec(dirs, &config)
         }
@@ -136,18 +116,6 @@ pub fn uu_app() -> Command {
                 .long(options::VERBOSE)
                 .help(translate!("mkdir-help-verbose"))
                 .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new(options::SELINUX)
-                .short('Z')
-                .help(translate!("mkdir-help-selinux"))
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new(options::CONTEXT)
-                .long(options::CONTEXT)
-                .value_name("CTX")
-                .help(translate!("mkdir-help-context")),
         )
         .arg(
             Arg::new(options::DIRS)

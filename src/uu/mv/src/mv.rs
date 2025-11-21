@@ -97,9 +97,6 @@ pub struct Options {
 
     /// `--debug`
     pub debug: bool,
-
-    /// `-Z, --context`
-    pub context: Option<String>,
 }
 
 impl Default for Options {
@@ -115,7 +112,6 @@ impl Default for Options {
             strip_slashes: false,
             progress_bar: false,
             debug: false,
-            context: None,
         }
     }
 }
@@ -142,8 +138,6 @@ static OPT_VERBOSE: &str = "verbose";
 static OPT_PROGRESS: &str = "progress";
 static ARG_FILES: &str = "files";
 static OPT_DEBUG: &str = "debug";
-static OPT_CONTEXT: &str = "context";
-static OPT_SELINUX: &str = "selinux";
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
@@ -190,15 +184,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         }
     }
 
-    // Handle -Z and --context options
-    // If -Z is used, use the default context (empty string)
-    // If --context=value is used, use that specific value
-    let context = if matches.get_flag(OPT_SELINUX) {
-        Some(String::new())
-    } else {
-        matches.get_one::<String>(OPT_CONTEXT).cloned()
-    };
-
     let opts = Options {
         overwrite: overwrite_mode,
         backup: backup_mode,
@@ -210,7 +195,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         strip_slashes: matches.get_flag(OPT_STRIP_TRAILING_SLASHES),
         progress_bar: matches.get_flag(OPT_PROGRESS),
         debug: matches.get_flag(OPT_DEBUG),
-        context,
     };
 
     mv(&files[..], &opts)
@@ -293,22 +277,6 @@ pub fn uu_app() -> Command {
                 .long(OPT_PROGRESS)
                 .help(translate!("mv-help-progress"))
                 .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new(OPT_SELINUX)
-                .short('Z')
-                .help(translate!("mv-help-selinux"))
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new(OPT_CONTEXT)
-                .long(OPT_CONTEXT)
-                .value_name("CTX")
-                .value_parser(clap::value_parser!(String))
-                .help(translate!("mv-help-context"))
-                .num_args(0..=1)
-                .require_equals(true)
-                .default_missing_value(""),
         )
         .arg(
             Arg::new(ARG_FILES)

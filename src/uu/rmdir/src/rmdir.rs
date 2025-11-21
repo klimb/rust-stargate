@@ -51,8 +51,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             // a "not a directory" error. This is confusing as `rm foo/` says
             // "is a directory".
             // This differs from system to system. Some don't give an error.
-            // Windows simply allows calling RemoveDirectory on symlinks so we
-            // don't need to worry about it here.
             // GNU rmdir seems to print "Symbolic link not followed" if:
             // - It has a trailing slash
             // - It's a symlink

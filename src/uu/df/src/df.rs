@@ -77,9 +77,6 @@ struct Options {
     /// types will *not* be listed.
     exclude: Option<Vec<String>>,
 
-    /// Whether to sync before operating.
-    sync: bool,
-
     /// Whether to show a final row comprising the totals for each column.
     show_total: bool,
 
@@ -97,7 +94,6 @@ impl Default for Options {
             header_mode: HeaderMode::default(),
             include: Option::default(),
             exclude: Option::default(),
-            sync: Default::default(),
             show_total: Default::default(),
             columns: vec![
                 Column::Source,
@@ -159,7 +155,6 @@ impl Options {
         Ok(Self {
             show_local_fs: matches.get_flag(OPT_LOCAL),
             show_all_fs: matches.get_flag(OPT_ALL),
-            sync: matches.get_flag(OPT_SYNC),
             block_size: read_block_size(matches).map_err(|e| match e {
                 ParseSizeError::InvalidSuffix(s) => OptionsError::InvalidSuffix(s),
                 ParseSizeError::SizeTooBig(_) => OptionsError::BlockSizeTooLarge(

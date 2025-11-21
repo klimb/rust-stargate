@@ -19,7 +19,6 @@ TARGETS = [
     "aarch64-unknown-linux-gnu",
     "i686-unknown-linux-gnu",
     "powerpc64-unknown-linux-gnu",
-    "riscv64gc-unknown-linux-gnu",
     "x86_64-unknown-linux-gnu",
     # Apple
     "aarch64-apple-darwin",

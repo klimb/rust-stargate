@@ -5,7 +5,7 @@
 
 // spell-checker:ignore (ToDO) parsemode makedev sysmacros perror IFBLK IFCHR IFIFO
 
-use clap::{Arg, ArgAction, Command, value_parser};
+use clap::{Arg, Command, value_parser};
 use libc::{S_IFBLK, S_IFCHR, S_IFIFO, S_IRGRP, S_IROTH, S_IRUSR, S_IWGRP, S_IWOTH, S_IWUSR};
 use libc::{dev_t, mode_t};
 use std::ffi::CString;
@@ -22,8 +22,6 @@ mod options {
     pub const TYPE: &str = "type";
     pub const MAJOR: &str = "major";
     pub const MINOR: &str = "minor";
-    pub const SELINUX: &str = "z";
-    pub const CONTEXT: &str = "context";
 }
 
 #[inline(always)]
@@ -50,7 +48,7 @@ impl FileType {
 }
 
 /// Configuration for special inode creation.
-pub struct Config<'a> {
+pub struct Config<> {
     /// bitmask of inode mode (permissions and file type)
     pub mode: mode_t,
 
@@ -58,12 +56,6 @@ pub struct Config<'a> {
     pub use_umask: bool,
 
     pub dev: dev_t,
-
-    /// Set `SELinux` security context.
-    pub set_selinux_context: bool,
-
-    /// Specific `SELinux` context.
-    pub context: Option<&'a String>,
 }
 
 fn mknod(file_name: &str, config: Config) -> i32 {
@@ -115,10 +107,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         .get_one::<String>("name")
         .expect("Missing argument 'NAME'");
 
-    // Extract the SELinux related flags and options
-    let set_selinux_context = matches.get_flag(options::SELINUX);
-    let context = matches.get_one::<String>(options::CONTEXT);
-
     let dev = match (
         file_type,
         matches.get_one::<u64>(options::MAJOR),
@@ -144,8 +132,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         mode,
         use_umask,
         dev,
-        set_selinux_context: set_selinux_context || context.is_some(),
-        context,
     };
 
     let exit_code = mknod(file_name, config);
@@ -193,21 +179,6 @@ pub fn uu_app() -> Command {
                 .value_name(options::MINOR)
                 .help(translate!("mknod-help-minor"))
                 .value_parser(value_parser!(u64)),
-        )
-        .arg(
-            Arg::new(options::SELINUX)
-                .short('Z')
-                .help(translate!("mknod-help-selinux"))
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new(options::CONTEXT)
-                .long(options::CONTEXT)
-                .value_name("CTX")
-                .value_parser(value_parser!(String))
-                .num_args(0..=1)
-                .require_equals(true)
-                .help(translate!("mknod-help-context")),
         )
 }
 

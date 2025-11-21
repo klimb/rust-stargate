@@ -16,7 +16,6 @@ use uucore::{format_usage, show};
 
 mod options {
     pub static MODE: &str = "mode";
-    pub static SELINUX: &str = "Z";
     pub static CONTEXT: &str = "context";
     pub static FIFO: &str = "fifo";
 }
@@ -76,12 +75,6 @@ pub fn uu_app() -> Command {
                 .long(options::MODE)
                 .help(translate!("mkfifo-help-mode"))
                 .value_name("MODE"),
-        )
-        .arg(
-            Arg::new(options::SELINUX)
-                .short('Z')
-                .help(translate!("mkfifo-help-selinux"))
-                .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(options::CONTEXT)

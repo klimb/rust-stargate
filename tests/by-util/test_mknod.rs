@@ -7,8 +7,6 @@
 
 use std::os::unix::fs::PermissionsExt;
 
-#[cfg(feature = "feat_selinux")]
-use uucore::selinux::get_getfattr_output;
 use uutests::new_ucmd;
 use uutests::util::TestScenario;
 use uutests::util::run_ucmd_as_root;

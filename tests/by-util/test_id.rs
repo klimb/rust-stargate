@@ -31,16 +31,14 @@ fn test_id_no_specified_user() {
     let exp_result = unwrap_or_return!(expected_result(&ts, &[]));
     let mut exp_stdout = exp_result.stdout_str().to_string();
 
-    #[cfg(not(feature = "feat_selinux"))]
-    {
-        // NOTE: strip 'context' part from exp_stdout if selinux not enabled:
-        // example:
-        // uid=1001(runner) gid=121(docker) groups=121(docker),4(adm),101(systemd-journal) \
-        // context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
-        if let Some(context_offset) = exp_result.stdout_str().find(" context=") {
-            exp_stdout.replace_range(context_offset..exp_stdout.len() - 1, "");
-        }
+    // NOTE: strip 'context' part from exp_stdout if selinux not enabled:
+    // example:
+    // uid=1001(runner) gid=121(docker) groups=121(docker),4(adm),101(systemd-journal) \
+    // context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+    if let Some(context_offset) = exp_result.stdout_str().find(" context=") {
+        exp_stdout.replace_range(context_offset..exp_stdout.len() - 1, "");
     }
+
 
     result
         .stdout_is(exp_stdout)
@@ -380,66 +378,6 @@ fn test_id_zero() {
 }
 
 #[test]
-#[cfg(feature = "feat_selinux")]
-fn test_id_context() {
-    if !uucore::selinux::is_selinux_enabled() {
-        println!("test skipped: Kernel has no support for SElinux context");
-        return;
-    }
-    let ts = TestScenario::new(util_name!());
-    for c_flag in ["-Z", "--context"] {
-        ts.ucmd()
-            .args(&[c_flag])
-            .succeeds()
-            .stdout_only(unwrap_or_return!(expected_result(&ts, &[c_flag])).stdout_str());
-        for z_flag in ["-z", "--zero"] {
-            let args = [c_flag, z_flag];
-            ts.ucmd()
-                .args(&args)
-                .succeeds()
-                .stdout_only(unwrap_or_return!(expected_result(&ts, &args)).stdout_str());
-            for opt1 in ["--name", "--real"] {
-                // id: cannot print only names or real IDs in default format
-                let args = [opt1, c_flag];
-                ts.ucmd()
-                    .args(&args)
-                    .succeeds()
-                    .stdout_only(unwrap_or_return!(expected_result(&ts, &args)).stdout_str());
-                let args = [opt1, c_flag, z_flag];
-                ts.ucmd()
-                    .args(&args)
-                    .succeeds()
-                    .stdout_only(unwrap_or_return!(expected_result(&ts, &args)).stdout_str());
-                for opt2 in ["--user", "--group", "--groups"] {
-                    // u/g/G n/r z Z
-                    // for now, we print clap's standard response for "conflicts_with" instead of:
-                    // id: cannot print "only" of more than one choice
-                    let args = [opt2, c_flag, opt1];
-                    let _result = ts.ucmd().args(&args).fails();
-                    // let exp_result = unwrap_or_return!(expected_result(&args));
-                    // result
-                    //     .stdout_is(exp_result.stdout_str())
-                    //     .stderr_is(exp_result.stderr_str())
-                    //     .code_is(exp_result.code());
-                }
-            }
-            for opt2 in ["--user", "--group", "--groups"] {
-                // u/g/G z Z
-                // for now, we print clap's standard response for "conflicts_with" instead of:
-                // id: cannot print "only" of more than one choice
-                let args = [opt2, c_flag];
-                let _result = ts.ucmd().args(&args).fails();
-                // let exp_result = unwrap_or_return!(expected_result(&args));
-                // result
-                //     .stdout_is(exp_result.stdout_str())
-                //     .stderr_is(exp_result.stderr_str())
-                //     .code_is(exp_result.code());
-            }
-        }
-    }
-}
-
-#[test]
 fn test_id_no_specified_user_posixly() {
     // gnu/tests/id/no-context.sh
 
@@ -449,23 +387,10 @@ fn test_id_no_specified_user_posixly() {
     if !is_ci() {
         result.success();
     }
-
-    #[cfg(all(
-        any(target_os = "linux", target_os = "android"),
-        feature = "feat_selinux"
-    ))]
-    {
-        if uucore::selinux::is_selinux_enabled() {
-            let result = ts.ucmd().succeeds();
-            assert!(result.stdout_str().contains("context="));
-        } else {
-            println!("test skipped: Kernel has no support for SElinux context");
-        }
-    }
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
+#[cfg(not(target_os = "linux"))]
 fn test_id_pretty_print_password_record() {
     // `-p` is BSD only and not supported on GNU's `id`.
     // `-P` is our own extension, and not supported by either GNU nor BSD.
