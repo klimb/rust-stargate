@@ -34,13 +34,13 @@ pub fn uu_app() -> Command {
     Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
-        .about(translate!("get_hostname-about"))
+        .about(translate!("get_domainname-about"))
         .override_usage(format_usage(&translate!("get_domainname-usage")))
 }
 
 fn print_domainname(matches: &ArgMatches) -> UResult<()> {
     let fqdn = hostname::get()
-        .map_err_context(|| "failed to get domainname".to_owned())?
+        .map_err_context(|| "failed to get domain name".to_owned())?
         .to_string_lossy()
         .into_owned();
 
@@ -50,7 +50,7 @@ fn print_domainname(matches: &ArgMatches) -> UResult<()> {
         println!("{}", domain_name);
     }
 
-    println!("");
+    println!();
 
     Ok(())
 }

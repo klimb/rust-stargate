@@ -6,15 +6,17 @@ use uutests::new_ucmd;
 
 #[test]
 fn test_get_domainname_full() {
-    let ls_short_res = new_ucmd!().arg("-s").succeeds();
-    assert!(!ls_short_res.stdout_str().trim().is_empty());
+    let output = new_ucmd!().succeeds();
+    assert!(!output.stdout_str().trim().is_empty());
 
     new_ucmd!()
         .succeeds()
-        .stdout_contains(ls_short_res.stdout_str().trim());
+        .stdout_contains(output.stdout_str().trim());
 }
 
 #[test]
 fn test_invalid_arg() {
-    new_ucmd!().arg("--definitely-invalid").fails_with_code(1);
+    new_ucmd!()
+        .arg("--bad-param")
+        .fails_with_code(1);
 }
