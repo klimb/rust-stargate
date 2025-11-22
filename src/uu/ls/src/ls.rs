@@ -35,23 +35,13 @@ use lscolors::{Colorable, LsColors};
 use term_grid::{DEFAULT_SEPARATOR_SIZE, Direction, Filling, Grid, GridOptions, SPACES_IN_TAB};
 use thiserror::Error;
 
-#[cfg(unix)]
 use uucore::entries;
-#[cfg(all(unix, not(any(target_os = "android", target_os = "macos"))))]
-use uucore::fsxattr::has_acl;
-#[cfg(unix)]
 use uucore::libc::{S_IXGRP, S_IXOTH, S_IXUSR};
 #[cfg(any(
     target_os = "linux",
     target_os = "macos",
-    target_os = "android",
-    target_os = "ios",
     target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "netbsd",
     target_os = "openbsd",
-    target_os = "illumos",
-    target_os = "solaris"
 ))]
 use uucore::libc::{dev_t, major, minor};
 use uucore::{
@@ -160,7 +150,6 @@ pub mod options {
     pub static FULL_TIME: &str = "full-time";
     pub static HIDE: &str = "hide";
     pub static IGNORE: &str = "ignore";
-    pub static CONTEXT: &str = "context";
     pub static GROUP_DIRECTORIES_FIRST: &str = "group-directories-first";
     pub static ZERO: &str = "zero";
     pub static DIRED: &str = "dired";
@@ -361,7 +350,6 @@ pub struct Config {
     indicator_style: IndicatorStyle,
     time_format_recent: String,        // Time format for recent dates
     time_format_older: Option<String>, // Time format for older dates (optional, if not present, time_format_recent is used)
-    context: bool,
     group_directories_first: bool,
     line_ending: LineEnding,
     dired: bool,
@@ -384,7 +372,6 @@ struct PaddingCollection {
     link_count: usize,
     uname: usize,
     group: usize,
-    context: usize,
     size: usize,
     #[cfg(unix)]
     major: usize,
@@ -798,7 +785,6 @@ fn parse_width(width_match: Option<&String>) -> Result<u16, LsError> {
 impl Config {
     #[allow(clippy::cognitive_complexity)]
     pub fn from(options: &clap::ArgMatches) -> UResult<Self> {
-        let context = options.get_flag(options::CONTEXT);
         let (mut format, opt) = extract_format(options);
         let files = extract_files(options);
 
@@ -1154,7 +1140,6 @@ impl Config {
             indicator_style,
             time_format_recent,
             time_format_older,
-            context,
             group_directories_first: options.get_flag(options::GROUP_DIRECTORIES_FIRST),
             line_ending: LineEnding::from_zero_flag(options.get_flag(options::ZERO)),
             dired,
@@ -1811,13 +1796,6 @@ pub fn uu_app() -> Command {
             .action(ArgAction::SetTrue),
     )
     .arg(
-        Arg::new(options::CONTEXT)
-            .short('Z')
-            .long(options::CONTEXT)
-            .help(translate!("ls-help-context"))
-            .action(ArgAction::SetTrue),
-    )
-    .arg(
         Arg::new(options::GROUP_DIRECTORIES_FIRST)
             .long(options::GROUP_DIRECTORIES_FIRST)
             .help(translate!("ls-help-group-directories-first"))
@@ -1844,7 +1822,6 @@ struct PathData {
     // can be used to avoid reading the filetype. Can be also called d_type:
     // https://www.gnu.org/software/libc/manual/html_node/Directory-Entries.html
     de: RefCell<Option<Box<DirEntry>>>,
-    security_context: OnceCell<Box<str>>,
     // Name of the file - will be empty for . or ..
     display_name: OsString,
     // PathBuf that all above data corresponds to
@@ -1895,7 +1872,6 @@ impl PathData {
         // nearly free compared to a metadata() call on a Path
         let ft: OnceCell<Option<FileType>> = OnceCell::new();
         let md: OnceCell<Option<Metadata>> = OnceCell::new();
-        let security_context: OnceCell<Box<str>> = OnceCell::new();
 
         let de: RefCell<Option<Box<DirEntry>>> = if let Some(de) = dir_entry {
             if must_dereference {
@@ -1918,7 +1894,6 @@ impl PathData {
             md,
             ft,
             de,
-            security_context,
             display_name,
             p_buf,
             must_dereference,
@@ -1974,15 +1949,9 @@ impl PathData {
         self.must_dereference && self.file_type().is_none() && self.metadata().is_none()
     }
 
-    #[cfg(unix)]
     fn is_executable_file(&self) -> bool {
         self.file_type().is_some_and(|f| f.is_file())
             && self.metadata().is_some_and(file_is_executable)
-    }
-
-    fn security_context(&self, config: &Config) -> &str {
-        self.security_context
-            .get_or_init(|| get_security_context(&self.p_buf, self.must_dereference, config).into())
     }
 
     fn path(&self) -> &Path {
@@ -2518,9 +2487,6 @@ fn display_items(
     state: &mut ListState,
     dired: &mut DiredOutput,
 ) -> UResult<()> {
-    // `-Z`, `--context`:
-    // Display the SELinux security context or '?' if none is found. When used with the `-l`
-    // option, print the security context to the left of the size column.
 
     let quoted = items.iter().any(|item| {
         let name = locale_aware_escape_name(item.display_name(), config.quoting_style);
@@ -2545,17 +2511,6 @@ fn display_items(
             display_item_long(item, &padding_collection, config, state, dired, quoted)?;
         }
     } else {
-        let mut longest_context_len = 1;
-        let prefix_context = if config.context {
-            for item in items {
-                let context_len = item.security_context(config).len();
-                longest_context_len = context_len.max(longest_context_len);
-            }
-            Some(longest_context_len)
-        } else {
-            None
-        };
-
         let padding = calculate_padding_collection(items, config, state);
 
         // we need to apply normal color to non filename output
@@ -2583,7 +2538,6 @@ fn display_items(
             let cell = display_item_name(
                 i,
                 config,
-                prefix_context,
                 more_info,
                 state,
                 LazyCell::new(Box::new(|| 0)),
@@ -2800,19 +2754,8 @@ fn display_item_long(
         output_display.extend(b"  ");
     }
     if let Some(md) = item.metadata() {
-        #[cfg(any(not(unix), target_os = "android", target_os = "macos"))]
-        // TODO: See how Mac should work here
-        let is_acl_set = false;
-        #[cfg(all(unix, not(any(target_os = "android", target_os = "macos"))))]
-        let is_acl_set = has_acl(item.path());
+
         output_display.extend(display_permissions(md, true).as_bytes());
-        if item.security_context(config).len() > 1 {
-            // GNU `ls` uses a "." character to indicate a file with a security context,
-            // but not other alternate access method.
-            output_display.extend(b".");
-        } else if is_acl_set {
-            output_display.extend(b"+");
-        }
         output_display.extend(b" ");
         output_display.extend_pad_left(&display_symlink_count(md), padding.link_count);
 
@@ -2826,10 +2769,6 @@ fn display_item_long(
             output_display.extend_pad_right(display_group(md, config, state), padding.group);
         }
 
-        if config.context {
-            output_display.extend(b" ");
-            output_display.extend_pad_right(item.security_context(config), padding.context);
-        }
 
         // Author is only different from owner on GNU/Hurd, so we reuse
         // the owner, since GNU/Hurd is not currently supported by Rust.
@@ -2875,7 +2814,6 @@ fn display_item_long(
             item,
             config,
             None,
-            None,
             state,
             LazyCell::new(Box::new(|| {
                 ansi_width(&String::from_utf8_lossy(&output_display))
@@ -2901,27 +2839,6 @@ fn display_item_long(
         write_os_str(&mut output_display, &displayed_item)?;
         output_display.extend(config.line_ending.to_string().as_bytes());
     } else {
-        #[cfg(unix)]
-        let leading_char = {
-            if let Some(ft) = item.file_type() {
-                if ft.is_char_device() {
-                    "c"
-                } else if ft.is_block_device() {
-                    "b"
-                } else if ft.is_symlink() {
-                    "l"
-                } else if ft.is_dir() {
-                    "d"
-                } else {
-                    "-"
-                }
-            } else if item.is_dangling_link() {
-                "l"
-            } else {
-                "-"
-            }
-        };
-        #[cfg(not(unix))]
         let leading_char = {
             if let Some(ft) = item.file_type() {
                 if ft.is_symlink() {
@@ -2940,11 +2857,7 @@ fn display_item_long(
 
         output_display.extend(leading_char.as_bytes());
         output_display.extend(b"?????????");
-        if item.security_context(config).len() > 1 {
-            // GNU `ls` uses a "." character to indicate a file with a security context,
-            // but not other alternate access method.
-            output_display.extend(b".");
-        }
+
         output_display.extend(b" ");
         output_display.extend_pad_left("?", padding.link_count);
 
@@ -2958,11 +2871,6 @@ fn display_item_long(
             output_display.extend_pad_right("?", padding.group);
         }
 
-        if config.context {
-            output_display.extend(b" ");
-            output_display.extend_pad_right(item.security_context(config), padding.context);
-        }
-
         // Author is only different from owner on GNU/Hurd, so we reuse
         // the owner, since GNU/Hurd is not currently supported by Rust.
         if config.long.author {
@@ -2973,7 +2881,6 @@ fn display_item_long(
         let displayed_item = display_item_name(
             item,
             config,
-            None,
             None,
             state,
             LazyCell::new(Box::new(|| {
@@ -3033,16 +2940,6 @@ fn display_group<'a>(metadata: &Metadata, config: &Config, state: &'a mut ListSt
             entries::gid2grp(gid).unwrap_or_else(|_| gid.to_string())
         }
     })
-}
-
-#[cfg(not(unix))]
-fn display_uname(_metadata: &Metadata, _config: &Config, _state: &mut ListState) -> &'static str {
-    "somebody"
-}
-
-#[cfg(not(unix))]
-fn display_group(_metadata: &Metadata, _config: &Config, _state: &mut ListState) -> &'static str {
-    "somegroup"
 }
 
 fn display_date(
@@ -3154,7 +3051,6 @@ fn classify_file(path: &PathData) -> Option<char> {
 /// * `config.indicator_style` to append specific characters to `name` using [`classify_file`].
 /// * `config.format` to display symlink targets if `Format::Long`. This function is also
 ///   responsible for coloring symlink target names if `config.color` is specified.
-/// * `config.context` to prepend security context to `name` if compiled with `feat_selinux`.
 /// * `config.hyperlink` decides whether to hyperlink the item
 ///
 /// Note that non-unicode sequences in symlink targets are dealt with using
@@ -3163,7 +3059,6 @@ fn classify_file(path: &PathData) -> Option<char> {
 fn display_item_name(
     path: &PathData,
     config: &Config,
-    prefix_context: Option<usize>,
     more_info: Option<String>,
     state: &mut ListState,
     current_column: LazyCell<usize, Box<dyn FnOnce() -> usize + '_>>,
@@ -3275,22 +3170,6 @@ fn display_item_name(
         }
     }
 
-    // Prepend the security context to the `name` and adjust `width` in order
-    // to get correct alignment from later calls to`display_grid()`.
-    if config.context {
-        if let Some(pad_count) = prefix_context {
-            let security_context = if matches!(config.format, Format::Commas) {
-                path.security_context(config).to_string()
-            } else {
-                pad_left(path.security_context(config), pad_count)
-            };
-
-            let old_name = name;
-            name = format!("{security_context} ").into();
-            name.push(old_name);
-        }
-    }
-
     name
 }
 
@@ -3339,33 +3218,6 @@ fn display_inode(metadata: &Metadata) -> String {
     get_inode(metadata)
 }
 
-/// This returns the `SELinux` security context as UTF8 `String`.
-/// In the long term this should be changed to [`OsStr`], see discussions at #2621/#2656
-fn get_security_context<'a>(
-    path: &'a Path,
-    must_dereference: bool,
-    config: &'a Config,
-) -> Cow<'a, str> {
-    static SUBSTITUTE_STRING: &str = "?";
-
-    // If we must dereference, ensure that the symlink is actually valid even if the system
-    // does not support SELinux.
-    // Conforms to the GNU coreutils where a dangling symlink results in exit code 1.
-    if must_dereference {
-        if let Err(err) = get_metadata_with_deref_opt(path, must_dereference) {
-            // The Path couldn't be dereferenced, so return early and set exit code 1
-            // to indicate a minor error
-            // Only show error when context display is requested to avoid duplicate messages
-            if config.context {
-                show!(LsError::IOErrorContext(path.to_path_buf(), err, false));
-            }
-            return Cow::Borrowed(SUBSTITUTE_STRING);
-        }
-    }
-
-    Cow::Borrowed(SUBSTITUTE_STRING)
-}
-
 #[cfg(unix)]
 fn calculate_padding_collection(
     items: &[PathData],
@@ -3377,7 +3229,6 @@ fn calculate_padding_collection(
         link_count: 1,
         uname: 1,
         group: 1,
-        context: 1,
         size: 1,
         major: 1,
         minor: 1,
@@ -3403,15 +3254,12 @@ fn calculate_padding_collection(
         }
 
         if config.format == Format::Long {
-            let context_len = item.security_context(config).len();
             let (link_count_len, uname_len, group_len, size_len, major_len, minor_len) =
                 display_dir_entry_size(item, config, state);
             padding_collections.link_count = link_count_len.max(padding_collections.link_count);
             padding_collections.uname = uname_len.max(padding_collections.uname);
             padding_collections.group = group_len.max(padding_collections.group);
-            if config.context {
-                padding_collections.context = context_len.max(padding_collections.context);
-            }
+
             if items.len() == 1usize {
                 padding_collections.size = 0usize;
                 padding_collections.major = 0usize;
@@ -3424,44 +3272,6 @@ fn calculate_padding_collection(
                     .max(padding_collections.major);
             }
         }
-    }
-
-    padding_collections
-}
-
-#[cfg(not(unix))]
-fn calculate_padding_collection(
-    items: &[PathData],
-    config: &Config,
-    state: &mut ListState,
-) -> PaddingCollection {
-    let mut padding_collections = PaddingCollection {
-        link_count: 1,
-        uname: 1,
-        group: 1,
-        context: 1,
-        size: 1,
-        block_size: 1,
-    };
-
-    for item in items {
-        if config.alloc_size {
-            if let Some(md) = item.metadata() {
-                let block_size_len = display_size(get_block_size(md, config), config).len();
-                padding_collections.block_size = block_size_len.max(padding_collections.block_size);
-            }
-        }
-
-        let context_len = item.security_context(config).len();
-        let (link_count_len, uname_len, group_len, size_len, _major_len, _minor_len) =
-            display_dir_entry_size(item, config, state);
-        padding_collections.link_count = link_count_len.max(padding_collections.link_count);
-        padding_collections.uname = uname_len.max(padding_collections.uname);
-        padding_collections.group = group_len.max(padding_collections.group);
-        if config.context {
-            padding_collections.context = context_len.max(padding_collections.context);
-        }
-        padding_collections.size = size_len.max(padding_collections.size);
     }
 
     padding_collections

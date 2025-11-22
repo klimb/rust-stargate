@@ -6,8 +6,7 @@ stat-after-help = Valid format sequences for files (without `--file-system`):
   -`%A`: access rights in human readable form
   -`%b`: number of blocks allocated (see %B)
   -`%B`: the size in bytes of each block reported by %b
-  -`%C`: SELinux security context string
-  -`%d`: device number in decimal
+    -`%d`: device number in decimal
   -`%D`: device number in hex
   -`%f`: raw mode in hex
   -`%F`: file type

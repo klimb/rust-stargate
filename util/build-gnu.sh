@@ -103,8 +103,6 @@ cd -
 
 # Pass the feature flags to make, which will pass them to cargo
 "${MAKE}" PROFILE="${UU_MAKE_PROFILE}" CARGOFLAGS="${CARGO_FEATURE_FLAGS}"
-# min test for SELinux
-[ "${SELINUX_ENABLED}" = 1 ] && touch g && "${UU_MAKE_PROFILE}"/stat -c%C g && rm g
 
 cp "${UU_BUILD_DIR}/install" "${UU_BUILD_DIR}/ginstall" # The GNU tests rename this script before running, to avoid confusion with the make target
 # Create *sum binaries
@@ -137,9 +135,9 @@ else
     # Change the PATH to test the uutils coreutils instead of the GNU coreutils
     sed -i "s/^[[:blank:]]*PATH=.*/  PATH='${UU_BUILD_DIR//\//\\/}\$(PATH_SEPARATOR)'\"\$\$PATH\" \\\/" tests/local.mk
     ./bootstrap --skip-po
-    ./configure --quiet --disable-gcc-warnings --disable-nls --disable-dependency-tracking --disable-bold-man-page-references \
-      "$([ "${SELINUX_ENABLED}" = 1 ] && echo --with-selinux || echo --without-selinux)"
-    #Add timeout to to protect against hangs
+    ./configure --quiet --disable-gcc-warnings --disable-nls --disable-dependency-tracking --disable-bold-man-page-references --without-selinux
+
+     #Add timeout to to protect against hangs
     sed -i 's|^"\$@|'"${SYSTEM_TIMEOUT}"' 600 "\$@|' build-aux/test-driver
     sed -i 's| tr | /usr/bin/tr |' tests/init.sh
     # Use a better diff
@@ -245,9 +243,6 @@ sed -i "s/  {ERR_SUBST=>\"s\/(unrecognized|unknown) option \[-' \]\*foobar\[' \]
 
 # Remove the check whether a util was built. Otherwise tests against utils like "arch" are not run.
 sed -i "s|require_built_ |# require_built_ |g" init.cfg
-
-# exit early for the selinux check. The first is enough for us.
-sed -i "s|# Independent of whether SELinux|return 0\n  #|g" init.cfg
 
 # Some tests are executed with the "nobody" user.
 # The check to verify if it works is based on the GNU coreutils version
@@ -361,7 +356,4 @@ sed -i  's/\/usr\/bin\/tr/$(which tr)/' tests/init.sh
 # but we do. We should keep it that way.
 sed -i 's/echo "changing security context/echo "chcon: changing security context/' tests/chcon/chcon.sh
 
-# Disable this test, it is not relevant for us:
-# * the selinux crate is handling errors
-# * the test says "maybe we should not fail when no context available"
-sed -i -e "s|returns_ 1||g" tests/cp/no-ctx.sh
+

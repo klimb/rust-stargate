@@ -62,9 +62,6 @@ fn get_mode(matches: &ArgMatches) -> Result<u32, String> {
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    // Linux-specific options, not implemented
-    // opts.optflag("Z", "context", "set SELinux security context" +
-    // " of each created directory to CTX"),
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let dirs = matches

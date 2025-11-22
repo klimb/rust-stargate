@@ -25,10 +25,7 @@
 //
 // * Help text based on BSD's `id` manpage and GNU's `id` manpage.
 //
-// * This passes GNU's coreutils Test suite (8.32) for "tests/id/context.sh" if compiled with
-//   `--features feat_selinux`. It should also pass "tests/id/no-context.sh", but that depends on
-//   `uu_ls -Z` being implemented and therefore fails at the moment
-//
+
 
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
@@ -94,20 +91,6 @@ struct State {
     gsflag: bool, // --groups
     rflag: bool,  // --real
     ids: Option<Ids>,
-    // The behavior for calling GNU's `id` and calling GNU's `id $USER` is similar but different.
-    // * The SELinux context is only displayed without a specified user.
-    // * The `getgroups` system call is only used without a specified user, this causes
-    //   the order of the displayed groups to be different between `id` and `id $USER`.
-    //
-    // Example:
-    // $ strace -e getgroups id -G $USER
-    // 1000 10 975 968
-    // +++ exited with 0 +++
-    // $ strace -e getgroups id -G
-    // getgroups(0, NULL)                      = 4
-    // getgroups(4, [10, 968, 975, 1000])      = 4
-    // 1000 10 968 975
-    // +++ exited with 0 +++
     user_specified: bool,
 }
 

@@ -43,49 +43,6 @@ cd "${path_GNU}" && echo "[ pwd:'${PWD}' ]"
 
 export RUST_BACKTRACE=1
 
-# Determine if we have SELinux tests
-has_selinux_tests=false
-if test $# -ge 1; then
-    for t in "$@"; do
-        if [[ "$t" == *"selinux"* ]]; then
-                has_selinux_tests=true
-                break
-        fi
-    done
-fi
-
-if [[ "$1" == "run-root" && "$has_selinux_tests" == true ]]; then
-    # Handle SELinux root tests separately
-    shift
-    if test -n "$CI"; then
-        echo "Running SELinux tests as root"
-        # Don't use check-root here as the upstream root tests is hardcoded
-        sudo "${MAKE}" -j "$("${NPROC}")" check TESTS="$*" SUBDIRS=. RUN_EXPENSIVE_TESTS=yes RUN_VERY_EXPENSIVE_TESTS=yes VERBOSE=no gl_public_submodule_commit="" srcdir="${path_GNU}" TEST_SUITE_LOG="tests/test-suite-root.log" || :
-    fi
-    exit 0
-elif test "$1" != "run-root"; then
-    if test $# -ge 1; then
-        # if set, run only the tests passed
-        SPECIFIC_TESTS=""
-        for t in "$@"; do
-
-            # Construct the full path
-            full_path="$path_GNU/$t"
-
-            # Check if the file exists with .sh, .pl extension or without any extension in the $path_GNU directory
-            if [ -f "$full_path" ] || [ -f "$full_path.sh" ] || [ -f "$full_path.pl" ]; then
-                SPECIFIC_TESTS="$SPECIFIC_TESTS $t"
-            else
-                echo "Error: Test file $full_path, $full_path.sh, or $full_path.pl does not exist!"
-                exit 1
-            fi
-        done
-        # trim it
-        SPECIFIC_TESTS=$(echo "$SPECIFIC_TESTS" | xargs)
-        echo "Running specific tests: $SPECIFIC_TESTS"
-    fi
-fi
-
 # * timeout used to kill occasionally errant/"stuck" processes (note: 'release' testing takes ~1 hour; 'debug' testing takes ~2.5 hours)
 # * `gl_public_submodule_commit=` disables testing for use of a "public" gnulib commit (which will fail when using shallow gnulib checkouts)
 # * `srcdir=..` specifies the GNU source directory for tests (fixing failing/confused 'tests/factor/tNN.sh' tests and causing no harm to other tests)

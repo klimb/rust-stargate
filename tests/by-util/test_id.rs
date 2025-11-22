@@ -31,15 +31,6 @@ fn test_id_no_specified_user() {
     let exp_result = unwrap_or_return!(expected_result(&ts, &[]));
     let mut exp_stdout = exp_result.stdout_str().to_string();
 
-    // NOTE: strip 'context' part from exp_stdout if selinux not enabled:
-    // example:
-    // uid=1001(runner) gid=121(docker) groups=121(docker),4(adm),101(systemd-journal) \
-    // context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
-    if let Some(context_offset) = exp_result.stdout_str().find(" context=") {
-        exp_stdout.replace_range(context_offset..exp_stdout.len() - 1, "");
-    }
-
-
     result
         .stdout_is(exp_stdout)
         .stderr_is(exp_result.stderr_str())

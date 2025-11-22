@@ -14,15 +14,6 @@
   in {
     devShells = eachSystem (
       system: let
-        libselinuxPath = with pkgsFor.${system};
-          lib.makeLibraryPath [
-            libselinux
-          ];
-
-        libaclPath = with pkgsFor.${system};
-          lib.makeLibraryPath [
-            acl
-          ];
 
         build_deps = with pkgsFor.${system}; [
           clang
@@ -56,18 +47,6 @@
             export PATH=$PATH:''${RUSTUP_HOME:-~/.rustup}/toolchains/$RUSTC_VERSION-x86_64-unknown-linux-gnu/bin/
           '';
 
-          SELINUX_INCLUDE_DIR = ''${pkgsFor.${system}.libselinux.dev}/include'';
-          SELINUX_LIB_DIR = libselinuxPath;
-          SELINUX_STATIC = "0";
-
-          # Necessary to build GNU.
-          LDFLAGS = ''-L ${libselinuxPath} -L ${libaclPath}'';
-
-          # Add precompiled library to rustc search path
-          RUSTFLAGS = [
-            ''-L ${libselinuxPath}''
-            ''-L ${libaclPath}''
-          ];
         };
       }
     );

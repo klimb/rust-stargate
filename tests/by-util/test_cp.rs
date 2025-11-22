@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 // spell-checker:ignore (flags) reflink (fs) tmpfs (linux) rlimit Rlim NOFILE clob btrfs neve ROOTDIR USERDIR outfile uufs xattrs
-// spell-checker:ignore bdfl hlsl IRWXO IRWXG nconfined matchpathcon libselinux-devel prwx doesnotexist reftests subdirs mksocket srwx
+// spell-checker:ignore bdfl hlsl IRWXO IRWXG nconfined matchpathcon prwx doesnotexist reftests subdirs mksocket srwx
 use uucore::display::Quotable;
 
 use uutests::util::TestScenario;
@@ -1768,22 +1768,6 @@ fn test_cp_preserve_invalid_rejected() {
 }
 
 #[test]
-#[cfg(target_os = "android")]
-#[ignore = "disabled until fixed"] // FIXME: the test looks to .succeed on android
-fn test_cp_preserve_xattr_fails_on_android() {
-    // Because of the SELinux extended attributes used on Android, trying to copy extended
-    // attributes has to fail in this case, since we specify `--preserve=xattr` and this puts it
-    // into the required attributes
-    new_ucmd!()
-        .arg(TEST_COPY_FROM_FOLDER_FILE)
-        .arg(TEST_HELLO_WORLD_DEST)
-        .arg("--preserve=xattr")
-        .fails();
-}
-
-#[test]
-// android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_1() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1807,8 +1791,6 @@ fn test_cp_preserve_links_case_1() {
 }
 
 #[test]
-// android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_2() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1838,8 +1820,6 @@ fn test_cp_preserve_links_case_2() {
 }
 
 #[test]
-// android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_3() {
     let (at, mut ucmd) = at_and_ucmd!();
 

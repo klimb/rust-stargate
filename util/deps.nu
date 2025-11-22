@@ -85,7 +85,7 @@ def add_dep_type [dep_type: string, features: list<string>]: table<> -> table<> 
 }
 
 export def all_dep_info [] {
-    let features = [unix, feat_selinux]
+    let features = [unix]
 
     let lock = open Cargo.lock | from toml | get package
     

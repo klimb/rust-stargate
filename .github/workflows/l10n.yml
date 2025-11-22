@@ -50,8 +50,7 @@ jobs:
         ## Install/setup prerequisites
         case '${{ matrix.job.os }}' in
           ubuntu-*)
-            # selinux headers needed for testing
-            sudo apt-get -y update ; sudo apt-get -y install libselinux1-dev
+            sudo apt-get -y update
           ;;
           macos-*)
             # needed for testing
@@ -141,7 +140,7 @@ jobs:
     - name: Install/setup prerequisites
       shell: bash
       run: |
-        sudo apt-get -y update ; sudo apt-get -y install libselinux1-dev locales
+        sudo apt-get -y update ; sudo apt-get -y install locales
         sudo locale-gen --keep-existing fr_FR.UTF-8
         locale -a | grep -i fr || exit 1
     - name: Build coreutils with clap localization support
@@ -312,7 +311,7 @@ jobs:
       shell: bash
       run: |
         ## Install/setup prerequisites
-        sudo apt-get -y update ; sudo apt-get -y install libselinux1-dev locales
+        sudo apt-get -y update ; sudo apt-get -y install locales
     - name: Generate French locale
       shell: bash
       run: |
@@ -429,7 +428,7 @@ jobs:
         ## Install/setup prerequisites
         case '${{ matrix.job.os }}' in
           ubuntu-*)
-            sudo apt-get -y update ; sudo apt-get -y install libselinux1-dev build-essential
+            sudo apt-get -y update ; sudo apt-get -y install build-essential
           ;;
           macos-*)
             brew install coreutils make
@@ -580,7 +579,7 @@ jobs:
         ## Install/setup prerequisites
         case '${{ matrix.job.os }}' in
           ubuntu-*)
-            sudo apt-get -y update ; sudo apt-get -y install libselinux1-dev build-essential locales
+            sudo apt-get -y update ; sudo apt-get -y install build-essential locales
             # Generate French locale for testing
             sudo locale-gen --keep-existing fr_FR.UTF-8
             locale -a | grep -i fr || echo "French locale generation may have failed"
@@ -912,7 +911,7 @@ jobs:
       run: |
         ## Install/setup prerequisites including locale support
         sudo apt-get -y update
-        sudo apt-get -y install libselinux1-dev locales build-essential
+        sudo apt-get -y install locales build-essential
 
         # Generate multiple locales for testing
         sudo locale-gen --keep-existing en_US.UTF-8 fr_FR.UTF-8 de_DE.UTF-8 es_ES.UTF-8
@@ -1141,7 +1140,7 @@ jobs:
     - name: Install/setup prerequisites
       shell: bash
       run: |
-        sudo apt-get -y update && sudo apt-get -y install libselinux1-dev
+        sudo apt-get -y update
     - name: Test embedded locale functionality for individual utilities
       shell: bash
       run: |
@@ -1160,7 +1159,7 @@ jobs:
         # Use different cache key for each build to avoid conflicts
         key: cat-locale-embedding
     - name: Install prerequisites
-      run: sudo apt-get -y update && sudo apt-get -y install libselinux1-dev build-essential
+      run: sudo apt-get -y update && sudo apt-get -y install build-essential
     - name: Build cat with targeted locale embedding
       run: UUCORE_TARGET_UTIL=cat cargo build -p uu_cat --release
     - name: Verify cat locale count
@@ -1192,7 +1191,7 @@ jobs:
         # Use different cache key for each build to avoid conflicts
         key: ls-locale-embedding
     - name: Install prerequisites
-      run: sudo apt-get -y update && sudo apt-get -y install libselinux1-dev build-essential
+      run: sudo apt-get -y update && sudo apt-get -y install build-essential
     - name: Build ls with targeted locale embedding
       run: UUCORE_TARGET_UTIL=ls cargo build -p uu_ls --release
     - name: Verify ls locale count
@@ -1224,7 +1223,7 @@ jobs:
         # Use different cache key for each build to avoid conflicts
         key: multicall-locale-embedding
     - name: Install prerequisites
-      run: sudo apt-get -y update && sudo apt-get -y install libselinux1-dev build-essential
+      run: sudo apt-get -y update && sudo apt-get -y install build-essential
     - name: Build multicall binary with all locales
       run: cargo build --release
     - name: Verify multicall locale count
@@ -1264,7 +1263,7 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install libselinux1-dev locales
+        sudo apt-get -y install locales
         # Generate French locale for testing
         sudo locale-gen --keep-existing fr_FR.UTF-8
         locale -a | grep -i fr || exit 1

@@ -42,7 +42,6 @@ cp-help-archive = Same as -dR --preserve=all
 cp-help-no-dereference-preserve-links = same as --no-dereference --preserve=links
 cp-help-one-file-system = stay on this file system
 cp-help-sparse = control creation of sparse files. See below
-cp-help-selinux = set SELinux security context of destination file to default type
 cp-help-context = like -Z, or if CTX is specified then set the SELinux or SMACK security context to CTX
 cp-help-progress = Display a progress bar. Note: this feature is not supported by GNU coreutils.
 cp-help-copy-contents = NotImplemented: copy contents of special files when recursive
