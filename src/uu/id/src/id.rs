@@ -93,8 +93,6 @@ struct State {
     gflag: bool,  // --group
     gsflag: bool, // --groups
     rflag: bool,  // --real
-    zflag: bool,  // --zero
-    cflag: bool,  // --context
     ids: Option<Ids>,
     // The behavior for calling GNU's `id` and calling GNU's `id $USER` is similar but different.
     // * The SELinux context is only displayed without a specified user.
@@ -129,8 +127,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         gflag: matches.get_flag(options::OPT_GROUP),
         gsflag: matches.get_flag(options::OPT_GROUPS),
         rflag: matches.get_flag(options::OPT_REAL_ID),
-        zflag: matches.get_flag(options::OPT_ZERO),
-        cflag: matches.get_flag(options::OPT_CONTEXT),
         user_specified: !users.is_empty(),
         ids: None,
     };
@@ -140,35 +136,15 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         !(state.uflag || state.gflag || state.gsflag)
     };
 
-    if (state.nflag || state.rflag) && default_format && !state.cflag {
+    if (state.nflag || state.rflag) && default_format {
         return Err(USimpleError::new(
             1,
             translate!("id-error-names-real-ids-require-flags"),
         ));
     }
-    if state.zflag && default_format && !state.cflag {
-        // NOTE: GNU test suite "id/zero.sh" needs this stderr output:
-        return Err(USimpleError::new(
-            1,
-            translate!("id-error-zero-not-permitted-default"),
-        ));
-    }
-    if state.user_specified && state.cflag {
-        return Err(USimpleError::new(
-            1,
-            translate!("id-error-cannot-print-context-with-user"),
-        ));
-    }
 
-    let delimiter = if state.zflag { "\0" } else { " " };
-    let line_ending = LineEnding::from_zero_flag(state.zflag);
-
-    if state.cflag {
-        return Err(USimpleError::new(
-                1,
-                translate!("id-error-context-selinux-only"),
-            ))
-    }
+    let delimiter = "";
+    let line_ending = LineEnding::from_zero_flag(false);
 
     for i in 0..=users.len() {
         let possible_pw = if state.user_specified {
@@ -292,12 +268,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                     })
                     .collect::<Vec<_>>()
                     .join(delimiter),
-                // NOTE: this is necessary to pass GNU's "tests/id/zero.sh":
-                if state.zflag && state.user_specified && users.len() > 1 {
-                    "\0"
-                } else {
                     ""
-                }
             );
         }
 

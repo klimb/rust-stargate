@@ -61,9 +61,7 @@ fn test_terse_normal_format() {
     let mut v_expect: Vec<&str> = expect.trim().split(' ').collect();
     assert!(!v_expect.is_empty());
 
-    // uu_stat does not support selinux
     if v_actual.len() == v_expect.len() - 1 && v_expect[v_expect.len() - 1].contains(':') {
-        // assume last element contains: `SELinux security context string`
         v_expect.pop();
     }
 
