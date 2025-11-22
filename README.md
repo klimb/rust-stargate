@@ -20,6 +20,6 @@ Stargate (Rust implementation of Dreamland):
 - Standardize on input parameters (don't care about legacy POSIX): -r is always recursive, -v is always verbose ... etc. Stuff works as expected. A command that takes lots of parameters is doing too much, and branches too much. Its that simple.
 - Introduce a super thin object layer (for optional object output), so piping is faster by an order of magnitude (in some cases). Instead of searching in unstructured streams of text output (such as stdout), it will be a selection, slicing and dicing. Monad / MS Powershell has awesome design ideas. They came from UNIX ideas. Some UNIX ideas: (1) Do one thing and do it well. (2) Everything is a file (including pipes, stdout (just a special file), stderr (its also just a special file), directories are files, pipes and sockets are also files, etc). (3) Commands can be chained together with pipes. Output of one becomes an input into another (so far its been done as unstructured text; stderr is a design flaw).
 - Some stats: Rust is way better for this than C (by like 1 million percent, give or take).
-- Target platforms: Tier-1 is FreeBSD and OpenBSD (sorry). Tier-2 is supporting GNU/Linux & Mac OS X (works fine).
+- Target platforms: FreeBSD, OpenBSD, GNU/Linux & Mac OS X.
 
 Its much easier to do AI magic when your stuff speaks ultra simple English. 
