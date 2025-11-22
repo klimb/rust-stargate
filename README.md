@@ -1,7 +1,7 @@
 Stargate (Rust implementation of Dreamland):
 --------------------------------------------
 - [UNIX userland was always as mess, you're just used to it](https://www.linkedin.com/pulse/unix-userland-always-mess-youre-just-used-dmitry-kalashnikov-2k6sc)
-- ever wondered why its rm -rf, yet its chown -Rf dvk:dvk? ls ("list" what? I think you mean directory files .. etc)
+- ever wondered why its rm -rf, yet its chown -Rf dvk:dvk? ls ("list" what? I think you mean directory files .. etc). Why does "rm" also handle recursive removal of sub-directories, when its supposed to just "remove directory entries"? Why do we need "rmdir -p a/b/c" to duplicate this? why is it -p (instead of r)? Better name and parameter: remove-directory -r 
 - standardizing UNIX "userland" (commands you type) naming with verb-noun and their parameters (-h always means help, -v verbose and so on). Its obvious that some parameters are common, some unique per command. Needs a thin parameter parsing
  layer. And structured (command) output for selection instead of searching through text streams (super slow, big-O). This is also a common parameter.
 - some commands are focused on doing one thing and doing it well, and can be expressed as a verb-noun: ls is list-directory. Other commands (already) handle multiple verbs: hostname (hostname: "set or print name of current host system"). They can be split into set-hostname and get-hostname commands (disk space is not a concern in 2025). Or they need to be noun verb instead of verb noun: freebsd-update fetch (already does that .. that what we want). Another good example: "pkg update". There is going to be a noun and a verb (or vise-versa).
