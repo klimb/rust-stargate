@@ -76,6 +76,10 @@ pub use libc::statfs as statfs_fn;
 ))]
 pub use libc::statvfs as statfs_fn;
 
+#[cfg(target_os = "linux")]
+const LINUX_MTAB: &str = "/etc/mtab";
+const LINUX_MOUNTINFO: &str = "/proc/self/mountinfo";
+
 #[derive(Debug, Copy, Clone)]
 pub enum MetadataTimeField {
     Modification,
@@ -166,6 +170,136 @@ fn replace_special_chars(s: &[u8]) -> Vec<u8> {
 
 impl MountInfo {
 
+}
+
+impl MountInfo {
+    #[cfg(any(target_os = "linux"))]
+    fn new(file_name: &str, raw: &[&[u8]]) -> Option<Self> {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+        use std::os::unix::ffi::OsStringExt;
+
+        let dev_name;
+        let fs_type;
+        let mount_root;
+        let mount_dir;
+        let mount_option;
+
+        match file_name {
+            // spell-checker:ignore (word) noatime
+            // Format: 36 35 98:0 /mnt1 /mnt2 rw,noatime master:1 - ext3 /dev/root rw,errors=continue
+            // "man proc" for more details
+            LINUX_MOUNTINFO => {
+                const FIELDS_OFFSET: usize = 6;
+                let after_fields = raw[FIELDS_OFFSET..]
+                    .iter()
+                    .position(|c| *c == b"-")
+                    .unwrap()
+                    + FIELDS_OFFSET
+                    + 1;
+                dev_name = String::from_utf8_lossy(raw[after_fields + 1]).to_string();
+                fs_type = String::from_utf8_lossy(raw[after_fields]).to_string();
+                mount_root = OsStr::from_bytes(raw[3]).to_owned();
+                mount_dir = OsString::from_vec(replace_special_chars(raw[4]));
+                mount_option = String::from_utf8_lossy(raw[5]).to_string();
+            }
+            LINUX_MTAB => {
+                dev_name = String::from_utf8_lossy(raw[0]).to_string();
+                fs_type = String::from_utf8_lossy(raw[2]).to_string();
+                mount_root = OsString::new();
+                mount_dir = OsString::from_vec(replace_special_chars(raw[1]));
+                mount_option = String::from_utf8_lossy(raw[3]).to_string();
+            }
+            _ => return None,
+        }
+
+        let dev_id = mount_dev_id(&mount_dir);
+        let dummy = is_dummy_filesystem(&fs_type, &mount_option);
+        let remote = is_remote_filesystem(&dev_name, &fs_type);
+
+        Some(Self {
+            dev_id,
+            dev_name,
+            fs_type,
+            mount_root,
+            mount_dir,
+            mount_option,
+            remote,
+            dummy,
+        })
+    }
+}
+#[cfg(windows)]
+fn new(mut volume_name: String) -> Option<Self> {
+    let mut dev_name_buf = [0u16; MAX_PATH];
+    volume_name.pop();
+    unsafe {
+        QueryDosDeviceW(
+            OsStr::new(&volume_name)
+                .encode_wide()
+                .chain(Some(0))
+                .skip(4)
+                .collect::<Vec<u16>>()
+                .as_ptr(),
+            dev_name_buf.as_mut_ptr(),
+            dev_name_buf.len() as u32,
+        )
+    };
+    volume_name.push('\\');
+    let dev_name = LPWSTR2String(&dev_name_buf);
+
+    let mut mount_root_buf = [0u16; MAX_PATH];
+    let success = unsafe {
+        let volume_name = to_nul_terminated_wide_string(&volume_name);
+        GetVolumePathNamesForVolumeNameW(
+            volume_name.as_ptr(),
+            mount_root_buf.as_mut_ptr(),
+            mount_root_buf.len() as u32,
+            ptr::null_mut(),
+        )
+    };
+    if 0 == success {
+        // TODO: support the case when `GetLastError()` returns `ERROR_MORE_DATA`
+        return None;
+    }
+    // TODO: This should probably call `OsString::from_wide`, but unclear if
+    // terminating zeros need to be striped first.
+    let mount_root = LPWSTR2String(&mount_root_buf);
+
+    let mut fs_type_buf = [0u16; MAX_PATH];
+    let success = unsafe {
+        let mount_root = to_nul_terminated_wide_string(&mount_root);
+        GetVolumeInformationW(
+            mount_root.as_ptr(),
+            ptr::null_mut(),
+            0,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut(),
+            fs_type_buf.as_mut_ptr(),
+            fs_type_buf.len() as u32,
+        )
+    };
+    let fs_type = if 0 == success {
+        None
+    } else {
+        Some(LPWSTR2String(&fs_type_buf))
+    };
+    let remote = DRIVE_REMOTE
+        == unsafe {
+        let mount_root = to_nul_terminated_wide_string(&mount_root);
+        GetDriveTypeW(mount_root.as_ptr())
+    };
+    Some(Self {
+        dev_id: volume_name,
+        dev_name,
+        fs_type: fs_type.unwrap_or_default(),
+        mount_root: mount_root.into(), // TODO: We should figure out how to keep an OsString here.
+        mount_dir: OsString::new(),
+        mount_option: String::new(),
+        remote,
+        dummy: false,
+    })
 }
 
 #[cfg(any(
