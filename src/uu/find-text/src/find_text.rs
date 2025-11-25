@@ -32,6 +32,7 @@ pub struct FileSearchResults {
     pub matches: Vec<Match>,
 }
 
+
 /// Search for pattern in a file
 pub fn search_file(
     file_path: &str,
