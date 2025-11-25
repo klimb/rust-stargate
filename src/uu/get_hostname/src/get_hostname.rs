@@ -13,10 +13,10 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use uucore::translate;
 
 use uucore::{
-    error::{FromIo, UResult, USimpleError},
+    error::{CommandResult, FromIo, UResult, USimpleError},
     format_usage,
 };
-use crate::CommandResult::{Success, Error};
+use uucore::error::CommandResult::{Success, Error};
 use serde_json::json;
 
 static SHORT_FLAG: &str = "short";
@@ -40,10 +40,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
 }
 
-enum CommandResult<S, E = Box<dyn uucore::error::UError>> {
-    Success(S),
-    Error(E),
-}
+// `CommandResult` is now available in `uucore::error` for shared use across all commands.
 #[uucore::to_obj]
 pub fn to_obj(args: impl uucore::Args) -> CommandResult<()> {
     let matches = match uucore::clap_localization::handle_clap_result(uu_app(), args) {

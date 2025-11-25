@@ -779,3 +779,27 @@ mod tests {
         );
     }
 }
+
+/// Result type used by commands implementing object output via the `#[uucore::to_obj]` proc-macro.
+///
+/// `CommandResult` can hold either a success value `S` or an error `E`.
+/// The default error type is `Box<dyn UError>`, which allows flexible error handling.
+/// This type is commonly used with the `#[uucore::to_obj]` proc-macro attribute, which
+/// expects unqualified `Success` and `Error` variants in scope.
+///
+/// # Example
+///
+/// ```ignore
+/// use uucore::error::CommandResult;
+/// use uucore::error::CommandResult::{Success, Error};
+///
+/// fn process() -> CommandResult<()> {
+///     Success(())
+/// }
+/// ```
+pub enum CommandResult<S, E = Box<dyn UError>> {
+    /// Operation succeeded with value `S`
+    Success(S),
+    /// Operation failed with error `E`
+    Error(E),
+}
