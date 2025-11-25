@@ -1,7 +1,7 @@
 [package]
-name = "uu_chgrp"
-description = "chgrp ~ (uutils) change the group ownership of FILE"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chgrp"
+name = "uu_change_group"
+description = "change-group ~ (uutils) change the group ownership of FILE"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/change_group"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/chgrp.rs"
+path = "src/change_group.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -23,5 +23,5 @@ uucore = { workspace = true, features = ["entries", "fs", "perms"] }
 fluent = { workspace = true }
 
 [[bin]]
-name = "chgrp"
+name = "change-group"
 path = "src/main.rs"

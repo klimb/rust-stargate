@@ -147,7 +147,7 @@ PROGS       := \
 	yes
 
 UNIX_PROGS := \
-	chgrp \
+	change_group \
 	chmod \
 	change_owner \
 	chroot \
