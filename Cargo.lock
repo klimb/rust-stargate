@@ -560,6 +560,7 @@ dependencies = [
  "uu_expr",
  "uu_factor",
  "uu_false",
+ "uu_find_text",
  "uu_fmt",
  "uu_fold",
  "uu_get_domainname",
@@ -3251,6 +3252,16 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "uucore",
+]
+
+[[package]]
+name = "uu_find_text"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "serde_json",
  "uucore",
 ]
 
