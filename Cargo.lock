@@ -3121,7 +3121,6 @@ dependencies = [
  "libc",
  "parse_datetime",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3350,7 +3349,6 @@ dependencies = [
  "fluent",
  "hostname",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3529,7 +3527,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3695,7 +3692,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3848,7 +3844,6 @@ dependencies = [
  "fluent",
  "nix",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3876,8 +3871,6 @@ dependencies = [
  "rstest",
  "same-file",
  "uucore",
- "winapi-util",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3925,7 +3918,6 @@ dependencies = [
  "parse_datetime",
  "thiserror 2.0.17",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4076,7 +4068,6 @@ dependencies = [
  "clap",
  "fluent",
  "uucore",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
