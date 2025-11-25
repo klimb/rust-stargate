@@ -23,6 +23,3 @@ Stargate (Rust implementation of Dreamland):
 - Target platforms: FreeBSD, OpenBSD, GNU/Linux & Mac OS X.
 
 Its much easier to do AI magic when your stuff speaks ultra simple English. 
-
-Impl Notes:
-- grep is missing .. its functionality replacement is in the works .. it will be re-implemented as a simple literal find  and a much more powerful regex version
