@@ -96,6 +96,10 @@ mod test_dircolors;
 #[path = "by-util/test_dirname.rs"]
 mod test_dirname;
 
+#[cfg(feature = "find_text")]
+#[path = "by-util/test_find_text.rs"]
+mod test_find_text;
+
 #[cfg(feature = "du")]
 #[path = "by-util/test_du.rs"]
 mod test_du;
