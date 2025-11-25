@@ -1,0 +1,60 @@
+# spell-checker:ignore tzdb zoneinfo
+
+[package]
+name = "uu_list_directory"
+description = "list-directory"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/ls"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/list-directory.rs"
+
+[dependencies]
+ansi-width = { workspace = true }
+clap = { workspace = true, features = ["env"] }
+glob = { workspace = true }
+hostname = { workspace = true }
+lscolors = { workspace = true }
+
+terminal_size = { workspace = true }
+thiserror = { workspace = true }
+uucore = { workspace = true, features = [
+  "colors",
+  "entries",
+  "format",
+  "fs",
+  "fsext",
+  "fsxattr",
+  "parser",
+  "quoting-style",
+  "time",
+  "version-cmp",
+] }
+uutils_term_grid = { workspace = true }
+fluent = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+
+[[bin]]
+name = "list-directory"
+path = "src/main.rs"
+
+[dev-dependencies]
+divan = { workspace = true }
+tempfile = { workspace = true }
+uucore = { workspace = true, features = ["benchmark"] }
+
+[[bench]]
+name = "list_directory_bench"
+harness = false
+

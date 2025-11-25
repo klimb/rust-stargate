@@ -161,7 +161,7 @@ To debug:
 
 ```shell
 rust-gdb --args target/debug/coreutils ls
-(gdb) b ls.rs:79
+(gdb) b list_directory.rs:79
 (gdb) run
 ```
 
