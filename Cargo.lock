@@ -2952,6 +2952,7 @@ dependencies = [
  "clap",
  "fluent",
  "platform-info",
+ "serde_json",
  "uucore",
 ]
 
@@ -2983,6 +2984,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde_json",
  "uucore",
 ]
 
@@ -3164,6 +3166,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde_json",
  "uucore",
 ]
 
@@ -4068,6 +4071,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde_json",
  "uucore",
 ]
 
@@ -4120,6 +4124,7 @@ dependencies = [
  "os_display",
  "phf",
  "procfs",
+ "serde_json",
  "sha1",
  "sha2",
  "sha3",
