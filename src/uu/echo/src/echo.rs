@@ -13,12 +13,14 @@ use uucore::format::{FormatChar, OctalParsing, parse_escape_only};
 use uucore::{format_usage, os_str_as_bytes};
 
 use uucore::translate;
+use serde_json::json;
 
 mod options {
     pub const STRING: &str = "STRING";
     pub const NO_NEWLINE: &str = "no_newline";
     pub const ENABLE_BACKSLASH_ESCAPE: &str = "enable_backslash_escape";
     pub const DISABLE_BACKSLASH_ESCAPE: &str = "disable_backslash_escape";
+    pub const JSON_OUTPUT: &str = "json_output";
 }
 
 /// Options for the echo command.
@@ -35,6 +37,9 @@ struct Options {
     /// False by default, can be enabled with `-e`. Always true if
     /// `POSIXLY_CORRECT` (cannot be disabled with `-E`).
     pub escape: bool,
+
+    /// Whether to output JSON format.
+    pub json_output: bool,
 }
 
 impl Default for Options {
@@ -42,6 +47,7 @@ impl Default for Options {
         Self {
             trailing_newline: true,
             escape: false,
+            json_output: false,
         }
     }
 }
@@ -51,6 +57,7 @@ impl Options {
         Self {
             trailing_newline: true,
             escape: true,
+            json_output: false,
         }
     }
 }
@@ -174,6 +181,32 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         filter_flags(args.into_iter())
     };
 
+    // Check if JSON output is requested (filter -o/--obj from args)
+    let (args, options) = {
+        let mut json_flag = false;
+        let filtered: Vec<OsString> = args
+            .into_iter()
+            .filter(|arg| {
+                if arg == "-o" || arg == "--obj" {
+                    json_flag = true;
+                    false
+                } else {
+                    true
+                }
+            })
+            .collect();
+        
+        let (final_args, mut opts) = if is_posixly_correct || json_flag {
+            // If json output requested, we need to re-filter flags
+            filter_flags(filtered.into_iter())
+        } else {
+            (filtered, options)
+        };
+        
+        opts.json_output = json_flag;
+        (final_args, opts)
+    };
+
     execute(&mut io::stdout().lock(), args, options)?;
 
     Ok(())
@@ -215,6 +248,13 @@ pub fn uu_app() -> Command {
                 .overrides_with(options::ENABLE_BACKSLASH_ESCAPE)
         )
         .arg(
+            Arg::new(options::JSON_OUTPUT)
+                .short('o')
+                .long("obj")
+                .help("Output as JSON object")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
             Arg::new(options::STRING)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
@@ -222,27 +262,59 @@ pub fn uu_app() -> Command {
 }
 
 fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UResult<()> {
-    for (i, arg) in args.into_iter().enumerate() {
-        let bytes = os_str_as_bytes(&arg)?;
-
-        // Don't print a space before the first argument
-        if i > 0 {
-            stdout.write_all(b" ")?;
-        }
-
-        if options.escape {
-            for item in parse_escape_only(bytes, OctalParsing::ThreeDigits) {
-                if item.write(&mut *stdout)?.is_break() {
-                    return Ok(());
-                }
+    if options.json_output {
+        // Build the output string as usual
+        let mut output = String::new();
+        for (i, arg) in args.iter().enumerate() {
+            let bytes = os_str_as_bytes(&arg)?;
+            
+            // Don't add a space before the first argument
+            if i > 0 {
+                output.push(' ');
             }
-        } else {
-            stdout.write_all(bytes)?;
+            
+            if options.escape {
+                // For escaped output, we need to process escape sequences
+                let mut temp: Vec<u8> = Vec::new();
+                for item in parse_escape_only(bytes, OctalParsing::ThreeDigits) {
+                    item.write(&mut temp)?;
+                }
+                output.push_str(&String::from_utf8_lossy(&temp));
+            } else {
+                output.push_str(&String::from_utf8_lossy(bytes));
+            }
         }
-    }
+        
+        let json_output = json!({
+            "output": output,
+            "trailing_newline": options.trailing_newline
+        });
+        
+        writeln!(stdout, "{}", json_output)?;
+    } else {
+        // Original non-JSON output logic
+        for (i, arg) in args.into_iter().enumerate() {
+            let bytes = os_str_as_bytes(&arg)?;
 
-    if options.trailing_newline {
-        stdout.write_all(b"\n")?;
+            // Don't print a space before the first argument
+            if i > 0 {
+                stdout.write_all(b" ")?;
+            }
+
+            if options.escape {
+                for item in parse_escape_only(bytes, OctalParsing::ThreeDigits) {
+                    if item.write(&mut *stdout)?.is_break() {
+                        return Ok(());
+                    }
+                }
+            } else {
+                stdout.write_all(bytes)?;
+            }
+        }
+
+        if options.trailing_newline {
+            stdout.write_all(b"\n")?;
+        }
     }
 
     Ok(())
