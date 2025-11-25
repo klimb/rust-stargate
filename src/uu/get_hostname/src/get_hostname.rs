@@ -10,17 +10,19 @@ use std::net::ToSocketAddrs;
 use std::str;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
-
 use uucore::translate;
 
 use uucore::{
-    error::{FromIo, UResult},
+    error::{FromIo, UResult, USimpleError},
     format_usage,
 };
+use crate::CommandResult::{Success, Error};
+use serde_json::json;
 
 static SHORT_FLAG: &str = "short";
 static DOMAIN_FLAG: &str = "domain";
 static FQDN_FLAG: &str = "fqdn";
+static OBJ_FLAG: &str = "obj";
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
@@ -31,7 +33,24 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // in FreeBSD the hostname is the unique name for a specific server, while the domain name
     // provides a broader organizational context. Together, they form a
     // Fully Qualified Domain Name (FQDN),
-    print_name(&matches)
+    if matches.get_flag(OBJ_FLAG) {
+        produce_json(&matches)
+    } else {
+        produce(&matches)
+    }
+}
+
+enum CommandResult<S, E = Box<dyn uucore::error::UError>> {
+    Success(S),
+    Error(E),
+}
+#[uucore::to_obj]
+pub fn to_obj(args: impl uucore::Args) -> CommandResult<()> {
+    let matches = match uucore::clap_localization::handle_clap_result(uu_app(), args) {
+        Ok(m) => m,
+        Err(e) => return CommandResult::Error(e),
+    };
+    produce_object(&matches)
 }
 
 pub fn uu_app() -> Command {
@@ -41,6 +60,13 @@ pub fn uu_app() -> Command {
         .about(translate!("get_hostname-about"))
         .override_usage(format_usage(&translate!("get_hostname-usage")))
         .infer_long_args(true)
+        .arg(
+            Arg::new(OBJ_FLAG)
+                .short('o')
+                .long("obj")
+                .help("Output result as JSON object")
+                .action(ArgAction::SetTrue),
+        )
         .arg(
             Arg::new(DOMAIN_FLAG)
                 .short('d')
@@ -67,7 +93,7 @@ pub fn uu_app() -> Command {
         )
 }
 
-fn print_name(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> UResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get hostname".to_owned())?
         .to_string_lossy()
@@ -95,3 +121,76 @@ fn print_name(matches: &ArgMatches) -> UResult<()> {
 
     Ok(())
 }
+
+fn produce_json(matches: &ArgMatches) -> UResult<()> {
+    let fqdn = hostname::get()
+        .map_err_context(|| "failed to get hostname".to_owned())?
+        .to_string_lossy()
+        .into_owned();
+
+    let has_short_flag = matches.get_flag(SHORT_FLAG);
+    let has_domain_flag = matches.get_flag(DOMAIN_FLAG);
+    let has_fqdn_flag = matches.get_flag(FQDN_FLAG);
+
+    let value = if has_short_flag || has_domain_flag {
+        let mut it = fqdn.char_indices().filter(|&ci| ci.1 == '.');
+        if let Some(dot) = it.next() {
+            if has_short_flag {
+                fqdn[0..dot.0].to_string()
+            } else {
+                fqdn[dot.0 + 1..].to_string()
+            }
+        } else if has_short_flag {
+            fqdn.clone()
+        } else {
+            String::new()
+        }
+    } else {
+        fqdn.clone()
+    };
+
+    let obj = json!({
+        "status": "success",
+        "value": value,
+        "flags": {
+            "short": has_short_flag,
+            "domain": has_domain_flag,
+            "fqdn": has_fqdn_flag,
+            "obj": true
+        }
+    });
+
+    println!("{}", obj.to_string());
+
+    Ok(())
+}
+
+fn produce_object(matches: &ArgMatches) -> CommandResult<()> {
+    let fqdn = match hostname::get() {
+        Ok(s) => s.to_string_lossy().into_owned(),
+        Err(e) => return CommandResult::Error(USimpleError::new(1, format!("failed to get hostname: {}", e))),
+    };
+
+    let has_short_flag = matches.get_flag(SHORT_FLAG);
+    let has_domain_flag = matches.get_flag(DOMAIN_FLAG);
+    if has_short_flag || has_domain_flag {
+        let mut it = fqdn.char_indices().filter(|&ci| ci.1 == '.');
+        if let Some(dot) = it.next() {
+            if has_short_flag {
+                let short_name = &fqdn[0..dot.0];
+                println!("{}", short_name);
+            } else {
+                let domain_name = &fqdn[dot.0 + 1..];
+                println!("{}", domain_name);
+            }
+        } else if has_short_flag {
+            println!("{}", fqdn);
+        }
+        return CommandResult::Success(());
+    }
+
+    println!("{}", fqdn);
+
+    CommandResult::Success(())
+}
+

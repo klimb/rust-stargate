@@ -3292,6 +3292,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
+ "serde_json",
  "uucore",
 ]
 
