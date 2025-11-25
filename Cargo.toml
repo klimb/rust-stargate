@@ -124,6 +124,7 @@ feat_Tier1 = [
   "hostname",
   "get_hostname",
   "get_domainname",
+  "get_fqdn",
   "nproc",
   "sync",
   "uname",
@@ -387,6 +388,7 @@ head = { optional = true, version = "0.4.0", package = "uu_head", path = "src/uu
 hostname = { optional = true, version = "0.4.0", package = "uu_hostname", path = "src/uu/hostname" }
 get_hostname = { optional = true, version = "0.4.0", package = "uu_get_hostname", path = "src/uu/get_hostname" }
 get_domainname = { optional = true, version = "0.4.0", package = "uu_get_domainname", path = "src/uu/get_domainname" }
+get_fqdn = { optional = true, version = "0.4.0", package = "uu_get_fqdn", path = "src/uu/get_fqdn" }
 id = { optional = true, version = "0.4.0", package = "uu_id", path = "src/uu/id" }
 install = { optional = true, version = "0.4.0", package = "uu_install", path = "src/uu/install" }
 join = { optional = true, version = "0.4.0", package = "uu_join", path = "src/uu/join" }
