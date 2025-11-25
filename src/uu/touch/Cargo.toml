@@ -28,12 +28,6 @@ thiserror = { workspace = true }
 uucore = { workspace = true, features = ["libc", "parser"] }
 fluent = { workspace = true }
 
-[target.'cfg(target_os = "windows")'.dependencies]
-windows-sys = { workspace = true, features = [
-  "Win32_Storage_FileSystem",
-  "Win32_Foundation",
-] }
-
 [[bin]]
 name = "touch"
 path = "src/main.rs"
