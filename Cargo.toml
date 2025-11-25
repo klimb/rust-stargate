@@ -178,7 +178,7 @@ feat_require_unix = ["feat_require_unix_core", "stdbuf"]
 feat_require_unix_musl = ["feat_require_unix_core"]
 # "feat_require_unix_core" == core unix utilities (shared between regular unix and musl)
 feat_require_unix_core = [
-  "chgrp",
+  "change_group",
   "chmod",
   "change_owner",
   "chroot",
@@ -360,7 +360,7 @@ base64 = { optional = true, version = "0.4.0", package = "uu_base64", path = "sr
 basename = { optional = true, version = "0.4.0", package = "uu_basename", path = "src/uu/basename" }
 basenc = { optional = true, version = "0.4.0", package = "uu_basenc", path = "src/uu/basenc" }
 cat = { optional = true, version = "0.4.0", package = "uu_cat", path = "src/uu/cat" }
-chgrp = { optional = true, version = "0.4.0", package = "uu_chgrp", path = "src/uu/chgrp" }
+change_group = { optional = true, version = "0.4.0", package = "uu_change_group", path = "src/uu/change_group" }
 chmod = { optional = true, version = "0.4.0", package = "uu_chmod", path = "src/uu/chmod" }
 change_owner = { optional = true, version = "0.4.0", package = "uu_change_owner", path = "src/uu/change_owner" }
 chroot = { optional = true, version = "0.4.0", package = "uu_chroot", path = "src/uu/chroot" }

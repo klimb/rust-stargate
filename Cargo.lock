@@ -539,8 +539,8 @@ dependencies = [
  "uu_basename",
  "uu_basenc",
  "uu_cat",
+ "uu_change_group",
  "uu_change_owner",
- "uu_chgrp",
  "uu_chmod",
  "uu_chroot",
  "uu_cksum",
@@ -3013,7 +3013,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "uu_change_owner"
+name = "uu_change_group"
 version = "0.4.0"
 dependencies = [
  "clap",
@@ -3022,7 +3022,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "uu_chgrp"
+name = "uu_change_owner"
 version = "0.4.0"
 dependencies = [
  "clap",

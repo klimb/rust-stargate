@@ -40,9 +40,9 @@ mod test_basenc;
 #[path = "by-util/test_cat.rs"]
 mod test_cat;
 
-#[cfg(feature = "chgrp")]
+#[cfg(feature = "change_group")]
 #[path = "by-util/test_chgrp.rs"]
-mod test_chgrp;
+mod test_change_group;
 
 #[cfg(feature = "chmod")]
 #[path = "by-util/test_chmod.rs"]
