@@ -97,7 +97,7 @@ pub fn uu_app() -> Command {
                 .long(options::MODE)
                 .help(translate!("mkdir-help-mode"))
                 .allow_hyphen_values(true)
-                .num_args(1),
+                .num_args(1)
         )
         .arg(
             Arg::new(options::PARENTS)
@@ -105,14 +105,14 @@ pub fn uu_app() -> Command {
                 .long(options::PARENTS)
                 .help(translate!("mkdir-help-parents"))
                 .overrides_with(options::PARENTS)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::VERBOSE)
                 .short('v')
                 .long(options::VERBOSE)
                 .help(translate!("mkdir-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DIRS)
@@ -120,7 +120,7 @@ pub fn uu_app() -> Command {
                 .num_args(1..)
                 .required(true)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::DirPath),
+                .value_hint(clap::ValueHint::DirPath)
         )
 }
 
@@ -154,7 +154,7 @@ pub fn mkdir(path: &Path, config: &Config) -> UResult<()> {
     if path.as_os_str().is_empty() {
         return Err(USimpleError::new(
             1,
-            translate!("mkdir-error-empty-directory-name"),
+            translate!("mkdir-error-empty-directory-name")
         ));
     }
     // Special case to match GNU's behavior:
@@ -171,7 +171,7 @@ fn chmod(path: &Path, mode: u32) -> UResult<()> {
     use std::os::unix::fs::PermissionsExt;
     let mode = Permissions::from_mode(mode);
     set_permissions(path, mode).map_err_context(
-        || translate!("mkdir-error-cannot-set-permissions", "path" => path.quote()),
+        || translate!("mkdir-error-cannot-set-permissions", "path" => path.quote())
     )
 }
 
@@ -188,7 +188,7 @@ fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
     if path_exists && !config.recursive {
         return Err(USimpleError::new(
             1,
-            translate!("mkdir-error-file-exists", "path" => path.to_string_lossy()),
+            translate!("mkdir-error-file-exists", "path" => path.to_string_lossy())
         ));
     }
     if path == Path::new("") {

@@ -33,7 +33,7 @@ impl SplitName {
     pub fn new(
         prefix_opt: Option<String>,
         format_opt: Option<String>,
-        n_digits_opt: Option<String>,
+        n_digits_opt: Option<String>
     ) -> Result<Self, CsplitError> {
         // get the prefix
         let prefix = prefix_opt.unwrap_or_else(|| "xx".to_string());
@@ -137,7 +137,7 @@ mod tests {
         let split_name = SplitName::new(
             Some(String::from("pre-")),
             Some(String::from("cst-%03d-post")),
-            None,
+            None
         )
         .unwrap();
         assert_eq!(split_name.get(2), "pre-cst-002-post");
@@ -148,7 +148,7 @@ mod tests {
         let split_name = SplitName::new(
             None,
             Some(String::from("cst-%03d-")),
-            Some(String::from("42")),
+            Some(String::from("42"))
         )
         .unwrap();
         assert_eq!(split_name.get(2), "xxcst-002-");

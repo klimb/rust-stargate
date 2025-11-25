@@ -78,7 +78,7 @@ pub fn parse_inputs(matches: &dyn CommandLineOpts) -> Result<CommandLineInputs, 
                     return Ok(CommandLineInputs::FileAndOffset((
                         input_strings[0].to_string(),
                         n,
-                        None,
+                        None
                     )));
                 }
             }
@@ -89,7 +89,7 @@ pub fn parse_inputs(matches: &dyn CommandLineOpts) -> Result<CommandLineInputs, 
         input_strings.push("-");
     }
     Ok(CommandLineInputs::FileNames(
-        input_strings.iter().map(|&s| s.to_string()).collect(),
+        input_strings.iter().map(|&s| s.to_string()).collect()
     ))
 }
 
@@ -105,7 +105,7 @@ pub fn parse_inputs_traditional(input_strings: &[&str]) -> Result<CommandLineInp
             Ok(match offset0 {
                 Ok(n) => CommandLineInputs::FileAndOffset(("-".to_string(), n, None)),
                 _ => CommandLineInputs::FileNames(
-                    input_strings.iter().map(|&s| s.to_string()).collect(),
+                    input_strings.iter().map(|&s| s.to_string()).collect()
                 ),
             })
         }
@@ -116,12 +116,12 @@ pub fn parse_inputs_traditional(input_strings: &[&str]) -> Result<CommandLineInp
                 (Ok(n), Ok(m)) => Ok(CommandLineInputs::FileAndOffset((
                     "-".to_string(),
                     n,
-                    Some(m),
+                    Some(m)
                 ))),
                 (_, Ok(m)) => Ok(CommandLineInputs::FileAndOffset((
                     input_strings[0].to_string(),
                     m,
-                    None,
+                    None
                 ))),
                 _ => Err(translate!("od-error-invalid-offset", "offset" => input_strings[1])),
             }
@@ -133,7 +133,7 @@ pub fn parse_inputs_traditional(input_strings: &[&str]) -> Result<CommandLineInp
                 (Ok(n), Ok(m)) => Ok(CommandLineInputs::FileAndOffset((
                     input_strings[0].to_string(),
                     n,
-                    Some(m),
+                    Some(m)
                 ))),
                 (Err(_), _) => {
                     Err(translate!("od-error-invalid-offset", "offset" => input_strings[1]))

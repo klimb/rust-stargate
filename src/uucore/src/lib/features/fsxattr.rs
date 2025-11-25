@@ -60,7 +60,7 @@ pub fn retrieve_xattrs<P: AsRef<Path>>(source: P) -> std::io::Result<HashMap<OsS
 /// A result indicating success or failure.
 pub fn apply_xattrs<P: AsRef<Path>>(
     dest: P,
-    xattrs: HashMap<OsString, Vec<u8>>,
+    xattrs: HashMap<OsString, Vec<u8>>
 ) -> std::io::Result<()> {
     for (attr, value) in xattrs {
         xattr::set(&dest, &attr, &value)?;

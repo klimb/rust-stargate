@@ -120,11 +120,11 @@ where
 
 /// Move exactly `num_bytes` bytes from `read_fd` to `write_fd` using the `read`
 /// and `write` calls.
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 pub(crate) fn copy_exact(
     read_fd: &impl AsFd,
     write_fd: &impl AsFd,
-    num_bytes: usize,
+    num_bytes: usize
 ) -> std::io::Result<usize> {
     use nix::unistd;
 

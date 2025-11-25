@@ -26,7 +26,7 @@ mod options {
 fn print_factors_str(
     num_str: &str,
     w: &mut io::BufWriter<impl Write>,
-    print_exponents: bool,
+    print_exponents: bool
 ) -> UResult<()> {
     let rx = num_str.trim().parse::<BigUint>();
     let Ok(x) = rx else {
@@ -62,7 +62,7 @@ fn print_factors_str(
             if let Some(_remaining) = remaining {
                 return Err(USimpleError::new(
                     1,
-                    translate!("factor-error-factorization-incomplete"),
+                    translate!("factor-error-factorization-incomplete")
                 ));
             }
             write_result_big_uint(w, &x, prime_factors, print_exponents)
@@ -82,7 +82,7 @@ fn write_result_u64(
     w: &mut io::BufWriter<impl Write>,
     x: &BigUint,
     factorization: BTreeMap<u64, usize>,
-    print_exponents: bool,
+    print_exponents: bool
 ) -> io::Result<()> {
     write!(w, "{x}:")?;
     for (factor, n) in factorization {
@@ -105,7 +105,7 @@ fn write_result_u128(
     w: &mut io::BufWriter<impl Write>,
     x: &u128,
     factorization: BTreeMap<u128, usize>,
-    print_exponents: bool,
+    print_exponents: bool
 ) -> io::Result<()> {
     write!(w, "{x}:")?;
     for (factor, n) in factorization {
@@ -128,7 +128,7 @@ fn write_result_big_uint(
     w: &mut io::BufWriter<impl Write>,
     x: &BigUint,
     factorization: BTreeMap<BigUint, usize>,
-    print_exponents: bool,
+    print_exponents: bool
 ) -> io::Result<()> {
     write!(w, "{x}:")?;
     for (factor, n) in factorization {
@@ -202,12 +202,12 @@ pub fn uu_app() -> Command {
                 .short('h')
                 .long(options::EXPONENTS)
                 .help(translate!("factor-help-exponents"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("factor-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
 }

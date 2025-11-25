@@ -397,7 +397,7 @@ fn test_mv_replace_file() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_replace_symlink_with_symlink() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -423,7 +423,7 @@ fn test_mv_replace_symlink_with_symlink() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_replace_symlink_with_directory() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -442,7 +442,7 @@ fn test_mv_replace_symlink_with_directory() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_replace_symlink_with_file() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -464,7 +464,7 @@ fn test_mv_replace_symlink_with_file() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_file_to_symlink_directory() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -518,7 +518,7 @@ fn test_mv_same_file() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_same_hardlink() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file_a = "test_mv_same_file_a";
@@ -535,7 +535,7 @@ fn test_mv_same_hardlink() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_dangling_symlink_to_folder() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -548,7 +548,7 @@ fn test_mv_dangling_symlink_to_folder() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_same_symlink() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file_a = "test_mv_same_file_a";
@@ -596,7 +596,7 @@ fn test_mv_same_symlink() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_same_broken_symlink() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -609,7 +609,7 @@ fn test_mv_same_broken_symlink() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_symlink_into_target() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -620,7 +620,7 @@ fn test_mv_symlink_into_target() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_hardlink_to_symlink() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file = "file";
@@ -649,7 +649,7 @@ fn test_mv_hardlink_to_symlink() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_same_hardlink_backup_simple() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file_a = "test_mv_same_file_a";
@@ -665,7 +665,7 @@ fn test_mv_same_hardlink_backup_simple() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_same_hardlink_backup_simple_destroy() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file_a = "test_mv_same_file_a~";
@@ -1528,7 +1528,7 @@ fn test_mv_verbose() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))] // mkdir does not support -m on windows. Freebsd doesn't return a permission error either.
+#[cfg(any(target_os = "linux"))] // mkdir does not support -m on windows. Freebsd doesn't return a permission error either.
 #[cfg(feature = "mkdir")]
 fn test_mv_permission_error() {
     let scene = TestScenario::new("mkdir");
@@ -2431,7 +2431,7 @@ fn test_mv_error_msg_with_multiple_sources_that_does_not_exist() {
 
 // Tests for hardlink preservation (now always enabled)
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_hardlink_preservation() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -2450,7 +2450,7 @@ fn test_mv_hardlink_preservation() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_hardlink_progress_indication() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -2476,7 +2476,7 @@ fn test_mv_hardlink_progress_indication() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_mv_mixed_hardlinks_and_regular_files() {
     use std::fs::metadata;
     use std::os::unix::fs::MetadataExt;

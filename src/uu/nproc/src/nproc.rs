@@ -12,7 +12,7 @@ use uucore::error::{UResult, USimpleError};
 use uucore::format_usage;
 use uucore::translate;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = 83;
 #[cfg(target_vendor = "apple")]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = libc::_SC_NPROCESSORS_CONF;
@@ -34,7 +34,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             Err(e) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("nproc-error-invalid-number", "value" => numstr.quote(), "error" => e),
+                    translate!("nproc-error-invalid-number", "value" => numstr.quote(), "error" => e)
                 ));
             }
         },
@@ -100,13 +100,13 @@ pub fn uu_app() -> Command {
             Arg::new(OPT_ALL)
                 .long(OPT_ALL)
                 .help(translate!("nproc-help-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_IGNORE)
                 .long(OPT_IGNORE)
                 .value_name("N")
-                .help(translate!("nproc-help-ignore")),
+                .help(translate!("nproc-help-ignore"))
         )
 }
 

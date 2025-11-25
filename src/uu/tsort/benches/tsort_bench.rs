@@ -91,7 +91,7 @@ fn generate_wide_dag(num_nodes: usize) -> Vec<u8> {
                     chain,
                     i + 1 - chain_start
                 )
-                .as_bytes(),
+                .as_bytes()
             );
         }
 
@@ -108,7 +108,7 @@ fn generate_wide_dag(num_nodes: usize) -> Vec<u8> {
                     chain,
                     curr_mid - chain_start
                 )
-                .as_bytes(),
+                .as_bytes()
             );
         }
     }

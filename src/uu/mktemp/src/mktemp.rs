@@ -201,7 +201,7 @@ impl Params {
         let Some(template_str) = options.template.to_str() else {
             // For non-UTF-8 templates, return an error
             return Err(MkTempError::InvalidTemplate(
-                options.template.to_string_lossy().into_owned(),
+                options.template.to_string_lossy().into_owned()
             ));
         };
 
@@ -235,7 +235,7 @@ impl Params {
         let prefix_path = Path::new(&prefix_from_option).join(prefix_from_template);
         if options.treat_as_template && prefix_from_template.contains(MAIN_SEPARATOR) {
             return Err(MkTempError::PrefixContainsDirSeparator(
-                template_str.to_string(),
+                template_str.to_string()
             ));
         }
         if tmpdir.is_some() && Path::new(prefix_from_template).is_absolute() {
@@ -314,7 +314,7 @@ impl TypedValueParser for OptionalPathBufParser {
         &self,
         _cmd: &Command,
         _arg: Option<&Arg>,
-        value: &OsStr,
+        value: &OsStr
     ) -> Result<Self::Value, clap::Error> {
         if value.is_empty() {
             Ok(None)
@@ -350,7 +350,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             {
                 return Err(UUsageError::new(
                     1,
-                    translate!("mktemp-error-too-many-templates"),
+                    translate!("mktemp-error-too-many-templates")
                 ));
             }
             return Err(e.into());
@@ -411,27 +411,27 @@ pub fn uu_app() -> Command {
                 .short('d')
                 .long(OPT_DIRECTORY)
                 .help(translate!("mktemp-help-directory"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_DRY_RUN)
                 .short('u')
                 .long(OPT_DRY_RUN)
                 .help(translate!("mktemp-help-dry-run"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_QUIET)
                 .short('q')
                 .long("quiet")
                 .help(translate!("mktemp-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_SUFFIX)
                 .long(OPT_SUFFIX)
                 .help(translate!("mktemp-help-suffix"))
-                .value_name("SUFFIX"),
+                .value_name("SUFFIX")
         )
         .arg(
             Arg::new(OPT_P)
@@ -440,7 +440,7 @@ pub fn uu_app() -> Command {
                 .value_name("DIR")
                 .num_args(1)
                 .value_parser(OptionalPathBufParser)
-                .value_hint(clap::ValueHint::DirPath),
+                .value_hint(clap::ValueHint::DirPath)
         )
         .arg(
             Arg::new(OPT_TMPDIR)
@@ -454,18 +454,18 @@ pub fn uu_app() -> Command {
                 .require_equals(true)
                 .overrides_with(OPT_P)
                 .value_parser(OptionalPathBufParser)
-                .value_hint(clap::ValueHint::DirPath),
+                .value_hint(clap::ValueHint::DirPath)
         )
         .arg(
             Arg::new(OPT_T)
                 .short('t')
                 .help(translate!("mktemp-help-t"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_TEMPLATE)
                 .num_args(..=1)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 

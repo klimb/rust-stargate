@@ -30,7 +30,7 @@ use uucore::translate;
 use uucore::{fast_inc::fast_inc_one, format_usage};
 
 /// Linux splice support
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 mod splice;
 
 // Allocate 32 digits for the line number.
@@ -91,7 +91,7 @@ enum CatError {
     #[error("{0}")]
     Io(#[from] io::Error),
     /// Wrapper around `nix::Error`
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     #[error("{0}")]
     Nix(#[from] nix::Error),
     /// Unknown file type; it's not a regular file, socket, etc.
@@ -293,14 +293,14 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::SHOW_ALL)
                 .short('A')
                 .long(options::SHOW_ALL)
                 .help(translate!("cat-help-show-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NUMBER_NONBLANK)
@@ -309,67 +309,67 @@ pub fn uu_app() -> Command {
                 .help(translate!("cat-help-number-nonblank"))
                 // Note: This MUST NOT .overrides_with(options::NUMBER)!
                 // In clap, overriding is symmetric, so "-b -n" counts as "-n", which is not what we want.
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHOW_NONPRINTING_ENDS)
                 .short('e')
                 .help(translate!("cat-help-show-nonprinting-ends"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHOW_ENDS)
                 .short('E')
                 .long(options::SHOW_ENDS)
                 .help(translate!("cat-help-show-ends"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NUMBER)
                 .short('n')
                 .long(options::NUMBER)
                 .help(translate!("cat-help-number"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SQUEEZE_BLANK)
                 .short('s')
                 .long(options::SQUEEZE_BLANK)
                 .help(translate!("cat-help-squeeze-blank"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHOW_NONPRINTING_TABS)
                 .short('t')
                 .help(translate!("cat-help-show-nonprinting-tabs"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHOW_TABS)
                 .short('T')
                 .long(options::SHOW_TABS)
                 .help(translate!("cat-help-show-tabs"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHOW_NONPRINTING)
                 .short('v')
                 .long(options::SHOW_NONPRINTING)
                 .help(translate!("cat-help-show-nonprinting"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::IGNORED_U)
                 .short('u')
                 .help(translate!("cat-help-ignored-u"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }
 
 fn cat_handle<R: FdReadable>(
     handle: &mut InputHandle<R>,
     options: &OutputOptions,
-    state: &mut OutputState,
+    state: &mut OutputState
 ) -> CatResult<()> {
     if options.can_write_fast() {
         write_fast(handle)
@@ -441,7 +441,7 @@ fn cat_files(files: &[OsString], options: &OutputOptions) -> UResult<()> {
 
         Err(uucore::error::USimpleError::new(
             error_messages.len() as i32,
-            error_messages.join(&line_joiner),
+            error_messages.join(&line_joiner)
         ))
     }
 }
@@ -496,7 +496,7 @@ fn get_input_type(path: &OsString) -> CatResult<InputType> {
 fn write_fast<R: FdReadable>(handle: &mut InputHandle<R>) -> CatResult<()> {
     let stdout = io::stdout();
     let mut stdout_lock = stdout.lock();
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         // If we're on Linux or Android, try to use the splice() system call
         // for faster writing. If it works, we're done.
@@ -536,7 +536,7 @@ fn write_fast<R: FdReadable>(handle: &mut InputHandle<R>) -> CatResult<()> {
 fn write_lines<R: FdReadable>(
     handle: &mut InputHandle<R>,
     options: &OutputOptions,
-    state: &mut OutputState,
+    state: &mut OutputState
 ) -> CatResult<()> {
     let mut in_buf = [0; 1024 * 31];
     let stdout = io::stdout();
@@ -588,7 +588,7 @@ fn write_lines<R: FdReadable>(
                 write_end_of_line(
                     &mut writer,
                     options.end_of_line().as_bytes(),
-                    handle.is_interactive,
+                    handle.is_interactive
                 )?;
                 state.at_line_start = true;
             }
@@ -612,7 +612,7 @@ fn write_new_line<W: Write>(
     writer: &mut W,
     options: &OutputOptions,
     state: &mut OutputState,
-    is_interactive: bool,
+    is_interactive: bool
 ) -> CatResult<()> {
     if state.skipped_carriage_return {
         if options.show_ends {
@@ -717,7 +717,7 @@ fn write_nonprint_to_end<W: Write>(in_buf: &[u8], writer: &mut W, tab: &[u8]) ->
 fn write_end_of_line<W: Write>(
     writer: &mut W,
     end_of_line: &[u8],
-    is_interactive: bool,
+    is_interactive: bool
 ) -> CatResult<()> {
     writer.write_all(end_of_line)?;
     if is_interactive {

@@ -66,7 +66,7 @@ impl Base {
     fn parse_digits_count<'a>(
         &self,
         str: &'a str,
-        digits: Option<BigUint>,
+        digits: Option<BigUint>
     ) -> (Option<BigUint>, i64, &'a str) {
         let mut digits: Option<BigUint> = digits;
         let mut count: i64 = 0;
@@ -81,7 +81,7 @@ impl Base {
             (digits_tmp, count_tmp, mul_tmp) = (
                 digits_tmp * *self as u64 + d,
                 count_tmp + 1,
-                mul_tmp * *self as u64,
+                mul_tmp * *self as u64
             );
             rest = &rest[1..];
             // In base 16, we parse 4 bits at a time, so we can parse 16 digits at most in a u64.
@@ -89,7 +89,7 @@ impl Base {
                 // Accumulate what we have so far
                 (digits, count) = (
                     Some(digits.unwrap_or_default() * mul_tmp + digits_tmp),
-                    count + count_tmp,
+                    count + count_tmp
                 );
                 // Reset state
                 (digits_tmp, count_tmp, mul_tmp) = (0, 0, 1);
@@ -100,7 +100,7 @@ impl Base {
         if mul_tmp > 1 {
             (digits, count) = (
                 Some(digits.unwrap_or_default() * mul_tmp + digits_tmp),
-                count + count_tmp,
+                count + count_tmp
             );
         }
         (digits, count, rest)
@@ -143,7 +143,7 @@ where
     /// conversion.
     fn map<U>(
         self,
-        f: impl FnOnce(T) -> Result<U, ExtendedParserError<U>>,
+        f: impl FnOnce(T) -> Result<U, ExtendedParserError<U>>
     ) -> ExtendedParserError<U>
     where
         U: Zero,
@@ -348,7 +348,7 @@ fn parse_suffix_multiplier<'a>(str: &'a str, allowed_suffixes: &[(char, u32)]) -
 fn parse_special_value(
     input: &str,
     negative: bool,
-    allowed_suffixes: &[(char, u32)],
+    allowed_suffixes: &[(char, u32)]
 ) -> Result<ExtendedBigDecimal, ExtendedParserError<ExtendedBigDecimal>> {
     let input_lc = input.to_ascii_lowercase();
 
@@ -444,7 +444,7 @@ fn pow_with_context(bd: &BigDecimal, exp: i64, ctx: &Context) -> BigDecimal {
         bd.clone()
     } else {
         bd.inverse_with_context(&ctx.with_precision(
-            NonZeroU64::new(ctx.precision().get() + margin + MARGIN_PER_MUL).unwrap(),
+            NonZeroU64::new(ctx.precision().get() + margin + MARGIN_PER_MUL).unwrap()
         ))
     };
 
@@ -469,7 +469,7 @@ fn construct_extended_big_decimal(
     negative: bool,
     base: Base,
     scale: i64,
-    exponent: BigInt,
+    exponent: BigInt
 ) -> Result<ExtendedBigDecimal, ExtendedParserError<ExtendedBigDecimal>> {
     if digits == BigUint::zero() {
         // Return return 0 if the digits are zero. In particular, we do not ever
@@ -540,7 +540,7 @@ pub(crate) enum ParseTarget {
 pub(crate) fn parse(
     input: &str,
     target: ParseTarget,
-    allowed_suffixes: &[(char, u32)],
+    allowed_suffixes: &[(char, u32)]
 ) -> Result<ExtendedBigDecimal, ExtendedParserError<ExtendedBigDecimal>> {
     // Note: literals with ' and " prefixes are parsed earlier on in argument parsing,
     // before UTF-8 conversion.
@@ -624,7 +624,7 @@ pub(crate) fn parse(
     } else {
         Err(ExtendedParserError::PartialMatch(
             ebd_result.unwrap_or_else(|e| e.extract()),
-            rest.to_string(),
+            rest.to_string()
         ))
     }
 }
@@ -926,7 +926,7 @@ mod tests {
         // But no Overflow/Underflow if the digits are 0.
         assert_eq!(
             ExtendedBigDecimal::extended_parse(&format!("0e{}", i64::MAX as u64 + 2)),
-            Ok(ExtendedBigDecimal::zero()),
+            Ok(ExtendedBigDecimal::zero())
         );
         assert_eq!(
             ExtendedBigDecimal::extended_parse(&format!("-0.0e{}", i64::MAX as u64 + 3)),
@@ -934,7 +934,7 @@ mod tests {
         );
         assert_eq!(
             ExtendedBigDecimal::extended_parse(&format!("0.0000e{}", i64::MIN)),
-            Ok(ExtendedBigDecimal::zero()),
+            Ok(ExtendedBigDecimal::zero())
         );
         assert_eq!(
             ExtendedBigDecimal::extended_parse(&format!("-0e{}", i64::MIN + 2)),

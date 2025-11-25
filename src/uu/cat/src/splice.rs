@@ -22,7 +22,7 @@ const BUF_SIZE: usize = 1024 * 16;
 #[inline]
 pub(super) fn write_fast_using_splice<R: FdReadable, S: AsRawFd + AsFd>(
     handle: &InputHandle<R>,
-    write_fd: &S,
+    write_fd: &S
 ) -> CatResult<bool> {
     let (pipe_rd, pipe_wr) = pipe()?;
 

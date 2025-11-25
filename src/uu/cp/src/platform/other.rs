@@ -17,7 +17,7 @@ pub(crate) fn copy_on_write(
     dest: &Path,
     reflink_mode: ReflinkMode,
     sparse_mode: SparseMode,
-    context: &str,
+    context: &str
 ) -> CopyResult<CopyDebug> {
     if reflink_mode != ReflinkMode::Never {
         return Err(translate!("cp-error-reflink-not-supported")

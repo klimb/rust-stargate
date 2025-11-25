@@ -6,7 +6,6 @@
 
 use uutests::at_and_ucmd;
 use uutests::new_ucmd;
-#[cfg(not(target_os = "android"))]
 use uutests::util::is_ci;
 use uutests::util::{TestScenario, run_ucmd_as_root};
 use uutests::util_name;
@@ -30,7 +29,6 @@ fn test_missing_operand() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_enter_chroot_fails() {
     // NOTE: since #2689 this test also ensures that we don't regress #2687
     let (at, mut ucmd) = at_and_ucmd!();
@@ -126,7 +124,6 @@ fn test_invalid_user() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_preference_of_userspec() {
     let scene = TestScenario::new(util_name!());
     let result = scene.cmd("whoami").run();

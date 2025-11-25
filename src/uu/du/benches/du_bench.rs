@@ -24,7 +24,7 @@ fn bench_du_with_args(bencher: Bencher, temp_dir: &TempDir, args: &[&str]) {
 #[divan::bench(args = [(5, 4, 10)])]
 fn du_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);
@@ -37,7 +37,7 @@ fn du_balanced_tree(
 #[divan::bench(args = [(4, 3, 10)])]
 fn du_all_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);
@@ -50,7 +50,7 @@ fn du_all_balanced_tree(
 #[divan::bench(args = [(5, 4, 10)])]
 fn du_human_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);
@@ -86,7 +86,7 @@ fn du_deep_tree(bencher: Bencher, (depth, files_per_level): (usize, usize)) {
 #[divan::bench(args = [(5, 4, 10)])]
 fn du_summarize_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);
@@ -97,7 +97,7 @@ fn du_summarize_balanced_tree(
 #[divan::bench(args = [(6, 4, 10)])]
 fn du_max_depth_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);

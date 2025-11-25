@@ -155,7 +155,7 @@ impl<'a> FormatArguments<'a> {
         if bytes.len() > len {
             return Err(ExtendedParserError::PartialMatch(
                 val,
-                String::from_utf8_lossy(&bytes[len..]).into_owned(),
+                String::from_utf8_lossy(&bytes[len..]).into_owned()
             ));
         }
 
@@ -203,7 +203,7 @@ impl<'a> FormatArguments<'a> {
 fn extract_value<T: Default>(
     p: Result<T, ExtendedParserError<T>>,
     input: &str,
-    quote_start: bool,
+    quote_start: bool
 ) -> T {
     match p {
         Ok(v) => v,

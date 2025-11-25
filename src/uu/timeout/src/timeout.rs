@@ -59,7 +59,7 @@ impl Config {
                     None => {
                         return Err(UUsageError::new(
                             ExitStatus::TimeoutFailed.into(),
-                            translate!("timeout-error-invalid-signal", "signal" => signal_.quote()),
+                            translate!("timeout-error-invalid-signal", "signal" => signal_.quote())
                         ));
                     }
                     Some(signal_value) => signal_value,
@@ -115,7 +115,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         config.kill_after,
         config.foreground,
         config.preserve_status,
-        config.verbose,
+        config.verbose
     )
 }
 
@@ -130,46 +130,46 @@ pub fn uu_app() -> Command {
                 .long(options::FOREGROUND)
                 .short('f')
                 .help(translate!("timeout-help-foreground"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::KILL_AFTER)
                 .long(options::KILL_AFTER)
                 .short('k')
-                .help(translate!("timeout-help-kill-after")),
+                .help(translate!("timeout-help-kill-after"))
         )
         .arg(
             Arg::new(options::PRESERVE_STATUS)
                 .long(options::PRESERVE_STATUS)
                 .short('p')
                 .help(translate!("timeout-help-preserve-status"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SIGNAL)
                 .short('s')
                 .long(options::SIGNAL)
                 .help(translate!("timeout-help-signal"))
-                .value_name("SIGNAL"),
+                .value_name("SIGNAL")
         )
         .arg(
             Arg::new(options::VERBOSE)
                 .short('v')
                 .long(options::VERBOSE)
                 .help(translate!("timeout-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DURATION)
                 .required(true)
-                .help(translate!("timeout-help-duration")),
+                .help(translate!("timeout-help-duration"))
         )
         .arg(
             Arg::new(options::COMMAND)
                 .required(true)
                 .action(ArgAction::Append)
                 .help(translate!("timeout-help-command"))
-                .value_hint(clap::ValueHint::CommandName),
+                .value_hint(clap::ValueHint::CommandName)
         )
         .trailing_var_arg(true)
         .infer_long_args(true)
@@ -181,7 +181,7 @@ fn unblock_sigchld() {
     unsafe {
         nix::sys::signal::signal(
             nix::sys::signal::Signal::SIGCHLD,
-            nix::sys::signal::SigHandler::SigDfl,
+            nix::sys::signal::SigHandler::SigDfl
         )
         .unwrap();
     }
@@ -257,7 +257,7 @@ fn wait_or_kill_process(
     duration: Duration,
     preserve_status: bool,
     foreground: bool,
-    verbose: bool,
+    verbose: bool
 ) -> std::io::Result<i32> {
     // ignore `SIGTERM` here
     match process.wait_or_timeout(duration, None) {
@@ -313,7 +313,7 @@ fn timeout(
     kill_after: Option<Duration>,
     foreground: bool,
     preserve_status: bool,
-    verbose: bool,
+    verbose: bool
 ) -> UResult<()> {
     if !foreground {
         unsafe { libc::setpgid(0, 0) };
@@ -337,7 +337,7 @@ fn timeout(
             };
             USimpleError::new(
                 status_code,
-                translate!("timeout-error-failed-to-execute-process", "error" => err),
+                translate!("timeout-error-failed-to-execute-process", "error" => err)
             )
         })?;
     unblock_sigchld();
@@ -385,12 +385,12 @@ fn timeout(
                         kill_after,
                         preserve_status,
                         foreground,
-                        verbose,
+                        verbose
                     ) {
                         Ok(status) => Err(status.into()),
                         Err(e) => Err(USimpleError::new(
                             ExitStatus::TimeoutFailed.into(),
-                            e.to_string(),
+                            e.to_string()
                         )),
                     }
                 }

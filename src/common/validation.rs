@@ -16,7 +16,7 @@ use uucore::locale;
 /// Gets all available utilities including "coreutils"
 #[allow(clippy::type_complexity)]
 pub fn get_all_utilities<T: Args>(
-    util_map: &phf::OrderedMap<&'static str, (fn(T) -> i32, fn() -> clap::Command)>,
+    util_map: &phf::OrderedMap<&'static str, (fn(T) -> i32, fn() -> clap::Command)>
 ) -> Vec<&'static str> {
     std::iter::once("coreutils")
         .chain(util_map.keys().copied())
@@ -65,7 +65,7 @@ fn get_canonical_util_name(util_name: &str) -> &str {
 /// Finds a utility with a prefix (e.g., "uu_test" -> "test")
 pub fn find_prefixed_util<'a>(
     binary_name: &str,
-    mut util_keys: impl Iterator<Item = &'a str>,
+    mut util_keys: impl Iterator<Item = &'a str>
 ) -> Option<&'a str> {
     util_keys.find(|util| {
         binary_name.ends_with(*util)

@@ -80,7 +80,7 @@ impl Column {
         match (
             matches.get_flag(OPT_PRINT_TYPE),
             matches.get_flag(OPT_INODES),
-            matches.value_source(OPT_OUTPUT) == Some(ValueSource::CommandLine),
+            matches.value_source(OPT_OUTPUT) == Some(ValueSource::CommandLine)
         ) {
             (false, false, false) => Ok(vec![
                 Self::Source,

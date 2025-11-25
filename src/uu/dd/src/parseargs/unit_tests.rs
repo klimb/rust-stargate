@@ -12,7 +12,7 @@ use crate::conversion_tables::{
 };
 use crate::parseargs::Parser;
 
-#[cfg(not(any(target_os = "linux", target_os = "android")))]
+#[cfg(not(any(target_os = "linux")))]
 #[allow(clippy::useless_vec)]
 #[test]
 fn unimplemented_flags_should_error_non_linux() {
@@ -42,7 +42,7 @@ fn unimplemented_flags_should_error_non_linux() {
 
     assert!(
         succeeded.is_empty(),
-        "The following flags did not panic as expected: {succeeded:?}",
+        "The following flags did not panic as expected: {succeeded:?}"
     );
 }
 
@@ -136,7 +136,7 @@ fn test_all_top_level_args_no_leading_dashes() {
                 1
             )),
             ..IConvFlags::default()
-        },
+        }
     );
 
     // no conv flags apply to output
@@ -149,7 +149,7 @@ fn test_all_top_level_args_no_leading_dashes() {
             count_bytes: true,
             skip_bytes: true,
             ..IFlags::default()
-        },
+        }
     );
 
     // oconv=append,seek_bytes
@@ -159,7 +159,7 @@ fn test_all_top_level_args_no_leading_dashes() {
             append: true,
             seek_bytes: true,
             ..OFlags::default()
-        },
+        }
     );
 }
 
@@ -384,7 +384,7 @@ fn parse_oflag_tokens() {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn parse_iflag_tokens_linux() {
     let args = ["iflag=direct,directory,dsync,sync,nonblock,noatime,noctty,nofollow"];
@@ -407,7 +407,7 @@ fn parse_iflag_tokens_linux() {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn parse_oflag_tokens_linux() {
     let args = ["oflag=direct,directory,dsync,sync,nonblock,noatime,noctty,nofollow"];

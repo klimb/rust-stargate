@@ -194,7 +194,7 @@ impl<'a> Options<'a> {
                     std::fs::OpenOptions::new()
                         .read(true)
                         .custom_flags(O_NONBLOCK)
-                        .open(f)?,
+                        .open(f)?
                 ),
                 // default to /dev/tty, if that does not exist then default to stdout
                 None => {
@@ -253,14 +253,14 @@ fn stty(opts: &Options) -> UResult<()> {
     if opts.save && opts.all {
         return Err(USimpleError::new(
             1,
-            translate!("stty-error-options-mutually-exclusive"),
+            translate!("stty-error-options-mutually-exclusive")
         ));
     }
 
     if opts.settings.is_some() && (opts.save || opts.all) {
         return Err(USimpleError::new(
             1,
-            translate!("stty-error-output-style-no-modes"),
+            translate!("stty-error-output-style-no-modes")
         ));
     }
 
@@ -281,8 +281,8 @@ fn stty(opts: &Options) -> UResult<()> {
                                 translate!(
                                     "stty-error-invalid-speed",
                                     "arg" => *arg,
-                                    "speed" => *speed,
-                                ),
+                                    "speed" => *speed
+                                )
                             ));
                         }
                     }
@@ -434,7 +434,7 @@ fn missing_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
         translate!(
             "stty-error-missing-argument",
             "arg" => *arg
-        ),
+        )
     ))
 }
 
@@ -444,7 +444,7 @@ fn invalid_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
         translate!(
             "stty-error-invalid-argument",
             "arg" => *arg
-        ),
+        )
     ))
 }
 
@@ -454,7 +454,7 @@ fn invalid_integer_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
         translate!(
             "stty-error-invalid-integer-argument",
             "value" => format!("'{arg}'")
-        ),
+        )
     ))
 }
 
@@ -797,7 +797,7 @@ fn apply_char_mapping(termios: &mut Termios, mapping: &(S, u8)) {
 fn apply_special_setting(
     _termios: &mut Termios,
     setting: &SpecialSetting,
-    fd: i32,
+    fd: i32
 ) -> nix::Result<()> {
     let mut size = TermSize::default();
     unsafe { tiocgwinsz(fd, &raw mut size)? };
@@ -806,7 +806,7 @@ fn apply_special_setting(
         SpecialSetting::Cols(n) => size.columns = *n,
         SpecialSetting::Line(_n) => {
             // nix only defines Termios's `line_discipline` field on these platforms
-            #[cfg(any(target_os = "linux", target_os = "android"))]
+            #[cfg(any(target_os = "linux"))]
             {
                 _termios.line_discipline = *_n;
             }
@@ -1014,14 +1014,14 @@ pub fn uu_app() -> Command {
                 .short('a')
                 .long(options::ALL)
                 .help(translate!("stty-option-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SAVE)
                 .short('g')
                 .long(options::SAVE)
                 .help(translate!("stty-option-save"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
@@ -1029,13 +1029,13 @@ pub fn uu_app() -> Command {
                 .long(options::FILE)
                 .value_hint(clap::ValueHint::FilePath)
                 .value_name("DEVICE")
-                .help(translate!("stty-option-file")),
+                .help(translate!("stty-option-file"))
         )
         .arg(
             Arg::new(options::SETTINGS)
                 .action(ArgAction::Append)
                 .allow_hyphen_values(true)
-                .help(translate!("stty-option-settings")),
+                .help(translate!("stty-option-settings"))
         )
 }
 

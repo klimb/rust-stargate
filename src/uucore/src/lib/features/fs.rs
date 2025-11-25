@@ -43,7 +43,7 @@ macro_rules! has {
 
 /// Information to uniquely identify a file
 pub struct FileInformation(
-    nix::sys::stat::FileStat,
+    nix::sys::stat::FileStat
 );
 
 impl FileInformation {
@@ -98,7 +98,6 @@ impl FileInformation {
             unix,
             any(
                 target_vendor = "apple",
-                target_os = "android",
                 target_os = "freebsd",
                 target_os = "netbsd",
                 target_os = "openbsd",
@@ -278,7 +277,7 @@ impl<'a> From<Component<'a>> for OwningComponent {
 pub fn canonicalize<P: AsRef<Path>>(
     original: P,
     miss_mode: MissingHandling,
-    res_mode: ResolveMode,
+    res_mode: ResolveMode
 ) -> IOResult<PathBuf> {
     const SYMLINKS_TO_LOOK_FOR_LOOPS: i32 = 20;
     let original = original.as_ref();
@@ -336,7 +335,7 @@ pub fn canonicalize<P: AsRef<Path>>(
                     if !visited_files.insert((file_info, path_to_follow)) {
                         return Err(Error::new(
                             ErrorKind::InvalidInput,
-                            "Too many levels of symbolic links",
+                            "Too many levels of symbolic links"
                         )); // TODO use ErrorKind::FilesystemLoop when stable
                     }
                 }
@@ -500,7 +499,7 @@ pub fn dir_strip_dot_for_creation(path: &Path) -> PathBuf {
 pub fn paths_refer_to_same_file<P: AsRef<Path>>(p1: P, p2: P, dereference: bool) -> bool {
     infos_refer_to_same_file(
         FileInformation::from_path(p1, dereference),
-        FileInformation::from_path(p2, dereference),
+        FileInformation::from_path(p2, dereference)
     )
 }
 
@@ -508,7 +507,7 @@ pub fn paths_refer_to_same_file<P: AsRef<Path>>(p1: P, p2: P, dereference: bool)
 /// If error happens when trying to get files' metadata, returns false
 pub fn infos_refer_to_same_file(
     info1: IOResult<FileInformation>,
-    info2: IOResult<FileInformation>,
+    info2: IOResult<FileInformation>
 ) -> bool {
     if let Ok(info1) = info1 {
         if let Ok(info2) = info2 {
@@ -560,7 +559,7 @@ pub fn is_symlink_loop(path: &Path) -> bool {
 
     while let (Ok(metadata), Ok(link)) = (
         current_path.symlink_metadata(),
-        fs::read_link(&current_path),
+        fs::read_link(&current_path)
     ) {
         if !metadata.file_type().is_symlink() {
             return false;

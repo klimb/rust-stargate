@@ -32,7 +32,7 @@ mod ffi {
         pub fn sd_session_get_tty(session: *const c_char, tty: *mut *mut c_char) -> c_int;
         pub fn sd_session_get_remote_host(
             session: *const c_char,
-            remote_host: *mut *mut c_char,
+            remote_host: *mut *mut c_char
         ) -> c_int;
         pub fn sd_session_get_display(session: *const c_char, display: *mut *mut c_char) -> c_int;
         pub fn sd_session_get_type(session: *const c_char, session_type: *mut *mut c_char)
@@ -90,7 +90,7 @@ mod login {
 
         if result < 0 {
             return Err(
-                format!("sd_session_get_uid failed for session '{session_id}': {result}",).into(),
+                format!("sd_session_get_uid failed for session '{session_id}': {result}",).into()
             );
         }
 
@@ -106,7 +106,7 @@ mod login {
 
         if result < 0 {
             return Err(format!(
-                "sd_session_get_start_time failed for session '{session_id}': {result}",
+                "sd_session_get_start_time failed for session '{session_id}': {result}"
             )
             .into());
         }
@@ -123,7 +123,7 @@ mod login {
 
         if result < 0 {
             return Err(
-                format!("sd_session_get_tty failed for session '{session_id}': {result}",).into(),
+                format!("sd_session_get_tty failed for session '{session_id}': {result}",).into()
             );
         }
 
@@ -141,7 +141,7 @@ mod login {
 
     /// Get remote host for a session
     pub fn get_session_remote_host(
-        session_id: &str,
+        session_id: &str
     ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         let session_cstring = CString::new(session_id)?;
         let mut host_ptr: *mut libc::c_char = ptr::null_mut();
@@ -151,7 +151,7 @@ mod login {
 
         if result < 0 {
             return Err(format!(
-                "sd_session_get_remote_host failed for session '{session_id}': {result}",
+                "sd_session_get_remote_host failed for session '{session_id}': {result}"
             )
             .into());
         }
@@ -170,7 +170,7 @@ mod login {
 
     /// Get display for a session
     pub fn get_session_display(
-        session_id: &str,
+        session_id: &str
     ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         let session_cstring = CString::new(session_id)?;
         let mut display_ptr: *mut libc::c_char = ptr::null_mut();
@@ -180,7 +180,7 @@ mod login {
 
         if result < 0 {
             return Err(format!(
-                "sd_session_get_display failed for session '{session_id}': {result}",
+                "sd_session_get_display failed for session '{session_id}': {result}"
             )
             .into());
         }
@@ -199,7 +199,7 @@ mod login {
 
     /// Get type for a session
     pub fn get_session_type(
-        session_id: &str,
+        session_id: &str
     ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         let session_cstring = CString::new(session_id)?;
         let mut type_ptr: *mut libc::c_char = ptr::null_mut();
@@ -208,7 +208,7 @@ mod login {
 
         if result < 0 {
             return Err(
-                format!("sd_session_get_type failed for session '{session_id}': {result}",).into(),
+                format!("sd_session_get_type failed for session '{session_id}': {result}",).into()
             );
         }
 
@@ -226,7 +226,7 @@ mod login {
 
     /// Get seat for a session
     pub fn get_session_seat(
-        session_id: &str,
+        session_id: &str
     ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         let session_cstring = CString::new(session_id)?;
         let mut seat_ptr: *mut libc::c_char = ptr::null_mut();
@@ -235,7 +235,7 @@ mod login {
 
         if result < 0 {
             return Err(
-                format!("sd_session_get_seat failed for session '{session_id}': {result}",).into(),
+                format!("sd_session_get_seat failed for session '{session_id}': {result}",).into()
             );
         }
 
@@ -375,7 +375,7 @@ pub fn read_login_records() -> UResult<Vec<SystemdLoginRecord>> {
                 passwd.as_mut_ptr(),
                 buf.as_mut_ptr() as *mut libc::c_char,
                 buf.len(),
-                &mut result,
+                &mut result
             );
 
             if ret == 0 && !result.is_null() {
@@ -478,7 +478,7 @@ pub fn read_login_records() -> UResult<Vec<SystemdLoginRecord>> {
                 seat,
                 user.clone(),
                 session_id.clone(),
-                host.clone(),
+                host.clone()
             ));
 
             let tty_formatted = if tty.starts_with("tty") {
@@ -507,7 +507,7 @@ pub fn read_login_records() -> UResult<Vec<SystemdLoginRecord>> {
                 String::new(),
                 user,
                 session_id,
-                host,
+                host
             ));
         }
     }

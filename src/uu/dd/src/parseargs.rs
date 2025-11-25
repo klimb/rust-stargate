@@ -114,7 +114,7 @@ enum Block {
 /// Return an Unimplemented error when the target is not Linux or Android
 macro_rules! linux_only {
     ($s: expr, $val: expr) => {
-        if cfg!(any(target_os = "linux", target_os = "android")) {
+        if cfg!(any(target_os = "linux")) {
             $val
         } else {
             return Err(ParseError::Unimplemented($s.to_string()).into());
@@ -129,14 +129,14 @@ impl Parser {
 
     pub(crate) fn parse(
         self,
-        operands: impl IntoIterator<Item: AsRef<str>>,
+        operands: impl IntoIterator<Item: AsRef<str>>
     ) -> Result<Settings, ParseError> {
         self.read(operands)?.validate()
     }
 
     pub(crate) fn read(
         mut self,
-        operands: impl IntoIterator<Item: AsRef<str>>,
+        operands: impl IntoIterator<Item: AsRef<str>>
     ) -> Result<Self, ParseError> {
         for operand in operands {
             self.parse_operand(operand.as_ref())?;
@@ -523,7 +523,7 @@ pub fn parse_bytes_with_opt_multiplier(s: &str) -> Result<u64, ParseError> {
 
 fn get_ctable(
     conversion: Option<Conversion>,
-    case: Option<Case>,
+    case: Option<Case>
 ) -> Option<&'static ConversionTable> {
     use crate::conversion_tables::*;
     Some(match (conversion, case) {
@@ -560,7 +560,7 @@ fn conversion_mode(
     ctable: Option<&'static ConversionTable>,
     block: Option<Block>,
     is_ascii: bool,
-    is_sync: bool,
+    is_sync: bool
 ) -> Option<ConversionMode> {
     match (ctable, block) {
         (Some(ct), None) => Some(ConversionMode::ConvertOnly(ct)),

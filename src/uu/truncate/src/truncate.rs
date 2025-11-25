@@ -95,7 +95,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if files.is_empty() {
         Err(UUsageError::new(
             1,
-            translate!("truncate-error-missing-file-operand"),
+            translate!("truncate-error-missing-file-operand")
         ))
     } else {
         let io_blocks = matches.get_flag(options::IO_BLOCKS);
@@ -121,14 +121,14 @@ pub fn uu_app() -> Command {
                 .short('o')
                 .long(options::IO_BLOCKS)
                 .help(translate!("truncate-help-io-blocks"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_CREATE)
                 .short('c')
                 .long(options::NO_CREATE)
                 .help(translate!("truncate-help-no-create"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REFERENCE)
@@ -137,7 +137,7 @@ pub fn uu_app() -> Command {
                 .required_unless_present(options::SIZE)
                 .help(translate!("truncate-help-reference"))
                 .value_name("RFILE")
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::SIZE)
@@ -146,7 +146,7 @@ pub fn uu_app() -> Command {
                 .required_unless_present(options::REFERENCE)
                 .help(translate!("truncate-help-size"))
                 .allow_hyphen_values(true)
-                .value_name("SIZE"),
+                .value_name("SIZE")
         )
         .arg(
             Arg::new(options::ARG_FILES)
@@ -154,7 +154,7 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .required(true)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 
@@ -178,7 +178,7 @@ fn file_truncate(filename: &OsString, create: bool, size: u64) -> UResult<()> {
         if metadata.file_type().is_fifo() {
             return Err(USimpleError::new(
                 1,
-                translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote()),
+                translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote())
             ));
         }
     }
@@ -188,7 +188,7 @@ fn file_truncate(filename: &OsString, create: bool, size: u64) -> UResult<()> {
         Err(e) => Err(e),
     }
     .map_err_context(
-        || translate!("truncate-error-cannot-open-for-writing", "filename" => filename.quote()),
+        || translate!("truncate-error-cannot-open-for-writing", "filename" => filename.quote())
     )
 }
 
@@ -213,19 +213,19 @@ fn truncate_reference_and_size(
     rfilename: &str,
     size_string: &str,
     filenames: &[OsString],
-    create: bool,
+    create: bool
 ) -> UResult<()> {
     let mode = match parse_mode_and_size(size_string) {
         Err(e) => {
             return Err(USimpleError::new(
                 1,
-                translate!("truncate-error-invalid-number", "error" => e),
+                translate!("truncate-error-invalid-number", "error" => e)
             ));
         }
         Ok(TruncateMode::Absolute(_)) => {
             return Err(USimpleError::new(
                 1,
-                translate!("truncate-error-must-specify-relative-size"),
+                translate!("truncate-error-must-specify-relative-size")
             ));
         }
         Ok(m) => m,
@@ -234,14 +234,14 @@ fn truncate_reference_and_size(
     if let TruncateMode::RoundDown(0) | TruncateMode::RoundUp(0) = mode {
         return Err(USimpleError::new(
             1,
-            translate!("truncate-error-division-by-zero"),
+            translate!("truncate-error-division-by-zero")
         ));
     }
 
     let metadata = metadata(rfilename).map_err(|e| match e.kind() {
         ErrorKind::NotFound => USimpleError::new(
             1,
-            translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote()),
+            translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote())
         ),
         _ => e.map_err_context(String::new),
     })?;
@@ -272,12 +272,12 @@ fn truncate_reference_and_size(
 fn truncate_reference_file_only(
     rfilename: &str,
     filenames: &[OsString],
-    create: bool,
+    create: bool
 ) -> UResult<()> {
     let metadata = metadata(rfilename).map_err(|e| match e.kind() {
         ErrorKind::NotFound => USimpleError::new(
             1,
-            translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote()),
+            translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote())
         ),
         _ => e.map_err_context(String::new),
     })?;
@@ -316,7 +316,7 @@ fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -
     if let TruncateMode::RoundDown(0) | TruncateMode::RoundUp(0) = mode {
         return Err(USimpleError::new(
             1,
-            translate!("truncate-error-division-by-zero"),
+            translate!("truncate-error-division-by-zero")
         ));
     }
 
@@ -328,7 +328,7 @@ fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -
                 if m.file_type().is_fifo() {
                     return Err(USimpleError::new(
                         1,
-                        translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote()),
+                        translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote())
                     ));
                 }
                 m.len()
@@ -348,7 +348,7 @@ fn truncate(
     _: bool,
     reference: Option<String>,
     size: Option<String>,
-    filenames: &[OsString],
+    filenames: &[OsString]
 ) -> UResult<()> {
     let create = !no_create;
 

@@ -16,7 +16,7 @@ fn cut_bytes(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-b", "1-20", file_path.to_str().unwrap()],
+            &["-b", "1-20", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -30,7 +30,7 @@ fn cut_characters(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-c", "5-30", file_path.to_str().unwrap()],
+            &["-c", "5-30", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -48,7 +48,7 @@ fn cut_fields_tab(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-f", "2,4", file_path.to_str().unwrap()],
+            &["-f", "2,4", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -66,7 +66,7 @@ fn cut_fields_custom_delim(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-d", ",", "-f", "1,3,5", file_path.to_str().unwrap()],
+            &["-d", ",", "-f", "1,3,5", file_path.to_str().unwrap()]
         ));
     });
 }

@@ -38,7 +38,7 @@ fn b64_decode_synthetic(bencher: Bencher) {
             OsString::from(format!(">{in_file_str}")),
         ]
         .iter()
-        .map(|x| (*x).clone()),
+        .map(|x| (*x).clone())
     );
 
     bencher.bench(|| {
@@ -59,7 +59,7 @@ fn b64_decode_ignore_garbage_synthetic(bencher: Bencher) {
             OsString::from(format!(">{in_file_str}")),
         ]
         .iter()
-        .map(|x| (*x).clone()),
+        .map(|x| (*x).clone())
     );
 
     bencher.bench(|| {

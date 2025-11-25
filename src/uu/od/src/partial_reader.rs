@@ -48,7 +48,7 @@ impl<R: Read> Read for PartialReader<R> {
                             // this is an error as we still have more to skip
                             return Err(io::Error::new(
                                 io::ErrorKind::UnexpectedEof,
-                                translate!("od-error-skip-past-end"),
+                                translate!("od-error-skip-past-end")
                             ));
                         }
                         Ok(n) => {

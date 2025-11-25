@@ -19,24 +19,24 @@ fn get_encodings() -> Vec<(&'static str, Format, String)> {
         (
             "base64url",
             Format::Base64Url,
-            translate!("basenc-help-base64url"),
+            translate!("basenc-help-base64url")
         ),
         ("base32", Format::Base32, translate!("basenc-help-base32")),
         (
             "base32hex",
             Format::Base32Hex,
-            translate!("basenc-help-base32hex"),
+            translate!("basenc-help-base32hex")
         ),
         ("base16", Format::Base16, translate!("basenc-help-base16")),
         (
             "base2lsbf",
             Format::Base2Lsbf,
-            translate!("basenc-help-base2lsbf"),
+            translate!("basenc-help-base2lsbf")
         ),
         (
             "base2msbf",
             Format::Base2Msbf,
-            translate!("basenc-help-base2msbf"),
+            translate!("basenc-help-base2msbf")
         ),
         ("z85", Format::Z85, translate!("basenc-help-z85")),
         ("base58", Format::Base58, translate!("basenc-help-base58")),
@@ -73,7 +73,7 @@ fn parse_cmd_args(args: impl uucore::Args) -> UResult<(Config, Format)> {
         .ok_or_else(|| {
             UUsageError::new(
                 BASE_CMD_PARSE_ERROR,
-                translate!("basenc-error-missing-encoding-type"),
+                translate!("basenc-error-missing-encoding-type")
             )
         })?
         .1;

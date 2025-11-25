@@ -121,7 +121,7 @@ impl Stat {
     fn new(
         path: &Path,
         dir_entry: Option<&DirEntry>,
-        options: &TraversalOptions,
+        options: &TraversalOptions
     ) -> std::io::Result<Self> {
         // Determine whether to dereference (follow) the symbolic link
         let should_dereference = match &options.dereference {
@@ -232,7 +232,7 @@ fn safe_du(
     depth: usize,
     seen_inodes: &mut HashSet<FileInfo>,
     print_tx: &mpsc::Sender<UResult<StatPrintInfo>>,
-    parent_fd: Option<&DirFd>,
+    parent_fd: Option<&DirFd>
 ) -> Result<Stat, Box<mpsc::SendError<UResult<StatPrintInfo>>>> {
     // Get initial stat for this path - use DirFd if available to avoid path length issues
     let mut my_stat = if let Some(parent_fd) = parent_fd {
@@ -271,14 +271,14 @@ fn safe_du(
             }
             Err(e) => {
                 let error = e.map_err_context(
-                    || translate!("du-error-cannot-access", "path" => path.quote()),
+                    || translate!("du-error-cannot-access", "path" => path.quote())
                 );
                 if let Err(send_error) = print_tx.send(Err(error)) {
                     return Err(Box::new(send_error));
                 }
                 return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
                     0,
-                    "Error already handled",
+                    "Error already handled"
                 )))));
             }
         }
@@ -293,27 +293,27 @@ fn safe_du(
                         Ok(s) => s,
                         Err(e) => {
                             let error = e.map_err_context(
-                                || translate!("du-error-cannot-access", "path" => path.quote()),
+                                || translate!("du-error-cannot-access", "path" => path.quote())
                             );
                             if let Err(send_error) = print_tx.send(Err(error)) {
                                 return Err(Box::new(send_error));
                             }
                             return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
                                 0,
-                                "Error already handled",
+                                "Error already handled"
                             )))));
                         }
                     },
                     Err(e) => {
                         let error = e.map_err_context(
-                            || translate!("du-error-cannot-access", "path" => path.quote()),
+                            || translate!("du-error-cannot-access", "path" => path.quote())
                         );
                         if let Err(send_error) = print_tx.send(Err(error)) {
                             return Err(Box::new(send_error));
                         }
                         return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
                             0,
-                            "Error already handled",
+                            "Error already handled"
                         )))));
                     }
                 }
@@ -334,7 +334,7 @@ fn safe_du(
         Ok(fd) => fd,
         Err(e) => {
             print_tx.send(Err(e.map_err_context(
-                || translate!("du-error-cannot-read-directory", "path" => path.quote()),
+                || translate!("du-error-cannot-read-directory", "path" => path.quote())
             )))?;
             return Ok(my_stat);
         }
@@ -345,7 +345,7 @@ fn safe_du(
         Ok(entries) => entries,
         Err(e) => {
             print_tx.send(Err(e.map_err_context(
-                || translate!("du-error-cannot-read-directory", "path" => path.quote()),
+                || translate!("du-error-cannot-read-directory", "path" => path.quote())
             )))?;
             return Ok(my_stat);
         }
@@ -359,7 +359,7 @@ fn safe_du(
             Ok(stat) => stat,
             Err(e) => {
                 print_tx.send(Err(e.map_err_context(
-                    || translate!("du-error-cannot-access", "path" => entry_path.quote()),
+                    || translate!("du-error-cannot-access", "path" => entry_path.quote())
                 )))?;
                 continue;
             }
@@ -456,7 +456,7 @@ fn safe_du(
                 depth + 1,
                 seen_inodes,
                 print_tx,
-                Some(&dir_fd),
+                Some(&dir_fd)
             )?;
 
             if !options.separate_dirs {
@@ -496,7 +496,7 @@ fn du_regular(
     seen_inodes: &mut HashSet<FileInfo>,
     print_tx: &mpsc::Sender<UResult<StatPrintInfo>>,
     ancestors: Option<&mut HashSet<FileInfo>>,
-    symlink_depth: Option<usize>,
+    symlink_depth: Option<usize>
 ) -> Result<Stat, Box<mpsc::SendError<UResult<StatPrintInfo>>>> {
     let mut default_ancestors = HashSet::new();
     let ancestors = ancestors.unwrap_or(&mut default_ancestors);
@@ -519,7 +519,7 @@ fn du_regular(
             Ok(read) => read,
             Err(e) => {
                 print_tx.send(Err(e.map_err_context(
-                    || translate!("du-error-cannot-read-directory", "path" => my_stat.path.quote()),
+                    || translate!("du-error-cannot-read-directory", "path" => my_stat.path.quote())
                 )))?;
                 return Ok(my_stat);
             }
@@ -545,9 +545,9 @@ fn du_regular(
                         if current_symlink_depth > MAX_SYMLINK_DEPTH {
                             print_tx.send(Err(std::io::Error::new(
                                 std::io::ErrorKind::InvalidData,
-                                "Too many levels of symbolic links",
+                                "Too many levels of symbolic links"
                             ).map_err_context(
-                                || translate!("du-error-cannot-access", "path" => entry_path.quote()),
+                                || translate!("du-error-cannot-access", "path" => entry_path.quote())
                             )))?;
                             continue 'file_loop;
                         }
@@ -622,7 +622,7 @@ fn du_regular(
                                     seen_inodes,
                                     print_tx,
                                     Some(ancestors),
-                                    Some(current_symlink_depth),
+                                    Some(current_symlink_depth)
                                 )?;
 
                                 if !options.separate_dirs {
@@ -648,7 +648,7 @@ fn du_regular(
                         }
                         Err(e) => {
                             print_tx.send(Err(e.map_err_context(
-                                    || translate!("du-error-cannot-access", "path" => entry_path.quote()),
+                                    || translate!("du-error-cannot-access", "path" => entry_path.quote())
                                 )))?;
                         }
                     }
@@ -792,11 +792,11 @@ impl StatPrinter {
         match self.size_format {
             SizeFormat::HumanDecimal => uucore::format::human::human_readable(
                 size,
-                uucore::format::human::SizeFormat::Decimal,
+                uucore::format::human::SizeFormat::Decimal
             ),
             SizeFormat::HumanBinary => uucore::format::human::human_readable(
                 size,
-                uucore::format::human::SizeFormat::Binary,
+                uucore::format::human::SizeFormat::Binary
             ),
             SizeFormat::BlockSize(block_size) => {
                 if self.inodes {
@@ -818,7 +818,7 @@ impl StatPrinter {
                     &mut stdout(),
                     time,
                     &self.time_format,
-                    FormatSystemTimeFallback::IntegerError,
+                    FormatSystemTimeFallback::IntegerError
                 )?;
                 print!("\t");
             } else {
@@ -843,7 +843,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
         let path = PathBuf::from(file_name);
         if path.is_dir() {
             return Err(std::io::Error::other(
-                translate!("du-error-read-error-is-directory", "file" => file_name.to_string_lossy()),
+                translate!("du-error-read-error-is-directory", "file" => file_name.to_string_lossy())
             ));
         }
 
@@ -852,7 +852,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
             Ok(file) => Box::new(BufReader::new(file)),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
                 return Err(std::io::Error::other(
-                    translate!("du-error-cannot-open-for-reading", "file" => file_name.to_string_lossy()),
+                    translate!("du-error-cannot-open-for-reading", "file" => file_name.to_string_lossy())
                 ));
             }
             Err(e) => return Err(e),
@@ -895,7 +895,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         matches
             .get_one::<String>(options::MAX_DEPTH)
             .map(|s| s.as_str()),
-        summarize,
+        summarize
     )?;
 
     let files = if let Some(file_from) = matches.get_one::<OsString>(options::FILES0_FROM) {
@@ -907,7 +907,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                         .unwrap()
                         .to_string_lossy()
                         .quote()
-                ),
+                )
             )
             .into());
         }
@@ -1055,7 +1055,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                     0,
                     &mut seen_inodes,
                     &print_tx,
-                    None,
+                    None
                 ) {
                     Ok(stat) => {
                         print_tx
@@ -1087,7 +1087,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                     &mut seen_inodes,
                     &print_tx,
                     None,
-                    None,
+                    None
                 )
                 .map_err(|e| USimpleError::new(1, e.to_string()))?;
 
@@ -1175,81 +1175,81 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("du-help-print-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::ALL)
                 .short('a')
                 .long(options::ALL)
                 .help(translate!("du-help-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::APPARENT_SIZE)
                 .long(options::APPARENT_SIZE)
                 .help(translate!("du-help-apparent-size"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::BLOCK_SIZE)
                 .short('B')
                 .long(options::BLOCK_SIZE)
                 .value_name("SIZE")
-                .help(translate!("du-help-block-size")),
+                .help(translate!("du-help-block-size"))
         )
         .arg(
             Arg::new(options::BYTES)
                 .short('b')
                 .long("bytes")
                 .help(translate!("du-help-bytes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TOTAL)
                 .long("total")
                 .short('c')
                 .help(translate!("du-help-total"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::MAX_DEPTH)
                 .short('d')
                 .long("max-depth")
                 .value_name("N")
-                .help(translate!("du-help-max-depth")),
+                .help(translate!("du-help-max-depth"))
         )
         .arg(
             Arg::new(options::HUMAN_READABLE)
                 .long("human-readable")
                 .short('h')
                 .help(translate!("du-help-human-readable"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::INODES)
                 .long(options::INODES)
                 .help(translate!("du-help-inodes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::BLOCK_SIZE_1K)
                 .short('k')
                 .help(translate!("du-help-block-size-1k"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COUNT_LINKS)
                 .short('l')
                 .long("count-links")
                 .help(translate!("du-help-count-links"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DEREFERENCE)
                 .short('L')
                 .long(options::DEREFERENCE)
                 .help(translate!("du-help-dereference"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DEREFERENCE_ARGS)
@@ -1257,7 +1257,7 @@ pub fn uu_app() -> Command {
                 .visible_short_alias('H')
                 .long(options::DEREFERENCE_ARGS)
                 .help(translate!("du-help-dereference-args"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_DEREFERENCE)
@@ -1265,47 +1265,47 @@ pub fn uu_app() -> Command {
                 .long(options::NO_DEREFERENCE)
                 .help(translate!("du-help-no-dereference"))
                 .overrides_with(options::DEREFERENCE)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::BLOCK_SIZE_1M)
                 .short('m')
                 .help(translate!("du-help-block-size-1m"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NULL)
                 .short('0')
                 .long("null")
                 .help(translate!("du-help-null"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SEPARATE_DIRS)
                 .short('S')
                 .long("separate-dirs")
                 .help(translate!("du-help-separate-dirs"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SUMMARIZE)
                 .short('s')
                 .long("summarize")
                 .help(translate!("du-help-summarize"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SI)
                 .long(options::SI)
                 .help(translate!("du-help-si"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ONE_FILE_SYSTEM)
                 .short('x')
                 .long(options::ONE_FILE_SYSTEM)
                 .help(translate!("du-help-one-file-system"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::THRESHOLD)
@@ -1314,21 +1314,21 @@ pub fn uu_app() -> Command {
                 .value_name("SIZE")
                 .num_args(1)
                 .allow_hyphen_values(true)
-                .help(translate!("du-help-threshold")),
+                .help(translate!("du-help-threshold"))
         )
         .arg(
             Arg::new(options::VERBOSE)
                 .short('v')
                 .long("verbose")
                 .help(translate!("du-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::EXCLUDE)
                 .long(options::EXCLUDE)
                 .value_name("PATTERN")
                 .help(translate!("du-help-exclude"))
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::EXCLUDE_FROM)
@@ -1337,7 +1337,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE")
                 .value_hint(clap::ValueHint::FilePath)
                 .help(translate!("du-help-exclude-from"))
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::FILES0_FROM)
@@ -1346,7 +1346,7 @@ pub fn uu_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
                 .help(translate!("du-help-files0-from"))
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::TIME)
@@ -1359,20 +1359,20 @@ pub fn uu_app() -> Command {
                     PossibleValue::new("ctime").alias("status"),
                     PossibleValue::new("creation").alias("birth"),
                 ]))
-                .help(translate!("du-help-time")),
+                .help(translate!("du-help-time"))
         )
         .arg(
             Arg::new(options::TIME_STYLE)
                 .long(options::TIME_STYLE)
                 .value_name("STYLE")
-                .help(translate!("du-help-time-style")),
+                .help(translate!("du-help-time-style"))
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString))
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
 }
 

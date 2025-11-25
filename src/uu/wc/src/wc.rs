@@ -165,7 +165,7 @@ impl<'a> Inputs<'a> {
     /// Returns an error if the file specified in --files0-from cannot be opened.
     fn try_iter(
         &'a self,
-        settings: &'a Settings<'a>,
+        settings: &'a Settings<'a>
     ) -> UResult<impl Iterator<Item = InputIterItem<'a>>> {
         let base: Box<dyn Iterator<Item = _>> = match self {
             Self::Stdin => Box::new(iter::once(Ok(Input::Stdin(StdinKind::Implicit)))),
@@ -249,7 +249,7 @@ impl<'a> Input<'a> {
                 if path.to_string_lossy().contains('\n') {
                     Some(Cow::Owned(quoting_style::locale_aware_escape_name(
                         path,
-                        QuotingStyle::SHELL_ESCAPE,
+                        QuotingStyle::SHELL_ESCAPE
                     )))
                 } else {
                     Some(Cow::Borrowed(path))
@@ -276,7 +276,7 @@ impl<'a> Input<'a> {
         match self {
             Self::Path(path) => match fs::metadata(path) {
                 Ok(meta) if meta.is_file() && meta.len() <= (10 << 20) => Ok(Some(
-                    files0_iter_file(path)?.collect::<Result<Vec<_>, _>>()?,
+                    files0_iter_file(path)?.collect::<Result<Vec<_>, _>>()?
                 )),
                 _ => Ok(None),
             },
@@ -390,14 +390,14 @@ pub fn uu_app() -> Command {
                 .short('c')
                 .long(options::BYTES)
                 .help(translate!("wc-help-bytes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHAR)
                 .short('m')
                 .long(options::CHAR)
                 .help(translate!("wc-help-chars"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILES0_FROM)
@@ -405,21 +405,21 @@ pub fn uu_app() -> Command {
                 .value_name("F")
                 .help(translate!("wc-help-files0-from"))
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::LINES)
                 .short('l')
                 .long(options::LINES)
                 .help(translate!("wc-help-lines"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::MAX_LINE_LENGTH)
                 .short('L')
                 .long(options::MAX_LINE_LENGTH)
                 .help(translate!("wc-help-max-line-length"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TOTAL)
@@ -429,33 +429,33 @@ pub fn uu_app() -> Command {
                 ]))
                 .value_name("WHEN")
                 .hide_possible_values(true)
-                .help(translate!("wc-help-total")),
+                .help(translate!("wc-help-total"))
         )
         .arg(
             Arg::new(options::WORDS)
                 .short('w')
                 .long(options::WORDS)
                 .help(translate!("wc-help-words"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
 fn word_count_from_reader<T: WordCountable>(
     mut reader: T,
-    settings: &Settings,
+    settings: &Settings
 ) -> (WordCount, Option<io::Error>) {
     match (
         settings.show_bytes,
         settings.show_chars,
         settings.show_lines,
         settings.show_max_line_length,
-        settings.show_words,
+        settings.show_words
     ) {
         // Specialize scanning loop to improve the performance.
         (false, false, false, false, false) => unreachable!(),
@@ -469,7 +469,7 @@ fn word_count_from_reader<T: WordCountable>(
                     bytes,
                     ..WordCount::default()
                 },
-                error,
+                error
             )
         }
 
@@ -558,7 +558,7 @@ fn process_chunk<
     total: &mut WordCount,
     text: &str,
     current_len: &mut usize,
-    in_word: &mut bool,
+    in_word: &mut bool
 ) {
     for ch in text.chars() {
         if SHOW_WORDS {
@@ -614,7 +614,7 @@ fn word_count_from_reader_specialized<
     const SHOW_MAX_LINE_LENGTH: bool,
     const SHOW_WORDS: bool,
 >(
-    reader: T,
+    reader: T
 ) -> (WordCount, Option<io::Error>) {
     let mut total = WordCount::default();
     let mut reader = BufReadDecoder::new(reader.buffered());
@@ -627,7 +627,7 @@ fn word_count_from_reader_specialized<
                     &mut total,
                     text,
                     &mut current_len,
-                    &mut in_word,
+                    &mut in_word
                 );
             }
             Err(e) => {
@@ -743,7 +743,7 @@ fn files0_iter_file<'a>(path: &Path) -> UResult<impl Iterator<Item = InputIterIt
             translate!("wc-error-cannot-open-for-reading",
                 "path" => quoting_style::locale_aware_escape_name(
                     path.as_os_str(),
-                    QuotingStyle::SHELL_ESCAPE_QUOTE,
+                    QuotingStyle::SHELL_ESCAPE_QUOTE
                 )
                 .into_string()
                 .expect("All escaped names with the escaping option return valid strings.")
@@ -754,7 +754,7 @@ fn files0_iter_file<'a>(path: &Path) -> UResult<impl Iterator<Item = InputIterIt
 
 fn files0_iter<'a>(
     r: impl io::Read + 'static,
-    err_path: OsString,
+    err_path: OsString
 ) -> impl Iterator<Item = InputIterItem<'a>> {
     use std::io::BufRead;
     let mut i = Some(
@@ -778,9 +778,9 @@ fn files0_iter<'a>(
                     }
                 }
                 Err(e) => Err(e.map_err_context(
-                    || translate!("wc-error-read-error", "path" => escape_name_wrapper(&err_path)),
+                    || translate!("wc-error-read-error", "path" => escape_name_wrapper(&err_path))
                 ) as Box<dyn UError>),
-            }),
+            })
     );
     // Loop until there is an error; yield that error and then nothing else.
     iter::from_fn(move || {
@@ -857,7 +857,7 @@ fn print_stats(
     settings: &Settings,
     result: &WordCount,
     title: Option<&OsStr>,
-    number_width: usize,
+    number_width: usize
 ) -> io::Result<()> {
     let mut stdout = io::stdout().lock();
 

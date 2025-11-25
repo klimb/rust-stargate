@@ -303,7 +303,7 @@ pub mod fs_tree {
         base_dir: &Path,
         depth: usize,
         dirs_per_level: usize,
-        files_per_dir: usize,
+        files_per_dir: usize
     ) {
         if depth == 0 {
             return;

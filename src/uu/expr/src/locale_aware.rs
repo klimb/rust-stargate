@@ -32,7 +32,7 @@ pub(crate) fn locale_comparison(a: &MaybeNonUtf8Str, b: &MaybeNonUtf8Str) -> Ord
 fn index_with_locale(
     left: &MaybeNonUtf8Str,
     right: &MaybeNonUtf8Str,
-    encoding: UEncoding,
+    encoding: UEncoding
 ) -> usize {
     match encoding {
         UEncoding::Utf8 => {
@@ -73,7 +73,7 @@ fn substr_with_locale(
     s: MaybeNonUtf8String,
     pos: usize,
     len: usize,
-    encoding: UEncoding,
+    encoding: UEncoding
 ) -> MaybeNonUtf8String {
     match encoding {
         UEncoding::Utf8 => {
@@ -105,7 +105,7 @@ fn substr_with_locale(
 pub(crate) fn locale_aware_substr(
     s: MaybeNonUtf8String,
     pos: usize,
-    len: usize,
+    len: usize
 ) -> MaybeNonUtf8String {
     substr_with_locale(s, pos, len, get_locale_encoding())
 }

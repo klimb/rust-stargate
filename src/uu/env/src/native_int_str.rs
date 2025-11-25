@@ -179,7 +179,7 @@ impl<'a> NativeStr<'a> {
         let n_prefix = to_native_int_representation(prefix);
         let result = self.match_cow(
             |b| b.strip_prefix(&*n_prefix).ok_or(()),
-            |o| o.strip_prefix(&*n_prefix).map(|x| x.to_vec()).ok_or(()),
+            |o| o.strip_prefix(&*n_prefix).map(|x| x.to_vec()).ok_or(())
         );
         result.ok()
     }
@@ -188,7 +188,7 @@ impl<'a> NativeStr<'a> {
         let n_prefix = to_native_int_representation(prefix);
         let result = self.match_cow_native(
             |b| b.strip_prefix(&*n_prefix).ok_or(()),
-            |o| o.strip_prefix(&*n_prefix).map(|x| x.to_vec()).ok_or(()),
+            |o| o.strip_prefix(&*n_prefix).map(|x| x.to_vec()).ok_or(())
         );
         result.ok()
     }
@@ -196,7 +196,7 @@ impl<'a> NativeStr<'a> {
     fn match_cow<FnBorrow, FnOwned, Err>(
         &self,
         f_borrow: FnBorrow,
-        f_owned: FnOwned,
+        f_owned: FnOwned
     ) -> Result<Cow<'a, OsStr>, Err>
     where
         FnBorrow: FnOnce(&'a [NativeCharInt]) -> Result<&'a [NativeCharInt], Err>,
@@ -218,7 +218,7 @@ impl<'a> NativeStr<'a> {
     fn match_cow_native<FnBorrow, FnOwned, Err>(
         &self,
         f_borrow: FnBorrow,
-        f_owned: FnOwned,
+        f_owned: FnOwned
     ) -> Result<Cow<'a, NativeIntStr>, Err>
     where
         FnBorrow: FnOnce(&'a [NativeCharInt]) -> Result<&'a [NativeCharInt], Err>,

@@ -62,7 +62,7 @@ impl ProgUpdate {
         read_stat: ReadStat,
         write_stat: WriteStat,
         duration: Duration,
-        update_type: ProgUpdateType,
+        update_type: ProgUpdateType
     ) -> Self {
         Self {
             read_stat,
@@ -255,7 +255,7 @@ impl ProgUpdate {
     pub(crate) fn print_final_stats(
         &self,
         print_level: Option<StatusLevel>,
-        progress_printed: bool,
+        progress_printed: bool
     ) {
         match print_level {
             Some(StatusLevel::None) => {}
@@ -421,7 +421,7 @@ pub(crate) enum StatusLevel {
 #[cfg(not(target_os = "linux"))]
 pub(crate) fn gen_prog_updater(
     rx: mpsc::Receiver<ProgUpdate>,
-    print_level: Option<StatusLevel>,
+    print_level: Option<StatusLevel>
 ) -> impl Fn() {
     move || {
         // As we are in a thread, we need to set up localization independently.
@@ -452,7 +452,7 @@ pub(crate) struct SignalHandler {
 #[cfg(target_os = "linux")]
 impl SignalHandler {
     pub(crate) fn install_signal_handler(
-        f: Box<dyn Send + Sync + Fn()>,
+        f: Box<dyn Send + Sync + Fn()>
     ) -> Result<Self, std::io::Error> {
         use signal_hook::consts::signal::*;
         use signal_hook::iterator::Signals;
@@ -497,7 +497,7 @@ impl Drop for SignalHandler {
 #[cfg(target_os = "linux")]
 pub(crate) fn gen_prog_updater(
     rx: mpsc::Receiver<ProgUpdate>,
-    print_level: Option<StatusLevel>,
+    print_level: Option<StatusLevel>
 ) -> impl Fn() {
     // --------------------------------------------------------------
     move || {

@@ -119,7 +119,7 @@ impl HardlinkTracker {
         source: &Path,
         dest: &Path,
         scanner: &HardlinkGroupScanner,
-        options: &HardlinkOptions,
+        options: &HardlinkOptions
     ) -> HardlinkResult<Option<PathBuf>> {
         use std::os::unix::fs::MetadataExt;
 
@@ -176,7 +176,7 @@ impl HardlinkGroupScanner {
     pub fn scan_files(
         &mut self,
         files: &[PathBuf],
-        options: &HardlinkOptions,
+        options: &HardlinkOptions
     ) -> HardlinkResult<()> {
         if self.scanned {
             return Ok(());
@@ -259,7 +259,7 @@ impl HardlinkGroupScanner {
     pub fn scan_files(
         &mut self,
         files: &[PathBuf],
-        _options: &HardlinkOptions,
+        _options: &HardlinkOptions
     ) -> HardlinkResult<()> {
         self.source_files = files.to_vec();
         self.scanned = true;
@@ -303,7 +303,7 @@ pub fn create_hardlink_context() -> (HardlinkTracker, HardlinkGroupScanner) {
 pub fn with_optional_hardlink_context<F, R>(
     tracker: Option<&mut HardlinkTracker>,
     scanner: Option<&HardlinkGroupScanner>,
-    operation: F,
+    operation: F
 ) -> R
 where
     F: FnOnce(&mut HardlinkTracker, &HardlinkGroupScanner) -> R,

@@ -176,12 +176,12 @@ impl Display for BackupError {
             Self::InvalidArgument(arg, origin) => write!(
                 f,
                 "invalid argument {} for '{origin}'\n{VALID_ARGS_HELP}",
-                arg.quote(),
+                arg.quote()
             ),
             Self::AmbiguousArgument(arg, origin) => write!(
                 f,
                 "ambiguous argument {} for '{origin}'\n{VALID_ARGS_HELP}",
-                arg.quote(),
+                arg.quote()
             ),
             Self::BackupImpossible() => write!(f, "cannot create backup"),
             // Placeholder for later
@@ -408,7 +408,7 @@ fn match_method(method: &str, origin: &str) -> UResult<BackupMode> {
 pub fn get_backup_path(
     backup_mode: BackupMode,
     backup_path: &Path,
-    suffix: &str,
+    suffix: &str
 ) -> Option<PathBuf> {
     match backup_mode {
         BackupMode::None => None,

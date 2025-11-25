@@ -37,7 +37,7 @@ use crate::{
 /// parent.
 fn get_local_to_root_parent(
     path: &Path,
-    root_parent: Option<&Path>,
+    root_parent: Option<&Path>
 ) -> Result<PathBuf, StripPrefixError> {
     match root_parent {
         Some(parent) => {
@@ -151,7 +151,7 @@ impl Entry {
     fn new<A: AsRef<Path>>(
         context: &Context,
         source: A,
-        no_target_dir: bool,
+        no_target_dir: bool
     ) -> Result<Self, StripPrefixError> {
         let source = source.as_ref();
         let source_relative = source.to_path_buf();
@@ -214,7 +214,7 @@ fn copy_direntry(
     preserve_hard_links: bool,
     copied_destinations: &HashSet<PathBuf>,
     copied_files: &mut HashMap<FileInformation, PathBuf>,
-    created_parent_dirs: &mut HashSet<PathBuf>,
+    created_parent_dirs: &mut HashSet<PathBuf>
 ) -> CopyResult<()> {
     let source_is_symlink = entry_is_symlink;
     let source_is_dir = if source_is_symlink && !options.dereference {
@@ -235,7 +235,7 @@ fn copy_direntry(
                 &entry.local_to_target,
                 false,
                 options,
-                Some(&entry.source_absolute),
+                Some(&entry.source_absolute)
             )?;
             if options.verbose {
                 println!(
@@ -258,7 +258,7 @@ fn copy_direntry(
             copied_destinations,
             copied_files,
             created_parent_dirs,
-            false,
+            false
         ) {
             if preserve_hard_links {
                 if !source_is_symlink {
@@ -282,7 +282,7 @@ fn copy_direntry(
                             translate!(
                                 "cp-error-cannot-open-for-reading",
                                 "source" => entry.source_relative.quote()
-                            ),
+                            )
                         ));
                     }
                     e => return Err(e),
@@ -311,7 +311,7 @@ pub(crate) fn copy_directory(
     copied_destinations: &HashSet<PathBuf>,
     copied_files: &mut HashMap<FileInformation, PathBuf>,
     created_parent_dirs: &mut HashSet<PathBuf>,
-    source_in_command_line: bool,
+    source_in_command_line: bool
 ) -> CopyResult<()> {
     // if no-dereference is enabled and this is a symlink, copy it as a file
     if !options.dereference(source_in_command_line) && root.is_symlink() {
@@ -324,7 +324,7 @@ pub(crate) fn copy_directory(
             copied_destinations,
             copied_files,
             created_parent_dirs,
-            source_in_command_line,
+            source_in_command_line
         );
     }
 
@@ -419,7 +419,7 @@ pub(crate) fn copy_directory(
                     preserve_hard_links,
                     copied_destinations,
                     copied_files,
-                    created_parent_dirs,
+                    created_parent_dirs
                 )?;
 
                 // We omit certain permissions when creating directories
@@ -470,7 +470,7 @@ pub(crate) fn copy_directory(
                             copy_attributes(
                                 &entry.source_absolute,
                                 &entry.local_to_target,
-                                &options.attributes,
+                                &options.attributes
                             )?;
                         }
                     }
@@ -544,7 +544,7 @@ fn build_dir(
     path: &PathBuf,
     recursive: bool,
     options: &Options,
-    copy_attributes_from: Option<&Path>,
+    copy_attributes_from: Option<&Path>
 ) -> CopyResult<()> {
     let mut builder = fs::DirBuilder::new();
     builder.recursive(recursive);

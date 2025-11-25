@@ -29,7 +29,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let new = Path::new(files[1]);
 
     hard_link(old, new).map_err_context(
-        || translate!("link-error-cannot-create-link", "new" => new.quote(), "old" => old.quote()),
+        || translate!("link-error-cannot-create-link", "new" => new.quote(), "old" => old.quote())
     )
 }
 
@@ -46,6 +46,6 @@ pub fn uu_app() -> Command {
                 .required(true)
                 .num_args(2)
                 .value_hint(clap::ValueHint::AnyPath)
-                .value_parser(ValueParser::os_string()),
+                .value_parser(ValueParser::os_string())
         )
 }

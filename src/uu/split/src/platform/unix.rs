@@ -128,7 +128,7 @@ impl Drop for FilterWriter {
 pub fn instantiate_current_writer(
     filter: Option<&str>,
     filename: &str,
-    is_new: bool,
+    is_new: bool
 ) -> Result<BufWriter<Box<dyn Write>>> {
     match filter {
         None => {
@@ -141,7 +141,7 @@ pub fn instantiate_current_writer(
                     .open(Path::new(&filename))
                     .map_err(|_| {
                         Error::other(
-                            translate!("split-error-unable-to-open-file", "file" => filename),
+                            translate!("split-error-unable-to-open-file", "file" => filename)
                         )
                     })?
             } else {
@@ -151,7 +151,7 @@ pub fn instantiate_current_writer(
                     .open(Path::new(&filename))
                     .map_err(|_| {
                         Error::other(
-                            translate!("split-error-unable-to-reopen-file", "file" => filename),
+                            translate!("split-error-unable-to-reopen-file", "file" => filename)
                         )
                     })?
             };
@@ -159,7 +159,7 @@ pub fn instantiate_current_writer(
         }
         Some(filter_command) => Ok(BufWriter::new(Box::new(
             // spawn a shell command and write to it
-            FilterWriter::new(filter_command, filename)?,
+            FilterWriter::new(filter_command, filename)?
         ) as Box<dyn Write>)),
     }
 }

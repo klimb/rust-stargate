@@ -139,7 +139,7 @@ fn check_width(width: usize) -> std::io::Result<()> {
     if width > MAX_FORMAT_WIDTH {
         Err(std::io::Error::new(
             std::io::ErrorKind::OutOfMemory,
-            "formatting width too large",
+            "formatting width too large"
         ))
     } else {
         Ok(())
@@ -187,7 +187,7 @@ impl<C: FormatChar> FormatItem<C> {
     pub fn write(
         &self,
         writer: impl Write,
-        args: &mut FormatArguments,
+        args: &mut FormatArguments
     ) -> Result<ControlFlow<()>, FormatError> {
         match self {
             Self::Spec(spec) => spec.write(writer, args)?,
@@ -199,7 +199,7 @@ impl<C: FormatChar> FormatItem<C> {
 
 /// Parse a format string containing % directives and escape sequences
 pub fn parse_spec_and_escape(
-    fmt: &[u8],
+    fmt: &[u8]
 ) -> impl Iterator<Item = Result<FormatItem<EscapedChar>, FormatError>> + '_ {
     let mut current = fmt;
     std::iter::from_fn(move || match current {
@@ -229,7 +229,7 @@ pub fn parse_spec_and_escape(
 
 /// Parse a format string containing % directives
 pub fn parse_spec_only(
-    fmt: &[u8],
+    fmt: &[u8]
 ) -> impl Iterator<Item = Result<FormatItem<u8>, FormatError>> + '_ {
     let mut current = fmt;
     std::iter::from_fn(move || match current {
@@ -257,7 +257,7 @@ pub fn parse_spec_only(
 /// Parse a format string containing escape sequences
 pub fn parse_escape_only(
     fmt: &[u8],
-    zero_octal_parsing: OctalParsing,
+    zero_octal_parsing: OctalParsing
 ) -> impl Iterator<Item = EscapedChar> + '_ {
     let mut current = fmt;
     std::iter::from_fn(move || match current {
@@ -266,7 +266,7 @@ pub fn parse_escape_only(
             current = rest;
             Some(
                 parse_escape_code(&mut current, zero_octal_parsing)
-                    .unwrap_or(EscapedChar::Backslash(b'x')),
+                    .unwrap_or(EscapedChar::Backslash(b'x'))
             )
         }
         [c, rest @ ..] => {
@@ -293,7 +293,7 @@ pub fn parse_escape_only(
 /// ```
 pub fn printf<'a>(
     format_string: impl AsRef<[u8]>,
-    arguments: impl IntoIterator<Item = &'a FormatArgument>,
+    arguments: impl IntoIterator<Item = &'a FormatArgument>
 ) -> Result<(), FormatError> {
     printf_writer(stdout(), format_string, arguments)
 }
@@ -301,7 +301,7 @@ pub fn printf<'a>(
 fn printf_writer<'a>(
     mut writer: impl Write,
     format_string: impl AsRef<[u8]>,
-    args: impl IntoIterator<Item = &'a FormatArgument>,
+    args: impl IntoIterator<Item = &'a FormatArgument>
 ) -> Result<(), FormatError> {
     let args = args.into_iter().cloned().collect::<Vec<_>>();
     let mut args = FormatArguments::new(&args);
@@ -331,7 +331,7 @@ fn printf_writer<'a>(
 /// ```
 pub fn sprintf<'a>(
     format_string: impl AsRef<[u8]>,
-    arguments: impl IntoIterator<Item = &'a FormatArgument>,
+    arguments: impl IntoIterator<Item = &'a FormatArgument>
 ) -> Result<Vec<u8>, FormatError> {
     let mut writer = Vec::new();
     printf_writer(&mut writer, format_string, arguments)?;
@@ -379,7 +379,7 @@ impl<F: Formatter<T>, T> Format<F, T> {
 
         let Some(spec) = spec else {
             return Err(FormatError::NeedAtLeastOneSpec(
-                format_string.as_ref().to_vec(),
+                format_string.as_ref().to_vec()
             ));
         };
 

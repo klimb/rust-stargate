@@ -184,7 +184,7 @@ impl PathData {
     pub fn new(
         reader: Option<Box<dyn BufRead>>,
         metadata: Option<Metadata>,
-        display_name: &str,
+        display_name: &str
     ) -> Self {
         Self {
             reader,

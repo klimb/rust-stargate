@@ -18,7 +18,7 @@ fn hashsum_md5(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["--md5", file_path.to_str().unwrap()],
+            &["--md5", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -32,7 +32,7 @@ fn hashsum_sha1(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["--sha1", file_path.to_str().unwrap()],
+            &["--sha1", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -46,7 +46,7 @@ fn hashsum_sha256(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["--sha256", file_path.to_str().unwrap()],
+            &["--sha256", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -60,7 +60,7 @@ fn hashsum_sha512(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["--sha512", file_path.to_str().unwrap()],
+            &["--sha512", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -94,7 +94,7 @@ fn hashsum_md5_check(bencher: Bencher) {
         .bench_values(|(_checksum_file, checksum_path)| {
             black_box(run_util_function(
                 uumain,
-                &["--md5", "--check", &checksum_path],
+                &["--md5", "--check", &checksum_path]
             ));
         });
 }
@@ -128,7 +128,7 @@ fn hashsum_sha256_check(bencher: Bencher) {
         .bench_values(|(_checksum_file, checksum_path)| {
             black_box(run_util_function(
                 uumain,
-                &["--sha256", "--check", &checksum_path],
+                &["--sha256", "--check", &checksum_path]
             ));
         });
 }

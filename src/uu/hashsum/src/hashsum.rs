@@ -241,7 +241,7 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
         // Determine the source of input: a list of files or stdin.
         let input = matches.get_many::<OsString>(options::FILE).map_or_else(
             || iter::once(OsStr::new("-")).collect::<Vec<_>>(),
-            |files| files.map(OsStr::new).collect::<Vec<_>>(),
+            |files| files.map(OsStr::new).collect::<Vec<_>>()
         );
 
         let verbose = ChecksumVerbose::new(status, quiet, warn);
@@ -258,7 +258,7 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
             input.iter().copied(),
             Some(algo.name),
             Some(algo.bits),
-            opts,
+            opts
         );
     } else if quiet {
         return Err(ChecksumError::QuietNotCheck.into());
@@ -326,7 +326,7 @@ pub fn uu_app_common() -> Command {
                 .help({
                     translate!("hashsum-help-binary-other")
                 })
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHECK)
@@ -334,14 +334,14 @@ pub fn uu_app_common() -> Command {
                 .long("check")
                 .help(translate!("hashsum-help-check"))
                 .action(ArgAction::SetTrue)
-                .conflicts_with("tag"),
+                .conflicts_with("tag")
         )
         .arg(
             Arg::new(options::TAG)
                 .long("tag")
                 .help(translate!("hashsum-help-tag"))
                 .action(ArgAction::SetTrue)
-                .conflicts_with("text"),
+                .conflicts_with("text")
         )
         .arg(
             Arg::new(options::TEXT)
@@ -351,7 +351,7 @@ pub fn uu_app_common() -> Command {
                     translate!("hashsum-help-text-other")
                 })
                 .conflicts_with("binary")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::QUIET)
@@ -359,7 +359,7 @@ pub fn uu_app_common() -> Command {
                 .long(options::QUIET)
                 .help(translate!("hashsum-help-quiet"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::STATUS, options::WARN]),
+                .overrides_with_all([options::STATUS, options::WARN])
         )
         .arg(
             Arg::new(options::STATUS)
@@ -367,19 +367,19 @@ pub fn uu_app_common() -> Command {
                 .long("status")
                 .help(translate!("hashsum-help-status"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::QUIET, options::WARN]),
+                .overrides_with_all([options::QUIET, options::WARN])
         )
         .arg(
             Arg::new(options::STRICT)
                 .long("strict")
                 .help(translate!("hashsum-help-strict"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("ignore-missing")
                 .long("ignore-missing")
                 .help(translate!("hashsum-help-ignore-missing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WARN)
@@ -387,14 +387,14 @@ pub fn uu_app_common() -> Command {
                 .long("warn")
                 .help(translate!("hashsum-help-warn"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::QUIET, options::STATUS]),
+                .overrides_with_all([options::QUIET, options::STATUS])
         )
         .arg(
             Arg::new("zero")
                 .short('z')
                 .long("zero")
                 .help(translate!("hashsum-help-zero"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
@@ -402,7 +402,7 @@ pub fn uu_app_common() -> Command {
                 .action(ArgAction::Append)
                 .value_name(options::FILE)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(ValueParser::os_string()),
+                .value_parser(ValueParser::os_string())
         )
 }
 
@@ -418,7 +418,7 @@ fn uu_app_opt_length(command: Command) -> Command {
             .short('l')
             .help(translate!("hashsum-help-length"))
             .overrides_with(options::LENGTH)
-            .action(ArgAction::Set),
+            .action(ArgAction::Set)
     )
 }
 
@@ -431,7 +431,7 @@ fn uu_app_b3sum_opts(command: Command) -> Command {
         Arg::new("no-names")
             .long("no-names")
             .help(translate!("hashsum-help-no-names"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
 }
 
@@ -447,7 +447,7 @@ fn uu_app_opt_bits(command: Command) -> Command {
             .help(translate!("hashsum-help-bits"))
             .value_name("BITS")
             // XXX: should we actually use validators?  they're not particularly efficient
-            .value_parser(parse_bit_num),
+            .value_parser(parse_bit_num)
     )
 }
 
@@ -476,7 +476,7 @@ pub fn uu_app_custom() -> Command {
             Arg::new(*name)
                 .long(name)
                 .help(desc)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         );
     }
     command
@@ -538,14 +538,14 @@ where
                     }
                 };
                 Box::new(file_buf) as Box<dyn Read>
-            },
+            }
         );
 
         let sum = match digest_reader(
             &mut options.digest,
             &mut file,
             options.binary,
-            options.output_bits,
+            options.output_bits
         ) {
             Ok((sum, _)) => sum,
             Err(e) => {

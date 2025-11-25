@@ -134,14 +134,14 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     {
         return Err(UUsageError::new(
             1,
-            translate!("dircolors-error-shell-and-output-exclusive"),
+            translate!("dircolors-error-shell-and-output-exclusive")
         ));
     }
 
     if matches.get_flag(options::PRINT_DATABASE) && matches.get_flag(options::PRINT_LS_COLORS) {
         return Err(UUsageError::new(
             1,
-            translate!("dircolors-error-print-database-and-ls-colors-exclusive"),
+            translate!("dircolors-error-print-database-and-ls-colors-exclusive")
         ));
     }
 
@@ -149,7 +149,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if !files.is_empty() {
             return Err(UUsageError::new(
                 1,
-                translate!("dircolors-error-extra-operand-print-database", "operand" => files[0].to_string_lossy().quote()),
+                translate!("dircolors-error-extra-operand-print-database", "operand" => files[0].to_string_lossy().quote())
             ));
         }
 
@@ -172,7 +172,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             OutputFmt::Unknown => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("dircolors-error-no-shell-environment"),
+                    translate!("dircolors-error-no-shell-environment")
                 ));
             }
             fmt => out_format = fmt,
@@ -198,7 +198,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     } else if files.len() > 1 {
         return Err(UUsageError::new(
             1,
-            translate!("dircolors-error-extra-operand", "operand" => files[1].to_string_lossy().quote()),
+            translate!("dircolors-error-extra-operand", "operand" => files[1].to_string_lossy().quote())
         ));
     } else if files[0] == "-" {
         let fin = BufReader::new(std::io::stdin());
@@ -206,14 +206,14 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         result = parse(
             fin.lines().map_while(Result::ok),
             &out_format,
-            &files[0].to_string_lossy(),
+            &files[0].to_string_lossy()
         );
     } else {
         let path = Path::new(&files[0]);
         if path.is_dir() {
             return Err(USimpleError::new(
                 2,
-                translate!("dircolors-error-expected-file-got-directory", "path" => path.quote()),
+                translate!("dircolors-error-expected-file-got-directory", "path" => path.quote())
             ));
         }
         match File::open(path) {
@@ -222,7 +222,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 result = parse(
                     fin.lines().map_while(Result::ok),
                     &out_format,
-                    &path.to_string_lossy(),
+                    &path.to_string_lossy()
                 );
             }
             Err(e) => {
@@ -256,7 +256,7 @@ pub fn uu_app() -> Command {
                 .visible_alias("bourne-shell")
                 .overrides_with(options::C_SHELL)
                 .help(translate!("dircolors-help-bourne-shell"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::C_SHELL)
@@ -265,27 +265,27 @@ pub fn uu_app() -> Command {
                 .visible_alias("c-shell")
                 .overrides_with(options::BOURNE_SHELL)
                 .help(translate!("dircolors-help-c-shell"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRINT_DATABASE)
                 .long("print-database")
                 .short('p')
                 .help(translate!("dircolors-help-print-database"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRINT_LS_COLORS)
                 .long("print-ls-colors")
                 .help(translate!("dircolors-help-print-ls-colors"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
 }
 
@@ -379,7 +379,7 @@ where
         let (key, val) = line.split_two();
         if val.is_empty() {
             return Err(
-                translate!("dircolors-error-invalid-line-missing-token", "file" => fp.maybe_quote(), "line" => num),
+                translate!("dircolors-error-invalid-line-missing-token", "file" => fp.maybe_quote(), "line" => num)
             );
         }
 
@@ -433,7 +433,7 @@ fn append_entry(
     fmt: &OutputFmt,
     key: &str,
     lower: &str,
-    val: &str,
+    val: &str
 ) -> Result<(), String> {
     if key.starts_with(['.', '*']) {
         let entry = if key.starts_with('.') {
@@ -501,7 +501,7 @@ pub fn generate_dircolors_config() -> String {
          # Global config options can be specified before TERM or COLORTERM entries\n\
          # Below are TERM or COLORTERM entries, which can be glob patterns, which\n\
          # restrict following config to systems with matching environment variables.\n\
-        ",
+        "
     );
     config.push_str("COLORTERM ?*\n");
     for term in TERMS {
@@ -522,7 +522,7 @@ pub fn generate_dircolors_config() -> String {
         # 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white\n\
         #NORMAL 00 # no color code at all\n\
         #FILE 00 # regular file: use no color at all\n\
-        ",
+        "
     );
 
     for (name, _, code) in FILE_TYPES {

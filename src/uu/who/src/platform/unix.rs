@@ -270,7 +270,7 @@ impl Who {
             "",
             "",
             if last.is_control() { "" } else { &comment },
-            "",
+            ""
         );
     }
 
@@ -284,7 +284,7 @@ impl Who {
             "",
             "",
             "",
-            "",
+            ""
         );
     }
 
@@ -300,7 +300,7 @@ impl Who {
             "",
             &pidstr,
             &comment,
-            "",
+            ""
         );
     }
 
@@ -318,7 +318,7 @@ impl Who {
             "",
             &pidstr,
             &comment,
-            &exitstr,
+            &exitstr
         );
     }
 
@@ -334,7 +334,7 @@ impl Who {
             "",
             &pidstr,
             &comment,
-            "",
+            ""
         );
     }
 
@@ -348,7 +348,7 @@ impl Who {
             "",
             "",
             "",
-            "",
+            ""
         );
     }
 
@@ -360,12 +360,11 @@ impl Who {
         match p.metadata() {
             Ok(meta) => {
                 #[cfg(all(
-                    not(target_os = "android"),
                     not(target_os = "freebsd"),
                     not(target_vendor = "apple")
                 ))]
                 let iwgrp = S_IWGRP;
-                #[cfg(any(target_os = "android", target_os = "freebsd", target_vendor = "apple"))]
+                #[cfg(any(target_os = "freebsd", target_vendor = "apple"))]
                 let iwgrp = S_IWGRP as u32;
                 mesg = if meta.mode() & iwgrp == 0 { '-' } else { '+' };
                 last_change = meta.atime();
@@ -401,7 +400,7 @@ impl Who {
             idle.as_ref(),
             format!("{}", ut.pid()).as_str(),
             hoststr.as_str(),
-            "",
+            ""
         );
 
         Ok(())
@@ -417,7 +416,7 @@ impl Who {
         idle: &str,
         pid: &str,
         comment: &str,
-        exit: &str,
+        exit: &str
     ) {
         let mut buf = String::with_capacity(64);
         let msg = vec![' ', state].into_iter().collect::<String>();
@@ -454,7 +453,7 @@ impl Who {
             &translate!("who-heading-idle"),
             &translate!("who-heading-pid"),
             &translate!("who-heading-comment"),
-            &translate!("who-heading-exit"),
+            &translate!("who-heading-exit")
         );
     }
 }

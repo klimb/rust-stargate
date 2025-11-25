@@ -82,7 +82,7 @@ impl SuffixType {
 pub(crate) fn to_magnitude_and_suffix(
     n: u128,
     suffix_type: SuffixType,
-    add_tracing_zero: bool,
+    add_tracing_zero: bool
 ) -> String {
     let bases = suffix_type.bases();
     let suffixes = suffix_type.suffixes();

@@ -16,9 +16,9 @@ mod progress;
 use crate::bufferedoutput::BufferedOutput;
 use blocks::conv_block_unblock_helper;
 use datastructures::*;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use nix::fcntl::FcntlArg::F_SETFL;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use nix::fcntl::OFlag;
 use parseargs::Parser;
 use progress::ProgUpdateType;
@@ -31,9 +31,9 @@ use std::env;
 use std::ffi::OsString;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Stdout, Write};
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use std::os::fd::AsFd;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use std::os::unix::fs::OpenOptionsExt;
 #[cfg(unix)]
 use std::os::unix::{
@@ -332,7 +332,7 @@ impl<'a> Input<'a> {
             if settings.iflags.directory && !f.metadata()?.is_dir() {
                 return Err(USimpleError::new(
                     1,
-                    translate!("dd-error-not-directory", "file" => "standard input"),
+                    translate!("dd-error-not-directory", "file" => "standard input")
                 ));
             }
         }
@@ -348,13 +348,13 @@ impl<'a> Input<'a> {
             let mut opts = OpenOptions::new();
             opts.read(true);
 
-            #[cfg(any(target_os = "linux", target_os = "android"))]
+            #[cfg(any(target_os = "linux"))]
             if let Some(libc_flags) = make_linux_iflags(&settings.iflags) {
                 opts.custom_flags(libc_flags);
             }
 
             opts.open(filename).map_err_context(
-                || translate!("dd-error-failed-to-open", "path" => filename.quote()),
+                || translate!("dd-error-failed-to-open", "path" => filename.quote())
             )?
         };
 
@@ -370,7 +370,7 @@ impl<'a> Input<'a> {
     fn new_fifo(filename: &Path, settings: &'a Settings) -> UResult<Self> {
         let mut opts = OpenOptions::new();
         opts.read(true);
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         opts.custom_flags(make_linux_iflags(&settings.iflags).unwrap_or(0));
         let mut src = Source::Fifo(opts.open(filename)?);
         if settings.skip > 0 {
@@ -380,7 +380,7 @@ impl<'a> Input<'a> {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn make_linux_iflags(iflags: &IFlags) -> Option<libc::c_int> {
     let mut flag = 0;
 
@@ -668,7 +668,7 @@ fn is_sparse(buf: &[u8]) -> bool {
 
 /// Handle O_DIRECT write errors by temporarily removing the flag and retrying.
 /// This follows GNU dd behavior for partial block writes with O_DIRECT.
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn handle_o_direct_write(f: &mut File, buf: &[u8], original_error: io::Error) -> io::Result<usize> {
     use nix::fcntl::{FcntlArg, OFlag, fcntl};
 
@@ -705,11 +705,11 @@ fn handle_o_direct_write(f: &mut File, buf: &[u8], original_error: io::Error) ->
 }
 
 /// Stub for non-Linux platforms - just return the original error.
-#[cfg(not(any(target_os = "linux", target_os = "android")))]
+#[cfg(not(any(target_os = "linux")))]
 fn handle_o_direct_write(
     _f: &mut File,
     _buf: &[u8],
-    original_error: io::Error,
+    original_error: io::Error
 ) -> io::Result<usize> {
     Err(original_error)
 }
@@ -792,7 +792,7 @@ impl<'a> Output<'a> {
                 .create_new(cflags.excl)
                 .append(oflags.append);
 
-            #[cfg(any(target_os = "linux", target_os = "android"))]
+            #[cfg(any(target_os = "linux"))]
             if let Some(libc_flags) = make_linux_oflags(oflags) {
                 opts.custom_flags(libc_flags);
             }
@@ -801,7 +801,7 @@ impl<'a> Output<'a> {
         }
 
         let dst = open_dst(filename, &settings.oconv, &settings.oflags).map_err_context(
-            || translate!("dd-error-failed-to-open", "path" => filename.quote()),
+            || translate!("dd-error-failed-to-open", "path" => filename.quote())
         )?;
 
         // Seek to the index in the output file, truncating if requested.
@@ -838,11 +838,11 @@ impl<'a> Output<'a> {
     /// (current position) that shall be used.
     fn new_file_from_stdout(settings: &'a Settings) -> UResult<Self> {
         let fx = OwnedFileDescriptorOrHandle::from(io::stdout())?;
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         if let Some(libc_flags) = make_linux_oflags(&settings.oflags) {
             nix::fcntl::fcntl(
                 fx.as_raw().as_fd(),
-                F_SETFL(OFlag::from_bits_retain(libc_flags)),
+                F_SETFL(OFlag::from_bits_retain(libc_flags))
             )?;
         }
 
@@ -872,7 +872,7 @@ impl<'a> Output<'a> {
             .create(!settings.oconv.nocreat)
             .create_new(settings.oconv.excl)
             .append(settings.oflags.append);
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         opts.custom_flags(make_linux_oflags(&settings.oflags).unwrap_or(0));
         let dst = Dest::Fifo(opts.open(filename)?);
         Ok(Self { dst, settings })
@@ -1120,7 +1120,7 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
             start,
             &prog_tx,
             output_thread,
-            truncate,
+            truncate
         );
     }
 
@@ -1239,7 +1239,7 @@ fn finalize<T>(
     start: Instant,
     prog_tx: &mpsc::Sender<ProgUpdate>,
     output_thread: thread::JoinHandle<T>,
-    truncate: bool,
+    truncate: bool
 ) -> io::Result<()> {
     // Flush the output in case a partial write has been buffered but
     // not yet written.
@@ -1265,7 +1265,7 @@ fn finalize<T>(
     Ok(())
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[allow(clippy::cognitive_complexity)]
 fn make_linux_oflags(oflags: &OFlags) -> Option<libc::c_int> {
     let mut flag = 0;
@@ -1362,7 +1362,7 @@ fn calc_loop_bsize(
     rstat: &ReadStat,
     wstat: &WriteStat,
     ibs: usize,
-    ideal_bsize: usize,
+    ideal_bsize: usize
 ) -> usize {
     match count {
         Some(Num::Blocks(rmax)) => {
@@ -1462,7 +1462,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let settings: Settings = Parser::new().parse(
         matches
             .get_many::<String>(options::OPERANDS)
-            .unwrap_or_default(),
+            .unwrap_or_default()
     )?;
 
     let i = match settings.infile {

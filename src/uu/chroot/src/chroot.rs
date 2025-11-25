@@ -169,7 +169,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         && canonicalize(
             &options.newroot,
             MissingHandling::Normal,
-            ResolveMode::Logical,
+            ResolveMode::Logical
         )
         .unwrap()
         .to_str()
@@ -177,7 +177,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     {
         return Err(UUsageError::new(
             125,
-            translate!("chroot-error-skip-chdir-only-permitted"),
+            translate!("chroot-error-skip-chdir-only-permitted")
         ));
     }
 
@@ -247,33 +247,33 @@ pub fn uu_app() -> Command {
                 .value_hint(clap::ValueHint::DirPath)
                 .hide(true)
                 .required(true)
-                .index(1),
+                .index(1)
         )
         .arg(
             Arg::new(options::GROUPS)
                 .long(options::GROUPS)
                 .overrides_with(options::GROUPS)
                 .help(translate!("chroot-help-groups"))
-                .value_name("GROUP1,GROUP2..."),
+                .value_name("GROUP1,GROUP2...")
         )
         .arg(
             Arg::new(options::USERSPEC)
                 .long(options::USERSPEC)
                 .help(translate!("chroot-help-userspec"))
-                .value_name("USER:GROUP"),
+                .value_name("USER:GROUP")
         )
         .arg(
             Arg::new(options::SKIP_CHDIR)
                 .long(options::SKIP_CHDIR)
                 .help(translate!("chroot-help-skip-chdir"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COMMAND)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::CommandName)
                 .hide(true)
-                .index(2),
+                .index(2)
         )
 }
 
@@ -321,7 +321,7 @@ fn supplemental_gids(uid: libc::uid_t) -> Vec<libc::gid_t> {
 fn set_supplemental_gids(gids: &[libc::gid_t]) -> std::io::Result<()> {
     #[cfg(any(target_vendor = "apple", target_os = "freebsd", target_os = "openbsd"))]
     let n = gids.len() as libc::c_int;
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     let n = gids.len() as libc::size_t;
     let err = unsafe { setgroups(n, gids.as_ptr()) };
     if err == 0 {
@@ -384,7 +384,7 @@ fn handle_missing_groups(strategy: Strategy) -> Result<(), ChrootError> {
 /// Set supplemental groups for this process.
 fn set_supplemental_gids_with_strategy(
     strategy: Strategy,
-    groups: Option<&Vec<String>>,
+    groups: Option<&Vec<String>>
 ) -> Result<(), ChrootError> {
     match groups {
         None => handle_missing_groups(strategy),
@@ -439,7 +439,7 @@ fn enter_chroot(root: &Path, skip_chdir: bool) -> UResult<()> {
                 .map_err(|e| ChrootError::CannotEnter("root".to_string(), e.into()))?
                 .as_bytes_with_nul()
                 .as_ptr()
-                .cast::<libc::c_char>(),
+                .cast::<libc::c_char>()
         )
     };
 

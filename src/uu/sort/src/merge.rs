@@ -39,7 +39,7 @@ use crate::{
 fn replace_output_file_in_input_files(
     files: &mut [OsString],
     output: Option<&OsStr>,
-    tmp_dir: &mut TmpDirWrapper,
+    tmp_dir: &mut TmpDirWrapper
 ) -> UResult<()> {
     let mut copy: Option<PathBuf> = None;
     if let Some(Ok(output_path)) = output.map(|path| Path::new(path).canonicalize()) {
@@ -70,7 +70,7 @@ pub fn merge(
     files: &mut [OsString],
     settings: &GlobalSettings,
     output: Output,
-    tmp_dir: &mut TmpDirWrapper,
+    tmp_dir: &mut TmpDirWrapper
 ) -> UResult<()> {
     replace_output_file_in_input_files(files, output.as_output_name(), tmp_dir)?;
     let files = files
@@ -92,7 +92,7 @@ pub fn merge_with_file_limit<
     files: F,
     settings: &GlobalSettings,
     output: Output,
-    tmp_dir: &mut TmpDirWrapper,
+    tmp_dir: &mut TmpDirWrapper
 ) -> UResult<()> {
     if files.len() <= settings.merge_batch_size {
         let merger = merge_without_limit(files, settings);
@@ -132,7 +132,7 @@ pub fn merge_with_file_limit<
                     >),
             settings,
             output,
-            tmp_dir,
+            tmp_dir
         )
     }
 }
@@ -143,7 +143,7 @@ pub fn merge_with_file_limit<
 /// as many files as we are allowed to open concurrently.
 fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = UResult<M>>>(
     files: F,
-    settings: &GlobalSettings,
+    settings: &GlobalSettings
 ) -> UResult<FileMerger<'_>> {
     let (request_sender, request_receiver) = channel();
     let mut reader_files = Vec::with_capacity(files.size_hint().0);
@@ -176,7 +176,7 @@ fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = UResult<M>>>(
                 &request_receiver,
                 &mut reader_files,
                 &settings,
-                settings.line_ending.into(),
+                settings.line_ending.into()
             )
         }
     });
@@ -197,7 +197,7 @@ fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = UResult<M>>>(
     Ok(FileMerger {
         heap: binary_heap_plus::BinaryHeap::from_vec_cmp(
             mergeable_files,
-            FileComparator { settings },
+            FileComparator { settings }
         ),
         request_sender,
         prev: None,
@@ -216,7 +216,7 @@ fn reader(
     recycled_receiver: &Receiver<(usize, RecycledChunk)>,
     files: &mut [Option<ReaderFile<impl MergeInput>>],
     settings: &GlobalSettings,
-    separator: u8,
+    separator: u8
 ) -> UResult<()> {
     for (file_idx, recycled_chunk) in recycled_receiver {
         if let Some(ReaderFile {
@@ -233,7 +233,7 @@ fn reader(
                 file.as_read(),
                 &mut iter::empty(),
                 separator,
-                settings,
+                settings
             )?;
             if !should_continue {
                 // Remove the file from the list by replacing it with `None`.
@@ -289,7 +289,7 @@ impl FileMerger<'_> {
     fn write_next(
         &mut self,
         settings: &GlobalSettings,
-        out: &mut impl Write,
+        out: &mut impl Write
     ) -> std::io::Result<bool> {
         if let Some(file) = self.heap.peek() {
             let prev = self.prev.replace(PreviousLine {
@@ -307,7 +307,7 @@ impl FileMerger<'_> {
                             current_line,
                             settings,
                             prev.chunk.line_data(),
-                            file.current_chunk.line_data(),
+                            file.current_chunk.line_data()
                         );
                         if cmp == Ordering::Equal {
                             return Ok(());
@@ -358,7 +358,7 @@ impl Compare<MergeableFile> for FileComparator<'_> {
             &b.current_chunk.lines()[b.line_idx],
             self.settings,
             a.current_chunk.line_data(),
-            b.current_chunk.line_data(),
+            b.current_chunk.line_data()
         );
         if cmp == Ordering::Equal {
             // To make sorting stable, we need to consider the file number as well,

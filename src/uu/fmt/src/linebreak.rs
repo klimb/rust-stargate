@@ -39,7 +39,7 @@ impl BreakArgs<'_> {
 pub fn break_lines(
     para: &Paragraph,
     opts: &FmtOptions,
-    ostream: &mut BufWriter<Stdout>,
+    ostream: &mut BufWriter<Stdout>
 ) -> std::io::Result<()> {
     // indent
     let p_indent = &para.indent_str;
@@ -96,7 +96,7 @@ pub fn break_lines(
 /// maxlength would be exceeded, then print a linebreak and indent and continue.
 fn break_simple<'a, T: Iterator<Item = &'a WordInfo<'a>>>(
     mut iter: T,
-    args: &mut BreakArgs<'a>,
+    args: &mut BreakArgs<'a>
 ) -> std::io::Result<()> {
     iter.try_fold((args.init_len, false), |(l, prev_punct), winfo| {
         accum_words_simple(args, l, prev_punct, winfo)
@@ -108,7 +108,7 @@ fn accum_words_simple<'a>(
     args: &mut BreakArgs<'a>,
     l: usize,
     prev_punct: bool,
-    winfo: &'a WordInfo<'a>,
+    winfo: &'a WordInfo<'a>
 ) -> std::io::Result<(usize, bool)> {
     // compute the length of this word, considering how tabs will expand at this position on the line
     let wlen = winfo.word_nchars + args.compute_width(winfo, l, false);
@@ -117,7 +117,7 @@ fn accum_words_simple<'a>(
         args.uniform,
         winfo.new_line,
         winfo.sentence_start,
-        prev_punct,
+        prev_punct
     );
 
     if l + wlen + slen > args.opts.width {
@@ -136,7 +136,7 @@ fn accum_words_simple<'a>(
 /// <http://onlinelibrary.wiley.com/doi/10.1002/spe.4380111102/pdf>
 fn break_knuth_plass<'a, T: Clone + Iterator<Item = &'a WordInfo<'a>>>(
     mut iter: T,
-    args: &mut BreakArgs<'a>,
+    args: &mut BreakArgs<'a>
 ) -> std::io::Result<()> {
     // run the algorithm to get the breakpoints
     let breakpoints = find_kp_breakpoints(iter.clone(), args);
@@ -157,7 +157,7 @@ fn break_knuth_plass<'a, T: Clone + Iterator<Item = &'a WordInfo<'a>>>(
                     args.uniform,
                     winfo.new_line,
                     winfo.sentence_start,
-                    prev_punct,
+                    prev_punct
                 );
                 fresh = false;
                 prev_punct = winfo.ends_punct;
@@ -179,7 +179,7 @@ fn break_knuth_plass<'a, T: Clone + Iterator<Item = &'a WordInfo<'a>>>(
                 write_with_spaces(word, slen, args.ostream)?;
             }
             Ok((prev_punct, fresh))
-        },
+        }
     );
     let (mut prev_punct, mut fresh) = result?;
 
@@ -195,7 +195,7 @@ fn break_knuth_plass<'a, T: Clone + Iterator<Item = &'a WordInfo<'a>>>(
             args.uniform,
             winfo.new_line,
             winfo.sentence_start,
-            prev_punct,
+            prev_punct
         );
         prev_punct = winfo.ends_punct;
         fresh = false;
@@ -217,7 +217,7 @@ struct LineBreak<'a> {
 #[allow(clippy::cognitive_complexity)]
 fn find_kp_breakpoints<'a, T: Iterator<Item = &'a WordInfo<'a>>>(
     iter: T,
-    args: &BreakArgs<'a>,
+    args: &BreakArgs<'a>
 ) -> Vec<(&'a WordInfo<'a>, bool)> {
     let mut iter = iter.peekable();
     // set up the initial null linebreak
@@ -300,7 +300,7 @@ fn find_kp_breakpoints<'a, T: Iterator<Item = &'a WordInfo<'a>>>(
                             args.opts.goal as isize - tlen as isize,
                             stretch,
                             w.word_nchars,
-                            active.prev_rat,
+                            active.prev_rat
                         )
                     };
 
@@ -431,7 +431,7 @@ fn restart_active_breaks<'a>(
     act_idx: usize,
     w: &'a WordInfo<'a>,
     slen: usize,
-    min: usize,
+    min: usize
 ) -> LineBreak<'a> {
     let (break_before, line_length) = if active.fresh {
         // never break before a word if that word would be the first on a line
@@ -479,7 +479,7 @@ fn slice_if_fresh(
     uniform: bool,
     newline: bool,
     sstart: bool,
-    punct: bool,
+    punct: bool
 ) -> (usize, &str) {
     if fresh {
         (0, &word[start..])
@@ -498,7 +498,7 @@ fn write_newline(indent: &str, ostream: &mut BufWriter<Stdout>) -> std::io::Resu
 fn write_with_spaces(
     word: &str,
     slen: usize,
-    ostream: &mut BufWriter<Stdout>,
+    ostream: &mut BufWriter<Stdout>
 ) -> std::io::Result<()> {
     if slen == 2 {
         ostream.write_all(b"  ")?;

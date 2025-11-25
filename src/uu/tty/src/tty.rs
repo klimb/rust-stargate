@@ -64,6 +64,6 @@ pub fn uu_app() -> Command {
             .visible_alias("quiet")
             .short('s')
             .help(translate!("tty-help-silent"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
 }

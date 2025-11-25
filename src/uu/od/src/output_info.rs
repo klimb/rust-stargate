@@ -55,7 +55,7 @@ impl OutputInfo {
     pub fn new(
         line_bytes: usize,
         formats: &[ParsedFormatterItemInfo],
-        output_duplicates: bool,
+        output_duplicates: bool
     ) -> Self {
         let byte_size_block = formats.iter().fold(1, |max, next| {
             cmp::max(max, next.formatter_item_info.byte_size)
@@ -64,7 +64,7 @@ impl OutputInfo {
             cmp::max(
                 max,
                 next.formatter_item_info.print_width
-                    * (byte_size_block / next.formatter_item_info.byte_size),
+                    * (byte_size_block / next.formatter_item_info.byte_size)
             )
         });
         let print_width_line = print_width_block * (line_bytes / byte_size_block);
@@ -84,7 +84,7 @@ impl OutputInfo {
     fn create_spaced_formatter_info(
         formats: &[ParsedFormatterItemInfo],
         byte_size_block: usize,
-        print_width_block: usize,
+        print_width_block: usize
     ) -> Vec<SpacedFormatterItemInfo> {
         formats
             .iter()
@@ -144,7 +144,7 @@ impl OutputInfo {
     fn calculate_alignment(
         sf: &dyn TypeSizeInfo,
         byte_size_block: usize,
-        print_width_block: usize,
+        print_width_block: usize
     ) -> [usize; MAX_BYTES_PER_UNIT] {
         assert!(
             byte_size_block <= MAX_BYTES_PER_UNIT,

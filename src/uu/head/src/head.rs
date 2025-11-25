@@ -79,7 +79,7 @@ pub fn uu_app() -> Command {
                 .value_name("[-]NUM")
                 .help(translate!("head-help-bytes"))
                 .overrides_with_all([options::BYTES, options::LINES])
-                .allow_hyphen_values(true),
+                .allow_hyphen_values(true)
         )
         .arg(
             Arg::new(options::LINES)
@@ -88,7 +88,7 @@ pub fn uu_app() -> Command {
                 .value_name("[-]NUM")
                 .help(translate!("head-help-lines"))
                 .overrides_with_all([options::LINES, options::BYTES])
-                .allow_hyphen_values(true),
+                .allow_hyphen_values(true)
         )
         .arg(
             Arg::new(options::QUIET)
@@ -97,7 +97,7 @@ pub fn uu_app() -> Command {
                 .visible_alias("silent")
                 .help(translate!("head-help-quiet"))
                 .overrides_with_all([options::VERBOSE, options::QUIET])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::VERBOSE)
@@ -105,14 +105,14 @@ pub fn uu_app() -> Command {
                 .long("verbose")
                 .help(translate!("head-help-verbose"))
                 .overrides_with_all([options::QUIET, options::VERBOSE])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRESUME_INPUT_PIPE)
                 .long("presume-input-pipe")
                 .alias("-presume-input-pipe")
                 .hide(true)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ZERO)
@@ -120,13 +120,13 @@ pub fn uu_app() -> Command {
                 .long("zero-terminated")
                 .help(translate!("head-help-zero-terminated"))
                 .overrides_with(options::ZERO)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILES)
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -169,7 +169,7 @@ impl Mode {
 }
 
 fn arg_iterate<'a>(
-    mut args: impl uucore::Args + 'a,
+    mut args: impl uucore::Args + 'a
 ) -> HeadResult<Box<dyn Iterator<Item = OsString> + 'a>> {
     // argv[0] is always present
     let first = args.next().unwrap();
@@ -179,7 +179,7 @@ fn arg_iterate<'a>(
                 match v {
                     Ok(iter) => Ok(Box::new(vec![first].into_iter().chain(iter).chain(args))),
                     Err(parse::ParseError) => Err(HeadError::ParseError(
-                        translate!("head-error-bad-argument-format", "arg" => s.quote()),
+                        translate!("head-error-bad-argument-format", "arg" => s.quote())
                     )),
                 }
             } else {
@@ -232,7 +232,7 @@ impl HeadOptions {
 fn wrap_in_stdout_error(err: io::Error) -> io::Error {
     io::Error::new(
         err.kind(),
-        translate!("head-error-writing-stdout", "err" => err),
+        translate!("head-error-writing-stdout", "err" => err)
     )
 }
 
@@ -457,7 +457,7 @@ fn head_file(input: &mut File, options: &HeadOptions) -> io::Result<u64> {
         Mode::FirstLines(n) => read_n_lines(
             &mut io::BufReader::with_capacity(BUF_SIZE, input),
             n,
-            options.line_ending.into(),
+            options.line_ending.into()
         ),
         Mode::AllButLastBytes(_) | Mode::AllButLastLines(_) => head_backwards_file(input, options),
     }

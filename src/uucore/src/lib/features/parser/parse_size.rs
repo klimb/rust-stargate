@@ -344,7 +344,7 @@ impl<'parser> Parser<'parser> {
     fn parse_number(
         numeric_string: &str,
         radix: u32,
-        original_size: &str,
+        original_size: &str
     ) -> Result<u128, ParseSizeError> {
         u128::from_str_radix(numeric_string, radix).map_err(|e| match e.kind() {
             IntErrorKind::PosOverflow => ParseSizeError::size_too_big(original_size),

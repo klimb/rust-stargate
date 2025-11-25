@@ -459,7 +459,7 @@ impl<'a> ParaWords<'a> {
                         sentence_start: false,
                         ends_punct: false,
                         new_line: false,
-                    }),
+                    })
             );
         } else {
             // first line
@@ -479,7 +479,7 @@ impl<'a> ParaWords<'a> {
                         .lines
                         .iter()
                         .skip(1)
-                        .flat_map(|x| WordSplit::new(opts, &x[indent_end..])),
+                        .flat_map(|x| WordSplit::new(opts, &x[indent_end..]))
                 );
             }
         }
@@ -608,7 +608,7 @@ impl<'a> Iterator for WordSplit<'a> {
                 &self.string[old_position..self.position],
                 word_start_relative,
                 before_tab,
-                after_tab,
+                after_tab
             )
         };
 

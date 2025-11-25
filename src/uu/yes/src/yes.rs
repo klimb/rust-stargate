@@ -32,7 +32,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         Err(err) if err.kind() == io::ErrorKind::BrokenPipe => Ok(()),
         Err(err) => Err(USimpleError::new(
             1,
-            translate!("yes-error-standard-output", "error" => err),
+            translate!("yes-error-standard-output", "error" => err)
         )),
     }
 }
@@ -46,7 +46,7 @@ pub fn uu_app() -> Command {
         .arg(
             Arg::new("STRING")
                 .value_parser(ValueParser::os_string())
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .infer_long_args(true)
 }
@@ -54,7 +54,7 @@ pub fn uu_app() -> Command {
 /// Copies words from `i` into `buf`, separated by spaces.
 fn args_into_buffer<'a>(
     buf: &mut Vec<u8>,
-    i: Option<impl Iterator<Item = &'a OsString>>,
+    i: Option<impl Iterator<Item = &'a OsString>>
 ) -> Result<(), Box<dyn Error>> {
     let Some(i) = i else {
         buf.extend_from_slice(b"y\n");
@@ -164,8 +164,8 @@ mod tests {
                         OsString::from("bar    baz"),
                         OsString::from("qux"),
                     ]
-                    .iter(),
-                ),
+                    .iter()
+                )
             )
             .unwrap();
             assert_eq!(String::from_utf8(v).unwrap(), "foo bar    baz qux\n");

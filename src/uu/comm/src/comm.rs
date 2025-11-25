@@ -202,7 +202,7 @@ fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) 
         && (check_order
             || if let (Some(file1), Some(file2)) = (
                 opts.get_one::<OsString>(options::FILE_1),
-                opts.get_one::<OsString>(options::FILE_2),
+                opts.get_one::<OsString>(options::FILE_2)
             ) {
                 !(paths_refer_to_same_file(file1.as_os_str(), file2.as_os_str(), true)
                     || are_files_identical(Path::new(file1), Path::new(file2)).unwrap_or(false))
@@ -327,7 +327,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             // Note: This intentionally deviate from the GNU error message by inserting the word "conflicting".
             return Err(USimpleError::new(
                 1,
-                translate!("comm-error-multiple-conflicting-delimiters"),
+                translate!("comm-error-multiple-conflicting-delimiters")
             ));
         }
     }
@@ -351,19 +351,19 @@ pub fn uu_app() -> Command {
             Arg::new(options::COLUMN_1)
                 .short('1')
                 .help(translate!("comm-help-column-1"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COLUMN_2)
                 .short('2')
                 .help(translate!("comm-help-column-2"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COLUMN_3)
                 .short('3')
                 .help(translate!("comm-help-column-3"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DELIMITER)
@@ -373,7 +373,7 @@ pub fn uu_app() -> Command {
                 .default_value(options::DELIMITER_DEFAULT)
                 .allow_hyphen_values(true)
                 .action(ArgAction::Append)
-                .hide_default_value(true),
+                .hide_default_value(true)
         )
         .arg(
             Arg::new(options::ZERO_TERMINATED)
@@ -381,37 +381,37 @@ pub fn uu_app() -> Command {
                 .short('z')
                 .overrides_with(options::ZERO_TERMINATED)
                 .help(translate!("comm-help-zero-terminated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE_1)
                 .required(true)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::FILE_2)
                 .required(true)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::TOTAL)
                 .long(options::TOTAL)
                 .help(translate!("comm-help-total"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHECK_ORDER)
                 .long(options::CHECK_ORDER)
                 .help(translate!("comm-help-check-order"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_CHECK_ORDER)
                 .long(options::NO_CHECK_ORDER)
                 .help(translate!("comm-help-no-check-order"))
                 .action(ArgAction::SetTrue)
-                .conflicts_with(options::CHECK_ORDER),
+                .conflicts_with(options::CHECK_ORDER)
         )
 }

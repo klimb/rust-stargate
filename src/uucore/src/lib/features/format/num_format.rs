@@ -358,7 +358,7 @@ fn format_float_non_finite(e: &ExtendedBigDecimal, case: Case) -> String {
 fn format_float_decimal(
     bd: &BigDecimal,
     precision: Option<usize>,
-    force_decimal: ForceDecimal,
+    force_decimal: ForceDecimal
 ) -> String {
     debug_assert!(!bd.is_negative());
     let precision = precision.unwrap_or(6); // Default %f precision (C standard)
@@ -413,7 +413,7 @@ fn format_float_scientific(
     bd: &BigDecimal,
     precision: Option<usize>,
     case: Case,
-    force_decimal: ForceDecimal,
+    force_decimal: ForceDecimal
 ) -> String {
     debug_assert!(!bd.is_negative());
     let precision = precision.unwrap_or(6); // Default %e precision (C standard)
@@ -449,7 +449,7 @@ fn format_float_shortest(
     bd: &BigDecimal,
     precision: Option<usize>,
     case: Case,
-    force_decimal: ForceDecimal,
+    force_decimal: ForceDecimal
 ) -> String {
     debug_assert!(!bd.is_negative());
     let precision = precision.unwrap_or(6); // Default %g precision (C standard)
@@ -533,7 +533,7 @@ fn format_float_hexadecimal(
     bd: &BigDecimal,
     precision: Option<usize>,
     case: Case,
-    force_decimal: ForceDecimal,
+    force_decimal: ForceDecimal
 ) -> String {
     debug_assert!(!bd.is_negative());
     // Default precision for %a is supposed to be sufficient to represent the
@@ -606,7 +606,7 @@ fn format_float_hexadecimal(
         // (frac10 * 2^margin / 5^-exp10) * 2^(exp10-margin)
         (
             (frac10 << margin) / 5.to_bigint().unwrap().pow(-exp10 as u32),
-            exp10 - margin,
+            exp10 - margin
         )
     };
 
@@ -695,7 +695,7 @@ fn write_output(
     sign_indicator: String,
     s: String,
     width: usize,
-    alignment: NumberAlignment,
+    alignment: NumberAlignment
 ) -> std::io::Result<()> {
     if width == 0 {
         writer.write_all(sign_indicator.as_bytes())?;
@@ -800,7 +800,7 @@ mod test {
             format_float_decimal(
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(0),
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f(100.0), "100.");
@@ -810,7 +810,7 @@ mod test {
             format_float_decimal(
                 &BigDecimal::from_str(x).unwrap(),
                 Some(24),
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f("0.12345678901234567890"), "0.123456789012345678900000");
@@ -827,7 +827,7 @@ mod test {
             format_float_decimal(
                 &BigDecimal::from_bigint(digits, scale),
                 Some(6),
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.into(), 0), "0.000000");
@@ -843,7 +843,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.0), "0.000000e+00");
@@ -859,7 +859,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(6),
                 Case::Uppercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.0), "0.000000E+00");
@@ -871,7 +871,7 @@ mod test {
                 &BigDecimal::from_bigint(digits, scale),
                 Some(6),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.into(), 0), "0.000000e+00");
@@ -888,7 +888,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.0), "0e+00");
@@ -904,7 +904,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f(0.0), "0.e+00");
@@ -924,7 +924,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.0), "0");
@@ -946,7 +946,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f(0.0), "0.00000");
@@ -968,7 +968,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.0), "0");
@@ -987,7 +987,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f(0.0), "0.");
@@ -1013,7 +1013,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 Some(6),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f("0"), "0x0.000000p+0");
@@ -1028,7 +1028,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f("0"), "0x0p+0");
@@ -1040,7 +1040,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 Some(0),
                 Case::Lowercase,
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f("0"), "0x0.p+0");
@@ -1053,7 +1053,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f("0"), "0x0p+0");
@@ -1070,7 +1070,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::Yes,
+                ForceDecimal::Yes
             )
         };
         assert_eq!(f("0"), "0x0.p+0");
@@ -1083,7 +1083,7 @@ mod test {
                 &BigDecimal::from_str(x).unwrap(),
                 Some(6),
                 Case::Uppercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f("0.00001"), "0XA.7C5AC4P-20");
@@ -1095,7 +1095,7 @@ mod test {
                 &BigDecimal::from_bigint(digits, scale),
                 Some(6),
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.into(), 0), "0x0.000000p+0");
@@ -1125,7 +1125,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.1171875), "0.117188");
@@ -1143,7 +1143,7 @@ mod test {
                 &BigDecimal::from_f64(x).unwrap(),
                 None,
                 Case::Lowercase,
-                ForceDecimal::No,
+                ForceDecimal::No
             )
         };
         assert_eq!(f(0.001), "0.001");

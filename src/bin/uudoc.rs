@@ -64,7 +64,7 @@ fn gen_coreutils_app<T: Args>(util_map: &UtilityMap<T>) -> clap::Command {
 fn gen_manpage<T: Args>(
     tldr: &mut Option<ZipArchive<File>>,
     args: impl Iterator<Item = OsString>,
-    util_map: &UtilityMap<T>,
+    util_map: &UtilityMap<T>
 ) -> ! {
     let all_utilities = validation::get_all_utilities(util_map);
 
@@ -73,7 +73,7 @@ fn gen_manpage<T: Args>(
         .arg(
             Arg::new("utility")
                 .value_parser(clap::builder::PossibleValuesParser::new(&all_utilities))
-                .required(true),
+                .required(true)
         )
         .get_matches_from(std::iter::once(OsString::from("manpage")).chain(args));
 
@@ -107,12 +107,12 @@ fn gen_completions<T: Args>(args: impl Iterator<Item = OsString>, util_map: &Uti
         .arg(
             Arg::new("utility")
                 .value_parser(clap::builder::PossibleValuesParser::new(&all_utilities))
-                .required(true),
+                .required(true)
         )
         .arg(
             Arg::new("shell")
                 .value_parser(clap::builder::EnumValueParser::<Shell>::new())
-                .required(true),
+                .required(true)
         )
         .get_matches_from(std::iter::once(OsString::from("completion")).chain(args));
 
@@ -165,7 +165,7 @@ fn main() -> io::Result<()> {
                 gen_manpage(
                     &mut tldr_zip,
                     args_iter,
-                    &util_map::<Box<dyn Iterator<Item = OsString>>>(),
+                    &util_map::<Box<dyn Iterator<Item = OsString>>>()
                 );
             }
             "completion" => {
@@ -210,7 +210,7 @@ fn main() -> io::Result<()> {
         * [Extensions](extensions.md)\n\
         \n\
         # Reference\n\
-        * [Multi-call binary](multicall.md)\n",
+        * [Multi-call binary](multicall.md)\n"
     );
 
     println!("Gathering utils per platform");
@@ -221,7 +221,7 @@ fn main() -> io::Result<()> {
                 std::process::Command::new("./util/show-utils.sh")
                     .arg(format!("--features=feat_os_{platform}"))
                     .output()?
-                    .stdout,
+                    .stdout
             )
             .unwrap()
             .trim()
@@ -273,7 +273,7 @@ fn main() -> io::Result<()> {
                 format!("**{name}**"),
                 check_supported(name, "linux"),
                 check_supported(name, "macos"),
-                check_supported(name, "unix"),
+                check_supported(name, "unix")
             )?;
         }
     }
@@ -536,7 +536,7 @@ fn get_zip_content(archive: &mut ZipArchive<impl Read + Seek>, name: &str) -> Op
 fn write_zip_examples(
     archive: &mut ZipArchive<impl Read + Seek>,
     name: &str,
-    output_markdown: bool,
+    output_markdown: bool
 ) -> io::Result<String> {
     let content = if let Some(f) = get_zip_content(archive, &format!("pages/common/{name}.md")) {
         f
@@ -545,7 +545,7 @@ fn write_zip_examples(
     } else {
         return Err(io::Error::new(
             io::ErrorKind::NotFound,
-            format!("Could not find tldr examples for {name}"),
+            format!("Could not find tldr examples for {name}")
         ));
     };
 

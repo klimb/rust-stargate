@@ -158,7 +158,7 @@ impl Options {
             block_size: read_block_size(matches).map_err(|e| match e {
                 ParseSizeError::InvalidSuffix(s) => OptionsError::InvalidSuffix(s),
                 ParseSizeError::SizeTooBig(_) => OptionsError::BlockSizeTooLarge(
-                    matches.get_one::<String>(OPT_BLOCKSIZE).unwrap().to_owned(),
+                    matches.get_one::<String>(OPT_BLOCKSIZE).unwrap().to_owned()
                 ),
                 ParseSizeError::ParseFailure(s) => OptionsError::InvalidBlockSize(s),
                 ParseSizeError::PhysicalMem(s) => OptionsError::InvalidBlockSize(s),
@@ -299,7 +299,7 @@ fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
                 if let Ok(canonicalized_symlink) = uucore::fs::canonicalize(
                     dev_path,
                     uucore::fs::MissingHandling::Existing,
-                    uucore::fs::ResolveMode::Logical,
+                    uucore::fs::ResolveMode::Logical
                 ) {
                     mi.dev_name = canonicalized_symlink.to_string_lossy().to_string();
                 }
@@ -402,7 +402,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             if filesystems.is_empty() {
                 return Err(USimpleError::new(
                     1,
-                    translate!("df-error-no-file-systems-processed"),
+                    translate!("df-error-no-file-systems-processed")
                 ));
             }
 
@@ -443,7 +443,7 @@ pub fn uu_app() -> Command {
             Arg::new(OPT_HELP)
                 .long(OPT_HELP)
                 .help(translate!("df-help-print-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(OPT_ALL)
@@ -451,7 +451,7 @@ pub fn uu_app() -> Command {
                 .long("all")
                 .overrides_with(OPT_ALL)
                 .help(translate!("df-help-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_BLOCKSIZE)
@@ -459,14 +459,14 @@ pub fn uu_app() -> Command {
                 .long("block-size")
                 .value_name("SIZE")
                 .overrides_with_all([OPT_KILO, OPT_BLOCKSIZE])
-                .help(translate!("df-help-block-size")),
+                .help(translate!("df-help-block-size"))
         )
         .arg(
             Arg::new(OPT_TOTAL)
                 .long("total")
                 .overrides_with(OPT_TOTAL)
                 .help(translate!("df-help-total"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_HUMAN_READABLE_BINARY)
@@ -474,7 +474,7 @@ pub fn uu_app() -> Command {
                 .long("human-readable")
                 .overrides_with_all([OPT_HUMAN_READABLE_DECIMAL, OPT_HUMAN_READABLE_BINARY])
                 .help(translate!("df-help-human-readable"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_HUMAN_READABLE_DECIMAL)
@@ -482,7 +482,7 @@ pub fn uu_app() -> Command {
                 .long("si")
                 .overrides_with_all([OPT_HUMAN_READABLE_BINARY, OPT_HUMAN_READABLE_DECIMAL])
                 .help(translate!("df-help-si"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_INODES)
@@ -490,14 +490,14 @@ pub fn uu_app() -> Command {
                 .long("inodes")
                 .overrides_with(OPT_INODES)
                 .help(translate!("df-help-inodes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_KILO)
                 .short('k')
                 .help(translate!("df-help-kilo"))
                 .overrides_with_all([OPT_BLOCKSIZE, OPT_KILO])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_LOCAL)
@@ -505,14 +505,14 @@ pub fn uu_app() -> Command {
                 .long("local")
                 .overrides_with(OPT_LOCAL)
                 .help(translate!("df-help-local"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_NO_SYNC)
                 .long("no-sync")
                 .overrides_with_all([OPT_SYNC, OPT_NO_SYNC])
                 .help(translate!("df-help-no-sync"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_OUTPUT)
@@ -526,7 +526,7 @@ pub fn uu_app() -> Command {
                 .default_missing_values(OUTPUT_FIELD_LIST)
                 .default_values(["source", "size", "used", "avail", "pcent", "target"])
                 .conflicts_with_all([OPT_INODES, OPT_PORTABILITY, OPT_PRINT_TYPE])
-                .help(translate!("df-help-output")),
+                .help(translate!("df-help-output"))
         )
         .arg(
             Arg::new(OPT_PORTABILITY)
@@ -534,14 +534,14 @@ pub fn uu_app() -> Command {
                 .long("portability")
                 .overrides_with(OPT_PORTABILITY)
                 .help(translate!("df-help-portability"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_SYNC)
                 .long("sync")
                 .overrides_with_all([OPT_NO_SYNC, OPT_SYNC])
                 .help(translate!("df-help-sync"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_TYPE)
@@ -550,7 +550,7 @@ pub fn uu_app() -> Command {
                 .value_parser(ValueParser::os_string())
                 .value_name("TYPE")
                 .action(ArgAction::Append)
-                .help(translate!("df-help-type")),
+                .help(translate!("df-help-type"))
         )
         .arg(
             Arg::new(OPT_PRINT_TYPE)
@@ -558,7 +558,7 @@ pub fn uu_app() -> Command {
                 .long("print-type")
                 .overrides_with(OPT_PRINT_TYPE)
                 .help(translate!("df-help-print-type"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_EXCLUDE_TYPE)
@@ -568,13 +568,13 @@ pub fn uu_app() -> Command {
                 .value_parser(ValueParser::os_string())
                 .value_name("TYPE")
                 .use_value_delimiter(true)
-                .help(translate!("df-help-exclude-type")),
+                .help(translate!("df-help-exclude-type"))
         )
         .arg(
             Arg::new(OPT_PATHS)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 

@@ -143,7 +143,7 @@ impl Uniq {
         first_line: &[u8],
         first_meta: &LineMeta,
         second_line: &[u8],
-        second_meta: &LineMeta,
+        second_meta: &LineMeta
     ) -> bool {
         let first_slice = &first_line[first_meta.key_start..first_meta.key_end];
         let second_slice = &second_line[second_meta.key_start..second_meta.key_end];
@@ -249,7 +249,7 @@ impl Uniq {
     fn read_line(
         reader: &mut impl BufRead,
         buffer: &mut Vec<u8>,
-        line_terminator: u8,
+        line_terminator: u8
     ) -> UResult<bool> {
         buffer.clear();
         let bytes_read = reader
@@ -282,7 +282,7 @@ impl Uniq {
         writer: &mut impl Write,
         line: &[u8],
         count: usize,
-        first_line_printed: bool,
+        first_line_printed: bool
     ) -> UResult<()> {
         let line_terminator = self.get_line_terminator();
 
@@ -353,7 +353,7 @@ fn opt_parsed(opt_name: &str, matches: &ArgMatches) -> UResult<Option<usize>> {
                 IntErrorKind::PosOverflow => Ok(Some(usize::MAX)),
                 _ => Err(USimpleError::new(
                     1,
-                    translate!("uniq-error-invalid-argument", "opt_name" => opt_name, "arg" => arg_str.maybe_quote()),
+                    translate!("uniq-error-invalid-argument", "opt_name" => opt_name, "arg" => arg_str.maybe_quote())
                 )),
             },
         },
@@ -389,7 +389,7 @@ fn handle_obsolete(args: impl uucore::Args) -> (Vec<OsString>, Option<usize>, Op
                 &mut skip_fields_old,
                 &mut skip_chars_old,
                 &mut preceding_long_opt_req_value,
-                &mut preceding_short_opt_req_value,
+                &mut preceding_short_opt_req_value
             )
         })
         .collect();
@@ -408,14 +408,14 @@ fn filter_args(
     skip_fields_old: &mut Option<String>,
     skip_chars_old: &mut Option<String>,
     preceding_long_opt_req_value: &mut bool,
-    preceding_short_opt_req_value: &mut bool,
+    preceding_short_opt_req_value: &mut bool
 ) -> Option<OsString> {
     let filter: Option<OsString>;
     if let Some(slice) = os_slice.to_str() {
         if should_extract_obs_skip_fields(
             slice,
             preceding_long_opt_req_value,
-            preceding_short_opt_req_value,
+            preceding_short_opt_req_value
         ) {
             // start of the short option string
             // that can have obsolete skip fields option value in it
@@ -423,7 +423,7 @@ fn filter_args(
         } else if should_extract_obs_skip_chars(
             slice,
             preceding_long_opt_req_value,
-            preceding_short_opt_req_value,
+            preceding_short_opt_req_value
         ) {
             // the obsolete skip chars option
             filter = handle_extract_obs_skip_chars(slice, skip_chars_old);
@@ -446,7 +446,7 @@ fn filter_args(
         handle_preceding_options(
             slice,
             preceding_long_opt_req_value,
-            preceding_short_opt_req_value,
+            preceding_short_opt_req_value
         );
     } else {
         // Cannot cleanly convert os_slice to UTF-8
@@ -464,7 +464,7 @@ fn filter_args(
 fn should_extract_obs_skip_fields(
     slice: &str,
     preceding_long_opt_req_value: &bool,
-    preceding_short_opt_req_value: &bool,
+    preceding_short_opt_req_value: &bool
 ) -> bool {
     slice.starts_with('-')
         && !slice.starts_with("--")
@@ -480,7 +480,7 @@ fn should_extract_obs_skip_fields(
 fn should_extract_obs_skip_chars(
     slice: &str,
     preceding_long_opt_req_value: &bool,
-    preceding_short_opt_req_value: &bool,
+    preceding_short_opt_req_value: &bool
 ) -> bool {
     slice.starts_with('+')
         && posix_version().is_some_and(|v| v <= OBSOLETE)
@@ -495,7 +495,7 @@ fn should_extract_obs_skip_chars(
 fn handle_preceding_options(
     slice: &str,
     preceding_long_opt_req_value: &mut bool,
-    preceding_short_opt_req_value: &mut bool,
+    preceding_short_opt_req_value: &mut bool
 ) {
     // capture if current slice is a preceding long option that requires value and does not use '=' to assign that value
     // following slice should be treaded as value for this option
@@ -525,7 +525,7 @@ fn handle_preceding_options(
 /// and filters it out
 fn handle_extract_obs_skip_fields(
     slice: &str,
-    skip_fields_old: &mut Option<String>,
+    skip_fields_old: &mut Option<String>
 ) -> Option<OsString> {
     let mut obs_extracted: Vec<char> = vec![];
     let mut obs_end_reached = false;
@@ -588,7 +588,7 @@ fn handle_extract_obs_skip_fields(
 /// Extracts obsolete skip chars numeric part from argument slice
 fn handle_extract_obs_skip_chars(
     slice: &str,
-    skip_chars_old: &mut Option<String>,
+    skip_chars_old: &mut Option<String>
 ) -> Option<OsString> {
     let mut obs_extracted: Vec<char> = vec![];
     let mut slice_chars = slice.chars();
@@ -701,13 +701,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if uniq.show_counts && uniq.all_repeated {
         return Err(USimpleError::new(
             1,
-            translate!("uniq-error-counts-and-repeated-meaningless"),
+            translate!("uniq-error-counts-and-repeated-meaningless")
         ));
     }
 
     uniq.print_uniq(
         open_input_file(in_file_name)?,
-        open_output_file(out_file_name)?,
+        open_output_file(out_file_name)?
     )
 }
 
@@ -728,7 +728,7 @@ pub fn uu_app() -> Command {
                 .value_name("delimit-method")
                 .num_args(0..=1)
                 .default_missing_value("none")
-                .require_equals(true),
+                .require_equals(true)
         )
         .arg(
             Arg::new(options::GROUP)
@@ -746,63 +746,63 @@ pub fn uu_app() -> Command {
                     options::ALL_REPEATED,
                     options::UNIQUE,
                     options::COUNT,
-                ]),
+                ])
         )
         .arg(
             Arg::new(options::CHECK_CHARS)
                 .short('w')
                 .long(options::CHECK_CHARS)
                 .help(translate!("uniq-help-check-chars"))
-                .value_name("N"),
+                .value_name("N")
         )
         .arg(
             Arg::new(options::COUNT)
                 .short('c')
                 .long(options::COUNT)
                 .help(translate!("uniq-help-count"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::IGNORE_CASE)
                 .short('i')
                 .long(options::IGNORE_CASE)
                 .help(translate!("uniq-help-ignore-case"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REPEATED)
                 .short('d')
                 .long(options::REPEATED)
                 .help(translate!("uniq-help-repeated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SKIP_CHARS)
                 .short('s')
                 .long(options::SKIP_CHARS)
                 .help(translate!("uniq-help-skip-chars"))
-                .value_name("N"),
+                .value_name("N")
         )
         .arg(
             Arg::new(options::SKIP_FIELDS)
                 .short('f')
                 .long(options::SKIP_FIELDS)
                 .help(translate!("uniq-help-skip-fields"))
-                .value_name("N"),
+                .value_name("N")
         )
         .arg(
             Arg::new(options::UNIQUE)
                 .short('u')
                 .long(options::UNIQUE)
                 .help(translate!("uniq-help-unique"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ZERO_TERMINATED)
                 .short('z')
                 .long(options::ZERO_TERMINATED)
                 .help(translate!("uniq-help-zero-terminated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
@@ -810,7 +810,7 @@ pub fn uu_app() -> Command {
                 .value_parser(ValueParser::os_string())
                 .num_args(0..=2)
                 .hide(true)
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -839,7 +839,7 @@ fn open_input_file(in_file_name: Option<&OsStr>) -> UResult<Box<dyn BufRead>> {
     Ok(match in_file_name {
         Some(path) if path != "-" => {
             let in_file = File::open(path).map_err_context(
-                || translate!("uniq-error-could-not-open", "path" => path.maybe_quote()),
+                || translate!("uniq-error-could-not-open", "path" => path.maybe_quote())
             )?;
             Box::new(BufReader::new(in_file))
         }
@@ -852,13 +852,13 @@ fn open_output_file(out_file_name: Option<&OsStr>) -> UResult<Box<dyn Write>> {
     Ok(match out_file_name {
         Some(path) if path != "-" => {
             let out_file = File::create(path).map_err_context(
-                || translate!("uniq-error-could-not-open", "path" => path.maybe_quote()),
+                || translate!("uniq-error-could-not-open", "path" => path.maybe_quote())
             )?;
             Box::new(BufWriter::with_capacity(OUTPUT_BUFFER_CAPACITY, out_file))
         }
         _ => Box::new(BufWriter::with_capacity(
             OUTPUT_BUFFER_CAPACITY,
-            stdout().lock(),
+            stdout().lock()
         )),
     })
 }

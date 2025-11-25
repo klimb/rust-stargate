@@ -32,7 +32,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         None => {
             return Err(USimpleError::new(
                 1,
-                translate!("mkfifo-error-missing-operand"),
+                translate!("mkfifo-error-missing-operand")
             ));
         }
     };
@@ -45,7 +45,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if err == -1 {
             show!(USimpleError::new(
                 1,
-                translate!("mkfifo-error-cannot-create-fifo", "path" => f.quote()),
+                translate!("mkfifo-error-cannot-create-fifo", "path" => f.quote())
             ));
         }
 
@@ -53,7 +53,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if let Err(e) = fs::set_permissions(&f, fs::Permissions::from_mode(mode)) {
             return Err(USimpleError::new(
                 1,
-                translate!("mkfifo-error-cannot-set-permissions", "path" => f.quote(), "error" => e),
+                translate!("mkfifo-error-cannot-set-permissions", "path" => f.quote(), "error" => e)
             ));
         }
 
@@ -74,7 +74,7 @@ pub fn uu_app() -> Command {
                 .short('m')
                 .long(options::MODE)
                 .help(translate!("mkfifo-help-mode"))
-                .value_name("MODE"),
+                .value_name("MODE")
         )
         .arg(
             Arg::new(options::CONTEXT)
@@ -83,13 +83,13 @@ pub fn uu_app() -> Command {
                 .value_parser(value_parser!(String))
                 .num_args(0..=1)
                 .require_equals(true)
-                .help(translate!("mkfifo-help-context")),
+                .help(translate!("mkfifo-help-context"))
         )
         .arg(
             Arg::new(options::FIFO)
                 .hide(true)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 

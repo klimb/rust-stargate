@@ -129,7 +129,7 @@ fn parse_program_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> 
     if opts.line_ending == LineEnding::Nul {
         Err(UUsageError::new(
             125,
-            translate!("env-error-cannot-specify-null-with-command"),
+            translate!("env-error-cannot-specify-null-with-command")
         ))
     } else {
         opts.program.push(opt);
@@ -143,7 +143,7 @@ fn parse_signal_value(signal_name: &str) -> UResult<usize> {
     let optional_signal_value = signal_by_name_or_value(&signal_name_upcase);
     let error = USimpleError::new(
         125,
-        translate!("env-error-invalid-signal", "signal" => signal_name.quote()),
+        translate!("env-error-invalid-signal", "signal" => signal_name.quote())
     );
     match optional_signal_value {
         Some(sig_val) => {
@@ -178,7 +178,7 @@ fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
         let Some(sig_str) = sig.to_str() else {
             return Err(USimpleError::new(
                 1,
-                translate!("env-error-invalid-signal", "signal" => sig.quote()),
+                translate!("env-error-invalid-signal", "signal" => sig.quote())
             ));
         };
         let sig_val = parse_signal_value(sig_str)?;
@@ -205,7 +205,7 @@ fn load_config_file(opts: &mut Options) -> UResult<()> {
         let conf = conf.map_err(|e| {
             USimpleError::new(
                 1,
-                translate!("env-error-config-file", "file" => file.maybe_quote(), "error" => e),
+                translate!("env-error-config-file", "file" => file.maybe_quote(), "error" => e)
             )
         })?;
 
@@ -236,7 +236,7 @@ pub fn uu_app() -> Command {
                 .short('i')
                 .long(options::IGNORE_ENVIRONMENT)
                 .help(translate!("env-help-ignore-environment"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHDIR)
@@ -246,14 +246,14 @@ pub fn uu_app() -> Command {
                 .value_name("DIR")
                 .value_parser(ValueParser::os_string())
                 .value_hint(clap::ValueHint::DirPath)
-                .help(translate!("env-help-chdir")),
+                .help(translate!("env-help-chdir"))
         )
         .arg(
             Arg::new(options::NULL)
                 .short('0')
                 .long(options::NULL)
                 .help(translate!("env-help-null"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
@@ -263,7 +263,7 @@ pub fn uu_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(ValueParser::os_string())
                 .action(ArgAction::Append)
-                .help(translate!("env-help-file")),
+                .help(translate!("env-help-file"))
         )
         .arg(
             Arg::new(options::UNSET)
@@ -272,14 +272,14 @@ pub fn uu_app() -> Command {
                 .value_name("NAME")
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-unset")),
+                .help(translate!("env-help-unset"))
         )
         .arg(
             Arg::new(options::DEBUG)
                 .short('v')
                 .long(options::DEBUG)
                 .action(ArgAction::Count)
-                .help(translate!("env-help-debug")),
+                .help(translate!("env-help-debug"))
         )
         .arg(
             Arg::new(options::SPLIT_STRING) // split string handling is implemented directly, not using CLAP. But this entry here is needed for the help information output.
@@ -288,7 +288,7 @@ pub fn uu_app() -> Command {
                 .value_name("S")
                 .action(ArgAction::Set)
                 .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-split-string")),
+                .help(translate!("env-help-split-string"))
         )
         .arg(
             Arg::new(options::ARGV0)
@@ -298,12 +298,12 @@ pub fn uu_app() -> Command {
                 .value_name("a")
                 .action(ArgAction::Set)
                 .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-argv0")),
+                .help(translate!("env-help-argv0"))
         )
         .arg(
             Arg::new("vars")
                 .action(ArgAction::Append)
-                .value_parser(ValueParser::os_string()),
+                .value_parser(ValueParser::os_string())
         )
         .arg(
             Arg::new(options::IGNORE_SIGNAL)
@@ -311,7 +311,7 @@ pub fn uu_app() -> Command {
                 .value_name("SIG")
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-ignore-signal")),
+                .help(translate!("env-help-ignore-signal"))
         )
 }
 
@@ -327,27 +327,27 @@ pub fn parse_args_from_str(text: &NativeIntStr) -> UResult<Vec<NativeIntString>>
         EnvError::EnvMissingClosingQuote(_, _) => USimpleError::new(125, e.to_string()),
         EnvError::EnvParsingOfVariableMissingClosingBrace(pos) => USimpleError::new(
             125,
-            translate!("env-error-variable-name-issue", "position" => pos, "error" => e),
+            translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
         EnvError::EnvParsingOfMissingVariable(pos) => USimpleError::new(
             125,
-            translate!("env-error-variable-name-issue", "position" => pos, "error" => e),
+            translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
         EnvError::EnvParsingOfVariableMissingClosingBraceAfterValue(pos) => USimpleError::new(
             125,
-            translate!("env-error-variable-name-issue", "position" => pos, "error" => e),
+            translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
         EnvError::EnvParsingOfVariableUnexpectedNumber(pos, _) => USimpleError::new(
             125,
-            translate!("env-error-variable-name-issue", "position" => pos, "error" => e),
+            translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
         EnvError::EnvParsingOfVariableExceptedBraceOrColon(pos, _) => USimpleError::new(
             125,
-            translate!("env-error-variable-name-issue", "position" => pos, "error" => e),
+            translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
         _ => USimpleError::new(
             125,
-            translate!("env-error-generic", "error" => format!("{e:?}")),
+            translate!("env-error-generic", "error" => format!("{e:?}"))
         ),
     })
 }
@@ -363,7 +363,7 @@ fn check_and_handle_string_args(
     arg: &OsString,
     prefix_to_test: &str,
     all_args: &mut Vec<OsString>,
-    do_debug_print_args: Option<&Vec<OsString>>,
+    do_debug_print_args: Option<&Vec<OsString>>
 ) -> UResult<bool> {
     let native_arg = NCvt::convert(arg);
     if let Some(remaining_arg) = native_arg.strip_prefix(&*NCvt::convert(prefix_to_test)) {
@@ -375,7 +375,7 @@ fn check_and_handle_string_args(
         all_args.extend(
             arg_strings
                 .into_iter()
-                .map(from_native_int_representation_owned),
+                .map(from_native_int_representation_owned)
         );
 
         Ok(true)
@@ -405,7 +405,7 @@ impl EnvAppData {
 
     fn process_all_string_arguments(
         &mut self,
-        original_args: &Vec<OsString>,
+        original_args: &Vec<OsString>
     ) -> UResult<Vec<OsString>> {
         let mut all_args: Vec<OsString> = Vec::new();
         let mut process_flags = true;
@@ -448,7 +448,7 @@ impl EnvAppData {
                     b,
                     "-vvS",
                     &mut all_args,
-                    Some(original_args),
+                    Some(original_args)
                 )? =>
                 {
                     self.do_debug_printing = true;
@@ -473,7 +473,7 @@ impl EnvAppData {
                         let name = &arg_str[arg_str.find('=').unwrap()..];
                         return Err(USimpleError::new(
                             125,
-                            translate!("env-error-cannot-unset", "name" => name),
+                            translate!("env-error-cannot-unset", "name" => name)
                         ));
                     }
 
@@ -487,7 +487,7 @@ impl EnvAppData {
 
     fn parse_arguments(
         &mut self,
-        original_args: impl uucore::Args,
+        original_args: impl uucore::Args
     ) -> Result<(Vec<OsString>, clap::ArgMatches), Box<dyn UError>> {
         let original_args: Vec<OsString> = original_args.collect();
         let args = self.process_all_string_arguments(&original_args)?;
@@ -571,7 +571,7 @@ impl EnvAppData {
     fn run_program(
         &mut self,
         opts: &Options<'_>,
-        do_debug_printing: bool,
+        do_debug_printing: bool
     ) -> Result<(), Box<dyn UError>> {
         let prog = Cow::from(opts.program[0]);
         #[cfg(unix)]
@@ -592,7 +592,7 @@ impl EnvAppData {
             #[cfg(not(unix))]
             return Err(USimpleError::new(
                 2,
-                translate!("env-error-argv0-not-supported"),
+                translate!("env-error-argv0-not-supported")
             ));
         }
 
@@ -771,7 +771,7 @@ fn apply_unset_env_vars(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
         {
             return Err(USimpleError::new(
                 125,
-                translate!("env-error-cannot-unset-invalid", "name" => name.quote()),
+                translate!("env-error-cannot-unset-invalid", "name" => name.quote())
             ));
         }
         unsafe {
@@ -786,7 +786,7 @@ fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
     if opts.program.is_empty() && opts.running_directory.is_some() {
         return Err(UUsageError::new(
             125,
-            translate!("env-error-must-specify-command-with-chdir"),
+            translate!("env-error-must-specify-command-with-chdir")
         ));
     }
 
@@ -796,7 +796,7 @@ fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
             Err(error) => {
                 return Err(USimpleError::new(
                     125,
-                    translate!("env-error-cannot-change-directory", "directory" => d.quote(), "error" => error),
+                    translate!("env-error-cannot-change-directory", "directory" => d.quote(), "error" => error)
                 ));
             }
         };
@@ -861,7 +861,7 @@ fn ignore_signal(sig: Signal) -> UResult<()> {
     if let Err(err) = result {
         return Err(USimpleError::new(
             125,
-            translate!("env-error-failed-set-signal-action", "signal" => (sig as i32), "error" => err.desc()),
+            translate!("env-error-failed-set-signal-action", "signal" => (sig as i32), "error" => err.desc())
         ));
     }
     Ok(())
@@ -889,7 +889,7 @@ mod tests {
         assert_eq!(
             NCvt::convert(vec!["FOO=bar", "sh", "-c", "echo xBARx =$FOO="]),
             parse_args_from_str(&NCvt::convert(r#"FOO=bar sh -c "echo x${FOO}x =\$FOO=""#))
-                .unwrap(),
+                .unwrap()
         );
     }
 
@@ -897,7 +897,7 @@ mod tests {
     fn test_split_string_misc() {
         assert_eq!(
             NCvt::convert(vec!["A=B", "FOO=AR", "sh", "-c", "echo $A$FOO"]),
-            parse_args_from_str(&NCvt::convert(r#"A=B FOO=AR  sh -c "echo \$A\$FOO""#)).unwrap(),
+            parse_args_from_str(&NCvt::convert(r#"A=B FOO=AR  sh -c "echo \$A\$FOO""#)).unwrap()
         );
         assert_eq!(
             NCvt::convert(vec!["A=B", "FOO=AR", "sh", "-c", "echo $A$FOO"]),

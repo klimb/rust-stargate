@@ -158,21 +158,21 @@ pub fn uu_app() -> Command {
                 .short('f')
                 .long(options::FORCE)
                 .help(translate!("ln-help-force"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::INTERACTIVE)
                 .short('i')
                 .long(options::INTERACTIVE)
                 .help(translate!("ln-help-interactive"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_DEREFERENCE)
                 .short('n')
                 .long(options::NO_DEREFERENCE)
                 .help(translate!("ln-help-no-dereference"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::LOGICAL)
@@ -180,7 +180,7 @@ pub fn uu_app() -> Command {
                 .long(options::LOGICAL)
                 .help(translate!("ln-help-logical"))
                 .overrides_with(options::PHYSICAL)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             // Not implemented yet
@@ -188,7 +188,7 @@ pub fn uu_app() -> Command {
                 .short('P')
                 .long(options::PHYSICAL)
                 .help(translate!("ln-help-physical"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SYMBOLIC)
@@ -197,7 +197,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("ln-help-symbolic"))
                 // override added for https://github.com/uutils/coreutils/issues/2359
                 .overrides_with(options::SYMBOLIC)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(backup_control::arguments::suffix())
         .arg(
@@ -208,14 +208,14 @@ pub fn uu_app() -> Command {
                 .value_name("DIRECTORY")
                 .value_hint(clap::ValueHint::DirPath)
                 .value_parser(clap::value_parser!(OsString))
-                .conflicts_with(options::NO_TARGET_DIRECTORY),
+                .conflicts_with(options::NO_TARGET_DIRECTORY)
         )
         .arg(
             Arg::new(options::NO_TARGET_DIRECTORY)
                 .short('T')
                 .long(options::NO_TARGET_DIRECTORY)
                 .help(translate!("ln-help-no-target-directory"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::RELATIVE)
@@ -223,14 +223,14 @@ pub fn uu_app() -> Command {
                 .long(options::RELATIVE)
                 .help(translate!("ln-help-relative"))
                 .requires(options::SYMBOLIC)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::VERBOSE)
                 .short('v')
                 .long(options::VERBOSE)
                 .help(translate!("ln-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
@@ -238,7 +238,7 @@ pub fn uu_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString))
                 .required(true)
-                .num_args(1..),
+                .num_args(1..)
         )
 }
 
@@ -268,7 +268,7 @@ fn exec(files: &[PathBuf], settings: &Settings) -> UResult<()> {
     if files.len() > 2 {
         return Err(LnError::ExtraOperand(
             files[2].clone().into(),
-            uucore::execution_phrase().to_string(),
+            uucore::execution_phrase().to_string()
         )
         .into());
     }
@@ -351,7 +351,7 @@ fn relative_path<'a>(src: &'a Path, dst: &Path) -> Cow<'a, Path> {
         if let Ok(dst_abs) = canonicalize(
             dst.parent().unwrap(),
             MissingHandling::Missing,
-            ResolveMode::Physical,
+            ResolveMode::Physical
         ) {
             return make_path_relative_to(src_abs, dst_abs).into();
         }
@@ -400,7 +400,7 @@ fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
                     // Even in force overwrite mode, verify we are not targeting the same entry and return a SameFile error if so
                     let same_entry = match (
                         canonicalize(src, MissingHandling::Missing, ResolveMode::Physical),
-                        canonicalize(dst, MissingHandling::Missing, ResolveMode::Physical),
+                        canonicalize(dst, MissingHandling::Missing, ResolveMode::Physical)
                     ) {
                         (Ok(src), Ok(dst)) => src == dst,
                         _ => true,

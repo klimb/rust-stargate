@@ -31,7 +31,7 @@ impl<'a> StyleManager<'a> {
         &mut self,
         new_style: Option<&Style>,
         name: OsString,
-        wrap: bool,
+        wrap: bool
     ) -> OsString {
         let mut style_code = String::new();
         let mut force_suffix_reset: bool = false;
@@ -125,7 +125,7 @@ impl<'a> StyleManager<'a> {
         path: &PathData,
         md_option: Option<&Metadata>,
         name: OsString,
-        wrap: bool,
+        wrap: bool
     ) -> OsString {
         let style = self
             .colors
@@ -137,7 +137,7 @@ impl<'a> StyleManager<'a> {
         &mut self,
         path: &T,
         name: OsString,
-        wrap: bool,
+        wrap: bool
     ) -> OsString {
         let style = self.colors.style_for(path);
         self.apply_style(style, name, wrap)
@@ -150,10 +150,10 @@ pub(crate) fn color_name(
     path: &PathData,
     style_manager: &mut StyleManager,
     target_symlink: Option<&PathData>,
-    wrap: bool,
+    wrap: bool
 ) -> OsString {
     // Check if the file has capabilities
-    #[cfg(all(unix, not(any(target_os = "android", target_os = "macos"))))]
+    #[cfg(all(unix, not(any(target_os = "macos"))))]
     {
         // Skip checking capabilities if LS_COLORS=ca=:
         let capabilities = style_manager

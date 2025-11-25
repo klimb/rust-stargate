@@ -65,28 +65,28 @@ pub fn uu_app() -> Command {
                 .short('b')
                 .long(options::BEFORE)
                 .help(translate!("tac-help-before"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REGEX)
                 .short('r')
                 .long(options::REGEX)
                 .help(translate!("tac-help-regex"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SEPARATOR)
                 .short('s')
                 .long(options::SEPARATOR)
                 .help(translate!("tac-help-separator"))
-                .value_name("STRING"),
+                .value_name("STRING")
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -111,7 +111,7 @@ pub fn uu_app() -> Command {
 fn buffer_tac_regex(
     data: &[u8],
     pattern: &regex::bytes::Regex,
-    before: bool,
+    before: bool
 ) -> std::io::Result<()> {
     let out = stdout();
     let mut out = BufWriter::new(out.lock());

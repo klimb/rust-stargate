@@ -52,7 +52,7 @@ where
 #[divan::bench(args = [(5, 4, 10)])]
 fn cp_recursive_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     bench_cp_directory(bencher, &["-R"], |source| {
         fs_tree::create_balanced_tree(source, depth, dirs_per_level, files_per_dir);
@@ -62,7 +62,7 @@ fn cp_recursive_balanced_tree(
 #[divan::bench(args = [(5, 4, 10)])]
 fn cp_archive_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     bench_cp_directory(bencher, &["-a"], |source| {
         fs_tree::create_balanced_tree(source, depth, dirs_per_level, files_per_dir);
@@ -86,7 +86,7 @@ fn cp_recursive_deep_tree(bencher: Bencher, (depth, files_per_level): (usize, us
 #[divan::bench(args = [(5, 4, 10)])]
 fn cp_preserve_metadata(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     bench_cp_directory(bencher, &["-R", "--preserve=mode,timestamps"], |source| {
         fs_tree::create_balanced_tree(source, depth, dirs_per_level, files_per_dir);

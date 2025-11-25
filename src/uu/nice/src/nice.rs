@@ -111,7 +111,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if Error::last_os_error().raw_os_error().unwrap() != 0 {
         return Err(USimpleError::new(
             125,
-            format!("getpriority: {}", Error::last_os_error()),
+            format!("getpriority: {}", Error::last_os_error())
         ));
     }
 
@@ -120,7 +120,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             if !matches.contains_id(options::COMMAND) {
                 return Err(UUsageError::new(
                     125,
-                    translate!("nice-error-command-required-with-adjustment"),
+                    translate!("nice-error-command-required-with-adjustment")
                 ));
             }
             match nstr.parse::<i32>() {
@@ -128,7 +128,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 Err(e) => {
                     return Err(USimpleError::new(
                         125,
-                        translate!("nice-error-invalid-number", "value" => nstr.clone(), "error" => e),
+                        translate!("nice-error-invalid-number", "value" => nstr.clone(), "error" => e)
                     ));
                 }
             }
@@ -194,11 +194,11 @@ pub fn uu_app() -> Command {
                 .help(translate!("nice-help-adjustment"))
                 .action(ArgAction::Set)
                 .overrides_with(options::ADJUSTMENT)
-                .allow_hyphen_values(true),
+                .allow_hyphen_values(true)
         )
         .arg(
             Arg::new(options::COMMAND)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::CommandName),
+                .value_hint(clap::ValueHint::CommandName)
         )
 }

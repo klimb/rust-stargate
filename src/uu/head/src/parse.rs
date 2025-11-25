@@ -46,7 +46,7 @@ pub fn parse_obsolete(src: &str) -> Option<Result<Vec<OsString>, ParseError>> {
 fn process_num_block(
     src: &str,
     last_char: char,
-    chars: &mut std::str::CharIndices,
+    chars: &mut std::str::CharIndices
 ) -> Option<Result<Vec<OsString>, ParseError>> {
     let num = match src.parse::<usize>() {
         Ok(n) => n,

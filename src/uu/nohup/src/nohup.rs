@@ -96,7 +96,7 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .required(true)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::CommandName),
+                .value_hint(clap::ValueHint::CommandName)
         )
         .trailing_var_arg(true)
         .infer_long_args(true)
@@ -163,7 +163,7 @@ fn find_stdout() -> UResult<File> {
                     internal_failure_code,
                     e1,
                     homeout_str.to_string(),
-                    e2,
+                    e2
                 )
                 .into()),
             }
@@ -178,7 +178,7 @@ unsafe extern "C" {
 
 #[cfg(any(
     target_os = "linux",
-    target_os = "android",
+    
     target_os = "freebsd",
     target_os = "openbsd"
 ))]

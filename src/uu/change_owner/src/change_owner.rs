@@ -35,7 +35,7 @@ fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> 
     let raw_owner: String;
     if let Some(file) = matches.get_one::<String>(options::REFERENCE) {
         let meta = fs::metadata(file).map_err_context(
-            || translate!("change_owner-error-failed-to-get-attributes", "file" => file.quote()),
+            || translate!("change_owner-error-failed-to-get-attributes", "file" => file.quote())
         )?;
         let gid = meta.gid();
         let uid = meta.uid();
@@ -70,7 +70,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         args,
         options::ARG_OWNER,
         parse_gid_uid_and_filter,
-        false,
+        false
     )
 }
 
@@ -86,65 +86,65 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("change_owner-help-print-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::verbosity::CHANGES)
                 .short('c')
                 .long(options::verbosity::CHANGES)
                 .help(translate!("change_owner-help-changes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FROM)
                 .long(options::FROM)
                 .help(translate!("change_owner-help-from"))
-                .value_name("CURRENT_OWNER:CURRENT_GROUP"),
+                .value_name("CURRENT_OWNER:CURRENT_GROUP")
         )
         .arg(
             Arg::new(options::preserve_root::PRESERVE)
                 .long(options::preserve_root::PRESERVE)
                 .help(translate!("change_owner-help-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::preserve_root::NO_PRESERVE)
                 .long(options::preserve_root::NO_PRESERVE)
                 .help(translate!("change_owner-help-no-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::QUIET)
                 .long(options::verbosity::QUIET)
                 .help(translate!("change_owner-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::RECURSIVE)
                 .short('r')
                 .long(options::RECURSIVE)
                 .help(translate!("change_owner-help-recursive"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REFERENCE)
                 .long(options::REFERENCE)
                 .help(translate!("change_owner-help-reference"))
                 .value_name("RFILE")
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::verbosity::SILENT)
                 .short('f')
                 .long(options::verbosity::SILENT)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::VERBOSE)
                 .long(options::verbosity::VERBOSE)
                 .short('v')
                 .help(translate!("change_owner-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())
@@ -172,7 +172,7 @@ fn parse_uid(user: &str, spec: &str, sep: char) -> UResult<Option<u32>> {
                     Ok(uid) => Ok(Some(uid)),
                     Err(_) => Err(USimpleError::new(
                         1,
-                        translate!("change_owner-error-invalid-user", "user" => spec.quote()),
+                        translate!("change_owner-error-invalid-user", "user" => spec.quote())
                     )),
                 }
             }
@@ -191,7 +191,7 @@ fn parse_gid(group: &str, spec: &str) -> UResult<Option<u32>> {
             Ok(gid) => Ok(Some(gid)),
             Err(_) => Err(USimpleError::new(
                 1,
-                translate!("change_owner-error-invalid-group", "group" => spec.quote()),
+                translate!("change_owner-error-invalid-group", "group" => spec.quote())
             )),
         },
     }
@@ -223,7 +223,7 @@ fn parse_spec(spec: &str, sep: char) -> UResult<(Option<u32>, Option<u32>)> {
         // we should fail with an error
         return Err(USimpleError::new(
             1,
-            translate!("change_owner-error-invalid-spec", "spec" => spec.quote()),
+            translate!("change_owner-error-invalid-spec", "spec" => spec.quote())
         ));
     }
 

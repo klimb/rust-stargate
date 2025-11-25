@@ -94,18 +94,18 @@ pub fn uu_app() -> Command {
             Arg::new(HELP)
                 .long(HELP)
                 .help(translate!("printf-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(VERSION)
                 .long(VERSION)
                 .help(translate!("printf-help-version"))
-                .action(ArgAction::Version),
+                .action(ArgAction::Version)
         )
         .arg(Arg::new(options::FORMAT).value_parser(clap::value_parser!(OsString)))
         .arg(
             Arg::new(options::ARGUMENT)
                 .action(ArgAction::Append)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }

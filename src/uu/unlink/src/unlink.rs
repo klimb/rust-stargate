@@ -38,6 +38,6 @@ pub fn uu_app() -> Command {
                 .required(true)
                 .hide(true)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }

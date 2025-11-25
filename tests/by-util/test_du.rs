@@ -22,9 +22,9 @@ const SUB_DIR: &str = "subdir/deeper";
 const SUB_DEEPER_DIR: &str = "subdir/deeper/deeper_dir";
 const SUB_DIR_LINKS: &str = "subdir/links";
 const SUB_DIR_LINKS_DEEPER_SYM_DIR: &str = "subdir/links/deeper_dir";
-#[cfg(all(not(target_os = "android"), not(target_os = "openbsd")))]
+#[cfg(all(not(target_os = "unused"), not(target_os = "openbsd")))]
 const SUB_FILE: &str = "subdir/links/subwords.txt";
-#[cfg(all(not(target_os = "android"), not(target_os = "openbsd")))]
+#[cfg(all(not(target_os = "unused"), not(target_os = "openbsd")))]
 const SUB_LINK: &str = "subdir/links/sublink.txt";
 
 #[test]
@@ -34,7 +34,7 @@ fn test_du_basics() {
 
     let result = ts.ucmd().succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &[]));
         if result_reference.succeeded() {
@@ -84,7 +84,7 @@ fn test_du_basics_subdir() {
 
     let result = ts.ucmd().arg(SUB_DIR).succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &[SUB_DIR]));
         if result_reference.succeeded() {
@@ -291,7 +291,7 @@ fn test_du_soft_link() {
 
     let result = ts.ucmd().arg("subdir/links").succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &["subdir/links"]));
         if result_reference.succeeded() {
@@ -332,7 +332,7 @@ fn test_du_soft_link() {
     }
 }
 
-#[cfg(all(not(target_os = "android"), not(target_os = "openbsd")))]
+#[cfg(all(not(target_os = "unused"), not(target_os = "openbsd")))]
 #[test]
 fn test_du_hard_link() {
     let ts = TestScenario::new(util_name!());
@@ -367,7 +367,7 @@ fn du_hard_link(s: &str) {
     not(target_vendor = "apple"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd"),
-    not(target_os = "android")
+    not(target_os = "unused")
 ))]
 fn du_hard_link(s: &str) {
     // MS-WSL linux has altered expected output
@@ -385,7 +385,7 @@ fn test_du_d_flag() {
 
     let result = ts.ucmd().arg("-d1").succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &["-d1"]));
         if result_reference.succeeded() {
@@ -509,7 +509,6 @@ fn test_du_inodes_with_count_links() {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_du_inodes_with_count_links_all() {
     let ts = TestScenario::new(util_name!());
@@ -749,7 +748,7 @@ fn test_du_no_permission() {
     let result = ts.ucmd().arg(SUB_DIR_LINKS).fails();
     result.stderr_contains("du: cannot read directory 'subdir/links': Permission denied");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &[SUB_DIR_LINKS]));
         if result_reference
@@ -794,7 +793,7 @@ fn test_du_one_file_system() {
 
     let result = ts.ucmd().arg("-x").arg("subdir/deeper").succeeds();
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let result_reference = unwrap_or_return!(expected_result(&ts, &["-x", "subdir/deeper"]));
         if result_reference.succeeded() {
@@ -1294,7 +1293,6 @@ fn test_human_size() {
         .stdout_contains(format!("1.0K	{dir}"));
 }
 
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_du_deduplicated_input_args() {
     let ts = TestScenario::new(util_name!());
@@ -1325,7 +1323,6 @@ fn test_du_deduplicated_input_args() {
     assert_eq!(result_seq, ["1\td/d", "3\td"]);
 }
 
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_du_no_deduplicated_input_args() {
     let ts = TestScenario::new(util_name!());

@@ -210,7 +210,7 @@ fn test_rmdir_remove_symlink_file() {
 }
 
 // This behavior is known to happen on Linux but not all Unixes
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_rmdir_remove_symlink_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -223,7 +223,7 @@ fn test_rmdir_remove_symlink_dir() {
         .stderr_is("rmdir: failed to remove 'dl/': Symbolic link not followed\n");
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_rmdir_remove_symlink_dangling() {
     let (at, mut ucmd) = at_and_ucmd!();

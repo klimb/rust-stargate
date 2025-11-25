@@ -108,33 +108,33 @@ pub fn uu_app() -> Command {
                 .short('h')
                 .long("help")
                 .help(translate!("tee-help-help"))
-                .action(ArgAction::HelpLong),
+                .action(ArgAction::HelpLong)
         )
         .arg(
             Arg::new(options::APPEND)
                 .long(options::APPEND)
                 .short('a')
                 .help(translate!("tee-help-append"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::IGNORE_INTERRUPTS)
                 .long(options::IGNORE_INTERRUPTS)
                 .short('i')
                 .help(translate!("tee-help-ignore-interrupts"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::IGNORE_PIPE_ERRORS)
                 .short('p')
                 .help(translate!("tee-help-ignore-pipe-errors"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OUTPUT_ERROR)
@@ -149,7 +149,7 @@ pub fn uu_app() -> Command {
                     PossibleValue::new("exit-nopipe")
                         .help(translate!("tee-help-output-error-exit-nopipe")),
                 ]))
-                .help(translate!("tee-help-output-error")),
+                .help(translate!("tee-help-output-error"))
         )
 }
 
@@ -178,7 +178,7 @@ fn tee(options: &Options) -> Result<()> {
         NamedWriter {
             name: translate!("tee-standard-output"),
             inner: Box::new(stdout()),
-        },
+        }
     );
 
     let mut output = MultiWriter::new(writers, options.output_error.clone());
@@ -255,7 +255,7 @@ fn copy(mut input: impl Read, mut output: impl Write) -> Result<usize> {
 fn open(
     name: &OsString,
     append: bool,
-    output_error: Option<&OutputErrorMode>,
+    output_error: Option<&OutputErrorMode>
 ) -> Option<Result<NamedWriter>> {
     let path = PathBuf::from(name);
     let mut options = OpenOptions::new();
@@ -303,7 +303,7 @@ fn process_error(
     mode: Option<&OutputErrorMode>,
     f: Error,
     writer: &NamedWriter,
-    ignored_errors: &mut usize,
+    ignored_errors: &mut usize
 ) -> Result<()> {
     match mode {
         Some(OutputErrorMode::Warn) => {

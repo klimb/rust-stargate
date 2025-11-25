@@ -6,15 +6,15 @@
 /* Last synced with: sync (GNU coreutils) 8.13 */
 
 use clap::{Arg, ArgAction, Command};
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use nix::errno::Errno;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use nix::fcntl::{OFlag, open};
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use nix::sys::stat::Mode;
 use std::path::Path;
 use uucore::display::Quotable;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use uucore::error::FromIo;
 use uucore::error::{UResult, USimpleError};
 use uucore::format_usage;
@@ -30,9 +30,9 @@ static ARG_FILES: &str = "files";
 #[cfg(unix)]
 mod platform {
     use nix::unistd::sync;
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     use nix::unistd::{fdatasync, syncfs};
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     use std::fs::File;
     use uucore::error::UResult;
 
@@ -41,7 +41,7 @@ mod platform {
         Ok(())
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     pub fn do_syncfs(files: Vec<String>) -> UResult<()> {
         for path in files {
             let f = File::open(path).unwrap();
@@ -50,7 +50,7 @@ mod platform {
         Ok(())
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     pub fn do_fdatasync(files: Vec<String>) -> UResult<()> {
         for path in files {
             let f = File::open(path).unwrap();
@@ -71,29 +71,29 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if matches.get_flag(options::DATA) && files.is_empty() {
         return Err(USimpleError::new(
             1,
-            translate!("sync-error-data-needs-argument"),
+            translate!("sync-error-data-needs-argument")
         ));
     }
 
     for f in &files {
         // Use the Nix open to be able to set the NONBLOCK flags for fifo files
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         {
             let path = Path::new(&f);
             if let Err(e) = open(path, OFlag::O_NONBLOCK, Mode::empty()) {
                 if e != Errno::EACCES || (e == Errno::EACCES && path.is_dir()) {
                     e.map_err_context(
-                        || translate!("sync-error-opening-file", "file" => f.quote()),
+                        || translate!("sync-error-opening-file", "file" => f.quote())
                     )?;
                 }
             }
         }
-        #[cfg(not(any(target_os = "linux", target_os = "android")))]
+        #[cfg(not(any(target_os = "linux")))]
         {
             if !Path::new(&f).exists() {
                 return Err(USimpleError::new(
                     1,
-                    translate!("sync-error-no-such-file", "file" => f.quote()),
+                    translate!("sync-error-no-such-file", "file" => f.quote())
                 ));
             }
         }
@@ -122,7 +122,7 @@ pub fn uu_app() -> Command {
                 .long(options::FILE_SYSTEM)
                 .conflicts_with(options::DATA)
                 .help(translate!("sync-help-file-system"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DATA)
@@ -130,12 +130,12 @@ pub fn uu_app() -> Command {
                 .long(options::DATA)
                 .conflicts_with(options::FILE_SYSTEM)
                 .help(translate!("sync-help-data"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 

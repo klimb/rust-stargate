@@ -129,7 +129,7 @@ impl<'a> SplitIterator<'a> {
     fn make_invalid_sequence_backslash_xin_minus_s(&self, c: char) -> EnvError {
         EnvError::EnvInvalidSequenceBackslashXInMinusS(
             self.expander.get_parser().get_peek_position(),
-            c,
+            c
         )
     }
 
@@ -170,7 +170,7 @@ impl<'a> SplitIterator<'a> {
         match self.get_current_char() {
             None => Err(EnvError::EnvInvalidBackslashAtEndOfStringInMinusS(
                 self.get_parser().get_peek_position(),
-                "Delimiter".into(),
+                "Delimiter".into()
             )),
             Some('_' | NEW_LINE) => {
                 self.skip_one()?;
@@ -224,7 +224,7 @@ impl<'a> SplitIterator<'a> {
         match self.get_current_char() {
             None => Err(EnvError::EnvInvalidBackslashAtEndOfStringInMinusS(
                 self.get_parser().get_peek_position(),
-                "Unquoted".into(),
+                "Unquoted".into()
             )),
             Some(NEW_LINE) => {
                 self.skip_one()?;
@@ -254,7 +254,7 @@ impl<'a> SplitIterator<'a> {
                 None => {
                     return Err(EnvError::EnvMissingClosingQuote(
                         self.get_parser().get_peek_position(),
-                        '\'',
+                        '\''
                     ));
                 }
                 Some(SINGLE_QUOTES) => {
@@ -276,7 +276,7 @@ impl<'a> SplitIterator<'a> {
         match self.get_current_char() {
             None => Err(EnvError::EnvMissingClosingQuote(
                 self.get_parser().get_peek_position(),
-                '\'',
+                '\''
             )),
             Some(NEW_LINE) => {
                 self.skip_one()?;
@@ -304,7 +304,7 @@ impl<'a> SplitIterator<'a> {
                 None => {
                     return Err(EnvError::EnvMissingClosingQuote(
                         self.get_parser().get_peek_position(),
-                        '"',
+                        '"'
                     ));
                 }
                 Some(DOLLAR) => {
@@ -329,7 +329,7 @@ impl<'a> SplitIterator<'a> {
         match self.get_current_char() {
             None => Err(EnvError::EnvMissingClosingQuote(
                 self.get_parser().get_peek_position(),
-                '"',
+                '"'
             )),
             Some(NEW_LINE) => {
                 self.skip_one()?;
@@ -340,7 +340,7 @@ impl<'a> SplitIterator<'a> {
                 Ok(())
             }
             Some('c') => Err(EnvError::EnvBackslashCNotAllowedInDoubleQuotes(
-                self.get_parser().get_peek_position(),
+                self.get_parser().get_peek_position()
             )),
             Some(c) if self.check_and_replace_ascii_escape_code(c)? => Ok(()),
             Some(c) => Err(self.make_invalid_sequence_backslash_xin_minus_s(c)),

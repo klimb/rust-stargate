@@ -59,7 +59,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 .get_many(options::FILE_OR_ARGS)
                 .unwrap_or_default()
                 .cloned()
-                .collect(),
+                .collect()
         )
     } else if let Some(range) = matches.get_one(options::INPUT_RANGE).cloned() {
         Mode::InputRange(range)
@@ -71,7 +71,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if let Some(second_file) = operands.next() {
             return Err(UUsageError::new(
                 1,
-                translate!("shuf-error-unexpected-argument", "arg" => second_file.quote()),
+                translate!("shuf-error-unexpected-argument", "arg" => second_file.quote())
             ));
         }
         Mode::Default(file.into())
@@ -102,7 +102,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         None => Box::new(stdout()) as Box<dyn OsWrite>,
         Some(ref s) => {
             let file = File::create(s).map_err_context(
-                || translate!("shuf-error-failed-to-open-for-writing", "file" => s.quote()),
+                || translate!("shuf-error-failed-to-open-for-writing", "file" => s.quote())
             )?;
             Box::new(file) as Box<dyn OsWrite>
         }
@@ -116,7 +116,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let mut rng = match options.random_source {
         Some(ref r) => {
             let file = File::open(r).map_err_context(
-                || translate!("shuf-error-failed-to-open-random-source", "file" => r.quote()),
+                || translate!("shuf-error-failed-to-open-random-source", "file" => r.quote())
             )?;
             WrappedRng::RngFile(rand_read_adapter::ReadRng::new(file))
         }
@@ -155,7 +155,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("shuf-help-echo"))
                 .action(ArgAction::SetTrue)
                 .overrides_with(options::ECHO)
-                .conflicts_with(options::INPUT_RANGE),
+                .conflicts_with(options::INPUT_RANGE)
         )
         .arg(
             Arg::new(options::INPUT_RANGE)
@@ -164,7 +164,7 @@ pub fn uu_app() -> Command {
                 .value_name("LO-HI")
                 .help(translate!("shuf-help-input-range"))
                 .value_parser(parse_range)
-                .conflicts_with(options::FILE_OR_ARGS),
+                .conflicts_with(options::FILE_OR_ARGS)
         )
         .arg(
             Arg::new(options::HEAD_COUNT)
@@ -173,7 +173,7 @@ pub fn uu_app() -> Command {
                 .value_name("COUNT")
                 .action(ArgAction::Append)
                 .help(translate!("shuf-help-head-count"))
-                .value_parser(usize::from_str),
+                .value_parser(usize::from_str)
         )
         .arg(
             Arg::new(options::OUTPUT)
@@ -182,7 +182,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE")
                 .help(translate!("shuf-help-output"))
                 .value_parser(ValueParser::path_buf())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::RANDOM_SOURCE)
@@ -190,7 +190,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE")
                 .help(translate!("shuf-help-random-source"))
                 .value_parser(ValueParser::path_buf())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::REPEAT)
@@ -198,7 +198,7 @@ pub fn uu_app() -> Command {
                 .long(options::REPEAT)
                 .help(translate!("shuf-help-repeat"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::REPEAT),
+                .overrides_with(options::REPEAT)
         )
         .arg(
             Arg::new(options::ZERO_TERMINATED)
@@ -206,13 +206,13 @@ pub fn uu_app() -> Command {
                 .long(options::ZERO_TERMINATED)
                 .help(translate!("shuf-help-zero-terminated"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::ZERO_TERMINATED),
+                .overrides_with(options::ZERO_TERMINATED)
         )
         .arg(
             Arg::new(options::FILE_OR_ARGS)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -247,7 +247,7 @@ trait Shufable {
     fn partial_shuffle<'b>(
         &'b mut self,
         rng: &'b mut WrappedRng,
-        amount: usize,
+        amount: usize
     ) -> impl Iterator<Item = Self::Item>;
 }
 
@@ -268,7 +268,7 @@ impl<'a> Shufable for Vec<&'a [u8]> {
     fn partial_shuffle<'b>(
         &'b mut self,
         rng: &'b mut WrappedRng,
-        amount: usize,
+        amount: usize
     ) -> impl Iterator<Item = Self::Item> {
         // Note: "copied()" only copies the reference, not the entire [u8].
         (**self).partial_shuffle(rng, amount).0.iter().copied()
@@ -289,7 +289,7 @@ impl<'a> Shufable for Vec<&'a OsStr> {
     fn partial_shuffle<'b>(
         &'b mut self,
         rng: &'b mut WrappedRng,
-        amount: usize,
+        amount: usize
     ) -> impl Iterator<Item = Self::Item> {
         (**self).partial_shuffle(rng, amount).0.iter().copied()
     }
@@ -309,7 +309,7 @@ impl Shufable for RangeInclusive<usize> {
     fn partial_shuffle<'b>(
         &'b mut self,
         rng: &'b mut WrappedRng,
-        amount: usize,
+        amount: usize
     ) -> impl Iterator<Item = Self::Item> {
         NonrepeatingIterator::new(self.clone(), rng, amount)
     }
@@ -430,7 +430,7 @@ fn shuf_exec(
     input: &mut impl Shufable,
     opts: &Options,
     rng: &mut WrappedRng,
-    output: &mut BufWriter<Box<dyn OsWrite>>,
+    output: &mut BufWriter<Box<dyn OsWrite>>
 ) -> UResult<()> {
     let ctx = || translate!("shuf-error-write-failed");
 
@@ -438,7 +438,7 @@ fn shuf_exec(
         if input.is_empty() {
             return Err(USimpleError::new(
                 1,
-                translate!("shuf-error-no-lines-to-repeat"),
+                translate!("shuf-error-no-lines-to-repeat")
             ));
         }
         for _ in 0..opts.head_count {

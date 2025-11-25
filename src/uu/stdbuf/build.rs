@@ -11,7 +11,7 @@ use std::process::Command;
 
 #[cfg(any(
     target_os = "linux",
-    target_os = "android",
+    
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",

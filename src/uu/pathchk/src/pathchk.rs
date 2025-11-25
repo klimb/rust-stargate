@@ -57,7 +57,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if paths.is_none() {
         return Err(UUsageError::new(
             1,
-            translate!("pathchk-error-missing-operand"),
+            translate!("pathchk-error-missing-operand")
         ));
     }
 
@@ -91,26 +91,26 @@ pub fn uu_app() -> Command {
             Arg::new(options::POSIX)
                 .short('p')
                 .help(translate!("pathchk-help-posix"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::POSIX_SPECIAL)
                 .short('P')
                 .help(translate!("pathchk-help-posix-special"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PORTABILITY)
                 .long(options::PORTABILITY)
                 .help(translate!("pathchk-help-portability"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PATH)
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 

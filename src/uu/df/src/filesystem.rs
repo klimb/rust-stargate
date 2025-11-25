@@ -78,7 +78,7 @@ fn mount_info_from_path<P>(
     mounts: &[MountInfo],
     path: P,
     // This is really only used for testing purposes.
-    canonicalize: bool,
+    canonicalize: bool
 ) -> Result<&MountInfo, FsError>
 where
     P: AsRef<Path>,
@@ -143,7 +143,7 @@ impl Filesystem {
     pub(crate) fn from_mount(
         mounts: &[MountInfo],
         mount: &MountInfo,
-        file: Option<OsString>,
+        file: Option<OsString>
     ) -> Result<Self, FsError> {
         if is_over_mounted(mounts, mount) {
             Err(FsError::OverMounted)

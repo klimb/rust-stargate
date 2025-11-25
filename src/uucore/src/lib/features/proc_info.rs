@@ -96,7 +96,7 @@ impl TryFrom<&str> for RunState {
             value
                 .chars()
                 .nth(0)
-                .ok_or::<io::Error>(io::ErrorKind::InvalidInput.into())?,
+                .ok_or::<io::Error>(io::ErrorKind::InvalidInput.into())?
         )
     }
 }
@@ -339,7 +339,7 @@ impl ProcessInformation {
                         .and_then(|it| it.to_str())
                         .and_then(|it| it.parse::<usize>().ok())
                 })
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         );
 
         self.cached_thread_ids = Some(Rc::clone(&result));
@@ -453,7 +453,7 @@ mod tests {
         let current_pid = current_pid();
 
         let pid_entry = ProcessInformation::try_new(
-            PathBuf::from_str(&format!("/proc/{current_pid}")).unwrap(),
+            PathBuf::from_str(&format!("/proc/{current_pid}")).unwrap()
         )
         .unwrap();
 
@@ -477,7 +477,7 @@ mod tests {
         let main_tid = unsafe { crate::libc::gettid() };
         std::thread::spawn(move || {
             let mut pid_entry = ProcessInformation::try_new(
-                PathBuf::from_str(&format!("/proc/{}", current_pid())).unwrap(),
+                PathBuf::from_str(&format!("/proc/{}", current_pid())).unwrap()
             )
             .unwrap();
             let thread_ids = pid_entry.thread_ids();
@@ -506,7 +506,7 @@ mod tests {
     #[test]
     fn test_uid_gid() {
         let mut pid_entry = ProcessInformation::try_new(
-            PathBuf::from_str(&format!("/proc/{}", current_pid())).unwrap(),
+            PathBuf::from_str(&format!("/proc/{}", current_pid())).unwrap()
         )
         .unwrap();
         assert_eq!(pid_entry.uid().unwrap(), crate::process::getuid());

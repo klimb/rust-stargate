@@ -163,21 +163,21 @@ pub fn uu_app() -> Command {
             Arg::new(OPT_IGNORE_FAIL_NON_EMPTY)
                 .long(OPT_IGNORE_FAIL_NON_EMPTY)
                 .help(translate!("rmdir-help-ignore-fail-non-empty"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PARENTS)
                 .short('p')
                 .long(OPT_PARENTS)
                 .help(translate!("rmdir-help-parents"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_VERBOSE)
                 .short('v')
                 .long(OPT_VERBOSE)
                 .help(translate!("rmdir-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_DIRS)
@@ -185,6 +185,6 @@ pub fn uu_app() -> Command {
                 .num_args(1..)
                 .required(true)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::DirPath),
+                .value_hint(clap::ValueHint::DirPath)
         )
 }

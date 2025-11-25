@@ -71,7 +71,7 @@ fn cut_bytes<R: Read, W: Write>(
     reader: R,
     out: &mut W,
     ranges: &[Range],
-    opts: &Options,
+    opts: &Options
 ) -> UResult<()> {
     let newline_char = opts.line_ending.into();
     let mut buf_in = BufReader::new(reader);
@@ -112,7 +112,7 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
     ranges: &[Range],
     only_delimited: bool,
     newline_char: u8,
-    out_delim: &[u8],
+    out_delim: &[u8]
 ) -> UResult<()> {
     let mut buf_in = BufReader::new(reader);
 
@@ -196,7 +196,7 @@ fn cut_fields_implicit_out_delim<R: Read, W: Write, M: Matcher>(
     matcher: &M,
     ranges: &[Range],
     only_delimited: bool,
-    newline_char: u8,
+    newline_char: u8
 ) -> UResult<()> {
     let mut buf_in = BufReader::new(reader);
 
@@ -266,7 +266,7 @@ fn cut_fields_newline_char_delim<R: Read, W: Write>(
     out: &mut W,
     ranges: &[Range],
     newline_char: u8,
-    out_delim: &[u8],
+    out_delim: &[u8]
 ) -> UResult<()> {
     let buf_in = BufReader::new(reader);
 
@@ -296,7 +296,7 @@ fn cut_fields<R: Read, W: Write>(
     reader: R,
     out: &mut W,
     ranges: &[Range],
-    opts: &Options,
+    opts: &Options
 ) -> UResult<()> {
     let newline_char = opts.line_ending.into();
     let field_opts = opts.field_opts.as_ref().unwrap(); // it is safe to unwrap() here - field_opts will always be Some() for cut_fields() call
@@ -315,7 +315,7 @@ fn cut_fields<R: Read, W: Write>(
                     ranges,
                     field_opts.only_delimited,
                     newline_char,
-                    out_delim,
+                    out_delim
                 ),
                 None => cut_fields_implicit_out_delim(
                     reader,
@@ -323,7 +323,7 @@ fn cut_fields<R: Read, W: Write>(
                     &matcher,
                     ranges,
                     field_opts.only_delimited,
-                    newline_char,
+                    newline_char
                 ),
             }
         }
@@ -336,7 +336,7 @@ fn cut_fields<R: Read, W: Write>(
                 ranges,
                 field_opts.only_delimited,
                 newline_char,
-                opts.out_delimiter.unwrap_or(b"\t"),
+                opts.out_delimiter.unwrap_or(b"\t")
             )
         }
     }
@@ -411,7 +411,7 @@ fn get_delimiters(matches: &ArgMatches) -> UResult<(Delimiter<'_>, Option<&[u8]>
         Some(_) if whitespace_delimited => {
             return Err(USimpleError::new(
                 1,
-                translate!("cut-error-delimiter-and-whitespace-conflict"),
+                translate!("cut-error-delimiter-and-whitespace-conflict")
             ));
         }
         Some(os_string) => {
@@ -427,7 +427,7 @@ fn get_delimiters(matches: &ArgMatches) -> UResult<(Delimiter<'_>, Option<&[u8]>
                 {
                     return Err(USimpleError::new(
                         1,
-                        translate!("cut-error-delimiter-must-be-single-character"),
+                        translate!("cut-error-delimiter-must-be-single-character")
                     ));
                 }
                 Delimiter::from(os_string)
@@ -508,7 +508,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         mode_args_count,
         matches.get_one::<String>(options::BYTES),
         matches.get_one::<String>(options::CHARACTERS),
-        matches.get_one::<String>(options::FIELDS),
+        matches.get_one::<String>(options::FIELDS)
     ) {
         (1, Some(byte_ranges), None, None) => {
             list_to_ranges(byte_ranges, complement).map(|ranges| {
@@ -518,7 +518,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                         out_delimiter,
                         line_ending,
                         field_opts: None,
-                    },
+                    }
                 )
             })
         }
@@ -531,7 +531,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                         out_delimiter,
                         line_ending,
                         field_opts: None,
-                    },
+                    }
                 )
             })
         }
@@ -547,7 +547,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                             delimiter,
                             only_delimited,
                         }),
-                    },
+                    }
                 )
             })
         }
@@ -616,7 +616,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("cut-help-bytes"))
                 .allow_hyphen_values(true)
                 .value_name("LIST")
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::CHARACTERS)
@@ -625,7 +625,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("cut-help-characters"))
                 .allow_hyphen_values(true)
                 .value_name("LIST")
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::DELIMITER)
@@ -633,14 +633,14 @@ pub fn uu_app() -> Command {
                 .long(options::DELIMITER)
                 .value_parser(ValueParser::os_string())
                 .help(translate!("cut-help-delimiter"))
-                .value_name("DELIM"),
+                .value_name("DELIM")
         )
         .arg(
             Arg::new(options::WHITESPACE_DELIMITED)
                 .short('w')
                 .help(translate!("cut-help-whitespace-delimited"))
                 .value_name("WHITESPACE")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FIELDS)
@@ -649,46 +649,46 @@ pub fn uu_app() -> Command {
                 .help(translate!("cut-help-fields"))
                 .allow_hyphen_values(true)
                 .value_name("LIST")
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
         .arg(
             Arg::new(options::COMPLEMENT)
                 .long(options::COMPLEMENT)
                 .help(translate!("cut-help-complement"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ONLY_DELIMITED)
                 .short('s')
                 .long(options::ONLY_DELIMITED)
                 .help(translate!("cut-help-only-delimited"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ZERO_TERMINATED)
                 .short('z')
                 .long(options::ZERO_TERMINATED)
                 .help(translate!("cut-help-zero-terminated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OUTPUT_DELIMITER)
                 .long(options::OUTPUT_DELIMITER)
                 .value_parser(ValueParser::os_string())
                 .help(translate!("cut-help-output-delimiter"))
-                .value_name("NEW_DELIM"),
+                .value_name("NEW_DELIM")
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::NOTHING)
                 .short('n')
                 .help("(ignored)")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }

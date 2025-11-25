@@ -77,7 +77,7 @@ fn handle_obsolete(args: impl uucore::Args) -> (Vec<OsString>, Option<String>) {
                 os_slice,
                 &mut obs_lines,
                 &mut preceding_long_opt_req_value,
-                &mut preceding_short_opt_req_value,
+                &mut preceding_short_opt_req_value
             )
         })
         .collect();
@@ -91,14 +91,14 @@ fn filter_args(
     os_slice: OsString,
     obs_lines: &mut Option<String>,
     preceding_long_opt_req_value: &mut bool,
-    preceding_short_opt_req_value: &mut bool,
+    preceding_short_opt_req_value: &mut bool
 ) -> Option<OsString> {
     let filter: Option<OsString>;
     if let Some(slice) = os_slice.to_str() {
         if should_extract_obs_lines(
             slice,
             preceding_long_opt_req_value,
-            preceding_short_opt_req_value,
+            preceding_short_opt_req_value
         ) {
             // start of the short option string
             // that can have obsolete lines option value in it
@@ -111,7 +111,7 @@ fn filter_args(
         handle_preceding_options(
             slice,
             preceding_long_opt_req_value,
-            preceding_short_opt_req_value,
+            preceding_short_opt_req_value
         );
     } else {
         // Cannot cleanly convert os_slice to UTF-8
@@ -129,7 +129,7 @@ fn filter_args(
 fn should_extract_obs_lines(
     slice: &str,
     preceding_long_opt_req_value: &bool,
-    preceding_short_opt_req_value: &bool,
+    preceding_short_opt_req_value: &bool
 ) -> bool {
     slice.starts_with('-')
         && !slice.starts_with("--")
@@ -192,7 +192,7 @@ fn handle_extract_obs_lines(slice: &str, obs_lines: &mut Option<String>) -> Opti
 fn handle_preceding_options(
     slice: &str,
     preceding_long_opt_req_value: &mut bool,
-    preceding_short_opt_req_value: &mut bool,
+    preceding_short_opt_req_value: &mut bool
 ) {
     // capture if current slice is a preceding long option that requires value and does not use '=' to assign that value
     // following slice should be treaded as value for this option
@@ -239,7 +239,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_BYTES)
                 .allow_hyphen_values(true)
                 .value_name("SIZE")
-                .help(translate!("split-help-bytes")),
+                .help(translate!("split-help-bytes"))
         )
         .arg(
             Arg::new(OPT_LINE_BYTES)
@@ -247,7 +247,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_LINE_BYTES)
                 .allow_hyphen_values(true)
                 .value_name("SIZE")
-                .help(translate!("split-help-line-bytes")),
+                .help(translate!("split-help-line-bytes"))
         )
         .arg(
             Arg::new(OPT_LINES)
@@ -256,7 +256,7 @@ pub fn uu_app() -> Command {
                 .allow_hyphen_values(true)
                 .value_name("NUMBER")
                 .default_value("1000")
-                .help(translate!("split-help-lines")),
+                .help(translate!("split-help-lines"))
         )
         .arg(
             Arg::new(OPT_NUMBER)
@@ -264,7 +264,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_NUMBER)
                 .allow_hyphen_values(true)
                 .value_name("CHUNKS")
-                .help(translate!("split-help-number")),
+                .help(translate!("split-help-number"))
         )
         // rest of the arguments
         .arg(
@@ -274,7 +274,7 @@ pub fn uu_app() -> Command {
                 .value_name("SUFFIX")
                 .default_value("")
                 .value_parser(clap::value_parser!(OsString))
-                .help(translate!("split-help-additional-suffix")),
+                .help(translate!("split-help-additional-suffix"))
         )
         .arg(
             Arg::new(OPT_FILTER)
@@ -282,14 +282,14 @@ pub fn uu_app() -> Command {
                 .allow_hyphen_values(true)
                 .value_name("COMMAND")
                 .value_hint(ValueHint::CommandName)
-                .help(translate!("split-help-filter")),
+                .help(translate!("split-help-filter"))
         )
         .arg(
             Arg::new(OPT_ELIDE_EMPTY_FILES)
                 .long(OPT_ELIDE_EMPTY_FILES)
                 .short('e')
                 .help(translate!("split-help-elide-empty-files"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_NUMERIC_SUFFIXES_SHORT)
@@ -301,7 +301,7 @@ pub fn uu_app() -> Command {
                     OPT_HEX_SUFFIXES,
                     OPT_HEX_SUFFIXES_SHORT,
                 ])
-                .help(translate!("split-help-numeric-suffixes-short")),
+                .help(translate!("split-help-numeric-suffixes-short"))
         )
         .arg(
             Arg::new(OPT_NUMERIC_SUFFIXES)
@@ -315,7 +315,7 @@ pub fn uu_app() -> Command {
                     OPT_HEX_SUFFIXES_SHORT,
                 ])
                 .value_name("FROM")
-                .help(translate!("split-help-numeric-suffixes")),
+                .help(translate!("split-help-numeric-suffixes"))
         )
         .arg(
             Arg::new(OPT_HEX_SUFFIXES_SHORT)
@@ -327,7 +327,7 @@ pub fn uu_app() -> Command {
                     OPT_HEX_SUFFIXES,
                     OPT_HEX_SUFFIXES_SHORT,
                 ])
-                .help(translate!("split-help-hex-suffixes-short")),
+                .help(translate!("split-help-hex-suffixes-short"))
         )
         .arg(
             Arg::new(OPT_HEX_SUFFIXES)
@@ -341,7 +341,7 @@ pub fn uu_app() -> Command {
                     OPT_HEX_SUFFIXES_SHORT,
                 ])
                 .value_name("FROM")
-                .help(translate!("split-help-hex-suffixes")),
+                .help(translate!("split-help-hex-suffixes"))
         )
         .arg(
             Arg::new(OPT_SUFFIX_LENGTH)
@@ -349,13 +349,13 @@ pub fn uu_app() -> Command {
                 .long(OPT_SUFFIX_LENGTH)
                 .allow_hyphen_values(true)
                 .value_name("N")
-                .help(translate!("split-help-suffix-length")),
+                .help(translate!("split-help-suffix-length"))
         )
         .arg(
             Arg::new(OPT_VERBOSE)
                 .long(OPT_VERBOSE)
                 .help(translate!("split-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_SEPARATOR)
@@ -364,24 +364,24 @@ pub fn uu_app() -> Command {
                 .allow_hyphen_values(true)
                 .value_name("SEP")
                 .action(ArgAction::Append)
-                .help(translate!("split-help-separator")),
+                .help(translate!("split-help-separator"))
         )
         .arg(
             Arg::new(OPT_IO_BLKSIZE)
                 .long("io-blksize")
                 .alias(OPT_IO_BLKSIZE)
-                .hide(true),
+                .hide(true)
         )
         .arg(
             Arg::new(ARG_INPUT)
                 .default_value("-")
                 .value_hint(ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(ARG_PREFIX)
                 .default_value("x")
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 
@@ -465,7 +465,7 @@ impl Settings {
         // If the separator was used multiple times but with different values (not all values are the same) - `split` should fail
         let separator = match matches.get_many::<String>(OPT_SEPARATOR) {
             Some(mut sep_values) => {
-                let first = sep_values.next().unwrap(); // it is safe to just unwrap here since Clap should not return empty ValuesRef<'_,String> in the option from get_many() call
+                let first = sep_values.next().unwrap(); // it is safe to just unwrap here since Clap should not return empty ValuesRef<'_,String> in the option from get_many(unix) call
                 if !sep_values.all(|s| s == first) {
                     return Err(SettingsError::MultipleSeparatorCharacters);
                 }
@@ -521,11 +521,11 @@ impl Settings {
     fn instantiate_current_writer(
         &self,
         filename: &str,
-        is_new: bool,
+        is_new: bool
     ) -> io::Result<BufWriter<Box<dyn Write>>> {
         if platform::paths_refer_to_same_file(&self.input, filename.as_ref()) {
             return Err(io::Error::other(
-                translate!("split-error-would-overwrite-input", "file" => filename.quote()),
+                translate!("split-error-would-overwrite-input", "file" => filename.quote())
             ));
         }
 
@@ -561,7 +561,7 @@ fn custom_write<T: Write>(bytes: &[u8], writer: &mut T, settings: &Settings) -> 
 fn custom_write_all<T: Write>(
     bytes: &[u8],
     writer: &mut T,
-    settings: &Settings,
+    settings: &Settings
 ) -> io::Result<bool> {
     match writer.write_all(bytes) {
         Ok(()) => Ok(true),
@@ -595,7 +595,7 @@ fn get_input_size<R>(
     input: &OsString,
     reader: &mut R,
     buf: &mut Vec<u8>,
-    io_blksize: Option<u64>,
+    io_blksize: Option<u64>
 ) -> io::Result<u64>
 where
     R: BufRead,
@@ -627,7 +627,7 @@ where
         // STDIN stream that did not fit all content into a buffer
         // Most likely continuous/infinite input stream
         Err(io::Error::other(
-            translate!("split-error-cannot-determine-input-size", "input" => input.to_string_lossy()),
+            translate!("split-error-cannot-determine-input-size", "input" => input.to_string_lossy())
         ))
     } else {
         // Could be that file size is larger than set read limit
@@ -652,7 +652,7 @@ where
                 // TODO It might be possible to do more here
                 // to address all possible file types and edge cases
                 Err(io::Error::other(
-                    translate!("split-error-cannot-determine-file-size", "input" => input.to_string_lossy()),
+                    translate!("split-error-cannot-determine-file-size", "input" => input.to_string_lossy())
                 ))
             }
         }
@@ -835,7 +835,7 @@ impl<'a> LineChunkWriter<'a> {
 
     fn start_new_chunk(
         settings: &Settings,
-        filename_iterator: &mut FilenameIterator,
+        filename_iterator: &mut FilenameIterator
     ) -> io::Result<BufWriter<Box<dyn Write>>> {
         let filename = filename_iterator.next().ok_or_else(|| {
             io::Error::other(translate!("split-error-output-file-suffixes-exhausted"))
@@ -913,7 +913,7 @@ trait ManageOutFiles {
     fn instantiate_writer(
         &mut self,
         idx: usize,
-        settings: &Settings,
+        settings: &Settings
     ) -> UResult<&mut BufWriter<Box<dyn Write>>>;
     /// Initialize a new set of output files
     /// Each [`OutFile`] is generated with filename, while the writer for it could be
@@ -936,7 +936,7 @@ trait ManageOutFiles {
     fn get_writer(
         &mut self,
         idx: usize,
-        settings: &Settings,
+        settings: &Settings
     ) -> UResult<&mut BufWriter<Box<dyn Write>>>;
 }
 
@@ -982,7 +982,7 @@ impl ManageOutFiles for OutFiles {
     fn instantiate_writer(
         &mut self,
         idx: usize,
-        settings: &Settings,
+        settings: &Settings
     ) -> UResult<&mut BufWriter<Box<dyn Write>>> {
         let mut count = 0;
         // Use-case for doing multiple tries of closing fds:
@@ -1031,7 +1031,7 @@ impl ManageOutFiles for OutFiles {
     fn get_writer(
         &mut self,
         idx: usize,
-        settings: &Settings,
+        settings: &Settings
     ) -> UResult<&mut BufWriter<Box<dyn Write>>> {
         if self[idx].maybe_writer.is_some() {
             Ok(self[idx].maybe_writer.as_mut().unwrap())
@@ -1075,7 +1075,7 @@ fn n_chunks_by_byte<R>(
     settings: &Settings,
     reader: &mut R,
     num_chunks: u64,
-    kth_chunk: Option<u64>,
+    kth_chunk: Option<u64>
 ) -> UResult<()>
 where
     R: BufRead,
@@ -1161,7 +1161,7 @@ where
                 Err(error) => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("split-error-cannot-read-from-input", "input" => settings.input.to_string_lossy(), "error" => error),
+                        translate!("split-error-cannot-read-from-input", "input" => settings.input.to_string_lossy(), "error" => error)
                     ));
                 }
             }
@@ -1220,7 +1220,7 @@ fn n_chunks_by_line<R>(
     settings: &Settings,
     reader: &mut R,
     num_chunks: u64,
-    kth_chunk: Option<u64>,
+    kth_chunk: Option<u64>
 ) -> UResult<()>
 where
     R: BufRead,
@@ -1357,7 +1357,7 @@ fn n_chunks_by_line_round_robin<R>(
     settings: &Settings,
     reader: &mut R,
     num_chunks: u64,
-    kth_chunk: Option<u64>,
+    kth_chunk: Option<u64>
 ) -> UResult<()>
 where
     R: BufRead,
@@ -1523,7 +1523,7 @@ fn split(settings: &Settings) -> UResult<()> {
         Box::new(stdin()) as Box<dyn Read>
     } else {
         let r = File::open(Path::new(&settings.input)).map_err_context(
-            || translate!("split-error-cannot-open-for-reading", "file" => settings.input.to_string_lossy().quote()),
+            || translate!("split-error-cannot-open-for-reading", "file" => settings.input.to_string_lossy().quote())
         )?;
         Box::new(r) as Box<dyn Read>
     };

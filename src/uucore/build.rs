@@ -40,7 +40,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &mut embedded_file,
                 &project_root()?,
                 &util_name,
-                &locales_to_embed,
+                &locales_to_embed
             )?;
         }
         None => {
@@ -124,7 +124,7 @@ fn embed_single_utility_locale(
     embedded_file: &mut std::fs::File,
     project_root: &Path,
     util_name: &str,
-    locales_to_embed: &(String, Option<String>),
+    locales_to_embed: &(String, Option<String>)
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Embed utility-specific locales
     embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
@@ -146,7 +146,7 @@ fn embed_single_utility_locale(
 fn embed_all_utility_locales(
     embedded_file: &mut std::fs::File,
     project_root: &Path,
-    locales_to_embed: &(String, Option<String>),
+    locales_to_embed: &(String, Option<String>)
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
 
@@ -190,7 +190,7 @@ fn embed_all_utility_locales(
 
 fn embed_static_utility_locales(
     embedded_file: &mut std::fs::File,
-    locales_to_embed: &(String, Option<String>),
+    locales_to_embed: &(String, Option<String>)
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::env;
 
@@ -225,7 +225,7 @@ fn embed_static_utility_locales(
                         embedded_file,
                         locales_to_embed,
                         util_name,
-                        |locale| entry.path().join(format!("locales/{locale}.ftl")),
+                        |locale| entry.path().join(format!("locales/{locale}.ftl"))
                     )?;
                 }
             }
@@ -258,7 +258,7 @@ fn get_locales_to_embed() -> (String, Option<String>) {
 /// Helper function to iterate over the locales to embed.
 fn for_each_locale<F>(
     locales: &(String, Option<String>),
-    mut f: F,
+    mut f: F
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     F: FnMut(&str) -> Result<(), Box<dyn std::error::Error>>,
@@ -276,7 +276,7 @@ fn embed_locale_file(
     locale_path: &Path,
     locale_key: &str,
     locale: &str,
-    component: &str,
+    component: &str
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
 
@@ -303,7 +303,7 @@ fn embed_component_locales<F>(
     embedded_file: &mut std::fs::File,
     locales: &(String, Option<String>),
     component_name: &str,
-    path_builder: F,
+    path_builder: F
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(&str) -> std::path::PathBuf,
@@ -315,7 +315,7 @@ where
             &locale_path,
             &format!("{component_name}/{locale}.ftl"),
             locale,
-            component_name,
+            component_name
         )
     })
 }

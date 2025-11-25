@@ -84,18 +84,18 @@ pub fn uu_app() -> Command {
             Arg::new(options::VERSION)
                 .long(options::VERSION)
                 .help(translate!("expr-help-version"))
-                .action(ArgAction::Version),
+                .action(ArgAction::Version)
         )
         .arg(
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("expr-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::EXPRESSION)
                 .action(ArgAction::Append)
-                .allow_hyphen_values(true),
+                .allow_hyphen_values(true)
         )
 }
 

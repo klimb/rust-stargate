@@ -294,21 +294,21 @@ pub fn uu_app() -> Command {
                 .short('f')
                 .long(OPT_FORCE)
                 .help(translate!("rm-help-force"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PROMPT_ALWAYS)
                 .short('i')
                 .help(translate!("rm-help-prompt-always"))
                 .overrides_with_all([OPT_PROMPT_ONCE, OPT_INTERACTIVE])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PROMPT_ONCE)
                 .short('I')
                 .help(translate!("rm-help-prompt-once"))
                 .overrides_with_all([OPT_PROMPT_ALWAYS, OPT_INTERACTIVE])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_INTERACTIVE)
@@ -323,25 +323,25 @@ pub fn uu_app() -> Command {
                 .num_args(0..=1)
                 .require_equals(true)
                 .default_missing_value("always")
-                .overrides_with_all([OPT_PROMPT_ALWAYS, OPT_PROMPT_ONCE]),
+                .overrides_with_all([OPT_PROMPT_ALWAYS, OPT_PROMPT_ONCE])
         )
         .arg(
             Arg::new(OPT_ONE_FILE_SYSTEM)
                 .long(OPT_ONE_FILE_SYSTEM)
                 .help(translate!("rm-help-one-file-system"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_NO_PRESERVE_ROOT)
                 .long(OPT_NO_PRESERVE_ROOT)
                 .help(translate!("rm-help-no-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PRESERVE_ROOT)
                 .long(OPT_PRESERVE_ROOT)
                 .help(translate!("rm-help-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_RECURSIVE)
@@ -349,28 +349,28 @@ pub fn uu_app() -> Command {
                 .visible_short_alias('R')
                 .long(OPT_RECURSIVE)
                 .help(translate!("rm-help-recursive"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_DIR)
                 .short('d')
                 .long(OPT_DIR)
                 .help(translate!("rm-help-dir"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_VERBOSE)
                 .short('v')
                 .long(OPT_VERBOSE)
                 .help(translate!("rm-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PROGRESS)
                 .short('g')
                 .long(OPT_PROGRESS)
                 .help(translate!("rm-help-progress"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         // From the GNU source code:
         // This is solely for testing.
@@ -385,14 +385,14 @@ pub fn uu_app() -> Command {
                 .long("presume-input-tty")
                 .alias(PRESUME_INPUT_TTY)
                 .hide(true)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
                 .num_args(1..)
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 
@@ -408,11 +408,11 @@ fn create_progress_bar(files: &[&OsStr], recursive: bool) -> Option<ProgressBar>
         ProgressBar::new(total_files)
             .with_style(
                 ProgressStyle::with_template(
-                    "{msg}: [{elapsed_precise}] {wide_bar} {pos:>7}/{len:7} files",
+                    "{msg}: [{elapsed_precise}] {wide_bar} {pos:>7}/{len:7} files"
                 )
-                .unwrap(),
+                .unwrap()
             )
-            .with_message(translate!("rm-progress-removing")),
+            .with_message(translate!("rm-progress-removing"))
     )
 }
 
@@ -584,7 +584,7 @@ fn is_writable(_path: &Path) -> bool {
 fn remove_dir_recursive(
     path: &Path,
     options: &Options,
-    progress_bar: Option<&ProgressBar>,
+    progress_bar: Option<&ProgressBar>
 ) -> bool {
     // Base case 1: this is a file or a symbolic link.
     //
@@ -620,7 +620,7 @@ fn remove_dir_recursive(
                     Ok(_) => return false,
                     Err(e) => {
                         let e = e.map_err_context(
-                            || translate!("rm-error-cannot-remove", "file" => path.quote()),
+                            || translate!("rm-error-cannot-remove", "file" => path.quote())
                         );
                         show_error!("{e}");
                         return true;
@@ -666,7 +666,7 @@ fn remove_dir_recursive(
             }
             Err(e) if !error => {
                 let e = e.map_err_context(
-                    || translate!("rm-error-cannot-remove", "file" => path.quote()),
+                    || translate!("rm-error-cannot-remove", "file" => path.quote())
                 );
                 show_error!("{e}");
                 error = true;
@@ -869,7 +869,7 @@ fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata
         stdin_ok,
         is_readable_metadata(metadata),
         is_writable_metadata(metadata),
-        options.interactive,
+        options.interactive
     ) {
         (false, _, _, InteractiveMode::PromptProtected) => true,
         (false, false, false, InteractiveMode::Never) => true, // Don't prompt when interactive is never

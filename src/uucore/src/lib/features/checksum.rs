@@ -386,7 +386,7 @@ fn print_file_report<W: Write>(
     filename: &[u8],
     result: FileChecksumResult,
     prefix: &str,
-    verbose: ChecksumVerbose,
+    verbose: ChecksumVerbose
 ) {
     if result.can_display(verbose) {
         let _ = write!(w, "{prefix}");
@@ -665,7 +665,7 @@ impl ByteSliceExt for [u8] {
             .position(|w| w == pattern)?;
         Some((
             &self[..self.len() - pattern.len() - pos],
-            &self[self.len() - pos..],
+            &self[self.len() - pos..]
         ))
     }
 }
@@ -725,7 +725,7 @@ fn get_filename_for_output(filename: &OsStr, input_is_stdin: bool) -> String {
 /// Extract the expected digest from the checksum string
 fn get_expected_digest_as_hex_string(
     line_info: &LineInfo,
-    len_hint: Option<usize>,
+    len_hint: Option<usize>
 ) -> Option<Cow<'_, str>> {
     let ck = &line_info.checksum;
 
@@ -758,7 +758,7 @@ fn get_expected_digest_as_hex_string(
 /// Returns a reader that reads from the specified file, or from stdin if `filename_to_check` is "-".
 fn get_file_to_check(
     filename: &OsStr,
-    opts: ChecksumOptions,
+    opts: ChecksumOptions
 ) -> Result<Box<dyn Read>, LineCheckError> {
     let filename_bytes = os_str_as_bytes(filename).expect("UTF-8 error");
 
@@ -771,7 +771,7 @@ fn get_file_to_check(
                 filename_bytes,
                 FileChecksumResult::CantOpen,
                 "",
-                opts.verbose,
+                opts.verbose
             );
         };
         let print_error = |err: io::Error| {
@@ -790,7 +790,7 @@ fn get_file_to_check(
                 {
                     print_error(io::Error::new(
                         io::ErrorKind::IsADirectory,
-                        "Is a directory",
+                        "Is a directory"
                     ));
                     // also regarded as a failed open
                     failed_open();
@@ -819,7 +819,7 @@ fn get_input_file(filename: &OsStr) -> UResult<Box<dyn Read>> {
             if f.metadata()?.is_dir() {
                 Err(
                     io::Error::other(format!("{}: Is a directory", filename.to_string_lossy()))
-                        .into(),
+                        .into()
                 )
             } else {
                 Ok(Box::new(f))
@@ -837,7 +837,7 @@ fn get_input_file(filename: &OsStr) -> UResult<Box<dyn Read>> {
 fn identify_algo_name_and_length(
     line_info: &LineInfo,
     algo_name_input: Option<&str>,
-    last_algo: &mut Option<String>,
+    last_algo: &mut Option<String>
 ) -> Result<(String, Option<usize>), LineCheckError> {
     let algo_from_line = line_info.algo_name.clone().unwrap_or_default();
     let line_algo = algo_from_line.to_lowercase();
@@ -856,7 +856,7 @@ fn identify_algo_name_and_length(
                 ALGORITHM_OPTIONS_SHA224
                 | ALGORITHM_OPTIONS_SHA256
                 | ALGORITHM_OPTIONS_SHA384
-                | ALGORITHM_OPTIONS_SHA512,
+                | ALGORITHM_OPTIONS_SHA512
             ) => (),
             _ => return Err(LineCheckError::ImproperlyFormatted),
         }
@@ -901,7 +901,7 @@ fn compute_and_check_digest_from_file(
     filename: &[u8],
     expected_checksum: &str,
     mut algo: HashAlgorithm,
-    opts: ChecksumOptions,
+    opts: ChecksumOptions
 ) -> Result<(), LineCheckError> {
     let (filename_to_check_unescaped, prefix) = unescape_filename(filename);
     let real_filename_to_check = os_str_from_bytes(&filename_to_check_unescaped)?;
@@ -923,7 +923,7 @@ fn compute_and_check_digest_from_file(
         filename,
         FileChecksumResult::from_bool(checksum_correct),
         prefix,
-        opts.verbose,
+        opts.verbose
     );
 
     if checksum_correct {
@@ -938,7 +938,7 @@ fn process_algo_based_line(
     line_info: &LineInfo,
     cli_algo_name: Option<&str>,
     opts: ChecksumOptions,
-    last_algo: &mut Option<String>,
+    last_algo: &mut Option<String>
 ) -> Result<(), LineCheckError> {
     let filename_to_check = line_info.filename.as_slice();
 
@@ -966,7 +966,7 @@ fn process_non_algo_based_line(
     line_info: &LineInfo,
     cli_algo_name: &str,
     cli_algo_length: Option<usize>,
-    opts: ChecksumOptions,
+    opts: ChecksumOptions
 ) -> Result<(), LineCheckError> {
     let mut filename_to_check = line_info.filename.as_slice();
     if filename_to_check.starts_with(b"*")
@@ -989,7 +989,7 @@ fn process_non_algo_based_line(
             // two hexadecimal characters.
             (
                 ALGORITHM_OPTIONS_BLAKE2B.to_string(),
-                Some(expected_checksum.len() / 2),
+                Some(expected_checksum.len() / 2)
             )
         }
         algo @ (ALGORITHM_OPTIONS_SHA2 | ALGORITHM_OPTIONS_SHA3) => {
@@ -1017,7 +1017,7 @@ fn process_checksum_line(
     cli_algo_length: Option<usize>,
     opts: ChecksumOptions,
     cached_line_format: &mut Option<LineFormat>,
-    last_algo: &mut Option<String>,
+    last_algo: &mut Option<String>
 ) -> Result<(), LineCheckError> {
     let line_bytes = os_str_as_bytes(line).map_err(|e| LineCheckError::UError(Box::new(e)))?;
 
@@ -1048,7 +1048,7 @@ fn process_checksum_file(
     filename_input: &OsStr,
     cli_algo_name: Option<&str>,
     cli_algo_length: Option<usize>,
-    opts: ChecksumOptions,
+    opts: ChecksumOptions
 ) -> Result<(), FileCheckError> {
     let mut res = ChecksumResult::default();
 
@@ -1087,7 +1087,7 @@ fn process_checksum_file(
             cli_algo_length,
             opts,
             &mut cached_line_format,
-            &mut last_algo,
+            &mut last_algo
         );
 
         // Match a first time to elude critical UErrors, and increment the total
@@ -1118,7 +1118,7 @@ fn process_checksum_file(
                         "{}: {}: {}: improperly formatted {algo} checksum line",
                         util_name(),
                         filename_input.maybe_quote(),
-                        i + 1,
+                        i + 1
                     );
                 }
             }
@@ -1149,7 +1149,7 @@ fn process_checksum_file(
             eprintln!(
                 "{}: {}: no file was verified",
                 util_name(),
-                filename_input.maybe_quote(),
+                filename_input.maybe_quote()
             );
         }
         return Err(FileCheckError::Failed);
@@ -1178,7 +1178,7 @@ pub fn perform_checksum_validation<'a, I>(
     files: I,
     algo_name_input: Option<&str>,
     length_input: Option<usize>,
-    opts: ChecksumOptions,
+    opts: ChecksumOptions
 ) -> UResult<()>
 where
     I: Iterator<Item = &'a OsStr>,
@@ -1206,7 +1206,7 @@ pub fn digest_reader<T: Read>(
     digest: &mut Box<dyn Digest>,
     reader: &mut T,
     binary: bool,
-    output_bits: usize,
+    output_bits: usize
 ) -> io::Result<(String, usize)> {
     digest.reset();
 
@@ -1256,7 +1256,7 @@ pub fn calculate_blake2b_length_str(length: &str) -> UResult<Option<usize>> {
                 format!(
                     "maximum digest length for {} is 512 bits",
                     "BLAKE2b".quote()
-                ),
+                )
             )
             .into())
         }
@@ -1567,23 +1567,23 @@ mod tests {
         let test_cases: &[(&[u8], Option<(&[u8], &[u8])>)] = &[
             (
                 b"60b725f10c9c85c70d97880dfe8191b3  a",
-                Some((b"60b725f10c9c85c70d97880dfe8191b3", b"a")),
+                Some((b"60b725f10c9c85c70d97880dfe8191b3", b"a"))
             ),
             (
                 b"bf35d7536c785cf06730d5a40301eba2   b",
-                Some((b"bf35d7536c785cf06730d5a40301eba2", b" b")),
+                Some((b"bf35d7536c785cf06730d5a40301eba2", b" b"))
             ),
             (
                 b"f5b61709718c1ecf8db1aea8547d4698  *c",
-                Some((b"f5b61709718c1ecf8db1aea8547d4698", b"*c")),
+                Some((b"f5b61709718c1ecf8db1aea8547d4698", b"*c"))
             ),
             (
                 b"b064a020db8018f18ff5ae367d01b212  dd",
-                Some((b"b064a020db8018f18ff5ae367d01b212", b"dd")),
+                Some((b"b064a020db8018f18ff5ae367d01b212", b"dd"))
             ),
             (
                 b"b064a020db8018f18ff5ae367d01b212   ",
-                Some((b"b064a020db8018f18ff5ae367d01b212", b" ")),
+                Some((b"b064a020db8018f18ff5ae367d01b212", b" "))
             ),
             (b"invalidchecksum  test", None),
         ];
@@ -1610,19 +1610,19 @@ mod tests {
         let test_cases: &[(&[u8], Option<(&[u8], &[u8])>)] = &[
             (
                 b"60b725f10c9c85c70d97880dfe8191b3 a",
-                Some((b"60b725f10c9c85c70d97880dfe8191b3", b"a")),
+                Some((b"60b725f10c9c85c70d97880dfe8191b3", b"a"))
             ),
             (
                 b"bf35d7536c785cf06730d5a40301eba2 b",
-                Some((b"bf35d7536c785cf06730d5a40301eba2", b"b")),
+                Some((b"bf35d7536c785cf06730d5a40301eba2", b"b"))
             ),
             (
                 b"f5b61709718c1ecf8db1aea8547d4698 *c",
-                Some((b"f5b61709718c1ecf8db1aea8547d4698", b"*c")),
+                Some((b"f5b61709718c1ecf8db1aea8547d4698", b"*c"))
             ),
             (
                 b"b064a020db8018f18ff5ae367d01b212 dd",
-                Some((b"b064a020db8018f18ff5ae367d01b212", b"dd")),
+                Some((b"b064a020db8018f18ff5ae367d01b212", b"dd"))
             ),
             (b"invalidchecksum test", None),
         ];
@@ -1739,25 +1739,25 @@ mod tests {
                 b"filename",
                 FileChecksumResult::Failed,
                 "",
-                b"filename: FAILED\n",
+                b"filename: FAILED\n"
             ),
             (
                 b"filename",
                 FileChecksumResult::CantOpen,
                 "",
-                b"filename: FAILED open or read\n",
+                b"filename: FAILED open or read\n"
             ),
             (
                 b"filename",
                 FileChecksumResult::Ok,
                 "prefix",
-                b"prefixfilename: OK\n",
+                b"prefixfilename: OK\n"
             ),
             (
                 b"funky\xffname",
                 FileChecksumResult::Ok,
                 "",
-                b"funky\xffname: OK\n",
+                b"funky\xffname: OK\n"
             ),
         ];
 

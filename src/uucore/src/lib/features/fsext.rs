@@ -42,7 +42,6 @@ use std::time::Duration;
 
 #[cfg(any(
     target_os = "linux",
-    target_os = "android",
     target_vendor = "apple",
     target_os = "freebsd",
     target_os = "openbsd"
@@ -60,10 +59,9 @@ pub use libc::statvfs as StatFs;
 
 #[cfg(any(
     target_os = "linux",
-    target_os = "android",
     target_vendor = "apple",
     target_os = "freebsd",
-    target_os = "openbsd",
+    target_os = "openbsd"
 ))]
 pub use libc::statfs as statfs_fn;
 #[cfg(any(
@@ -153,7 +151,7 @@ pub struct MountInfo {
     pub dummy: bool,
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn replace_special_chars(s: &[u8]) -> Vec<u8> {
     use bstr::ByteSlice;
 
@@ -242,7 +240,7 @@ fn new(mut volume_name: String) -> Option<Self> {
                 .collect::<Vec<u16>>()
                 .as_ptr(),
             dev_name_buf.as_mut_ptr(),
-            dev_name_buf.len() as u32,
+            dev_name_buf.len() as u32
         )
     };
     volume_name.push('\\');
@@ -255,7 +253,7 @@ fn new(mut volume_name: String) -> Option<Self> {
             volume_name.as_ptr(),
             mount_root_buf.as_mut_ptr(),
             mount_root_buf.len() as u32,
-            ptr::null_mut(),
+            ptr::null_mut()
         )
     };
     if 0 == success {
@@ -277,7 +275,7 @@ fn new(mut volume_name: String) -> Option<Self> {
             ptr::null_mut(),
             ptr::null_mut(),
             fs_type_buf.as_mut_ptr(),
-            fs_type_buf.len() as u32,
+            fs_type_buf.len() as u32
         )
     };
     let fs_type = if 0 == success {
@@ -306,7 +304,7 @@ fn new(mut volume_name: String) -> Option<Self> {
     target_os = "freebsd",
     target_vendor = "apple",
     target_os = "netbsd",
-    target_os = "openbsd",
+    target_os = "openbsd"
 ))]
 impl From<StatFs> for MountInfo {
     fn from(statfs: StatFs) -> Self {
@@ -426,9 +424,9 @@ use crate::error::UResult;
     target_os = "windows"
 ))]
 use crate::error::USimpleError;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use std::fs::File;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use std::io::{BufRead, BufReader};
 #[cfg(any(
     target_vendor = "apple",
@@ -448,7 +446,7 @@ use std::slice;
 
 /// Read file system list.
 pub fn read_fs_list() -> UResult<Vec<MountInfo>> {
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         let (file_name, f) = File::open(LINUX_MOUNTINFO)
             .map(|f| (LINUX_MOUNTINFO, f))
@@ -594,7 +592,7 @@ impl FsMeta for StatFs {
             any(
                 target_arch = "s390x",
                 target_vendor = "apple",
-                all(target_os = "android", target_pointer_width = "32"),
+                all(target_pointer_width = "32"),
                 target_os = "openbsd",
                 not(target_pointer_width = "64")
             )
@@ -608,7 +606,7 @@ impl FsMeta for StatFs {
             target_os = "illumos",
             target_os = "solaris",
             target_os = "redox",
-            all(target_os = "android", target_pointer_width = "64"),
+            all(target_pointer_width = "64")
         ))]
         return self.f_bsize.try_into().unwrap();
     }
@@ -656,7 +654,6 @@ impl FsMeta for StatFs {
     }
     #[cfg(any(
         target_os = "linux",
-        target_os = "android",
         target_vendor = "apple",
         target_os = "freebsd"
     ))]
@@ -674,7 +671,7 @@ impl FsMeta for StatFs {
             not(target_env = "musl"),
             any(
                 target_vendor = "apple",
-                all(target_os = "android", target_pointer_width = "32"),
+                all(target_pointer_width = "32"),
                 target_os = "freebsd",
                 target_arch = "s390x",
                 not(target_pointer_width = "64")
@@ -683,13 +680,12 @@ impl FsMeta for StatFs {
         return self.f_type.into();
         #[cfg(any(
             target_env = "musl",
-            all(target_os = "android", target_pointer_width = "64"),
+            all(target_pointer_width = "64")
         ))]
         return self.f_type.try_into().unwrap();
     }
     #[cfg(not(any(
         target_os = "linux",
-        target_os = "android",
         target_vendor = "apple",
         target_os = "freebsd"
     )))]
@@ -698,7 +694,7 @@ impl FsMeta for StatFs {
         unimplemented!()
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     fn io_size(&self) -> u64 {
         self.f_frsize as u64
     }
@@ -714,7 +710,6 @@ impl FsMeta for StatFs {
         target_vendor = "apple",
         target_os = "freebsd",
         target_os = "linux",
-        target_os = "android",
         target_os = "netbsd"
     )))]
     fn io_size(&self) -> u64 {
@@ -731,7 +726,6 @@ impl FsMeta for StatFs {
         target_vendor = "apple",
         target_os = "freebsd",
         target_os = "linux",
-        target_os = "android",
         target_os = "openbsd"
     ))]
     fn fsid(&self) -> u64 {
@@ -744,14 +738,13 @@ impl FsMeta for StatFs {
         target_vendor = "apple",
         target_os = "freebsd",
         target_os = "linux",
-        target_os = "android",
         target_os = "openbsd"
     )))]
     fn fsid(&self) -> u64 {
         self.f_fsid as u64
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     fn namelen(&self) -> u64 {
         self.f_namelen as u64
     }
@@ -768,7 +761,6 @@ impl FsMeta for StatFs {
         target_vendor = "apple",
         target_os = "freebsd",
         target_os = "linux",
-        target_os = "android",
         target_os = "netbsd",
         target_os = "openbsd"
     )))]
@@ -980,14 +972,14 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     fn test_mountinfo() {
         // spell-checker:ignore (word) relatime
         let info = MountInfo::new(
             LINUX_MOUNTINFO,
             &b"106 109 253:6 / /mnt rw,relatime - xfs /dev/fs0 rw"
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1002,7 +994,7 @@ mod tests {
             LINUX_MOUNTINFO,
             &b"106 109 253:6 / /mnt rw,relatime master:1 - xfs /dev/fs0 rw"
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1013,7 +1005,7 @@ mod tests {
             LINUX_MOUNTINFO,
             &b"106 109 253:6 / /mnt rw,relatime master:1 shared:2 - xfs /dev/fs0 rw"
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1022,13 +1014,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     fn test_mountinfo_dir_special_chars() {
         let info = MountInfo::new(
             LINUX_MOUNTINFO,
             &br#"317 61 7:0 / /mnt/f\134\040\011oo rw,relatime shared:641 - ext4 /dev/loop0 rw"#
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1038,7 +1030,7 @@ mod tests {
             LINUX_MTAB,
             &br#"/dev/loop0 /mnt/f\134\040\011oo ext4 rw,relatime 0 0"#
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1046,13 +1038,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     fn test_mountinfo_dir_non_unicode() {
         let info = MountInfo::new(
             LINUX_MOUNTINFO,
             &b"317 61 7:0 / /mnt/some-\xc0-dir-\xf3 rw,relatime shared:641 - ext4 /dev/loop0 rw"
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 
@@ -1065,7 +1057,7 @@ mod tests {
             LINUX_MOUNTINFO,
             &b"317 61 7:0 / /mnt/some-\\040-dir-\xf3 rw,relatime shared:641 - ext4 /dev/loop0 rw"
                 .split(|c| *c == b' ')
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()
         )
         .unwrap();
 

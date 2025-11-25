@@ -42,7 +42,7 @@ use uucore::libc::{S_IXGRP, S_IXOTH, S_IXUSR};
     target_os = "linux",
     target_os = "macos",
     target_os = "freebsd",
-    target_os = "openbsd",
+    target_os = "openbsd"
 ))]
 use uucore::libc::{dev_t, major, minor};
 use uucore::{
@@ -286,7 +286,7 @@ fn parse_time_style(options: &clap::ArgMatches) -> Result<(String, Option<String
                 // ISO older format needs extra padding.
                 "iso" => Ok((
                     "%m-%d %H:%M".to_string(),
-                    Some(format::ISO.to_string() + " "),
+                    Some(format::ISO.to_string() + " ")
                 )),
                 "locale" => ok(LOCALE_FORMAT),
                 _ => match field.chars().next().unwrap() {
@@ -400,7 +400,7 @@ fn extract_format(options: &clap::ArgMatches) -> (Format, Option<&'static str>) 
                 // below should never happen as clap already restricts the values.
                 _ => unreachable!("Invalid field for --format"),
             },
-            Some(options::FORMAT),
+            Some(options::FORMAT)
         )
     } else if options.get_flag(options::format::LONG) {
         (Format::Long, Some(options::format::LONG))
@@ -905,7 +905,7 @@ impl Config {
                     // ignore invalid block size from env vars
                     if let Some(invalid_block_size) = opt_block_size {
                         return Err(Box::new(LsError::BlockSizeParseError(
-                            invalid_block_size.clone(),
+                            invalid_block_size.clone()
                         )));
                     }
                     if is_env_var_blocksize {
@@ -1169,7 +1169,7 @@ pub fn uu_app() -> Command {
         Command::new(uucore::util_name())
             .version(uucore::crate_version!())
             .override_usage(format_usage(&translate!("ls-usage")))
-            .about(translate!("ls-about")),
+            .about(translate!("ls-about"))
     )
     .infer_long_args(true)
     .disable_help_flag(true)
@@ -1178,7 +1178,7 @@ pub fn uu_app() -> Command {
         Arg::new(options::HELP)
             .long(options::HELP)
             .help(translate!("ls-help-print-help"))
-            .action(ArgAction::Help),
+            .action(ArgAction::Help)
     )
     // Format arguments
     .arg(
@@ -1204,7 +1204,7 @@ pub fn uu_app() -> Command {
                 options::format::ACROSS,
                 options::format::COLUMNS,
                 options::DIRED,
-            ]),
+            ])
     )
     .arg(
         Arg::new(options::format::COLUMNS)
@@ -1217,7 +1217,7 @@ pub fn uu_app() -> Command {
                 options::format::ACROSS,
                 options::format::COLUMNS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::LONG)
@@ -1231,7 +1231,7 @@ pub fn uu_app() -> Command {
                 options::format::ACROSS,
                 options::format::COLUMNS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::ACROSS)
@@ -1244,7 +1244,7 @@ pub fn uu_app() -> Command {
                 options::format::ACROSS,
                 options::format::COLUMNS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::TAB_SIZE)
@@ -1252,7 +1252,7 @@ pub fn uu_app() -> Command {
             .long(options::format::TAB_SIZE)
             .env("TABSIZE")
             .value_name("COLS")
-            .help(translate!("ls-help-assume-tab-stops")),
+            .help(translate!("ls-help-assume-tab-stops"))
     )
     .arg(
         Arg::new(options::format::COMMAS)
@@ -1265,14 +1265,14 @@ pub fn uu_app() -> Command {
                 options::format::ACROSS,
                 options::format::COLUMNS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::ZERO)
             .long(options::ZERO)
             .overrides_with(options::ZERO)
             .help(translate!("ls-help-list-entries-nul"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::DIRED)
@@ -1280,7 +1280,7 @@ pub fn uu_app() -> Command {
             .short('D')
             .help(translate!("ls-help-generate-dired-output"))
             .action(ArgAction::SetTrue)
-            .overrides_with(options::HYPERLINK),
+            .overrides_with(options::HYPERLINK)
     )
     .arg(
         Arg::new(options::HYPERLINK)
@@ -1296,7 +1296,7 @@ pub fn uu_app() -> Command {
             .default_missing_value("always")
             .default_value("never")
             .value_name("WHEN")
-            .overrides_with(options::DIRED),
+            .overrides_with(options::DIRED)
     )
     // The next four arguments do not override with the other format
     // options, see the comment in Config::from for the reason.
@@ -1308,26 +1308,26 @@ pub fn uu_app() -> Command {
         Arg::new(options::format::ONE_LINE)
             .short('1')
             .help(translate!("ls-help-list-one-file-per-line"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::LONG_NO_GROUP)
             .short('o')
             .help(translate!("ls-help-long-format-no-group"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::LONG_NO_OWNER)
             .short('g')
             .help(translate!("ls-help-long-no-owner"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::format::LONG_NUMERIC_UID_GID)
             .short('n')
             .long(options::format::LONG_NUMERIC_UID_GID)
             .help(translate!("ls-help-long-numeric-uid-gid"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Quoting style
     .arg(
@@ -1348,7 +1348,7 @@ pub fn uu_app() -> Command {
                 options::quoting::LITERAL,
                 options::quoting::ESCAPE,
                 options::quoting::C,
-            ]),
+            ])
     )
     .arg(
         Arg::new(options::quoting::LITERAL)
@@ -1362,7 +1362,7 @@ pub fn uu_app() -> Command {
                 options::quoting::ESCAPE,
                 options::quoting::C,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::quoting::ESCAPE)
@@ -1375,7 +1375,7 @@ pub fn uu_app() -> Command {
                 options::quoting::ESCAPE,
                 options::quoting::C,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::quoting::C)
@@ -1388,7 +1388,7 @@ pub fn uu_app() -> Command {
                 options::quoting::ESCAPE,
                 options::quoting::C,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Control characters
     .arg(
@@ -1397,14 +1397,14 @@ pub fn uu_app() -> Command {
             .long(options::HIDE_CONTROL_CHARS)
             .help(translate!("ls-help-replace-control-chars"))
             .overrides_with_all([options::HIDE_CONTROL_CHARS, options::SHOW_CONTROL_CHARS])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::SHOW_CONTROL_CHARS)
             .long(options::SHOW_CONTROL_CHARS)
             .help(translate!("ls-help-show-control-chars"))
             .overrides_with_all([options::HIDE_CONTROL_CHARS, options::SHOW_CONTROL_CHARS])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Time arguments
     .arg(
@@ -1420,21 +1420,21 @@ pub fn uu_app() -> Command {
             ]))
             .hide_possible_values(true)
             .require_equals(true)
-            .overrides_with_all([options::TIME, options::time::ACCESS, options::time::CHANGE]),
+            .overrides_with_all([options::TIME, options::time::ACCESS, options::time::CHANGE])
     )
     .arg(
         Arg::new(options::time::CHANGE)
             .short('c')
             .help(translate!("ls-help-time-change"))
             .overrides_with_all([options::TIME, options::time::ACCESS, options::time::CHANGE])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::time::ACCESS)
             .short('u')
             .help(translate!("ls-help-time-access"))
             .overrides_with_all([options::TIME, options::time::ACCESS, options::time::CHANGE])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Hide and ignore
     .arg(
@@ -1442,7 +1442,7 @@ pub fn uu_app() -> Command {
             .long(options::HIDE)
             .action(ArgAction::Append)
             .value_name("PATTERN")
-            .help(translate!("ls-help-hide-pattern")),
+            .help(translate!("ls-help-hide-pattern"))
     )
     .arg(
         Arg::new(options::IGNORE)
@@ -1450,14 +1450,14 @@ pub fn uu_app() -> Command {
             .long(options::IGNORE)
             .action(ArgAction::Append)
             .value_name("PATTERN")
-            .help(translate!("ls-help-ignore-pattern")),
+            .help(translate!("ls-help-ignore-pattern"))
     )
     .arg(
         Arg::new(options::IGNORE_BACKUPS)
             .short('B')
             .long(options::IGNORE_BACKUPS)
             .help(translate!("ls-help-ignore-backups"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Sort arguments
     .arg(
@@ -1482,7 +1482,7 @@ pub fn uu_app() -> Command {
                 options::sort::NONE,
                 options::sort::VERSION,
                 options::sort::EXTENSION,
-            ]),
+            ])
     )
     .arg(
         Arg::new(options::sort::SIZE)
@@ -1496,7 +1496,7 @@ pub fn uu_app() -> Command {
                 options::sort::VERSION,
                 options::sort::EXTENSION,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::sort::TIME)
@@ -1510,7 +1510,7 @@ pub fn uu_app() -> Command {
                 options::sort::VERSION,
                 options::sort::EXTENSION,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::sort::VERSION)
@@ -1524,7 +1524,7 @@ pub fn uu_app() -> Command {
                 options::sort::VERSION,
                 options::sort::EXTENSION,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::sort::EXTENSION)
@@ -1538,7 +1538,7 @@ pub fn uu_app() -> Command {
                 options::sort::VERSION,
                 options::sort::EXTENSION,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::sort::NONE)
@@ -1552,7 +1552,7 @@ pub fn uu_app() -> Command {
                 options::sort::VERSION,
                 options::sort::EXTENSION,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Dereferencing
     .arg(
@@ -1565,7 +1565,7 @@ pub fn uu_app() -> Command {
                 options::dereference::DIR_ARGS,
                 options::dereference::ARGS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::dereference::DIR_ARGS)
@@ -1576,7 +1576,7 @@ pub fn uu_app() -> Command {
                 options::dereference::DIR_ARGS,
                 options::dereference::ARGS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::dereference::ARGS)
@@ -1588,7 +1588,7 @@ pub fn uu_app() -> Command {
                 options::dereference::DIR_ARGS,
                 options::dereference::ARGS,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Long format options
     .arg(
@@ -1596,13 +1596,13 @@ pub fn uu_app() -> Command {
             .long(options::NO_GROUP)
             .short('G')
             .help(translate!("ls-help-no-group"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::AUTHOR)
             .long(options::AUTHOR)
             .help(translate!("ls-help-author"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Other Flags
     .arg(
@@ -1612,7 +1612,7 @@ pub fn uu_app() -> Command {
             // Overrides -A (as the order matters)
             .overrides_with_all([options::files::ALL, options::files::ALMOST_ALL])
             .help(translate!("ls-help-all-files"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::files::ALMOST_ALL)
@@ -1621,20 +1621,20 @@ pub fn uu_app() -> Command {
             // Overrides -a (as the order matters)
             .overrides_with_all([options::files::ALL, options::files::ALMOST_ALL])
             .help(translate!("ls-help-almost-all"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::files::UNSORTED_ALL)
             .short('f')
             .help(translate!("ls-help-unsorted-all"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::DIRECTORY)
             .short('d')
             .long(options::DIRECTORY)
             .help(translate!("ls-help-directory"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::size::HUMAN_READABLE)
@@ -1642,21 +1642,21 @@ pub fn uu_app() -> Command {
             .long(options::size::HUMAN_READABLE)
             .help(translate!("ls-help-human-readable"))
             .overrides_with_all([options::size::BLOCK_SIZE, options::size::SI])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::size::KIBIBYTES)
             .short('k')
             .long(options::size::KIBIBYTES)
             .help(translate!("ls-help-kibibytes"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::size::SI)
             .long(options::size::SI)
             .help(translate!("ls-help-si"))
             .overrides_with_all([options::size::BLOCK_SIZE, options::size::HUMAN_READABLE])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::size::BLOCK_SIZE)
@@ -1664,42 +1664,42 @@ pub fn uu_app() -> Command {
             .require_equals(true)
             .value_name("BLOCK_SIZE")
             .help(translate!("ls-help-block-size"))
-            .overrides_with_all([options::size::SI, options::size::HUMAN_READABLE]),
+            .overrides_with_all([options::size::SI, options::size::HUMAN_READABLE])
     )
     .arg(
         Arg::new(options::INODE)
             .short('i')
             .long(options::INODE)
             .help(translate!("ls-help-print-inode"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::REVERSE)
             .short('r')
             .long(options::REVERSE)
             .help(translate!("ls-help-reverse-sort"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::RECURSIVE)
             .short('R')
             .long(options::RECURSIVE)
             .help(translate!("ls-help-recursive"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::WIDTH)
             .long(options::WIDTH)
             .short('w')
             .help(translate!("ls-help-terminal-width"))
-            .value_name("COLS"),
+            .value_name("COLS")
     )
     .arg(
         Arg::new(options::size::ALLOCATION_SIZE)
             .short('s')
             .long(options::size::ALLOCATION_SIZE)
             .help(translate!("ls-help-allocation-size"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::COLOR)
@@ -1711,7 +1711,7 @@ pub fn uu_app() -> Command {
                 PossibleValue::new("never").alias("no").alias("none"),
             ]))
             .require_equals(true)
-            .num_args(0..=1),
+            .num_args(0..=1)
     )
     .arg(
         Arg::new(options::INDICATOR_STYLE)
@@ -1728,7 +1728,7 @@ pub fn uu_app() -> Command {
                 options::indicator_style::SLASH,
                 options::indicator_style::CLASSIFY,
                 options::INDICATOR_STYLE,
-            ]),
+            ])
     )
     .arg(
         // The --classify flag can take an optional when argument to
@@ -1754,7 +1754,7 @@ pub fn uu_app() -> Command {
                 options::indicator_style::SLASH,
                 options::indicator_style::CLASSIFY,
                 options::INDICATOR_STYLE,
-            ]),
+            ])
     )
     .arg(
         Arg::new(options::indicator_style::FILE_TYPE)
@@ -1766,7 +1766,7 @@ pub fn uu_app() -> Command {
                 options::indicator_style::CLASSIFY,
                 options::INDICATOR_STYLE,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::indicator_style::SLASH)
@@ -1778,7 +1778,7 @@ pub fn uu_app() -> Command {
                 options::indicator_style::CLASSIFY,
                 options::INDICATOR_STYLE,
             ])
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         //This still needs support for posix-*
@@ -1788,27 +1788,27 @@ pub fn uu_app() -> Command {
             .value_name("TIME_STYLE")
             .env("TIME_STYLE")
             .value_parser(NonEmptyStringValueParser::new())
-            .overrides_with_all([options::TIME_STYLE]),
+            .overrides_with_all([options::TIME_STYLE])
     )
     .arg(
         Arg::new(options::FULL_TIME)
             .long(options::FULL_TIME)
             .overrides_with(options::FULL_TIME)
             .help(translate!("ls-help-full-time"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::GROUP_DIRECTORIES_FIRST)
             .long(options::GROUP_DIRECTORIES_FIRST)
             .help(translate!("ls-help-group-directories-first"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     // Positional arguments
     .arg(
         Arg::new(options::PATHS)
             .action(ArgAction::Append)
             .value_hint(clap::ValueHint::AnyPath)
-            .value_parser(ValueParser::os_string()),
+            .value_parser(ValueParser::os_string())
     )
     .after_help(translate!("ls-after-help"))
 }
@@ -1838,7 +1838,7 @@ impl PathData {
         dir_entry: Option<DirEntry>,
         file_name: Option<OsString>,
         config: &Config,
-        command_line: bool,
+        command_line: bool
     ) -> Self {
         // We cannot use `Path::ends_with` or `Path::Components`, because they remove occurrences of '.'
         // For '..', the filename is None
@@ -1994,7 +1994,7 @@ impl Colorable for PathData {
 fn show_dir_name(
     path_data: &PathData,
     out: &mut BufWriter<Stdout>,
-    config: &Config,
+    config: &Config
 ) -> std::io::Result<()> {
     let escaped_name =
         locale_aware_escape_dir_name(path_data.path().as_os_str(), config.quoting_style);
@@ -2130,7 +2130,7 @@ pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
         let mut listed_ancestors = HashSet::default();
         listed_ancestors.insert(FileInformation::from_path(
             path_data.path(),
-            path_data.must_dereference,
+            path_data.must_dereference
         )?);
         enter_directory(
             path_data,
@@ -2138,7 +2138,7 @@ pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
             config,
             &mut state,
             &mut listed_ancestors,
-            &mut dired,
+            &mut dired
         )?;
     }
     if config.dired && !config.hyperlink {
@@ -2153,7 +2153,7 @@ fn sort_entries(entries: &mut [PathData], config: &Config) {
             Reverse(
                 k.metadata()
                     .and_then(|md| metadata_get_time(md, config.time))
-                    .unwrap_or(UNIX_EPOCH),
+                    .unwrap_or(UNIX_EPOCH)
             )
         }),
         Sort::Size => {
@@ -2164,7 +2164,7 @@ fn sort_entries(entries: &mut [PathData], config: &Config) {
         Sort::Version => entries.sort_by(|a, b| {
             version_cmp(
                 os_str_as_bytes_lossy(a.path().as_os_str()).as_ref(),
-                os_str_as_bytes_lossy(b.path().as_os_str()).as_ref(),
+                os_str_as_bytes_lossy(b.path().as_os_str()).as_ref()
             )
             .then(a.path().to_string_lossy().cmp(&b.path().to_string_lossy()))
         }),
@@ -2257,7 +2257,7 @@ fn enter_directory(
     config: &Config,
     state: &mut ListState,
     listed_ancestors: &mut HashSet<FileInformation>,
-    dired: &mut DiredOutput,
+    dired: &mut DiredOutput
 ) -> UResult<()> {
     // Create vec of entries with initial dot files
     let mut entries: Vec<PathData> = if config.files == Files::All {
@@ -2267,14 +2267,14 @@ fn enter_directory(
                 None,
                 Some(".".into()),
                 config,
-                false,
+                false
             ),
             PathData::new(
                 path_data.path().join(".."),
                 None,
                 Some("..".into()),
                 config,
-                false,
+                false
             ),
         ]
     } else {
@@ -2374,7 +2374,7 @@ fn get_metadata_with_deref_opt(p_buf: &Path, dereference: bool) -> std::io::Resu
 fn display_dir_entry_size(
     entry: &PathData,
     config: &Config,
-    state: &mut ListState,
+    state: &mut ListState
 ) -> (usize, usize, usize, usize, usize, usize) {
     // TODO: Cache/memorize the display_* results so we don't have to recalculate them.
     if let Some(md) = entry.metadata() {
@@ -2390,7 +2390,7 @@ fn display_dir_entry_size(
             display_group(md, config, state).len(),
             size_len,
             major_len,
-            minor_len,
+            minor_len
         )
     } else {
         (0, 0, 0, 0, 0, 0)
@@ -2429,7 +2429,7 @@ fn pad_left(string: &str, count: usize) -> String {
 fn return_total(
     items: &[PathData],
     config: &Config,
-    out: &mut BufWriter<Stdout>,
+    out: &mut BufWriter<Stdout>
 ) -> UResult<String> {
     let mut total_size = 0;
     for item in items {
@@ -2451,7 +2451,7 @@ fn return_total(
 fn display_additional_leading_info(
     item: &PathData,
     padding: &PaddingCollection,
-    config: &Config,
+    config: &Config
 ) -> UResult<String> {
     let mut result = String::new();
     #[cfg(unix)]
@@ -2487,7 +2487,7 @@ fn display_items(
     items: &[PathData],
     config: &Config,
     state: &mut ListState,
-    dired: &mut DiredOutput,
+    dired: &mut DiredOutput
 ) -> UResult<()> {
 
     let quoted = items.iter().any(|item| {
@@ -2542,7 +2542,7 @@ fn display_items(
                 config,
                 more_info,
                 state,
-                LazyCell::new(Box::new(|| 0)),
+                LazyCell::new(Box::new(|| 0))
             );
 
             names_vec.push(cell);
@@ -2558,7 +2558,7 @@ fn display_items(
                     Direction::TopToBottom,
                     &mut state.out,
                     quoted,
-                    config.tab_size,
+                    config.tab_size
                 )?;
             }
             Format::Across => {
@@ -2568,7 +2568,7 @@ fn display_items(
                     Direction::LeftToRight,
                     &mut state.out,
                     quoted,
-                    config.tab_size,
+                    config.tab_size
                 )?;
             }
             Format::Commas => {
@@ -2637,7 +2637,7 @@ fn display_grid(
     direction: Direction,
     out: &mut BufWriter<Stdout>,
     quoted: bool,
-    tab_size: usize,
+    tab_size: usize
 ) -> UResult<()> {
     if width == 0 {
         // If the width is 0 we print one single line
@@ -2702,7 +2702,7 @@ fn display_grid(
                 filling,
                 direction,
                 width: width as usize,
-            },
+            }
         );
         write!(out, "{grid}")?;
     }
@@ -2744,7 +2744,7 @@ fn display_item_long(
     config: &Config,
     state: &mut ListState,
     dired: &mut DiredOutput,
-    quoted: bool,
+    quoted: bool
 ) -> UResult<()> {
     let mut output_display: Vec<u8> = Vec::with_capacity(128);
 
@@ -2794,8 +2794,8 @@ fn display_item_long(
                     padding.major.max(
                         padding
                             .size
-                            .saturating_sub(padding.minor.saturating_add(2usize)),
-                    ),
+                            .saturating_sub(padding.minor.saturating_add(2usize))
+                    )
                 );
                 output_display.extend(b", ");
                 output_display.extend_pad_left(
@@ -2803,7 +2803,7 @@ fn display_item_long(
                     #[cfg(not(unix))]
                     0usize,
                     #[cfg(unix)]
-                    padding.minor,
+                    padding.minor
                 );
             }
         }
@@ -2819,7 +2819,7 @@ fn display_item_long(
             state,
             LazyCell::new(Box::new(|| {
                 ansi_width(&String::from_utf8_lossy(&output_display))
-            })),
+            }))
         );
 
         let displayed_item = if quoted && !os_str_starts_with(&item_name, b"'") {
@@ -2834,7 +2834,7 @@ fn display_item_long(
             let (start, end) = dired::calculate_dired(
                 &dired.dired_positions,
                 output_display.len(),
-                displayed_item.len(),
+                displayed_item.len()
             );
             dired::update_positions(dired, start, end);
         }
@@ -2887,7 +2887,7 @@ fn display_item_long(
             state,
             LazyCell::new(Box::new(|| {
                 ansi_width(&String::from_utf8_lossy(&output_display))
-            })),
+            }))
         );
         let date_len = 12;
 
@@ -2901,7 +2901,7 @@ fn display_item_long(
             dired::calculate_and_update_positions(
                 dired,
                 output_display.len(),
-                displayed_item.to_string_lossy().trim().len(),
+                displayed_item.to_string_lossy().trim().len()
             );
         }
         write_os_str(&mut output_display, &displayed_item)?;
@@ -2948,7 +2948,7 @@ fn display_date(
     metadata: &Metadata,
     config: &Config,
     state: &mut ListState,
-    out: &mut Vec<u8>,
+    out: &mut Vec<u8>
 ) -> UResult<()> {
     let Some(time) = metadata_get_time(metadata, config.time) else {
         out.extend(b"???");
@@ -2975,7 +2975,7 @@ fn display_len_or_rdev(metadata: &Metadata, config: &Config) -> SizeOrDeviceId {
     #[cfg(any(
         target_os = "linux",
         target_os = "macos",
-        target_os = "android",
+        
         target_os = "ios",
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -3063,7 +3063,7 @@ fn display_item_name(
     config: &Config,
     more_info: Option<String>,
     state: &mut ListState,
-    current_column: LazyCell<usize, Box<dyn FnOnce() -> usize + '_>>,
+    current_column: LazyCell<usize, Box<dyn FnOnce() -> usize + '_>>
 ) -> OsString {
     // This is our return value. We start by `&path.display_name` and modify it along the way.
     let mut name = locale_aware_escape_name(path.display_name(), config.quoting_style);
@@ -3150,7 +3150,7 @@ fn display_item_name(
                             path,
                             style_manager,
                             Some(&target_data),
-                            is_wrap(name.len()),
+                            is_wrap(name.len())
                         ));
                     }
                 } else {
@@ -3158,7 +3158,7 @@ fn display_item_name(
                     // Apply the right quoting
                     name.push(locale_aware_escape_name(
                         target_path.as_os_str(),
-                        config.quoting_style,
+                        config.quoting_style
                     ));
                 }
             }
@@ -3224,7 +3224,7 @@ fn display_inode(metadata: &Metadata) -> String {
 fn calculate_padding_collection(
     items: &[PathData],
     config: &Config,
-    state: &mut ListState,
+    state: &mut ListState
 ) -> PaddingCollection {
     let mut padding_collections = PaddingCollection {
         inode: 1,

@@ -32,7 +32,7 @@ pub fn process_single_char_replace(
     input: &[u8],
     output: &mut Vec<u8>,
     source_char: u8,
-    target_char: u8,
+    target_char: u8
 ) {
     let count = bytecount::count(input, source_char);
     if count == 0 {
@@ -43,7 +43,7 @@ pub fn process_single_char_replace(
         output.extend(
             input
                 .iter()
-                .map(|&b| if b == source_char { target_char } else { b }),
+                .map(|&b| if b == source_char { target_char } else { b })
         );
     }
 }

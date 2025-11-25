@@ -188,7 +188,7 @@ impl Sequence {
                         .chain(33..=47)
                         .chain(58..=64)
                         .chain(91..=96)
-                        .chain(123..=126),
+                        .chain(123..=126)
                 ),
                 Class::Punct => Box::new((33..=47).chain(58..=64).chain(91..=96).chain(123..=126)),
                 Class::Space => Box::new(unicode_table::SPACES.iter().copied()),
@@ -205,7 +205,7 @@ impl Sequence {
         set2_str: &[u8],
         complement_flag: bool,
         truncate_set1_flag: bool,
-        translating: bool,
+        translating: bool
     ) -> Result<(Vec<u8>, Vec<u8>), BadSequence> {
         let is_char_star = |s: &&Self| -> bool { matches!(s, Self::CharStar(_)) };
 
@@ -332,7 +332,7 @@ impl Sequence {
             // NOTE: This must be the last one
             map(Self::parse_backslash_or_char_with_warning, |s| {
                 Ok(Self::Char(s))
-            }),
+            })
         )))
         .parse(input)
         .map(|(_, r)| r)
@@ -355,8 +355,8 @@ impl Sequence {
                 // Fallback for if the three digit octal escape is greater than \377 (0xFF), and therefore can't be
                 // parsed as as a byte
                 // See test `test_multibyte_octal_sequence`
-                Self::parse_octal_two_digits,
-            )),
+                Self::parse_octal_two_digits
+            ))
         )
         .parse(input)
     }
@@ -367,7 +367,7 @@ impl Sequence {
             |out: &[u8]| {
                 let str_to_parse = std::str::from_utf8(out).unwrap();
                 u8::from_str_radix(str_to_parse, 8).ok()
-            },
+            }
         )
         .parse(input)
     }
@@ -388,7 +388,7 @@ impl Sequence {
                     );
                 }
                 result
-            },
+            }
         )
         .parse(input)
     }
@@ -396,7 +396,7 @@ impl Sequence {
     fn parse_octal_two_digits(input: &[u8]) -> IResult<&[u8], u8> {
         map_opt(
             recognize(many_m_n(2, 2, one_of("01234567"))),
-            |out: &[u8]| u8::from_str_radix(std::str::from_utf8(out).unwrap(), 8).ok(),
+            |out: &[u8]| u8::from_str_radix(std::str::from_utf8(out).unwrap(), 8).ok()
         )
         .parse(input)
     }
@@ -427,7 +427,7 @@ impl Sequence {
         alt((
             Self::parse_octal_with_warning,
             Self::parse_backslash,
-            Self::single_char,
+            Self::single_char
         ))
         .parse(input)
     }
@@ -440,7 +440,7 @@ impl Sequence {
         separated_pair(
             Self::parse_backslash_or_char,
             tag("-"),
-            Self::parse_backslash_or_char,
+            Self::parse_backslash_or_char
         )
         .parse(input)
         .map(|(l, (a, b))| {
@@ -473,9 +473,9 @@ impl Sequence {
                 // TODO
                 // Why are the opening and closing tags not sufficient?
                 // Backslash check is a workaround for `check_against_gnu_tr_tests_repeat_bs_9`
-                take_till(|ue| matches!(ue, b']' | b'\\')),
+                take_till(|ue| matches!(ue, b']' | b'\\'))
             ),
-            tag("]"),
+            tag("]")
         )
         .parse(input)
         .map(|(l, (c, cnt_str))| {
@@ -514,13 +514,13 @@ impl Sequence {
                         value(Self::Class(Class::Punct), tag("punct")),
                         value(Self::Class(Class::Space), tag("space")),
                         value(Self::Class(Class::Upper), tag("upper")),
-                        value(Self::Class(Class::Xdigit), tag("xdigit")),
+                        value(Self::Class(Class::Xdigit), tag("xdigit"))
                     )),
-                    Ok,
+                    Ok
                 ),
-                value(Err(BadSequence::MissingCharClassName), tag("")),
+                value(Err(BadSequence::MissingCharClassName), tag(""))
             )),
-            tag(":]"),
+            tag(":]")
         )
         .parse(input)
     }
@@ -531,12 +531,12 @@ impl Sequence {
             (
                 alt((
                     value(Err(()), peek(tag("=]"))),
-                    map(Self::parse_backslash_or_char, Ok),
+                    map(Self::parse_backslash_or_char, Ok)
                 )),
                 map(terminated(take_until("=]"), tag("=]")), |v: &[u8]| {
                     if v.is_empty() { Ok(()) } else { Err(v) }
-                }),
-            ),
+                })
+            )
         )
         .parse(input)
         .map(|(l, (a, b))| {
@@ -550,7 +550,7 @@ impl Sequence {
                         String::from_utf8_lossy(&[c]).into_owned(),
                         String::from_utf8_lossy(v).into_owned()
                     ))),
-                },
+                }
             )
         })
     }
@@ -630,7 +630,7 @@ impl ChunkProcessor for DeleteOperation {
                 input
                     .iter()
                     .filter(|&&b| !self.delete_table[b as usize])
-                    .copied(),
+                    .copied()
             );
         }
     }

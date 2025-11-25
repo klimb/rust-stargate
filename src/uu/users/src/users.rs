@@ -96,6 +96,6 @@ pub fn uu_app() -> Command {
             Arg::new(ARG_FILE)
                 .num_args(1)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(ValueParser::os_string()),
+                .value_parser(ValueParser::os_string())
         )
 }

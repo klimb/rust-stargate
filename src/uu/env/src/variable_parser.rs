@@ -22,7 +22,7 @@ impl<'a> VariableParser<'a, '_> {
             if c.is_ascii_digit() {
                 return Err(EnvError::EnvParsingOfVariableUnexpectedNumber(
                     self.parser.get_peek_position(),
-                    c.to_string(),
+                    c.to_string()
                 ));
             }
         }
@@ -35,7 +35,7 @@ impl<'a> VariableParser<'a, '_> {
     }
 
     fn parse_braced_variable_name(
-        &mut self,
+        &mut self
     ) -> Result<(&'a NativeIntStr, Option<&'a NativeIntStr>), EnvError> {
         let pos_start = self.parser.get_peek_position();
 
@@ -46,7 +46,7 @@ impl<'a> VariableParser<'a, '_> {
             match self.get_current_char() {
                 None => {
                     return Err(EnvError::EnvParsingOfVariableMissingClosingBrace(
-                        self.parser.get_peek_position(),
+                        self.parser.get_peek_position()
                     ));
                 }
                 Some(c) if !c.is_ascii() || c.is_ascii_alphanumeric() || c == '_' => {
@@ -59,8 +59,8 @@ impl<'a> VariableParser<'a, '_> {
                             None => {
                                 return Err(
                                     EnvError::EnvParsingOfVariableMissingClosingBraceAfterValue(
-                                        self.parser.get_peek_position(),
-                                    ),
+                                        self.parser.get_peek_position()
+                                    )
                                 );
                             }
                             Some('}') => {
@@ -84,7 +84,7 @@ impl<'a> VariableParser<'a, '_> {
                 Some(c) => {
                     return Err(EnvError::EnvParsingOfVariableExceptedBraceOrColon(
                         self.parser.get_peek_position(),
-                        c.to_string(),
+                        c.to_string()
                     ));
                 }
             }
@@ -137,14 +137,14 @@ impl<'a> VariableParser<'a, '_> {
     }
 
     pub fn parse_variable(
-        &mut self,
+        &mut self
     ) -> Result<(&'a NativeIntStr, Option<&'a NativeIntStr>), EnvError> {
         self.skip_one()?;
 
         let (name, default) = match self.get_current_char() {
             None => {
                 return Err(EnvError::EnvParsingOfMissingVariable(
-                    self.parser.get_peek_position(),
+                    self.parser.get_peek_position()
                 ));
             }
             Some('{') => {

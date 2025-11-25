@@ -37,7 +37,7 @@ fn seq_formatted(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-f", "%.3f", "1", "0.1", "10000"],
+            &["-f", "%.3f", "1", "0.1", "10000"]
         ));
     });
 }

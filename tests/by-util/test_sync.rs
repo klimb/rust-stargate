@@ -56,7 +56,7 @@ fn test_sync_data_but_not_file() {
         .stderr_contains("sync: --data needs at least one argument");
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(target_os = "linux")]
 #[cfg(feature = "chmod")]
 #[test]
 fn test_sync_no_permission_dir() {

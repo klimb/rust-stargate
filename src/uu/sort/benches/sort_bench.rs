@@ -19,7 +19,7 @@ fn sort_ascii_only(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-o", output_path, file_path.to_str().unwrap()],
+            &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -35,7 +35,7 @@ fn sort_accented_data(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-o", output_path, file_path.to_str().unwrap()],
+            &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -51,7 +51,7 @@ fn sort_mixed_data(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-o", output_path, file_path.to_str().unwrap()],
+            &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -67,7 +67,7 @@ fn sort_case_sensitive(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-o", output_path, file_path.to_str().unwrap()],
+            &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -83,7 +83,7 @@ fn sort_case_insensitive(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-f", "-o", output_path, file_path.to_str().unwrap()],
+            &["-f", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -99,7 +99,7 @@ fn sort_dictionary_order(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-d", "-o", output_path, file_path.to_str().unwrap()],
+            &["-d", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -123,7 +123,7 @@ fn sort_numeric(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-n", "-o", output_path, file_path.to_str().unwrap()],
+            &["-n", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -139,7 +139,7 @@ fn sort_reverse_locale(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-r", "-o", output_path, file_path.to_str().unwrap()],
+            &["-r", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -167,7 +167,7 @@ fn sort_key_field(bencher: Bencher, num_lines: usize) {
         // Sort by second field
         black_box(run_util_function(
             uumain,
-            &["-k", "2", "-o", output_path, file_path.to_str().unwrap()],
+            &["-k", "2", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -183,7 +183,7 @@ fn sort_unique_locale(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["-u", "-o", output_path, file_path.to_str().unwrap()],
+            &["-u", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -211,7 +211,7 @@ fn sort_long_line(bencher: Bencher, line_size: usize) {
                 file_b.to_str().unwrap(),
                 "-o",
                 output_path,
-            ],
+            ]
         ));
     });
 }

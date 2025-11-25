@@ -51,7 +51,7 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
         if args.len() == 1 && (args[0] == "--help" || args[0] == "--version") {
             uucore::clap_localization::handle_clap_result(
                 uu_app(),
-                std::iter::once(program).chain(args.into_iter()),
+                std::iter::once(program).chain(args.into_iter())
             )?;
             return Ok(());
         }
@@ -60,7 +60,7 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
         if last.as_deref() != Some(OsStr::new("]")) {
             return Err(USimpleError::new(
                 2,
-                translate!("test-error-missing-closing-bracket"),
+                translate!("test-error-missing-closing-bracket")
             ));
         }
     }

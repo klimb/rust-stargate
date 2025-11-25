@@ -91,7 +91,7 @@ fn physical_memory_bytes() -> Option<u128> {
     #[cfg(all(
         target_family = "unix",
         not(target_os = "redox"),
-        any(target_os = "linux", target_os = "android")
+        any(target_os = "linux")
     ))]
     {
         physical_memory_bytes_unix()
@@ -100,7 +100,7 @@ fn physical_memory_bytes() -> Option<u128> {
     #[cfg(any(
         not(target_family = "unix"),
         target_os = "redox",
-        not(any(target_os = "linux", target_os = "android"))
+        not(any(target_os = "linux"))
     ))]
     {
         // No portable or safe API is available here to detect total physical memory.
@@ -111,7 +111,7 @@ fn physical_memory_bytes() -> Option<u128> {
 #[cfg(all(
     target_family = "unix",
     not(target_os = "redox"),
-    any(target_os = "linux", target_os = "android")
+    any(target_os = "linux")
 ))]
 fn physical_memory_bytes_unix() -> Option<u128> {
     use nix::unistd::{SysconfVar, sysconf};

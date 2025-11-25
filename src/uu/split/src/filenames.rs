@@ -145,7 +145,7 @@ impl Suffix {
             matches.contains_id(OPT_NUMERIC_SUFFIXES),
             matches.contains_id(OPT_HEX_SUFFIXES),
             matches.get_flag(OPT_NUMERIC_SUFFIXES_SHORT),
-            matches.get_flag(OPT_HEX_SUFFIXES_SHORT),
+            matches.get_flag(OPT_HEX_SUFFIXES_SHORT)
         ) {
             (true, _, _, _) => {
                 stype = SuffixType::Decimal;
@@ -178,7 +178,7 @@ impl Suffix {
                 (
                     v.parse::<usize>()
                         .map_err(|_| SuffixError::NotParsable(v.to_owned()))?,
-                    true,
+                    true
                 )
             } else {
                 // no suffix length option was specified in command line
@@ -225,7 +225,7 @@ impl Suffix {
             .clone();
         if additional.to_string_lossy().chars().any(is_separator) {
             return Err(SuffixError::ContainsSeparator(
-                additional.to_string_lossy().to_string(),
+                additional.to_string_lossy().to_string()
             ));
         }
 
@@ -319,9 +319,9 @@ impl<'a> FilenameIterator<'a> {
                 FixedWidthNumber::new(radix, suffix.length, suffix.start).map_err(|_| {
                     USimpleError::new(
                         1,
-                        translate!("split-error-numerical-suffix-start-too-large"),
+                        translate!("split-error-numerical-suffix-start-too-large")
                     )
-                })?,
+                })?
             )
         };
         let additional_suffix = &suffix.additional;

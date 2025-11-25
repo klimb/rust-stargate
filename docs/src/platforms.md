@@ -25,7 +25,6 @@ The platforms in tier 1 and the platforms that we test in CI are listed below.
 | **macOS**        | `x86_64-apple-darwin` |
 | **Windows**      | `i686-pc-windows-msvc` <br> `x86_64-pc-windows-gnu` <br> `x86_64-pc-windows-msvc` |
 | **FreeBSD**      | `x86_64-unknown-freebsd` |
-| **Android**      | `i686-linux-android` |
 
 The platforms in tier 2 are more vague, but include:
 

@@ -190,7 +190,7 @@ mod test {
         // Two merges and a duplicate
         m(
             vec![r(1, 3), r(6, 7), r(2, 4), r(6, 7)],
-            &[r(1, 4), r(6, 7)],
+            &[r(1, 4), r(6, 7)]
         );
 
         // One giant
@@ -202,7 +202,7 @@ mod test {
                 r(130, 140),
                 r(150, 160),
             ],
-            &[r(10, 20), r(100, 200)],
+            &[r(10, 20), r(100, 200)]
         );
 
         // Last one joins the previous two
@@ -210,7 +210,7 @@ mod test {
 
         m(
             vec![r(10, 20), r(30, 40), r(50, 60), r(20, 30)],
-            &[r(10, 40), r(50, 60)],
+            &[r(10, 40), r(50, 60)]
         );
 
         // Don't merge adjacent ranges

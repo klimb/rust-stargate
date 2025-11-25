@@ -168,28 +168,28 @@ pub fn uu_app() -> Command {
             Arg::new(options::PAGES)
                 .long(options::PAGES)
                 .help(translate!("pr-help-pages"))
-                .value_name("FIRST_PAGE[:LAST_PAGE]"),
+                .value_name("FIRST_PAGE[:LAST_PAGE]")
         )
         .arg(
             Arg::new(options::HEADER)
                 .short('h')
                 .long(options::HEADER)
                 .help(translate!("pr-help-header"))
-                .value_name("STRING"),
+                .value_name("STRING")
         )
         .arg(
             Arg::new(options::DATE_FORMAT)
                 .short('D')
                 .long(options::DATE_FORMAT)
                 .value_name("FORMAT")
-                .help(translate!("pr-help-date-format")),
+                .help(translate!("pr-help-date-format"))
         )
         .arg(
             Arg::new(options::DOUBLE_SPACE)
                 .short('d')
                 .long(options::DOUBLE_SPACE)
                 .help(translate!("pr-help-double-space"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NUMBER_LINES)
@@ -197,35 +197,35 @@ pub fn uu_app() -> Command {
                 .long(options::NUMBER_LINES)
                 .help(translate!("pr-help-number-lines"))
                 .allow_hyphen_values(true)
-                .value_name("[char][width]"),
+                .value_name("[char][width]")
         )
         .arg(
             Arg::new(options::FIRST_LINE_NUMBER)
                 .short('N')
                 .long(options::FIRST_LINE_NUMBER)
                 .help(translate!("pr-help-first-line-number"))
-                .value_name("NUMBER"),
+                .value_name("NUMBER")
         )
         .arg(
             Arg::new(options::OMIT_HEADER)
                 .short('t')
                 .long(options::OMIT_HEADER)
                 .help(translate!("pr-help-omit-header"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PAGE_LENGTH)
                 .short('l')
                 .long(options::PAGE_LENGTH)
                 .help(translate!("pr-help-page-length"))
-                .value_name("PAGE_LENGTH"),
+                .value_name("PAGE_LENGTH")
         )
         .arg(
             Arg::new(options::NO_FILE_WARNINGS)
                 .short('r')
                 .long(options::NO_FILE_WARNINGS)
                 .help(translate!("pr-help-no-file-warnings"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FORM_FEED)
@@ -233,79 +233,79 @@ pub fn uu_app() -> Command {
                 .short_alias('f')
                 .long(options::FORM_FEED)
                 .help(translate!("pr-help-form-feed"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COLUMN_WIDTH)
                 .short('w')
                 .long(options::COLUMN_WIDTH)
                 .help(translate!("pr-help-column-width"))
-                .value_name("width"),
+                .value_name("width")
         )
         .arg(
             Arg::new(options::PAGE_WIDTH)
                 .short('W')
                 .long(options::PAGE_WIDTH)
                 .help(translate!("pr-help-page-width"))
-                .value_name("width"),
+                .value_name("width")
         )
         .arg(
             Arg::new(options::ACROSS)
                 .short('a')
                 .long(options::ACROSS)
                 .help(translate!("pr-help-across"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::COLUMN)
                 .long(options::COLUMN)
                 .help(translate!("pr-help-column"))
-                .value_name("column"),
+                .value_name("column")
         )
         .arg(
             Arg::new(options::COLUMN_CHAR_SEPARATOR)
                 .short('s')
                 .long(options::COLUMN_CHAR_SEPARATOR)
                 .help(translate!("pr-help-column-char-separator"))
-                .value_name("char"),
+                .value_name("char")
         )
         .arg(
             Arg::new(options::COLUMN_STRING_SEPARATOR)
                 .short('S')
                 .long(options::COLUMN_STRING_SEPARATOR)
                 .help(translate!("pr-help-column-string-separator"))
-                .value_name("string"),
+                .value_name("string")
         )
         .arg(
             Arg::new(options::MERGE)
                 .short('m')
                 .long(options::MERGE)
                 .help(translate!("pr-help-merge"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::INDENT)
                 .short('o')
                 .long(options::INDENT)
                 .help(translate!("pr-help-indent"))
-                .value_name("margin"),
+                .value_name("margin")
         )
         .arg(
             Arg::new(options::JOIN_LINES)
                 .short('J')
                 .help(translate!("pr-help-join-lines"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("pr-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::FILES)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -432,7 +432,7 @@ fn get_date_format(matches: &ArgMatches) -> String {
 fn build_options(
     matches: &ArgMatches,
     paths: &[&str],
-    free_args: &str,
+    free_args: &str
 ) -> Result<OutputOptions, PrError> {
     let form_feed_used = matches.get_flag(options::FORM_FEED);
 
@@ -464,7 +464,7 @@ fn build_options(
             } else {
                 paths[0]
             },
-            |s| s.as_str(),
+            |s| s.as_str()
         )
         .to_string();
 
@@ -528,7 +528,7 @@ fn build_options(
                 &mut v,
                 time,
                 &get_date_format(matches),
-                FormatSystemTimeFallback::Integer,
+                FormatSystemTimeFallback::Integer
             )
             .ok()
             .map(|()| String::from_utf8_lossy(&v).to_string())
@@ -701,7 +701,7 @@ fn build_options(
                 .map(|_k| DEFAULT_COLUMN_SEPARATOR.to_string())
                 .unwrap_or_default()
         },
-        |i| i.column_separator.clone(),
+        |i| i.column_separator.clone()
     );
 
     let columns_to_print =
@@ -713,7 +713,7 @@ fn build_options(
         Some(
             column_mode_options
                 .as_ref()
-                .map_or(DEFAULT_COLUMN_WIDTH, |i| i.width),
+                .map_or(DEFAULT_COLUMN_WIDTH, |i| i.width)
         )
     } else {
         page_width
@@ -773,7 +773,7 @@ fn open(path: &str) -> Result<Box<dyn Read>, PrError> {
                 }
                 _ => Err(PrError::UnknownFiletype { file: path_string }),
             }
-        },
+        }
     )
 }
 
@@ -814,7 +814,7 @@ fn split_lines_if_form_feed(file_content: Result<String, std::io::Error>) -> Vec
             });
 
             lines
-        },
+        }
     )
 }
 
@@ -835,7 +835,7 @@ fn pr(path: &str, options: &OutputOptions) -> Result<i32, PrError> {
 fn read_stream_and_create_pages(
     options: &OutputOptions,
     lines: Lines<BufReader<Box<dyn Read>>>,
-    file_id: usize,
+    file_id: usize
 ) -> Box<dyn Iterator<Item = (usize, Vec<FileLine>)>> {
     let start_page = options.start_page;
     let start_line_number = get_start_line_number(options);
@@ -891,7 +891,7 @@ fn read_stream_and_create_pages(
 
                 current_page >= start_page
                     && last_page.is_none_or(|last_page| current_page <= last_page)
-            }),
+            })
     )
 }
 
@@ -958,7 +958,7 @@ fn mpr(paths: &[&str], options: &OutputOptions) -> Result<i32, PrError> {
 fn print_page(
     lines: &[FileLine],
     options: &OutputOptions,
-    page: usize,
+    page: usize
 ) -> Result<usize, std::io::Error> {
     let line_separator = options.line_separator.as_bytes();
     let page_separator = options.page_separator_char.as_bytes();
@@ -991,7 +991,7 @@ fn print_page(
 fn write_columns(
     lines: &[FileLine],
     options: &OutputOptions,
-    out: &mut impl Write,
+    out: &mut impl Write
 ) -> Result<usize, std::io::Error> {
     let line_separator = options.content_line_separator.as_bytes();
 
@@ -1059,7 +1059,7 @@ fn write_columns(
             if cell.is_none() && options.merge_files_print.is_some() {
                 out.write_all(
                     get_line_for_printing(options, &blank_line, columns, i, line_width, indexes)
-                        .as_bytes(),
+                        .as_bytes()
                 )?;
             } else if cell.is_none() {
                 not_found_break = true;
@@ -1069,7 +1069,7 @@ fn write_columns(
 
                 out.write_all(
                     get_line_for_printing(options, file_line, columns, i, line_width, indexes)
-                        .as_bytes(),
+                        .as_bytes()
                 )?;
                 lines_printed += 1;
             }
@@ -1089,7 +1089,7 @@ fn get_line_for_printing(
     columns: usize,
     index: usize,
     line_width: Option<usize>,
-    indexes: usize,
+    indexes: usize
 ) -> String {
     let blank_line = String::new();
     let formatted_line_number = get_formatted_line_number(options, file_line.line_number, index);
@@ -1124,7 +1124,7 @@ fn get_line_for_printing(
 
                 complete_line.chars().take(min_width).collect()
             })
-            .unwrap_or(complete_line),
+            .unwrap_or(complete_line)
     )
 }
 

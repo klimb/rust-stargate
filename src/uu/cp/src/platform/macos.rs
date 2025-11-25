@@ -26,7 +26,7 @@ pub(crate) fn copy_on_write(
     reflink_mode: ReflinkMode,
     sparse_mode: SparseMode,
     context: &str,
-    source_is_stream: bool,
+    source_is_stream: bool
 ) -> CopyResult<CopyDebug> {
     if sparse_mode != SparseMode::Auto {
         return Err(translate!("cp-error-sparse-not-supported")
@@ -59,7 +59,7 @@ pub(crate) fn copy_on_write(
             let pfn: extern "C" fn(
                 src: *const libc::c_char,
                 dst: *const libc::c_char,
-                flags: u32,
+                flags: u32
             ) -> libc::c_int = std::mem::transmute(raw_pfn);
             error = pfn(src.as_ptr(), dst.as_ptr(), 0);
             if std::io::Error::last_os_error().kind() == std::io::ErrorKind::AlreadyExists

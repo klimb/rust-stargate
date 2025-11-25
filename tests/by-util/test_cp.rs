@@ -28,16 +28,16 @@ use std::path::Path;
 #[cfg(target_os = "linux")]
 use std::path::PathBuf;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use filetime::FileTime;
 #[cfg(target_os = "linux")]
 use std::ffi::OsString;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 use std::fs as std_fs;
 use std::thread::sleep;
 use std::time::Duration;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[cfg(feature = "truncate")]
 use uutests::util::PATH;
 
@@ -54,16 +54,16 @@ static TEST_COPY_FROM_FOLDER: &str = "hello_dir_with_file/";
 static TEST_COPY_FROM_FOLDER_FILE: &str = "hello_dir_with_file/hello_world.txt";
 static TEST_COPY_TO_FOLDER_NEW: &str = "hello_dir_new";
 static TEST_COPY_TO_FOLDER_NEW_FILE: &str = "hello_dir_new/hello_world.txt";
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 static TEST_MOUNT_COPY_FROM_FOLDER: &str = "dir_with_mount";
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 static TEST_MOUNT_MOUNTPOINT: &str = "mount";
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 static TEST_MOUNT_OTHER_FILESYSTEM_FILE: &str = "mount/DO_NOT_copy_me.txt";
 static TEST_NONEXISTENT_FILE: &str = "nonexistent_file.txt";
 #[cfg(all(
     unix,
-    not(any(target_os = "android", target_os = "macos", target_os = "openbsd"))
+    not(any(target_os = "macos", target_os = "openbsd"))
 ))]
 use uutests::util::compare_xattrs;
 
@@ -682,7 +682,7 @@ fn test_cp_arg_interactive() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "android", target_os = "freebsd", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
 fn test_cp_arg_interactive_update_overwrite_newer() {
     // -u -i won't show the prompt to validate the override or not
     // Therefore, the error code will be 0
@@ -701,7 +701,7 @@ fn test_cp_arg_interactive_update_overwrite_newer() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "android", target_os = "freebsd")))]
+#[cfg(not(any(target_os = "freebsd")))]
 fn test_cp_arg_interactive_update_overwrite_older() {
     // -u -i *WILL* show the prompt to validate the override.
     // Therefore, the error code depends on the prompt response.
@@ -728,7 +728,6 @@ fn test_cp_arg_interactive_update_overwrite_older() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_cp_arg_interactive_verbose() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("a");
@@ -741,7 +740,6 @@ fn test_cp_arg_interactive_verbose() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_cp_arg_interactive_verbose_clobber() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("a");
@@ -1706,7 +1704,7 @@ fn test_cp_preserve_all() {
 }
 
 #[test]
-#[cfg(all(unix, not(any(target_os = "android", target_os = "openbsd"))))]
+#[cfg(all(unix, not(any(target_os = "openbsd"))))]
 fn test_cp_preserve_xattr() {
     let (at, mut ucmd) = at_and_ucmd!();
     let src_file = "a";
@@ -1849,7 +1847,6 @@ fn test_cp_preserve_links_case_3() {
 
 #[test]
 // android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_4() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1879,7 +1876,6 @@ fn test_cp_preserve_links_case_4() {
 
 #[test]
 // android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_5() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1908,7 +1904,6 @@ fn test_cp_preserve_links_case_5() {
 
 #[test]
 // android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_6() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1933,7 +1928,6 @@ fn test_cp_preserve_links_case_6() {
 
 #[test]
 // android platform will causing stderr = cp: Permission denied (os error 13)
-#[cfg(not(target_os = "android"))]
 fn test_cp_preserve_links_case_7() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -2211,7 +2205,7 @@ fn test_cp_archive() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_cp_archive_recursive() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -2275,7 +2269,7 @@ fn test_cp_archive_recursive() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_preserve_timestamps() {
     let (at, mut ucmd) = at_and_ucmd!();
     let ts = time::OffsetDateTime::now_utc();
@@ -2308,7 +2302,7 @@ fn test_cp_preserve_timestamps() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_no_preserve_timestamps() {
     let (at, mut ucmd) = at_and_ucmd!();
     let ts = time::OffsetDateTime::now_utc();
@@ -2353,7 +2347,7 @@ fn test_cp_no_preserve_timestamps() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_target_file_dev_null() {
     let (at, mut ucmd) = at_and_ucmd!();
     let file1 = "/dev/null";
@@ -2366,7 +2360,7 @@ fn test_cp_target_file_dev_null() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 fn test_cp_one_file_system() {
     use uutests::util::AtPath;
     use walkdir::WalkDir;
@@ -2424,7 +2418,7 @@ fn test_cp_one_file_system() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn test_cp_reflink_always() {
     let (at, mut ucmd) = at_and_ucmd!();
     let result = ucmd
@@ -2442,7 +2436,7 @@ fn test_cp_reflink_always() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn test_cp_reflink_auto() {
     let (at, mut ucmd) = at_and_ucmd!();
     ucmd.arg("--reflink=auto")
@@ -2455,7 +2449,7 @@ fn test_cp_reflink_auto() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn test_cp_reflink_none() {
     let (at, mut ucmd) = at_and_ucmd!();
     let result = ucmd
@@ -2473,7 +2467,7 @@ fn test_cp_reflink_none() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn test_cp_reflink_never() {
     for argument in ["--reflink=never", "--reflink=neve", "--reflink=n"] {
         let (at, mut ucmd) = at_and_ucmd!();
@@ -2488,7 +2482,7 @@ fn test_cp_reflink_never() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn test_cp_reflink_bad() {
     let (_, mut ucmd) = at_and_ucmd!();
     let _result = ucmd
@@ -2511,7 +2505,7 @@ fn test_cp_conflicting_update() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_reflink_insufficient_permission() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -2554,7 +2548,7 @@ fn test_closes_file_descriptors() {
         .succeeds();
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_never_empty() {
     const BUFFER_SIZE: usize = 4096 * 4;
@@ -2574,7 +2568,7 @@ fn test_cp_sparse_never_empty() {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_always_empty() {
     const BUFFER_SIZE: usize = 4096 * 4;
@@ -2594,7 +2588,7 @@ fn test_cp_sparse_always_empty() {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_always_non_empty() {
     const BUFFER_SIZE: usize = 4096 * 16 + 3;
@@ -2620,7 +2614,7 @@ fn test_cp_sparse_always_non_empty() {
     assert_eq!(at.metadata("dst_file_sparse").blocks(), touched_block_count);
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_invalid_option() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -2631,7 +2625,7 @@ fn test_cp_sparse_invalid_option() {
         .fails();
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_always_reflink_always() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -2647,7 +2641,7 @@ fn test_cp_sparse_always_reflink_always() {
     .fails();
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[test]
 fn test_cp_sparse_never_reflink_always() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -2663,7 +2657,7 @@ fn test_cp_sparse_never_reflink_always() {
     .fails();
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 #[cfg(feature = "truncate")]
 #[test]
 fn test_cp_reflink_always_override() {
@@ -3042,7 +3036,6 @@ fn test_cp_archive_on_nonexistent_file() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_cp_link_backup() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("file2");
@@ -3229,7 +3222,6 @@ fn test_cp_overriding_arguments() {
         ("--force", "--remove-destination"),
         ("--interactive", "--no-clobber"),
         ("--link", "--symbolic-link"),
-        #[cfg(not(target_os = "android"))]
         ("--symbolic-link", "--link"),
         ("--dereference", "--no-dereference"),
         ("--no-dereference", "--dereference"),
@@ -3291,7 +3283,7 @@ fn test_copy_same_symlink_no_dereference_dangling() {
 }
 
 // TODO: enable for Android, when #3477 solved
-#[cfg(not(any(windows, target_os = "android", target_os = "openbsd")))]
+#[cfg(not(any(windows, target_os = "openbsd")))]
 #[test]
 fn test_cp_parents_2_dirs() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -3401,7 +3393,6 @@ fn test_cp_mode_symlink() {
 }
 
 // Android doesn't allow creating hard links
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_cp_mode_hardlink() {
     for from in ["file", "slink", "slink2"] {
@@ -3419,7 +3410,6 @@ fn test_cp_mode_hardlink() {
 }
 
 // Android doesn't allow creating hard links
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_cp_mode_hardlink_no_dereference() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -3431,7 +3421,7 @@ fn test_cp_mode_hardlink_no_dereference() {
     assert_eq!(at.read_symlink("z"), "slink");
 }
 
-#[cfg(not(any(windows, target_os = "android")))]
+#[cfg(not(any(windows)))]
 #[test]
 fn test_remove_destination_with_destination_being_a_hardlink_to_source() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -3697,7 +3687,7 @@ fn test_reflink_never_sparse_always() {
 
 /// Test for preserving attributes of a hard link in a directory.
 #[test]
-#[cfg(not(any(target_os = "android", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "openbsd")))]
 fn test_preserve_hardlink_attributes_in_directory() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -3726,7 +3716,7 @@ fn test_preserve_hardlink_attributes_in_directory() {
 }
 
 #[test]
-#[cfg(not(any(windows, target_os = "android")))]
+#[cfg(not(any(windows)))]
 fn test_hard_link_file() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("src");
@@ -4126,7 +4116,7 @@ fn test_cp_no_such() {
 
 #[cfg(all(
     unix,
-    not(any(target_os = "android", target_os = "macos", target_os = "openbsd"))
+    not(any(target_os = "macos", target_os = "openbsd"))
 ))]
 #[test]
 fn test_acl_preserve() {
@@ -4168,7 +4158,7 @@ fn test_acl_preserve() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4193,7 +4183,7 @@ fn test_cp_debug_reflink_never_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_empty_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4218,7 +4208,7 @@ fn test_cp_debug_reflink_never_empty_file_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_default_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4244,7 +4234,7 @@ fn test_cp_debug_default_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_default_less_than_512_bytes() {
     let ts = TestScenario::new(util_name!());
 
@@ -4267,7 +4257,7 @@ fn test_cp_debug_default_less_than_512_bytes() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_default_without_hole() {
     let ts = TestScenario::new(util_name!());
 
@@ -4287,7 +4277,7 @@ fn test_cp_debug_default_without_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_default_empty_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4313,7 +4303,7 @@ fn test_cp_debug_default_empty_file_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_sparse_always_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4339,7 +4329,7 @@ fn test_cp_debug_reflink_never_sparse_always_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_sparse_always_without_hole() {
     let ts = TestScenario::new(util_name!());
     let empty_bytes = [0_u8; 10000];
@@ -4364,7 +4354,7 @@ fn test_cp_debug_reflink_never_sparse_always_without_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_sparse_always_empty_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4409,7 +4399,7 @@ fn test_cp_default_virtual_file() {
     assert!(dest_size > 0);
 }
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_auto_sparse_always_non_sparse_file_with_long_zero_sequence() {
     let ts = TestScenario::new(util_name!());
 
@@ -4451,7 +4441,7 @@ fn test_cp_debug_sparse_never_empty_sparse_file() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_sparse_always_non_sparse_file_with_long_zero_sequence() {
     let ts = TestScenario::new(util_name!());
 
@@ -4502,7 +4492,7 @@ fn test_cp_debug_sparse_always_sparse_virtual_file() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_less_than_512_bytes() {
     let ts = TestScenario::new(util_name!());
 
@@ -4524,7 +4514,7 @@ fn test_cp_debug_reflink_never_less_than_512_bytes() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_sparse_never_empty_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4546,7 +4536,7 @@ fn test_cp_debug_reflink_never_sparse_never_empty_file_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4569,7 +4559,7 @@ fn test_cp_debug_reflink_never_file_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_sparse_never_less_than_512_bytes() {
     let ts = TestScenario::new(util_name!());
 
@@ -4592,7 +4582,7 @@ fn test_cp_debug_sparse_never_less_than_512_bytes() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_sparse_never_without_hole() {
     let ts = TestScenario::new(util_name!());
 
@@ -4614,7 +4604,7 @@ fn test_cp_debug_sparse_never_without_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_sparse_never_empty_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4636,7 +4626,7 @@ fn test_cp_debug_sparse_never_empty_file_with_hole() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_sparse_never_file_with_hole() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -4707,7 +4697,7 @@ fn test_cp_debug_default_zero_sized_virtual_file() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_cp_debug_reflink_never_without_hole() {
     let ts = TestScenario::new(util_name!());
     let filler_bytes = [0_u8; 1000];
@@ -4778,7 +4768,7 @@ fn test_cp_no_dereference_attributes_only_with_symlink() {
         "file2 content does not match expected"
     );
 }
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 #[cfg(test)]
 /// contains the test for cp when the source and destination points to the same file
 mod same_file {
@@ -5752,7 +5742,7 @@ mod same_file {
 
 // the following tests are for how the cp should behave when the source is a symlink
 // and link option is given
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 mod link_deref {
 
     use std::os::unix::fs::MetadataExt;
@@ -5968,7 +5958,7 @@ fn test_preserve_attrs_overriding_1() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_preserve_attrs_overriding_2() {
     const FILE1: &str = "file1";
     const FILE2: &str = "file2";
@@ -6192,7 +6182,7 @@ fn test_cp_no_file() {
 #[test]
 #[cfg(all(
     unix,
-    not(any(target_os = "android", target_os = "macos", target_os = "openbsd"))
+    not(any(target_os = "macos", target_os = "openbsd"))
 ))]
 fn test_cp_preserve_xattr_readonly_source() {
     use std::process::Command;

@@ -133,7 +133,7 @@ fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
 fn create_bundle(
     locale: &LanguageIdentifier,
     locales_dir: &Path,
-    util_name: &str,
+    util_name: &str
 ) -> Result<FluentBundle<FluentResource>, LocalizationError> {
     let mut bundle = FluentBundle::new(vec![locale.clone()]);
 
@@ -169,7 +169,7 @@ fn create_bundle(
 fn init_localization(
     locale: &LanguageIdentifier,
     locales_dir: &Path,
-    util_name: &str,
+    util_name: &str
 ) -> Result<(), LocalizationError> {
     let default_locale = LanguageIdentifier::from_str(DEFAULT_LOCALE)
         .expect("Default locale should always be valid");
@@ -219,19 +219,19 @@ fn parse_fluent_resource(content: &str) -> Result<FluentResource, LocalizationEr
             } else {
                 LocalizationError::LocalesDirNotFound("Parse error without details".to_string())
             }
-        },
+        }
     )
 }
 
 /// Create a bundle from embedded English locale files with common uucore strings
 fn create_english_bundle_from_embedded(
     locale: &LanguageIdentifier,
-    util_name: &str,
+    util_name: &str
 ) -> Result<FluentBundle<FluentResource>, LocalizationError> {
     // Only support English from embedded files
     if *locale != "en-US" {
         return Err(LocalizationError::LocalesDirNotFound(
-            "Embedded locales only support en-US".to_string(),
+            "Embedded locales only support en-US".to_string()
         ));
     }
 
@@ -561,7 +561,7 @@ mod tests {
     #[cfg(test)]
     fn create_test_bundle(
         locale: &LanguageIdentifier,
-        test_locales_dir: &Path,
+        test_locales_dir: &Path
     ) -> Result<FluentBundle<FluentResource>, LocalizationError> {
         let mut bundle = FluentBundle::new(vec![locale.clone()]);
         bundle.set_use_isolating(false);
@@ -584,7 +584,7 @@ mod tests {
     #[cfg(test)]
     fn init_test_localization(
         locale: &LanguageIdentifier,
-        test_locales_dir: &Path,
+        test_locales_dir: &Path
     ) -> Result<(), LocalizationError> {
         let default_locale = LanguageIdentifier::from_str(DEFAULT_LOCALE)
             .expect("Default locale should always be valid");
@@ -734,7 +734,7 @@ invalid-syntax = This is { $missing
         let temp_dir = create_test_locales_dir();
         let en_bundle = create_test_bundle(
             &LanguageIdentifier::from_str("en-US").unwrap(),
-            temp_dir.path(),
+            temp_dir.path()
         )
         .unwrap();
 
@@ -749,7 +749,7 @@ invalid-syntax = This is { $missing
         let temp_dir = create_test_locales_dir();
         let en_bundle = create_test_bundle(
             &LanguageIdentifier::from_str("en-US").unwrap(),
-            temp_dir.path(),
+            temp_dir.path()
         )
         .unwrap();
 
@@ -766,12 +766,12 @@ invalid-syntax = This is { $missing
         let temp_dir = create_test_locales_dir();
         let fr_bundle = create_test_bundle(
             &LanguageIdentifier::from_str("fr-FR").unwrap(),
-            temp_dir.path(),
+            temp_dir.path()
         )
         .unwrap();
         let en_bundle = create_test_bundle(
             &LanguageIdentifier::from_str("en-US").unwrap(),
-            temp_dir.path(),
+            temp_dir.path()
         )
         .unwrap();
 
@@ -791,7 +791,7 @@ invalid-syntax = This is { $missing
         let temp_dir = create_test_locales_dir();
         let en_bundle = create_test_bundle(
             &LanguageIdentifier::from_str("en-US").unwrap(),
-            temp_dir.path(),
+            temp_dir.path()
         )
         .unwrap();
 

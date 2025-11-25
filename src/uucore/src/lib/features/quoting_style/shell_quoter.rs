@@ -38,7 +38,7 @@ impl<'a> NonEscapedShellQuoter<'a> {
         show_control: bool,
         always_quote: bool,
         dirname: bool,
-        size_hint: usize,
+        size_hint: usize
     ) -> Self {
         let (quotes, must_quote) = initial_quoting(reference, dirname, always_quote);
         Self {
@@ -175,7 +175,7 @@ impl Quoter for EscapedShellQuoter<'_> {
                 .iter()
                 .flat_map(|b| EscapedChar::new_octal(*b))
                 .collect::<String>()
-                .as_bytes(),
+                .as_bytes()
         );
     }
 
@@ -220,7 +220,7 @@ fn finalize_shell_quoter(
     buffer: Vec<u8>,
     reference: &[u8],
     must_quote: bool,
-    quotes: Quotes,
+    quotes: Quotes
 ) -> Vec<u8> {
     let contains_quote_chars = must_quote || bytes_start_with(reference, SPECIAL_SHELL_CHARS_START);
 

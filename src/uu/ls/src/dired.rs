@@ -74,7 +74,7 @@ fn get_offset_from_previous_line(dired_positions: &[BytePosition]) -> usize {
 pub fn calculate_dired(
     dired_positions: &[BytePosition],
     output_display_len: usize,
-    dfn_len: usize,
+    dfn_len: usize
 ) -> (usize, usize) {
     let offset_from_previous_line = get_offset_from_previous_line(dired_positions);
 
@@ -107,7 +107,7 @@ pub fn calculate_subdired(dired: &mut DiredOutput, path_len: usize) {
 pub fn print_dired_output(
     config: &Config,
     dired: &DiredOutput,
-    out: &mut BufWriter<Stdout>,
+    out: &mut BufWriter<Stdout>
 ) -> UResult<()> {
     out.flush()?;
     if !dired.dired_positions.is_empty() {
@@ -153,7 +153,7 @@ pub fn add_dir_name(dired: &mut DiredOutput, dir_len: usize) {
 pub fn calculate_and_update_positions(
     dired: &mut DiredOutput,
     output_display_len: usize,
-    dfn_len: usize,
+    dfn_len: usize
 ) {
     let offset = dired
         .dired_positions
@@ -225,7 +225,7 @@ mod tests {
         calculate_subdired(&mut dired, path_len);
         assert_eq!(
             dired.subdired_positions,
-            vec![BytePosition { start: 14, end: 19 }],
+            vec![BytePosition { start: 14, end: 19 }]
         );
     }
 

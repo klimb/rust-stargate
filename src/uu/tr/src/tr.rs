@@ -65,14 +65,14 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if !(delete_flag || squeeze_flag) && sets_len == 1 {
         return Err(UUsageError::new(
             1,
-            translate!("tr-error-missing-operand-translating", "set" => sets[0].quote()),
+            translate!("tr-error-missing-operand-translating", "set" => sets[0].quote())
         ));
     }
 
     if delete_flag && squeeze_flag && sets_len == 1 {
         return Err(UUsageError::new(
             1,
-            translate!("tr-error-missing-operand-deleting-squeezing", "set" => sets[0].quote()),
+            translate!("tr-error-missing-operand-deleting-squeezing", "set" => sets[0].quote())
         ));
     }
 
@@ -118,7 +118,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         complement_flag,
         // if we are not translating then we don't truncate set1
         truncate_set1_flag && translating,
-        translating,
+        translating
     )?;
 
     if is_stdin_directory(&stdin) {
@@ -172,7 +172,7 @@ pub fn uu_app() -> Command {
                 .long(options::COMPLEMENT)
                 .help(translate!("tr-help-complement"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::COMPLEMENT),
+                .overrides_with(options::COMPLEMENT)
         )
         .arg(
             Arg::new(options::DELETE)
@@ -180,7 +180,7 @@ pub fn uu_app() -> Command {
                 .long(options::DELETE)
                 .help(translate!("tr-help-delete"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::DELETE),
+                .overrides_with(options::DELETE)
         )
         .arg(
             Arg::new(options::SQUEEZE)
@@ -188,7 +188,7 @@ pub fn uu_app() -> Command {
                 .short('s')
                 .help(translate!("tr-help-squeeze"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::SQUEEZE),
+                .overrides_with(options::SQUEEZE)
         )
         .arg(
             Arg::new(options::TRUNCATE_SET1)
@@ -196,11 +196,11 @@ pub fn uu_app() -> Command {
                 .short('t')
                 .help(translate!("tr-help-truncate-set1"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::TRUNCATE_SET1),
+                .overrides_with(options::TRUNCATE_SET1)
         )
         .arg(
             Arg::new(options::SETS)
                 .num_args(1..)
-                .value_parser(value_parser!(OsString)),
+                .value_parser(value_parser!(OsString))
         )
 }

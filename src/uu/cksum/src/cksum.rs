@@ -106,7 +106,7 @@ fn print_legacy_checksum(
     options: &Options,
     filename: &OsStr,
     sum: &str,
-    size: usize,
+    size: usize
 ) -> UResult<()> {
     debug_assert!(LEGACY_ALGORITHMS.contains(&options.algo_name));
 
@@ -115,7 +115,7 @@ fn print_legacy_checksum(
         ALGORITHM_OPTIONS_SYSV => print!(
             "{} {}",
             sum.parse::<u16>().unwrap(),
-            size.div_ceil(options.output_bits),
+            size.div_ceil(options.output_bits)
         ),
         ALGORITHM_OPTIONS_BSD => {
             // The BSD checksum output is 5 digit integer
@@ -123,7 +123,7 @@ fn print_legacy_checksum(
             print!(
                 "{:0bsd_width$} {:bsd_width$}",
                 sum.parse::<u16>().unwrap(),
-                size.div_ceil(options.output_bits),
+                size.div_ceil(options.output_bits)
             );
         }
         ALGORITHM_OPTIONS_CRC | ALGORITHM_OPTIONS_CRC32B => {
@@ -165,7 +165,7 @@ fn print_tagged_checksum(options: &Options, filename: &OsStr, sum: &String) -> U
 fn print_untagged_checksum(
     filename: &OsStr,
     sum: &String,
-    reading_mode: ReadingMode,
+    reading_mode: ReadingMode
 ) -> UResult<()> {
     // Print checksum and reading mode flag
     print!("{sum} {}", reading_mode.as_char());
@@ -258,7 +258,7 @@ where
                 print_untagged_checksum(
                     filename,
                     &encode_sum(sum_hex, digest_format),
-                    reading_mode,
+                    reading_mode
                 )?;
             }
         }
@@ -294,7 +294,7 @@ mod options {
 /// output format, the second one indicates if we should use the binary flag in
 /// the untagged case.
 fn handle_tag_text_binary_flags<S: AsRef<OsStr>>(
-    args: impl Iterator<Item = S>,
+    args: impl Iterator<Item = S>
 ) -> UResult<(bool, bool)> {
     let mut tag = true;
     let mut binary = false;
@@ -335,7 +335,7 @@ fn figure_out_output_format(
     tag: bool,
     binary: bool,
     raw: bool,
-    base64: bool,
+    base64: bool
 ) -> OutputFormat {
     // Raw output format takes precedence over anything else.
     if raw {
@@ -369,7 +369,7 @@ fn figure_out_output_format(
 /// Sanitize the `--length` argument depending on `--algorithm` and `--length`.
 fn maybe_sanitize_length(
     algo_cli: Option<&str>,
-    input_length: Option<&str>,
+    input_length: Option<&str>
 ) -> UResult<Option<usize>> {
     match (algo_cli, input_length) {
         // No provided length is not a problem so far.
@@ -410,7 +410,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         // No files given, read from stdin.
         || Box::new(iter::once(OsStr::new("-"))) as Box<dyn Iterator<Item = &OsStr>>,
         // At least one file given, read from them.
-        |files| Box::new(files.map(OsStr::new)) as Box<dyn Iterator<Item = &OsStr>>,
+        |files| Box::new(files.map(OsStr::new)) as Box<dyn Iterator<Item = &OsStr>>
     );
 
     if check {
@@ -460,7 +460,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         tag,
         binary,
         matches.get_flag(options::RAW),
-        matches.get_flag(options::BASE64),
+        matches.get_flag(options::BASE64)
     );
 
     let opts = Options {
@@ -490,7 +490,7 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
         .arg(
             Arg::new(options::ALGORITHM)
@@ -498,47 +498,47 @@ pub fn uu_app() -> Command {
                 .short('a')
                 .help(translate!("cksum-help-algorithm"))
                 .value_name("ALGORITHM")
-                .value_parser(SUPPORTED_ALGORITHMS),
+                .value_parser(SUPPORTED_ALGORITHMS)
         )
         .arg(
             Arg::new(options::UNTAGGED)
                 .long(options::UNTAGGED)
                 .help(translate!("cksum-help-untagged"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::TAG),
+                .overrides_with(options::TAG)
         )
         .arg(
             Arg::new(options::TAG)
                 .long(options::TAG)
                 .help(translate!("cksum-help-tag"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::UNTAGGED),
+                .overrides_with(options::UNTAGGED)
         )
         .arg(
             Arg::new(options::LENGTH)
                 .long(options::LENGTH)
                 .short('l')
                 .help(translate!("cksum-help-length"))
-                .action(ArgAction::Set),
+                .action(ArgAction::Set)
         )
         .arg(
             Arg::new(options::RAW)
                 .long(options::RAW)
                 .help(translate!("cksum-help-raw"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::STRICT)
                 .long(options::STRICT)
                 .help(translate!("cksum-help-strict"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHECK)
                 .short('c')
                 .long(options::CHECK)
                 .help(translate!("cksum-help-check"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::BASE64)
@@ -547,7 +547,7 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
                 // Even though this could easily just override an earlier '--raw',
                 // GNU cksum does not permit these flags to be combined:
-                .conflicts_with(options::RAW),
+                .conflicts_with(options::RAW)
         )
         .arg(
             Arg::new(options::TEXT)
@@ -555,7 +555,7 @@ pub fn uu_app() -> Command {
                 .short('t')
                 .hide(true)
                 .overrides_with(options::BINARY)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::BINARY)
@@ -563,7 +563,7 @@ pub fn uu_app() -> Command {
                 .short('b')
                 .hide(true)
                 .overrides_with(options::TEXT)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WARN)
@@ -571,34 +571,34 @@ pub fn uu_app() -> Command {
                 .long("warn")
                 .help(translate!("cksum-help-warn"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::STATUS, options::QUIET]),
+                .overrides_with_all([options::STATUS, options::QUIET])
         )
         .arg(
             Arg::new(options::STATUS)
                 .long("status")
                 .help(translate!("cksum-help-status"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::WARN, options::QUIET]),
+                .overrides_with_all([options::WARN, options::QUIET])
         )
         .arg(
             Arg::new(options::QUIET)
                 .long(options::QUIET)
                 .help(translate!("cksum-help-quiet"))
                 .action(ArgAction::SetTrue)
-                .overrides_with_all([options::WARN, options::STATUS]),
+                .overrides_with_all([options::WARN, options::STATUS])
         )
         .arg(
             Arg::new(options::IGNORE_MISSING)
                 .long(options::IGNORE_MISSING)
                 .help(translate!("cksum-help-ignore-missing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ZERO)
                 .long(options::ZERO)
                 .short('z')
                 .help(translate!("cksum-help-zero"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .after_help(translate!("cksum-after-help"))
 }

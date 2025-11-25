@@ -254,7 +254,7 @@ fn row_column_sizes() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn line() {
     new_ucmd!()
         .args(&["line"])

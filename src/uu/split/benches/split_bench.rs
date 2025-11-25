@@ -23,7 +23,7 @@ fn split_lines(bencher: Bencher) {
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
                 uumain,
-                &["-l", "1000", file_path.to_str().unwrap(), &prefix],
+                &["-l", "1000", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
         });
@@ -44,7 +44,7 @@ fn split_bytes(bencher: Bencher) {
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
                 uumain,
-                &["-b", "100K", file_path.to_str().unwrap(), &prefix],
+                &["-b", "100K", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
         });
@@ -65,7 +65,7 @@ fn split_number_chunks(bencher: Bencher) {
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
                 uumain,
-                &["-n", "10", file_path.to_str().unwrap(), &prefix],
+                &["-n", "10", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
         });
@@ -86,7 +86,7 @@ fn split_numeric_suffix(bencher: Bencher) {
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
                 uumain,
-                &["-d", "-l", "500", file_path.to_str().unwrap(), &prefix],
+                &["-d", "-l", "500", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
         });

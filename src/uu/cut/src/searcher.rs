@@ -154,7 +154,7 @@ mod whitespace_searcher_tests {
     fn test_multispace_normal() {
         test_multispace(
             "...  ... \t...\t ... \t ...".as_bytes(),
-            &[(3, 5), (8, 10), (13, 15), (18, 21)],
+            &[(3, 5), (8, 10), (13, 15), (18, 21)]
         );
     }
 

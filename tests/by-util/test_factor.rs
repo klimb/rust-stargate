@@ -56,7 +56,6 @@ fn test_repeated_exponents() {
 
 #[test]
 #[cfg(feature = "sort")]
-#[cfg(not(target_os = "android"))]
 fn test_parallel() {
     use hex_literal::hex;
     use sha1::{Digest, Sha1};

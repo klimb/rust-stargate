@@ -120,7 +120,7 @@ pub fn uu_app() -> Command {
                 .short('L')
                 .long(OPT_LOGICAL)
                 .help(translate!("pwd-help-logical"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PHYSICAL)
@@ -128,6 +128,6 @@ pub fn uu_app() -> Command {
                 .long(OPT_PHYSICAL)
                 .overrides_with(OPT_LOGICAL)
                 .help(translate!("pwd-help-physical"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }

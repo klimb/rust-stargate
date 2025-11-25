@@ -47,66 +47,66 @@ pub fn uu_app() -> Command {
                 .short('l')
                 .requires(options::USER)
                 .help(translate!("pinky-help-long-format"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_HOME_DIR)
                 .short('b')
                 .help(translate!("pinky-help-omit-home-dir"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_PROJECT_FILE)
                 .short('h')
                 .help(translate!("pinky-help-omit-project-file"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_PLAN_FILE)
                 .short('p')
                 .help(translate!("pinky-help-omit-plan-file"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SHORT_FORMAT)
                 .short('s')
                 .help(translate!("pinky-help-short-format"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_HEADINGS)
                 .short('f')
                 .help(translate!("pinky-help-omit-headings"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_NAME)
                 .short('w')
                 .help(translate!("pinky-help-omit-name"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_NAME_HOST)
                 .short('i')
                 .help(translate!("pinky-help-omit-name-host"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OMIT_NAME_HOST_TIME)
                 .short('q')
                 .help(translate!("pinky-help-omit-name-host-time"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::USER)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::Username),
+                .value_hint(clap::ValueHint::Username)
         )
         .arg(
             Arg::new(options::LOOKUP)
                 .long(options::LOOKUP)
                 .help(translate!("pinky-help-lookup"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             // Redefine the help argument to not include the short flag
@@ -114,7 +114,7 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("pinky-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
 }
 

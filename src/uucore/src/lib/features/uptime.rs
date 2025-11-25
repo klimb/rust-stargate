@@ -277,7 +277,7 @@ pub fn get_formatted_loadavg() -> UResult<String> {
         "uptime-lib-format-loadavg",
         "avg1" => format!("{:.2}", loadavg.0),
         "avg5" => format!("{:.2}", loadavg.1),
-        "avg15" => format!("{:.2}", loadavg.2),
+        "avg15" => format!("{:.2}", loadavg.2)
     ))
 }
 

@@ -77,7 +77,7 @@ impl FilterMode {
                 Err(e) => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("tail-error-invalid-number-of-bytes", "arg" => format!("'{e}'")),
+                        translate!("tail-error-invalid-number-of-bytes", "arg" => format!("'{e}'"))
                     ));
                 }
             }
@@ -90,7 +90,7 @@ impl FilterMode {
                 Err(_) => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("tail-error-invalid-number-of-lines", "arg" => arg.quote()),
+                        translate!("tail-error-invalid-number-of-lines", "arg" => arg.quote())
                     ));
                 }
             }
@@ -192,7 +192,7 @@ impl Settings {
             follow_retry,
             matches
                 .get_one::<String>(options::FOLLOW)
-                .map(|s| s.as_str()),
+                .map(|s| s.as_str())
         ) {
             // -F and --follow if -F is specified after --follow. We don't need to care about the
             // value of --follow.
@@ -229,7 +229,7 @@ impl Settings {
             settings.sleep_sec = parse_time::from_str(source, false).map_err(|_| {
                 UUsageError::new(
                     1,
-                    translate!("tail-error-invalid-number-of-seconds", "source" => source.clone()),
+                    translate!("tail-error-invalid-number-of-seconds", "source" => source.clone())
                 )
             })?;
         }
@@ -240,7 +240,7 @@ impl Settings {
                 Err(_) => {
                     return Err(UUsageError::new(
                         1,
-                        translate!("tail-error-invalid-max-unchanged-stats", "value" => s.quote()),
+                        translate!("tail-error-invalid-max-unchanged-stats", "value" => s.quote())
                     ));
                 }
             }
@@ -255,7 +255,7 @@ impl Settings {
                         // NOTE: tail only accepts an unsigned pid
                         return Err(USimpleError::new(
                             1,
-                            translate!("tail-error-invalid-pid", "pid" => pid_str.quote()),
+                            translate!("tail-error-invalid-pid", "pid" => pid_str.quote())
                         ));
                     }
 
@@ -264,7 +264,7 @@ impl Settings {
                 Err(e) => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("tail-error-invalid-pid-with-error", "pid" => pid_str.quote(), "error" => e),
+                        translate!("tail-error-invalid-pid-with-error", "pid" => pid_str.quote(), "error" => e)
                     ));
                 }
             }
@@ -379,7 +379,7 @@ pub fn parse_obsolete(arg: &OsString, input: Option<&OsString>) -> UResult<Optio
                     parse::ParseError::InvalidEncoding => {
                         translate!("tail-error-bad-argument-encoding", "arg" => arg_str)
                     }
-                },
+                }
             ))
         }
     }
@@ -469,7 +469,7 @@ pub fn uu_app() -> Command {
                 .long(options::BYTES)
                 .allow_hyphen_values(true)
                 .overrides_with_all([options::BYTES, options::LINES])
-                .help(translate!("tail-help-bytes")),
+                .help(translate!("tail-help-bytes"))
         )
         .arg(
             Arg::new(options::FOLLOW)
@@ -480,7 +480,7 @@ pub fn uu_app() -> Command {
                 .require_equals(true)
                 .value_parser(ShortcutValueParser::new(["descriptor", "name"]))
                 .overrides_with(options::FOLLOW)
-                .help(translate!("tail-help-follow")),
+                .help(translate!("tail-help-follow"))
         )
         .arg(
             Arg::new(options::LINES)
@@ -488,14 +488,14 @@ pub fn uu_app() -> Command {
                 .long(options::LINES)
                 .allow_hyphen_values(true)
                 .overrides_with_all([options::BYTES, options::LINES])
-                .help(translate!("tail-help-lines")),
+                .help(translate!("tail-help-lines"))
         )
         .arg(
             Arg::new(options::PID)
                 .long(options::PID)
                 .value_name("PID")
                 .help(translate!("tail-help-pid"))
-                .overrides_with(options::PID),
+                .overrides_with(options::PID)
         )
         .arg(
             Arg::new(options::verbosity::QUIET)
@@ -504,20 +504,20 @@ pub fn uu_app() -> Command {
                 .visible_alias("silent")
                 .overrides_with_all([options::verbosity::QUIET, options::verbosity::VERBOSE])
                 .help(translate!("tail-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SLEEP_INT)
                 .short('s')
                 .value_name("N")
                 .long(options::SLEEP_INT)
-                .help(translate!("tail-help-sleep-interval")),
+                .help(translate!("tail-help-sleep-interval"))
         )
         .arg(
             Arg::new(options::MAX_UNCHANGED_STATS)
                 .value_name("N")
                 .long(options::MAX_UNCHANGED_STATS)
-                .help(translate!("tail-help-max-unchanged-stats")),
+                .help(translate!("tail-help-max-unchanged-stats"))
         )
         .arg(
             Arg::new(options::verbosity::VERBOSE)
@@ -525,14 +525,14 @@ pub fn uu_app() -> Command {
                 .long(options::verbosity::VERBOSE)
                 .overrides_with_all([options::verbosity::QUIET, options::verbosity::VERBOSE])
                 .help(translate!("tail-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ZERO_TERM)
                 .short('z')
                 .long(options::ZERO_TERM)
                 .help(translate!("tail-help-zero-terminated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::USE_POLLING)
@@ -540,35 +540,35 @@ pub fn uu_app() -> Command {
                 .alias("dis") // NOTE: Used by GNU's test suite
                 .long(options::USE_POLLING)
                 .help(polling_help)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::RETRY)
                 .long(options::RETRY)
                 .help(translate!("tail-help-retry"))
                 .overrides_with(options::RETRY)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FOLLOW_RETRY)
                 .short('F')
                 .help(translate!("tail-help-follow-retry"))
                 .overrides_with(options::FOLLOW_RETRY)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRESUME_INPUT_PIPE)
                 .long("presume-input-pipe")
                 .alias(options::PRESUME_INPUT_PIPE)
                 .hide(true)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ARG_FILES)
                 .action(ArgAction::Append)
                 .num_args(1..)
                 .value_parser(value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -650,7 +650,7 @@ mod tests {
     fn test_parse_settings_follow_mode_and_retry(
         #[case] args: Vec<&str>,
         #[case] expected_follow_mode: Option<FollowMode>,
-        #[case] expected_retry: bool,
+        #[case] expected_retry: bool
     ) {
         let settings =
             Settings::from(&uu_app().no_binary_name(true).get_matches_from(args)).unwrap();

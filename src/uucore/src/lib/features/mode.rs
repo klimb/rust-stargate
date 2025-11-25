@@ -36,7 +36,7 @@ pub fn parse_symbolic(
     mut fperm: u32,
     mut mode: &str,
     umask: u32,
-    considering_dir: bool,
+    considering_dir: bool
 ) -> Result<u32, String> {
     let (mask, pos) = parse_levels(mode);
     if pos == mode.len() {
@@ -145,7 +145,7 @@ pub fn parse_mode(mode: &str) -> Result<mode_t, String> {
         not(target_os = "android")
     ))]
     let fperm = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    #[cfg(any(target_os = "freebsd", target_vendor = "apple", target_os = "android"))]
+    #[cfg(any(target_os = "freebsd", target_vendor = "apple"))]
     let fperm = (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) as u32;
 
     let result = if mode.chars().any(|c| c.is_ascii_digit()) {
@@ -176,7 +176,6 @@ pub fn get_umask() -> u32 {
     #[cfg(any(
         target_os = "freebsd",
         target_vendor = "apple",
-        target_os = "android",
         target_os = "redox"
     ))]
     return mask as u32;
