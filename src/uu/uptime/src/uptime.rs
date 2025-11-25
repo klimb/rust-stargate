@@ -76,7 +76,7 @@ pub fn uu_app() -> Command {
                 .short('s')
                 .long(options::SINCE)
                 .help(translate!("uptime-help-since"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         );
     #[cfg(unix)]
     cmd.arg(
@@ -85,7 +85,7 @@ pub fn uu_app() -> Command {
             .action(ArgAction::Set)
             .num_args(0..=1)
             .value_parser(ValueParser::os_string())
-            .value_hint(ValueHint::AnyPath),
+            .value_hint(ValueHint::AnyPath)
     )
 }
 

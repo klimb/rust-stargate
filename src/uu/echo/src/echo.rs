@@ -149,7 +149,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 Options {
                     trailing_newline: false,
                     ..Options::posixly_correct_default()
-                },
+                }
             )
         } else {
             // if POSIXLY_CORRECT is set and the first argument is not the "-n" flag
@@ -198,26 +198,26 @@ pub fn uu_app() -> Command {
             Arg::new(options::NO_NEWLINE)
                 .short('n')
                 .help(translate!("echo-help-no-newline"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ENABLE_BACKSLASH_ESCAPE)
                 .short('e')
                 .help(translate!("echo-help-enable-escapes"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::DISABLE_BACKSLASH_ESCAPE),
+                .overrides_with(options::DISABLE_BACKSLASH_ESCAPE)
         )
         .arg(
             Arg::new(options::DISABLE_BACKSLASH_ESCAPE)
                 .short('E')
                 .help(translate!("echo-help-disable-escapes"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::ENABLE_BACKSLASH_ESCAPE),
+                .overrides_with(options::ENABLE_BACKSLASH_ESCAPE)
         )
         .arg(
             Arg::new(options::STRING)
                 .action(ArgAction::Append)
-                .value_parser(ValueParser::os_string()),
+                .value_parser(ValueParser::os_string())
         )
 }
 

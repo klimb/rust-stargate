@@ -53,7 +53,7 @@ pub fn uu_app() -> Command {
                 .long("domain")
                 .overrides_with_all([OPT_DOMAIN, OPT_IP_ADDRESS, OPT_FQDN, OPT_SHORT])
                 .help(translate!("hostname-help-domain"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_IP_ADDRESS)
@@ -61,7 +61,7 @@ pub fn uu_app() -> Command {
                 .long("ip-address")
                 .overrides_with_all([OPT_DOMAIN, OPT_IP_ADDRESS, OPT_FQDN, OPT_SHORT])
                 .help(translate!("hostname-help-ip-address"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_FQDN)
@@ -69,7 +69,7 @@ pub fn uu_app() -> Command {
                 .long("fqdn")
                 .overrides_with_all([OPT_DOMAIN, OPT_IP_ADDRESS, OPT_FQDN, OPT_SHORT])
                 .help(translate!("hostname-help-fqdn"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_SHORT)
@@ -77,12 +77,12 @@ pub fn uu_app() -> Command {
                 .long("short")
                 .overrides_with_all([OPT_DOMAIN, OPT_IP_ADDRESS, OPT_FQDN, OPT_SHORT])
                 .help(translate!("hostname-help-short"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_HOST)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::Hostname),
+                .value_hint(clap::ValueHint::Hostname)
         )
 }
 

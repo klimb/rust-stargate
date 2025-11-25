@@ -124,13 +124,13 @@ pub fn uu_app() -> Command {
                 .long(options::ZERO)
                 .short('z')
                 .help(translate!("dirname-zero-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DIR)
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }

@@ -208,19 +208,19 @@ mod tests {
             InputSource::Stream(Box::new(FailingMockStream::new(
                 ErrorKind::Other,
                 "Failing",
-                1,
+                1
             ))),
             InputSource::Stream(Box::new(Cursor::new(&b"abcd"[..]))),
             InputSource::Stream(Box::new(FailingMockStream::new(
                 ErrorKind::Other,
                 "Failing",
-                1,
+                1
             ))),
             InputSource::Stream(Box::new(Cursor::new(&b"ABCD"[..]))),
             InputSource::Stream(Box::new(FailingMockStream::new(
                 ErrorKind::Other,
                 "Failing",
-                1,
+                1
             ))),
         ];
         let mut v = [0; 5];

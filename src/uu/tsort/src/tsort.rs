@@ -101,7 +101,7 @@ pub fn uu_app() -> Command {
                 .default_value("-")
                 .hide(true)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -268,11 +268,11 @@ impl<'input> Graph<'input> {
         &'a self,
         node: &'input str,
         visited: &mut HashMap<&'input str, VisitedState>,
-        stack: &mut Vec<(&'input str, &'a [&'input str])>,
+        stack: &mut Vec<(&'input str, &'a [&'input str])>
     ) -> bool {
         stack.push((
             node,
-            self.nodes.get(node).map_or(&[], |n| &n.successor_names),
+            self.nodes.get(node).map_or(&[], |n| &n.successor_names)
         ));
         let state = *visited.entry(node).or_insert(VisitedState::Opened);
 
@@ -298,7 +298,7 @@ impl<'input> Graph<'input> {
                         next_node,
                         self.nodes
                             .get(next_node)
-                            .map_or(&[], |n| &n.successor_names),
+                            .map_or(&[], |n| &n.successor_names)
                     ));
                 }
                 Entry::Occupied(o) => {

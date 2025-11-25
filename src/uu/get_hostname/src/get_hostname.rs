@@ -62,7 +62,7 @@ pub fn uu_app() -> Command {
                 .short('o')
                 .long("obj")
                 .help("Output result as JSON object")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(DOMAIN_FLAG)
@@ -70,7 +70,7 @@ pub fn uu_app() -> Command {
                 .long("domain")
                 .overrides_with_all([DOMAIN_FLAG, FQDN_FLAG, SHORT_FLAG])
                 .help(translate!("get_hostname-help-domain"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(FQDN_FLAG)
@@ -78,7 +78,7 @@ pub fn uu_app() -> Command {
                 .long("fqdn")
                 .overrides_with_all([DOMAIN_FLAG, FQDN_FLAG, SHORT_FLAG])
                 .help(translate!("get_hostname-help-fqdn"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(SHORT_FLAG)
@@ -86,7 +86,7 @@ pub fn uu_app() -> Command {
                 .long("short")
                 .overrides_with_all([DOMAIN_FLAG, FQDN_FLAG, SHORT_FLAG])
                 .help(translate!("get_hostname-help-short"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }
 

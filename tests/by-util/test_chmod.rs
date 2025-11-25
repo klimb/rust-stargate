@@ -232,7 +232,7 @@ fn test_chmod_ugoa() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "android"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 #[allow(clippy::cast_lossless)]
 fn test_chmod_umask_expected() {
     // Get the actual system umask using libc
@@ -251,11 +251,11 @@ fn test_chmod_umask_expected() {
 }
 
 fn get_expected_symlink_permissions() -> u32 {
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         0o120_777
     }
-    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    #[cfg(not(any(target_os = "linux")))]
     {
         0o120_755
     }
@@ -599,7 +599,6 @@ fn test_invalid_arg() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_mode_after_dash_dash() {
     let (at, ucmd) = at_and_ucmd!();
     run_single_test(
@@ -726,7 +725,6 @@ fn test_gnu_invalid_mode() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_gnu_options() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;

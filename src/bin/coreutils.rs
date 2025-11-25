@@ -117,7 +117,7 @@ fn main() {
                                 let code = uumain(
                                     vec![util_os, OsString::from("--help")]
                                         .into_iter()
-                                        .chain(args),
+                                        .chain(args)
                                 );
                                 io::stdout().flush().expect("could not flush stdout");
                                 process::exit(code);

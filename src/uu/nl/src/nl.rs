@@ -200,7 +200,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 "{}\n{}",
                 translate!("nl-error-invalid-arguments"),
                 parse_errors.join("\n")
-            ),
+            )
         ));
     }
 
@@ -250,21 +250,21 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("nl-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::BODY_NUMBERING)
                 .short('b')
                 .long(options::BODY_NUMBERING)
                 .help(translate!("nl-help-body-numbering"))
-                .value_name("STYLE"),
+                .value_name("STYLE")
         )
         .arg(
             Arg::new(options::SECTION_DELIMITER)
@@ -272,21 +272,21 @@ pub fn uu_app() -> Command {
                 .long(options::SECTION_DELIMITER)
                 .help(translate!("nl-help-section-delimiter"))
                 .value_parser(clap::value_parser!(OsString))
-                .value_name("CC"),
+                .value_name("CC")
         )
         .arg(
             Arg::new(options::FOOTER_NUMBERING)
                 .short('f')
                 .long(options::FOOTER_NUMBERING)
                 .help(translate!("nl-help-footer-numbering"))
-                .value_name("STYLE"),
+                .value_name("STYLE")
         )
         .arg(
             Arg::new(options::HEADER_NUMBERING)
                 .short('h')
                 .long(options::HEADER_NUMBERING)
                 .help(translate!("nl-help-header-numbering"))
-                .value_name("STYLE"),
+                .value_name("STYLE")
         )
         .arg(
             Arg::new(options::LINE_INCREMENT)
@@ -294,7 +294,7 @@ pub fn uu_app() -> Command {
                 .long(options::LINE_INCREMENT)
                 .help(translate!("nl-help-line-increment"))
                 .value_name("NUMBER")
-                .value_parser(clap::value_parser!(i64)),
+                .value_parser(clap::value_parser!(i64))
         )
         .arg(
             Arg::new(options::JOIN_BLANK_LINES)
@@ -302,7 +302,7 @@ pub fn uu_app() -> Command {
                 .long(options::JOIN_BLANK_LINES)
                 .help(translate!("nl-help-join-blank-lines"))
                 .value_name("NUMBER")
-                .value_parser(clap::value_parser!(u64)),
+                .value_parser(clap::value_parser!(u64))
         )
         .arg(
             Arg::new(options::NUMBER_FORMAT)
@@ -310,14 +310,14 @@ pub fn uu_app() -> Command {
                 .long(options::NUMBER_FORMAT)
                 .help(translate!("nl-help-number-format"))
                 .value_name("FORMAT")
-                .value_parser(["ln", "rn", "rz"]),
+                .value_parser(["ln", "rn", "rz"])
         )
         .arg(
             Arg::new(options::NO_RENUMBER)
                 .short('p')
                 .long(options::NO_RENUMBER)
                 .help(translate!("nl-help-no-renumber"))
-                .action(ArgAction::SetFalse),
+                .action(ArgAction::SetFalse)
         )
         .arg(
             Arg::new(options::NUMBER_SEPARATOR)
@@ -325,7 +325,7 @@ pub fn uu_app() -> Command {
                 .long(options::NUMBER_SEPARATOR)
                 .help(translate!("nl-help-number-separator"))
                 .value_parser(clap::value_parser!(OsString))
-                .value_name("STRING"),
+                .value_name("STRING")
         )
         .arg(
             Arg::new(options::STARTING_LINE_NUMBER)
@@ -333,7 +333,7 @@ pub fn uu_app() -> Command {
                 .long(options::STARTING_LINE_NUMBER)
                 .help(translate!("nl-help-starting-line-number"))
                 .value_name("NUMBER")
-                .value_parser(clap::value_parser!(i64)),
+                .value_parser(clap::value_parser!(i64))
         )
         .arg(
             Arg::new(options::NUMBER_WIDTH)
@@ -341,7 +341,7 @@ pub fn uu_app() -> Command {
                 .long(options::NUMBER_WIDTH)
                 .help(translate!("nl-help-number-width"))
                 .value_name("NUMBER")
-                .value_parser(clap::value_parser!(usize)),
+                .value_parser(clap::value_parser!(usize))
         )
 }
 
@@ -406,7 +406,7 @@ fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings
                 let Some(line_number) = stats.line_number else {
                     return Err(USimpleError::new(
                         1,
-                        translate!("nl-error-line-number-overflow"),
+                        translate!("nl-error-line-number-overflow")
                     ));
                 };
                 writeln!(
@@ -416,7 +416,7 @@ fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings
                         .number_format
                         .format(line_number, settings.number_width),
                     settings.number_separator.to_string_lossy(),
-                    String::from_utf8_lossy(&line),
+                    String::from_utf8_lossy(&line)
                 )
                 .map_err_context(|| translate!("nl-error-could-not-write"))?;
                 // update line number for the potential next line

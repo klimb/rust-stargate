@@ -222,7 +222,7 @@ fn test_reference() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn test_reference_multi_no_equal() {
     new_ucmd!()
         .arg("-v")
@@ -236,7 +236,7 @@ fn test_reference_multi_no_equal() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn test_reference_last() {
     new_ucmd!()
         .arg("-v")
@@ -278,7 +278,7 @@ fn test_big_p() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_big_h() {
     if getegid() != 0 {
         assert!(
@@ -474,11 +474,10 @@ fn test_from_option() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "android", target_os = "macos")))]
+#[cfg(not(any(target_os = "macos")))]
 fn test_from_with_invalid_group() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("test_file");
-    #[cfg(not(target_os = "android"))]
     let err_msg = "chgrp: invalid user: 'nonexistent_group'\n";
     #[cfg(target_os = "android")]
     let err_msg = "chgrp: invalid user: 'staff'\n";

@@ -22,14 +22,14 @@ fn test_invalid_option() {
 #[cfg(unix)]
 const NORMAL_FORMAT_STR: &str =
     "%a %A %b %B %d %D %f %F %g %G %h %i %m %n %o %s %u %U %x %X %y %Y %z %Z"; // avoid "%w %W" (birth/creation) due to `stat` limitations and linux kernel & rust version capability variations
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 const DEV_FORMAT_STR: &str =
     "%a %A %b %B %d %D %f %F %g %G %h %i %m %n %o %s (%t/%T) %u %U %w %W %x %X %y %Y %z %Z";
 #[cfg(target_os = "linux")]
 const FS_FORMAT_STR: &str = "%b %c %i %l %n %s %S %t %T"; // avoid "%a %d %f" which can cause test failure due to race conditions
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_terse_fs_format() {
     let args = ["-f", "-t", "/proc"];
     let ts = TestScenario::new(util_name!());
@@ -166,7 +166,7 @@ fn test_symlinks() {
     assert!(tested, "No symlink found to test in this environment");
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[test]
 fn test_char() {
     // TODO: "(%t) (%x) (%w)" deviate from GNU stat for `character special file` on macOS
@@ -175,13 +175,13 @@ fn test_char() {
     // >"(f) (2021-05-20 23:08:03.455598000 +0200) (-)\n"
     let args = [
         "-c",
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         DEV_FORMAT_STR,
         #[cfg(target_os = "linux")]
         "/dev/pts/ptmx",
         #[cfg(target_vendor = "apple")]
         "%a %A %b %B %d %D %f %F %g %G %h %i %m %n %o %s (/%T) %u %U %W %X %y %Y %z %Z",
-        #[cfg(any(target_os = "android", target_vendor = "apple"))]
+        #[cfg(any(target_vendor = "apple"))]
         "/dev/ptmx",
     ];
     let ts = TestScenario::new(util_name!());
@@ -251,19 +251,19 @@ fn test_timestamp_format() {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_vendor = "apple"))]
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[test]
 fn test_date() {
     // Just test the date for the time 0.3 change
     let args = [
         "-c",
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         "%z",
         #[cfg(target_os = "linux")]
         "/bin/sh",
         #[cfg(target_vendor = "apple")]
         "%z",
-        #[cfg(any(target_os = "android", target_vendor = "apple"))]
+        #[cfg(any(target_vendor = "apple"))]
         "/bin/sh",
     ];
     let ts = TestScenario::new(util_name!());
@@ -272,13 +272,13 @@ fn test_date() {
     // Just test the date for the time 0.3 change
     let args = [
         "-c",
-        #[cfg(any(target_os = "linux", target_os = "android"))]
+        #[cfg(any(target_os = "linux"))]
         "%z",
         #[cfg(target_os = "linux")]
         "/dev/ptmx",
         #[cfg(target_vendor = "apple")]
         "%z",
-        #[cfg(any(target_os = "android", target_vendor = "apple"))]
+        #[cfg(any(target_vendor = "apple"))]
         "/dev/ptmx",
     ];
     let ts = TestScenario::new(util_name!());
@@ -359,7 +359,7 @@ fn test_stdin_pipe_fifo1() {
 
 // TODO(#7583): Re-enable on Mac OS X (and maybe Android)
 #[test]
-#[cfg(all(unix, not(any(target_os = "android", target_os = "macos"))))]
+#[cfg(all(unix, not(any(target_os = "macos"))))]
 fn test_stdin_pipe_fifo2() {
     // $ stat -
     // File: -
@@ -374,7 +374,7 @@ fn test_stdin_pipe_fifo2() {
 }
 
 #[test]
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "unused")))]
 fn test_stdin_with_fs_option() {
     // $ stat -f -
     new_ucmd!()

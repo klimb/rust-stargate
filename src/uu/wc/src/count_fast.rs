@@ -213,7 +213,7 @@ pub(crate) fn count_bytes_chars_and_lines_fast<
     const COUNT_CHARS: bool,
     const COUNT_LINES: bool,
 >(
-    handle: &mut R,
+    handle: &mut R
 ) -> (WordCount, Option<io::Error>) {
     let mut total = WordCount::default();
     let buf: &mut [u8] = &mut AlignedBuffer::default().data;

@@ -104,7 +104,7 @@ fn extract_negative_modes(mut args: impl uucore::Args) -> (Option<String>, Vec<O
             .iter()
             .map(|s| s.to_str().unwrap())
             .collect::<Vec<&str>>()
-            .join(","),
+            .join(",")
     )
     .filter(|s| !s.is_empty());
     (parsed_cmode, clean_args)
@@ -152,7 +152,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if files.is_empty() {
         return Err(UUsageError::new(
             1,
-            translate!("chmod-error-missing-operand"),
+            translate!("chmod-error-missing-operand")
         ));
     }
 
@@ -189,14 +189,14 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("chmod-help-print-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::CHANGES)
                 .long(options::CHANGES)
                 .short('c')
                 .help(translate!("chmod-help-changes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::QUIET)
@@ -204,40 +204,40 @@ pub fn uu_app() -> Command {
                 .visible_alias("silent")
                 .short('f')
                 .help(translate!("chmod-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::VERBOSE)
                 .long(options::VERBOSE)
                 .short('v')
                 .help(translate!("chmod-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_PRESERVE_ROOT)
                 .long(options::NO_PRESERVE_ROOT)
                 .help(translate!("chmod-help-no-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRESERVE_ROOT)
                 .long(options::PRESERVE_ROOT)
                 .help(translate!("chmod-help-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::RECURSIVE)
                 .long(options::RECURSIVE)
                 .short('R')
                 .help(translate!("chmod-help-recursive"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REFERENCE)
                 .long("reference")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
-                .help(translate!("chmod-help-reference")),
+                .help(translate!("chmod-help-reference"))
         )
         .arg(
             Arg::new(options::MODE).required_unless_present(options::REFERENCE),
@@ -250,7 +250,7 @@ pub fn uu_app() -> Command {
                 .required_unless_present(options::MODE)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())
@@ -342,7 +342,7 @@ impl Chmoder {
     fn handle_symlink_during_traversal(
         &self,
         path: &Path,
-        is_command_line_arg: bool,
+        is_command_line_arg: bool
     ) -> UResult<()> {
         let should_follow_symlink = match self.traverse_symlinks {
             TraverseSymlinks::All => true,
@@ -475,7 +475,7 @@ impl Chmoder {
                     // Handle permission denied errors with proper file path context
                     if err.kind() == std::io::ErrorKind::PermissionDenied {
                         r = r.and(Err(ChmodError::PermissionDenied(
-                            file_path.to_string_lossy().to_string(),
+                            file_path.to_string_lossy().to_string()
                         )
                         .into()));
                     } else {
@@ -536,7 +536,7 @@ impl Chmoder {
         &self,
         path: &Path,
         dir_fd: &DirFd,
-        entry_name: &std::ffi::OsStr,
+        entry_name: &std::ffi::OsStr
     ) -> UResult<()> {
         // During recursion, determine behavior based on traversal mode
         match self.traverse_symlinks {
@@ -569,7 +569,7 @@ impl Chmoder {
         file_path: &Path,
         dir_fd: &DirFd,
         entry_name: &std::ffi::OsStr,
-        current_mode: u32,
+        current_mode: u32
     ) -> UResult<()> {
         // Calculate the new mode using the helper method
         let (new_mode, _) = self.calculate_new_mode(current_mode, file_path.is_dir())?;
@@ -585,7 +585,7 @@ impl Chmoder {
                 );
             }
             return Err(
-                ChmodError::PermissionDenied(file_path.to_string_lossy().to_string()).into(),
+                ChmodError::PermissionDenied(file_path.to_string_lossy().to_string()).into()
             );
         }
 
@@ -659,7 +659,7 @@ impl Chmoder {
                     return Err(ChmodError::NewPermissions(
                         file.to_string_lossy().to_string(),
                         display_permissions_unix(new_mode as mode_t, false),
-                        display_permissions_unix(naively_expected_new_mode as mode_t, false),
+                        display_permissions_unix(naively_expected_new_mode as mode_t, false)
                     )
                     .into());
                 }

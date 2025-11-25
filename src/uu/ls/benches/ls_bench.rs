@@ -25,7 +25,7 @@ fn bench_ls_with_args(bencher: Bencher, temp_dir: &TempDir, args: &[&str]) {
 #[divan::bench(args = [(6, 4, 15)])]
 fn ls_recursive_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);
@@ -36,7 +36,7 @@ fn ls_recursive_balanced_tree(
 #[divan::bench(args = [(6, 4, 15)])]
 fn ls_recursive_long_all_balanced_tree(
     bencher: Bencher,
-    (depth, dirs_per_level, files_per_dir): (usize, usize, usize),
+    (depth, dirs_per_level, files_per_dir): (usize, usize, usize)
 ) {
     let temp_dir = TempDir::new().unwrap();
     fs_tree::create_balanced_tree(temp_dir.path(), depth, dirs_per_level, files_per_dir);

@@ -468,7 +468,7 @@ fn test_ls_devices() {
             .stdout_matches(&Regex::new("[^ ] 3, 2 [^ ]").unwrap());
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux"))]
     {
         scene
             .ucmd()
@@ -481,7 +481,6 @@ fn test_ls_devices() {
     // Tests display alignment against a file (stdout is a link to a tty)
     #[cfg(unix)]
     {
-        #[cfg(not(target_os = "android"))]
         let stdout = "/dev/stdout";
         #[cfg(target_os = "android")]
         let stdout = "/proc/self/fd/1";

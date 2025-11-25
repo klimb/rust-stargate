@@ -87,7 +87,7 @@ fn ensure_signal_handler_installed(state: Arc<Mutex<HandlerRegistration>>) -> UR
         HANDLER_INSTALLED.store(false, Ordering::Release);
         return Err(USimpleError::new(
             2,
-            translate!("sort-failed-to-set-up-signal-handler", "error" => e),
+            translate!("sort-failed-to-set-up-signal-handler", "error" => e)
         ));
     }
 
@@ -113,7 +113,7 @@ impl TmpDirWrapper {
                 .tempdir_in(&self.parent_path)
                 .map_err(|_| SortError::TmpFileCreationFailed {
                     path: self.parent_path.clone(),
-                })?,
+                })?
         );
 
         let path = self.temp_dir.as_ref().unwrap().path().to_owned();
@@ -138,7 +138,7 @@ impl TmpDirWrapper {
         let path = self.temp_dir.as_ref().unwrap().path().join(file_name);
         Ok((
             File::create(&path).map_err(|error| SortError::OpenTmpFileFailed { error })?,
-            path,
+            path
         ))
     }
 

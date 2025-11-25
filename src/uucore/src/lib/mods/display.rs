@@ -95,7 +95,7 @@ pub trait OsWrite: io::Write {
                 // so let's follow that.
                 None => Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    "OS string cannot be converted to bytes",
+                    "OS string cannot be converted to bytes"
                 )),
             }
         }

@@ -12,7 +12,7 @@
 //! ```
 //! use uucore::entries::{self, Locate};
 //!
-//! let root_group = if cfg!(any(target_os = "linux", target_os = "android")) {
+//! let root_group = if cfg!(any(target_os = "linux")) {
 //!     "root"
 //! } else {
 //!     "wheel"
@@ -53,7 +53,7 @@ unsafe extern "C" {
         name: *const c_char,
         gid: gid_t,
         groups: *mut gid_t,
-        ngroups: *mut c_int,
+        ngroups: *mut c_int
     ) -> c_int;
 }
 
@@ -181,11 +181,10 @@ impl Passwd {
             uid: raw.pw_uid,
             gid: raw.pw_gid,
             #[cfg(not(all(
-                target_os = "android",
                 any(target_arch = "x86", target_arch = "arm")
             )))]
             user_info: cstr2string(raw.pw_gecos),
-            #[cfg(all(target_os = "android", any(target_arch = "x86", target_arch = "arm")))]
+            #[cfg(all(any(target_arch = "x86", target_arch = "arm")))]
             user_info: None,
             user_shell: cstr2string(raw.pw_shell),
             user_dir: cstr2string(raw.pw_dir),
@@ -225,7 +224,7 @@ impl Passwd {
                     name.as_ptr(),
                     self.gid,
                     groups.as_mut_ptr(),
-                    &raw mut ngroups,
+                    &raw mut ngroups
                 )
             } == -1
             {
@@ -299,7 +298,7 @@ macro_rules! f {
                         // The same applies for the two cases below.
                         Err(IOError::new(
                             ErrorKind::NotFound,
-                            format!("No such id: {k}"),
+                            format!("No such id: {k}")
                         ))
                     }
                 }
@@ -326,7 +325,7 @@ macro_rules! f {
                         } else {
                             Err(IOError::new(
                                 ErrorKind::NotFound,
-                                format!("No such id: {id}"),
+                                format!("No such id: {id}")
                             ))
                         }
                     } else {

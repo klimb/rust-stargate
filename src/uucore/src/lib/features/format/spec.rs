@@ -346,7 +346,7 @@ impl Spec {
     pub fn write(
         &self,
         mut writer: impl Write,
-        args: &mut FormatArguments,
+        args: &mut FormatArguments
     ) -> Result<(), FormatError> {
         match self {
             Self::Char {
@@ -359,7 +359,7 @@ impl Spec {
                     writer,
                     &[args.next_char(position)],
                     width,
-                    *align_left || neg_width,
+                    *align_left || neg_width
                 )
             }
             Self::String {
@@ -405,7 +405,7 @@ impl Spec {
             Self::QuotedString { position } => {
                 let s = locale_aware_escape_name(
                     args.next_string(position),
-                    QuotingStyle::SHELL_ESCAPE,
+                    QuotingStyle::SHELL_ESCAPE
                 );
                 let bytes = os_str_as_bytes(&s)?;
                 writer.write_all(bytes).map_err(FormatError::IoError)
@@ -482,7 +482,7 @@ impl Spec {
 
                 if precision.is_some_and(|p| p as u64 > i32::MAX as u64) {
                     return Err(FormatError::InvalidPrecision(
-                        precision.unwrap().to_string(),
+                        precision.unwrap().to_string()
                     ));
                 }
 
@@ -510,7 +510,7 @@ impl Spec {
 /// Returns the non-negative width and whether the value should be left-aligned.
 fn resolve_asterisk_width(
     option: Option<CanAsterisk<usize>>,
-    args: &mut FormatArguments,
+    args: &mut FormatArguments
 ) -> Option<(usize, bool)> {
     match option {
         None => None,
@@ -530,7 +530,7 @@ fn resolve_asterisk_width(
 /// be a non-negative number.
 fn resolve_asterisk_precision(
     option: Option<CanAsterisk<usize>>,
-    args: &mut FormatArguments,
+    args: &mut FormatArguments
 ) -> Option<usize> {
     match option {
         None => None,
@@ -547,7 +547,7 @@ fn write_padded(
     mut writer: impl Write,
     text: &[u8],
     width: usize,
-    left: bool,
+    left: bool
 ) -> Result<(), FormatError> {
     let padlen = width.saturating_sub(text.len());
 
@@ -640,14 +640,14 @@ mod tests {
                 Some((42, false)),
                 resolve_asterisk_width(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::SignedInt(42)]),
+                    &mut FormatArguments::new(&[FormatArgument::SignedInt(42)])
                 )
             );
             assert_eq!(
                 Some((42, false)),
                 resolve_asterisk_width(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::Unparsed("42".into())]),
+                    &mut FormatArguments::new(&[FormatArgument::Unparsed("42".into())])
                 )
             );
 
@@ -655,14 +655,14 @@ mod tests {
                 Some((42, true)),
                 resolve_asterisk_width(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::SignedInt(-42)]),
+                    &mut FormatArguments::new(&[FormatArgument::SignedInt(-42)])
                 )
             );
             assert_eq!(
                 Some((42, true)),
                 resolve_asterisk_width(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::Unparsed("-42".into())]),
+                    &mut FormatArguments::new(&[FormatArgument::Unparsed("-42".into())])
                 )
             );
 
@@ -676,7 +676,7 @@ mod tests {
                         FormatArgument::Unparsed("1".into()),
                         FormatArgument::Unparsed("2".into()),
                         FormatArgument::Unparsed("3".into())
-                    ]),
+                    ])
                 )
             );
         }
@@ -711,14 +711,14 @@ mod tests {
                 Some(42),
                 resolve_asterisk_precision(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::SignedInt(42)]),
+                    &mut FormatArguments::new(&[FormatArgument::SignedInt(42)])
                 )
             );
             assert_eq!(
                 Some(42),
                 resolve_asterisk_precision(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::Unparsed("42".into())]),
+                    &mut FormatArguments::new(&[FormatArgument::Unparsed("42".into())])
                 )
             );
 
@@ -726,14 +726,14 @@ mod tests {
                 Some(0),
                 resolve_asterisk_precision(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::SignedInt(-42)]),
+                    &mut FormatArguments::new(&[FormatArgument::SignedInt(-42)])
                 )
             );
             assert_eq!(
                 Some(0),
                 resolve_asterisk_precision(
                     Some(CanAsterisk::Asterisk(ArgumentLocation::NextArgument)),
-                    &mut FormatArguments::new(&[FormatArgument::Unparsed("-42".into())]),
+                    &mut FormatArguments::new(&[FormatArgument::Unparsed("-42".into())])
                 )
             );
             assert_eq!(
@@ -746,7 +746,7 @@ mod tests {
                         FormatArgument::Unparsed("1".into()),
                         FormatArgument::Unparsed("2".into()),
                         FormatArgument::Unparsed("3".into())
-                    ]),
+                    ])
                 )
             );
         }

@@ -63,11 +63,11 @@ pub fn uu_app() -> Command {
                 .short('0')
                 .long(OPT_NULL)
                 .help(translate!("printenv-help-null"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_VARIABLES)
                 .action(ArgAction::Append)
-                .num_args(1..),
+                .num_args(1..)
         )
 }

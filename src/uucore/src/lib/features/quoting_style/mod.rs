@@ -148,7 +148,7 @@ fn escape_name_inner(
     name: &[u8],
     style: QuotingStyle,
     dirname: bool,
-    encoding: UEncoding,
+    encoding: UEncoding
 ) -> Vec<u8> {
     // Early handle Literal with show_control style
     if let QuotingStyle::Literal { show_control: true } = style {
@@ -166,7 +166,7 @@ fn escape_name_inner(
             name,
             always_quote,
             dirname,
-            name.len(),
+            name.len()
         )),
         QuotingStyle::Shell {
             escape: false,
@@ -177,7 +177,7 @@ fn escape_name_inner(
             show_control,
             always_quote,
             dirname,
-            name.len(),
+            name.len()
         )),
     };
 
@@ -344,7 +344,7 @@ mod tests {
                 ("'one_two'", "shell-always-show"),
                 ("one_two", "shell-escape"),
                 ("'one_two'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -363,7 +363,7 @@ mod tests {
                 ("''", "shell-always-show"),
                 ("''", "shell-escape"),
                 ("''", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -382,7 +382,7 @@ mod tests {
                 ("'one two'", "shell-always-show"),
                 ("'one two'", "shell-escape"),
                 ("'one two'", "shell-escape-always"),
-            ],
+            ]
         );
 
         check_names_both(
@@ -398,7 +398,7 @@ mod tests {
                 ("' one'", "shell-always-show"),
                 ("' one'", "shell-escape"),
                 ("' one'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -418,7 +418,7 @@ mod tests {
                 ("'one\"two'", "shell-always-show"),
                 ("'one\"two'", "shell-escape"),
                 ("'one\"two'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // One single quote
@@ -435,7 +435,7 @@ mod tests {
                 ("\"one'two\"", "shell-always-show"),
                 ("\"one'two\"", "shell-escape"),
                 ("\"one'two\"", "shell-escape-always"),
-            ],
+            ]
         );
 
         // One single quote and one double quote
@@ -452,7 +452,7 @@ mod tests {
                 ("'one'\\''two\"three'", "shell-always-show"),
                 ("'one'\\''two\"three'", "shell-escape"),
                 ("'one'\\''two\"three'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // Consecutive quotes
@@ -469,7 +469,7 @@ mod tests {
                 ("'one'\\'''\\''two\"\"three'", "shell-always-show"),
                 ("'one'\\'''\\''two\"\"three'", "shell-escape"),
                 ("'one'\\'''\\''two\"\"three'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -489,7 +489,7 @@ mod tests {
                 ("'one\ntwo'", "shell-always-show"),
                 ("'one'$'\\n''two'", "shell-escape"),
                 ("'one'$'\\n''two'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // A control character followed by a special shell character
@@ -506,7 +506,7 @@ mod tests {
                 ("'one\n&two'", "shell-always-show"),
                 ("'one'$'\\n''&two'", "shell-escape"),
                 ("'one'$'\\n''&two'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // The first 16 ASCII control characters. NUL is also included, even though it is of
@@ -517,35 +517,35 @@ mod tests {
                 ("????????????????", "literal"),
                 (
                     "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F",
-                    "literal-show",
+                    "literal-show"
                 ),
                 (
                     "\\000\\001\\002\\003\\004\\005\\006\\a\\b\\t\\n\\v\\f\\r\\016\\017",
-                    "escape",
+                    "escape"
                 ),
                 (
                     "\"\\000\\001\\002\\003\\004\\005\\006\\a\\b\\t\\n\\v\\f\\r\\016\\017\"",
-                    "c",
+                    "c"
                 ),
                 ("'????????????????'", "shell"),
                 (
                     "'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'",
-                    "shell-show",
+                    "shell-show"
                 ),
                 ("'????????????????'", "shell-always"),
                 (
                     "'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'",
-                    "shell-always-show",
+                    "shell-always-show"
                 ),
                 (
                     "''$'\\000\\001\\002\\003\\004\\005\\006\\a\\b\\t\\n\\v\\f\\r\\016\\017'",
-                    "shell-escape",
+                    "shell-escape"
                 ),
                 (
                     "''$'\\000\\001\\002\\003\\004\\005\\006\\a\\b\\t\\n\\v\\f\\r\\016\\017'",
-                    "shell-escape-always",
+                    "shell-escape-always"
                 ),
-            ],
+            ]
         );
 
         // The last 16 ASCII control characters.
@@ -555,35 +555,35 @@ mod tests {
                 ("????????????????", "literal"),
                 (
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F",
-                    "literal-show",
+                    "literal-show"
                 ),
                 (
                     "\\020\\021\\022\\023\\024\\025\\026\\027\\030\\031\\032\\033\\034\\035\\036\\037",
-                    "escape",
+                    "escape"
                 ),
                 (
                     "\"\\020\\021\\022\\023\\024\\025\\026\\027\\030\\031\\032\\033\\034\\035\\036\\037\"",
-                    "c",
+                    "c"
                 ),
                 ("????????????????", "shell"),
                 (
                     "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F",
-                    "shell-show",
+                    "shell-show"
                 ),
                 ("'????????????????'", "shell-always"),
                 (
                     "'\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F'",
-                    "shell-always-show",
+                    "shell-always-show"
                 ),
                 (
                     "''$'\\020\\021\\022\\023\\024\\025\\026\\027\\030\\031\\032\\033\\034\\035\\036\\037'",
-                    "shell-escape",
+                    "shell-escape"
                 ),
                 (
                     "''$'\\020\\021\\022\\023\\024\\025\\026\\027\\030\\031\\032\\033\\034\\035\\036\\037'",
-                    "shell-escape-always",
+                    "shell-escape-always"
                 ),
-            ],
+            ]
         );
 
         // DEL
@@ -600,7 +600,7 @@ mod tests {
                 ("'\x7F'", "shell-always-show"),
                 ("''$'\\177'", "shell-escape"),
                 ("''$'\\177'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // The first 16 Unicode control characters.
@@ -611,23 +611,23 @@ mod tests {
                 (test_str, "literal-show"),
                 (
                     "\\302\\200\\302\\201\\302\\202\\302\\203\\302\\204\\302\\205\\302\\206\\302\\207\\302\\210\\302\\211\\302\\212\\302\\213\\302\\214\\302\\215\\302\\216\\302\\217",
-                    "escape",
+                    "escape"
                 ),
                 (
                     "\"\\302\\200\\302\\201\\302\\202\\302\\203\\302\\204\\302\\205\\302\\206\\302\\207\\302\\210\\302\\211\\302\\212\\302\\213\\302\\214\\302\\215\\302\\216\\302\\217\"",
-                    "c",
+                    "c"
                 ),
                 (test_str, "shell-show"),
                 (&format!("'{test_str}'"), "shell-always-show"),
                 (
                     "''$'\\302\\200\\302\\201\\302\\202\\302\\203\\302\\204\\302\\205\\302\\206\\302\\207\\302\\210\\302\\211\\302\\212\\302\\213\\302\\214\\302\\215\\302\\216\\302\\217'",
-                    "shell-escape",
+                    "shell-escape"
                 ),
                 (
                     "''$'\\302\\200\\302\\201\\302\\202\\302\\203\\302\\204\\302\\205\\302\\206\\302\\207\\302\\210\\302\\211\\302\\212\\302\\213\\302\\214\\302\\215\\302\\216\\302\\217'",
-                    "shell-escape-always",
+                    "shell-escape-always"
                 ),
-            ],
+            ]
         );
         // Different expected output for UTF-8 and ASCII in these cases.
         check_names_encoding(
@@ -637,7 +637,7 @@ mod tests {
                 ("????????????????", "literal"),
                 ("????????????????", "shell"),
                 ("'????????????????'", "shell-always"),
-            ],
+            ]
         );
         check_names_encoding(
             UEncoding::Ascii,
@@ -646,7 +646,7 @@ mod tests {
                 ("????????????????????????????????", "literal"),
                 ("????????????????????????????????", "shell"),
                 ("'????????????????????????????????'", "shell-always"),
-            ],
+            ]
         );
 
         // The last 16 Unicode control characters.
@@ -657,23 +657,23 @@ mod tests {
                 (test_str, "literal-show"),
                 (
                     "\\302\\220\\302\\221\\302\\222\\302\\223\\302\\224\\302\\225\\302\\226\\302\\227\\302\\230\\302\\231\\302\\232\\302\\233\\302\\234\\302\\235\\302\\236\\302\\237",
-                    "escape",
+                    "escape"
                 ),
                 (
                     "\"\\302\\220\\302\\221\\302\\222\\302\\223\\302\\224\\302\\225\\302\\226\\302\\227\\302\\230\\302\\231\\302\\232\\302\\233\\302\\234\\302\\235\\302\\236\\302\\237\"",
-                    "c",
+                    "c"
                 ),
                 (test_str, "shell-show"),
                 (&format!("'{test_str}'"), "shell-always-show"),
                 (
                     "''$'\\302\\220\\302\\221\\302\\222\\302\\223\\302\\224\\302\\225\\302\\226\\302\\227\\302\\230\\302\\231\\302\\232\\302\\233\\302\\234\\302\\235\\302\\236\\302\\237'",
-                    "shell-escape",
+                    "shell-escape"
                 ),
                 (
                     "''$'\\302\\220\\302\\221\\302\\222\\302\\223\\302\\224\\302\\225\\302\\226\\302\\227\\302\\230\\302\\231\\302\\232\\302\\233\\302\\234\\302\\235\\302\\236\\302\\237'",
-                    "shell-escape-always",
+                    "shell-escape-always"
                 ),
-            ],
+            ]
         );
         // Different expected output for UTF-8 and ASCII in these cases.
         check_names_encoding(
@@ -683,7 +683,7 @@ mod tests {
                 ("????????????????", "literal"),
                 ("????????????????", "shell"),
                 ("'????????????????'", "shell-always"),
-            ],
+            ]
         );
         check_names_encoding(
             UEncoding::Ascii,
@@ -692,7 +692,7 @@ mod tests {
                 ("????????????????????????????????", "literal"),
                 ("????????????????????????????????", "shell"),
                 ("'????????????????????????????????'", "shell-always"),
-            ],
+            ]
         );
     }
 
@@ -719,7 +719,7 @@ mod tests {
                 (b"'\xA7'", "shell-always-show"),
                 (b"''$'\\247'", "shell-escape"),
                 (b"''$'\\247'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // ...but the byte becomes valid with appropriate context
@@ -731,7 +731,7 @@ mod tests {
                 (b"\xC2\xA7", "literal-show"),
                 (b"\xC2\xA7", "shell-show"),
                 (b"'\xC2\xA7'", "shell-always-show"),
-            ],
+            ]
         );
         // Different expected output for UTF-8 and ASCII in these cases.
         check_names_encoding_raw(
@@ -745,7 +745,7 @@ mod tests {
                 (b"'\xC2\xA7'", "shell-always"),
                 (b"\xC2\xA7", "shell-escape"),
                 (b"'\xC2\xA7'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_encoding_raw(
             UEncoding::Ascii,
@@ -758,7 +758,7 @@ mod tests {
                 (b"'??'", "shell-always"),
                 (b"''$'\\302\\247'", "shell-escape"),
                 (b"''$'\\302\\247'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // mixed with valid characters
@@ -775,7 +775,7 @@ mod tests {
                 (b"'\xA7_'", "shell-always-show"),
                 (b"''$'\\247''_'", "shell-escape"),
                 (b"''$'\\247''_'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_raw_both(
             &[ascii, continuation],
@@ -790,7 +790,7 @@ mod tests {
                 (b"'_\xA7'", "shell-always-show"),
                 (b"'_'$'\\247'", "shell-escape"),
                 (b"'_'$'\\247'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_raw_both(
             &[ascii, continuation, ascii],
@@ -805,7 +805,7 @@ mod tests {
                 (b"'_\xA7_'", "shell-always-show"),
                 (b"'_'$'\\247''_'", "shell-escape"),
                 (b"'_'$'\\247''_'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_raw_both(
             &[continuation, ascii, continuation],
@@ -820,7 +820,7 @@ mod tests {
                 (b"'\xA7_\xA7'", "shell-always-show"),
                 (b"''$'\\247''_'$'\\247'", "shell-escape"),
                 (b"''$'\\247''_'$'\\247'", "shell-escape-always"),
-            ],
+            ]
         );
 
         // contiguous invalid bytes
@@ -846,35 +846,35 @@ mod tests {
                 (b"_?_??_???_????_", "literal"),
                 (
                     b"_\xC0_\xA7\xA7_\xA7\xA7\xA7_\xA7\xA7\xA7\xA7_",
-                    "literal-show",
+                    "literal-show"
                 ),
                 (
                     b"_\\300_\\247\\247_\\247\\247\\247_\\247\\247\\247\\247_",
-                    "escape",
+                    "escape"
                 ),
                 (
                     b"\"_\\300_\\247\\247_\\247\\247\\247_\\247\\247\\247\\247_\"",
-                    "c",
+                    "c"
                 ),
                 (b"_?_??_???_????_", "shell"),
                 (
                     b"_\xC0_\xA7\xA7_\xA7\xA7\xA7_\xA7\xA7\xA7\xA7_",
-                    "shell-show",
+                    "shell-show"
                 ),
                 (b"'_?_??_???_????_'", "shell-always"),
                 (
                     b"'_\xC0_\xA7\xA7_\xA7\xA7\xA7_\xA7\xA7\xA7\xA7_'",
-                    "shell-always-show",
+                    "shell-always-show"
                 ),
                 (
                     b"'_'$'\\300''_'$'\\247\\247''_'$'\\247\\247\\247''_'$'\\247\\247\\247\\247''_'",
-                    "shell-escape",
+                    "shell-escape"
                 ),
                 (
                     b"'_'$'\\300''_'$'\\247\\247''_'$'\\247\\247\\247''_'$'\\247\\247\\247\\247''_'",
-                    "shell-escape-always",
+                    "shell-escape-always"
                 ),
-            ],
+            ]
         );
 
         // invalid multi-byte sequences that start valid
@@ -891,7 +891,7 @@ mod tests {
                 (b"'\xC2_'", "shell-always-show"),
                 (b"''$'\\302''_'", "shell-escape"),
                 (b"''$'\\302''_'", "shell-escape-always"),
-            ],
+            ]
         );
 
         let input = &[first2byte, first2byte, continuation];
@@ -910,7 +910,7 @@ mod tests {
                 (b"'\xC2\xC2\xA7'", "shell-always-show"),
                 (b"''$'\\302''\xC2\xA7'", "shell-escape"),
                 (b"''$'\\302''\xC2\xA7'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_encoding_raw(
             UEncoding::Ascii,
@@ -925,7 +925,7 @@ mod tests {
                 (b"'\xC2\xC2\xA7'", "shell-always-show"),
                 (b"''$'\\302\\302\\247'", "shell-escape"),
                 (b"''$'\\302\\302\\247'", "shell-escape-always"),
-            ],
+            ]
         );
 
         check_names_raw_both(
@@ -941,7 +941,7 @@ mod tests {
                 (b"'\xE0\xA7_'", "shell-always-show"),
                 (b"''$'\\340\\247''_'", "shell-escape"),
                 (b"''$'\\340\\247''_'", "shell-escape-always"),
-            ],
+            ]
         );
         check_names_raw_both(
             &[first4byte, continuation, continuation, ascii],
@@ -956,7 +956,7 @@ mod tests {
                 (b"'\xF0\xA7\xA7_'", "shell-always-show"),
                 (b"''$'\\360\\247\\247''_'", "shell-escape"),
                 (b"''$'\\360\\247\\247''_'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -978,7 +978,7 @@ mod tests {
                 ("'one?two'", "shell-always-show"),
                 ("'one?two'", "shell-escape"),
                 ("'one?two'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -996,7 +996,7 @@ mod tests {
                 ("'one\\two'", "shell-always"),
                 ("'one\\two'", "shell-escape"),
                 ("'one\\two'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 
@@ -1005,22 +1005,22 @@ mod tests {
         check_names_both("~", &[("'~'", "shell"), ("'~'", "shell-escape")]);
         check_names_both(
             "~name",
-            &[("'~name'", "shell"), ("'~name'", "shell-escape")],
+            &[("'~name'", "shell"), ("'~name'", "shell-escape")]
         );
         check_names_both(
             "some~name",
-            &[("some~name", "shell"), ("some~name", "shell-escape")],
+            &[("some~name", "shell"), ("some~name", "shell-escape")]
         );
         check_names_both("name~", &[("name~", "shell"), ("name~", "shell-escape")]);
 
         check_names_both("#", &[("'#'", "shell"), ("'#'", "shell-escape")]);
         check_names_both(
             "#name",
-            &[("'#name'", "shell"), ("'#name'", "shell-escape")],
+            &[("'#name'", "shell"), ("'#name'", "shell-escape")]
         );
         check_names_both(
             "some#name",
-            &[("some#name", "shell"), ("some#name", "shell-escape")],
+            &[("some#name", "shell"), ("some#name", "shell-escape")]
         );
         check_names_both("name#", &[("name#", "shell"), ("name#", "shell-escape")]);
     }
@@ -1034,7 +1034,7 @@ mod tests {
                 ("'can'\\''$t'", "shell-always"),
                 ("'can'\\''$t'", "shell-escape"),
                 ("'can'\\''$t'", "shell-escape-always"),
-            ],
+            ]
         );
 
         check_names_both(
@@ -1044,7 +1044,7 @@ mod tests {
                 ("'can'\\''`t'", "shell-always"),
                 ("'can'\\''`t'", "shell-escape"),
                 ("'can'\\''`t'", "shell-escape-always"),
-            ],
+            ]
         );
 
         check_names_both(
@@ -1054,7 +1054,7 @@ mod tests {
                 ("'can'\\''\\t'", "shell-always"),
                 ("'can'\\''\\t'", "shell-escape"),
                 ("'can'\\''\\t'", "shell-escape-always"),
-            ],
+            ]
         );
     }
 

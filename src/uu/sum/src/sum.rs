@@ -75,14 +75,14 @@ fn open(name: &OsString) -> UResult<Box<dyn Read>> {
         if path.is_dir() {
             return Err(USimpleError::new(
                 2,
-                translate!("sum-error-is-directory", "name" => name.to_string_lossy().maybe_quote()),
+                translate!("sum-error-is-directory", "name" => name.to_string_lossy().maybe_quote())
             ));
         }
         // Silent the warning as we want to the error message
         if path.metadata().is_err() {
             return Err(USimpleError::new(
                 2,
-                translate!("sum-error-no-such-file-or-directory", "name" => name.to_string_lossy().maybe_quote()),
+                translate!("sum-error-no-such-file-or-directory", "name" => name.to_string_lossy().maybe_quote())
             ));
         }
         let f = File::open(path).map_err_context(String::new)?;
@@ -150,19 +150,19 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .hide(true)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::BSD_COMPATIBLE)
                 .short('r')
                 .help(translate!("sum-help-bsd-compatible"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SYSTEM_V_COMPATIBLE)
                 .short('s')
                 .long(options::SYSTEM_V_COMPATIBLE)
                 .help(translate!("sum-help-sysv-compatible"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }

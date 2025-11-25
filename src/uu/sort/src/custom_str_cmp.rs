@@ -32,7 +32,7 @@ pub fn custom_str_cmp(
     b: &[u8],
     ignore_non_printing: bool,
     ignore_non_dictionary: bool,
-    ignore_case: bool,
+    ignore_case: bool
 ) -> Ordering {
     if !(ignore_case || ignore_non_dictionary || ignore_non_printing) {
         // There are no custom settings. Fall back to the default strcmp, which is faster.

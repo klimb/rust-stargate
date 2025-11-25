@@ -56,7 +56,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         args::VerificationResult::CannotFollowStdinByName => {
             return Err(USimpleError::new(
                 1,
-                translate!("tail-error-cannot-follow-stdin-by-name", "stdin" => text::DASH.quote()),
+                translate!("tail-error-cannot-follow-stdin-by-name", "stdin" => text::DASH.quote())
             ));
         }
         // Exit early if we do not output anything. Note, that this may break a pipe
@@ -117,7 +117,7 @@ fn tail_file(
     input: &Input,
     path: &Path,
     observer: &mut Observer,
-    offset: u64,
+    offset: u64
 ) -> UResult<()> {
     if !path.exists() {
         set_exit_code(1);
@@ -174,7 +174,7 @@ fn tail_file(
                         path,
                         input.display_name.as_str(),
                         Some(Box::new(reader)),
-                        true,
+                        true
                     )?;
                 } else {
                     observer.add_bad_path(path, input.display_name.as_str(), false)?;
@@ -202,7 +202,7 @@ fn tail_stdin(
     settings: &Settings,
     header_printer: &mut HeaderPrinter,
     input: &Input,
-    observer: &mut Observer,
+    observer: &mut Observer
 ) -> UResult<()> {
     // on macOS, resolve() will always return None for stdin,
     // we need to detect if stdin is a directory ourselves.
@@ -245,7 +245,7 @@ fn tail_stdin(
                 input,
                 &path,
                 observer,
-                stdin_offset,
+                stdin_offset
             )?;
         }
         // pipe
@@ -324,7 +324,7 @@ fn tail_stdin(
 fn forwards_thru_file(
     reader: &mut impl Read,
     num_delimiters: u64,
-    delimiter: u8,
+    delimiter: u8
 ) -> io::Result<usize> {
     // If num_delimiters == 0, always return 0.
     if num_delimiters == 0 {

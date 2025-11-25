@@ -174,7 +174,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if !form.starts_with('+') {
             return Err(USimpleError::new(
                 1,
-                translate!("date-error-invalid-date", "date" => form),
+                translate!("date-error-invalid-date", "date" => form)
             ));
         }
         let form = form[1..].to_string();
@@ -217,7 +217,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         Some(Err((input, _err))) => {
             return Err(USimpleError::new(
                 1,
-                translate!("date-error-invalid-date", "date" => input),
+                translate!("date-error-invalid-date", "date" => input)
             ));
         }
         Some(Ok(date)) => Some(date),
@@ -346,7 +346,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             if path.is_dir() {
                 return Err(USimpleError::new(
                     2,
-                    translate!("date-error-expected-file-got-directory", "path" => path.to_string_lossy()),
+                    translate!("date-error-expected-file-got-directory", "path" => path.to_string_lossy())
                 ));
             }
             let file = File::open(path)
@@ -362,7 +362,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             let ts = Timestamp::try_from(mtime).map_err(|e| {
                 USimpleError::new(
                     1,
-                    translate!("date-error-cannot-set-date", "path" => path.to_string_lossy(), "error" => e),
+                    translate!("date-error-cannot-set-date", "path" => path.to_string_lossy(), "error" => e)
                 )
             })?;
             let date = ts.to_zoned(TimeZone::try_system().unwrap_or(TimeZone::UTC));
@@ -392,7 +392,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 Err(e) => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("date-error-invalid-format", "format" => format_string, "error" => e),
+                        translate!("date-error-invalid-format", "format" => format_string, "error" => e)
                     ));
                 }
             },
@@ -420,7 +420,7 @@ pub fn uu_app() -> Command {
                 .value_name("STRING")
                 .allow_hyphen_values(true)
                 .overrides_with(OPT_DATE)
-                .help(translate!("date-help-date")),
+                .help(translate!("date-help-date"))
         )
         .arg(
             Arg::new(OPT_FILE)
@@ -429,7 +429,7 @@ pub fn uu_app() -> Command {
                 .value_name("DATEFILE")
                 .value_hint(clap::ValueHint::FilePath)
                 .conflicts_with(OPT_DATE)
-                .help(translate!("date-help-file")),
+                .help(translate!("date-help-file"))
         )
         .arg(
             Arg::new(OPT_ISO_8601)
@@ -441,7 +441,7 @@ pub fn uu_app() -> Command {
                 ]))
                 .num_args(0..=1)
                 .default_missing_value(OPT_DATE)
-                .help(translate!("date-help-iso-8601")),
+                .help(translate!("date-help-iso-8601"))
         )
         .arg(
             Arg::new(OPT_RESOLUTION)
@@ -449,7 +449,7 @@ pub fn uu_app() -> Command {
                 .conflicts_with_all([OPT_DATE, OPT_FILE])
                 .overrides_with(OPT_RESOLUTION)
                 .help(translate!("date-help-resolution"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_RFC_EMAIL)
@@ -459,20 +459,20 @@ pub fn uu_app() -> Command {
                 .alias(OPT_RFC_822)
                 .overrides_with(OPT_RFC_EMAIL)
                 .help(translate!("date-help-rfc-email"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_RFC_3339)
                 .long(OPT_RFC_3339)
                 .value_name("FMT")
                 .value_parser(ShortcutValueParser::new([DATE, SECONDS, NS]))
-                .help(translate!("date-help-rfc-3339")),
+                .help(translate!("date-help-rfc-3339"))
         )
         .arg(
             Arg::new(OPT_DEBUG)
                 .long(OPT_DEBUG)
                 .help(translate!("date-help-debug"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_REFERENCE)
@@ -481,7 +481,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE")
                 .value_hint(clap::ValueHint::AnyPath)
                 .conflicts_with_all([OPT_DATE, OPT_FILE, OPT_RESOLUTION])
-                .help(translate!("date-help-reference")),
+                .help(translate!("date-help-reference"))
         )
         .arg(
             Arg::new(OPT_SET)
@@ -501,7 +501,7 @@ pub fn uu_app() -> Command {
                     {
                         translate!("date-help-set-redox")
                     }
-                }),
+                })
         )
         .arg(
             Arg::new(OPT_UNIVERSAL)
@@ -511,7 +511,7 @@ pub fn uu_app() -> Command {
                 .alias("uct")
                 .overrides_with(OPT_UNIVERSAL)
                 .help(translate!("date-help-universal"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(Arg::new(OPT_FORMAT))
 }
@@ -675,7 +675,7 @@ fn resolve_tz_abbreviation<S: AsRef<str>>(date_str: S) -> String {
 /// This change was necessary to fix issue #8754 (parsing large second values like
 /// "12345.123456789 seconds ago" which failed in 0.11 but works in 0.13).
 fn parse_date<S: AsRef<str> + Clone>(
-    s: S,
+    s: S
 ) -> Result<Zoned, (String, parse_datetime::ParseDateTimeError)> {
     // First, try to resolve any timezone abbreviations
     let resolved = resolve_tz_abbreviation(s.as_ref());
@@ -725,7 +725,7 @@ fn get_clock_resolution() -> Timestamp {
 fn set_system_datetime(_date: Zoned) -> UResult<()> {
     Err(USimpleError::new(
         1,
-        translate!("date-error-setting-date-not-supported-macos"),
+        translate!("date-error-setting-date-not-supported-macos")
     ))
 }
 
@@ -733,7 +733,7 @@ fn set_system_datetime(_date: Zoned) -> UResult<()> {
 fn set_system_datetime(_date: Zoned) -> UResult<()> {
     Err(USimpleError::new(
         1,
-        translate!("date-error-setting-date-not-supported-redox"),
+        translate!("date-error-setting-date-not-supported-redox")
     ))
 }
 

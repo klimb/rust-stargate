@@ -24,7 +24,7 @@ fn sort_ascii_c_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -44,7 +44,7 @@ fn sort_ascii_utf8_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -64,7 +64,7 @@ fn sort_mixed_c_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -84,7 +84,7 @@ fn sort_mixed_utf8_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -104,7 +104,7 @@ fn sort_german_c_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -124,7 +124,7 @@ fn sort_german_locale(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-o", &output_path, file_path.to_str().unwrap()],
+            &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
 }
@@ -145,7 +145,7 @@ fn sort_numeric(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-n", file_path.to_str().unwrap()],
+            &["-n", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -162,7 +162,7 @@ fn sort_reverse_mixed(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-r", file_path.to_str().unwrap()],
+            &["-r", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -179,7 +179,7 @@ fn sort_unique_mixed(bencher: Bencher) {
         }
         black_box(run_util_function(
             uumain,
-            &["-u", file_path.to_str().unwrap()],
+            &["-u", file_path.to_str().unwrap()]
         ));
     });
 }

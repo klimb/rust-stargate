@@ -59,7 +59,7 @@ impl BinOp {
     fn eval(
         &self,
         left: ExprResult<NumOrStr>,
-        right: ExprResult<NumOrStr>,
+        right: ExprResult<NumOrStr>
     ) -> ExprResult<NumOrStr> {
         match self {
             Self::Relation(op) => op.eval(left, right),
@@ -101,7 +101,7 @@ impl NumericOp {
     fn eval(
         &self,
         left: ExprResult<NumOrStr>,
-        right: ExprResult<NumOrStr>,
+        right: ExprResult<NumOrStr>
     ) -> ExprResult<NumOrStr> {
         let a = left?.eval_as_bigint()?;
         let b = right?.eval_as_bigint()?;
@@ -127,7 +127,7 @@ impl StringOp {
     fn eval(
         &self,
         left: ExprResult<NumOrStr>,
-        right: ExprResult<NumOrStr>,
+        right: ExprResult<NumOrStr>
     ) -> ExprResult<NumOrStr> {
         match self {
             Self::Or => {
@@ -355,7 +355,7 @@ fn build_regex(pattern_bytes: Vec<u8>) -> ExprResult<(Regex, String)> {
             Regex::with_options_and_encoding(
                 &re_string,
                 RegexOptions::REGEX_OPTION_SINGLELINE,
-                Syntax::grep(),
+                Syntax::grep()
             )
         }
         UEncoding::Ascii => {
@@ -363,7 +363,7 @@ fn build_regex(pattern_bytes: Vec<u8>) -> ExprResult<(Regex, String)> {
             Regex::with_options_and_encoding(
                 EncodedBytes::ascii(re_string.as_bytes()),
                 RegexOptions::REGEX_OPTION_SINGLELINE,
-                Syntax::grep(),
+                Syntax::grep()
             )
         }
     }
@@ -397,7 +397,7 @@ fn find_match(regex: Regex, re_string: String, left_bytes: Vec<u8>) -> ExprResul
                     0,
                     left_str.len(),
                     onig::SearchOptions::SEARCH_OPTION_NONE,
-                    Some(&mut region),
+                    Some(&mut region)
                 );
 
                 if pos.is_some() {
@@ -428,7 +428,7 @@ fn find_match(regex: Regex, re_string: String, left_bytes: Vec<u8>) -> ExprResul
                 let re_ascii = Regex::with_options_and_encoding(
                     EncodedBytes::ascii(re_string.as_bytes()),
                     RegexOptions::REGEX_OPTION_SINGLELINE,
-                    Syntax::grep(),
+                    Syntax::grep()
                 )
                 .ok();
 
@@ -438,7 +438,7 @@ fn find_match(regex: Regex, re_string: String, left_bytes: Vec<u8>) -> ExprResul
                         0,
                         left_bytes.len(),
                         onig::SearchOptions::SEARCH_OPTION_NONE,
-                        Some(&mut region),
+                        Some(&mut region)
                     );
 
                     if pos.is_some() {
@@ -486,7 +486,7 @@ fn find_match(regex: Regex, re_string: String, left_bytes: Vec<u8>) -> ExprResul
                 0,
                 left_bytes.len(),
                 onig::SearchOptions::SEARCH_OPTION_NONE,
-                Some(&mut region),
+                Some(&mut region)
             );
 
             if pos.is_some() {
@@ -534,7 +534,7 @@ fn evaluate_match_expression(left_bytes: Vec<u8>, right_bytes: Vec<u8>) -> ExprR
             0,
             left_bytes.len(),
             onig::SearchOptions::SEARCH_OPTION_NONE,
-            Some(&mut region),
+            Some(&mut region)
         );
 
         if pos.is_some() {
@@ -697,7 +697,7 @@ impl AstNode {
                 } => {
                     let (Some(right), Some(left)) = (
                         result_stack.remove(&right.id),
-                        result_stack.remove(&left.id),
+                        result_stack.remove(&left.id)
                     ) else {
                         stack.push(node);
                         stack.push(right);
@@ -716,7 +716,7 @@ impl AstNode {
                     let (Some(string), Some(pos), Some(length)) = (
                         result_stack.remove(&string.id),
                         result_stack.remove(&pos.id),
-                        result_stack.remove(&length.id),
+                        result_stack.remove(&length.id)
                     ) else {
                         stack.push(node);
                         stack.push(string);
@@ -806,7 +806,7 @@ impl<'a, S: AsRef<MaybeNonUtf8Str>> Parser<'a, S> {
             // The indexing won't panic, because we know that the input size
             // is greater than zero.
             Err(ExprError::MissingArgument(
-                String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into_owned(),
+                String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into_owned()
             ))
         }
     }
@@ -829,7 +829,7 @@ impl<'a, S: AsRef<MaybeNonUtf8Str>> Parser<'a, S> {
         let res = self.parse_expression()?;
         if let Some(arg) = self.input.get(self.index) {
             return Err(ExprError::UnexpectedArgument(
-                String::from_utf8_lossy(arg.as_ref()).into_owned(),
+                String::from_utf8_lossy(arg.as_ref()).into_owned()
             ));
         }
         Ok(res)
@@ -921,12 +921,12 @@ impl<'a, S: AsRef<MaybeNonUtf8Str>> Parser<'a, S> {
                     // at `self.index - 1`. So this indexing won't panic.
                     Ok(_) => {
                         return Err(ExprError::ExpectedClosingBraceInsteadOf(
-                            String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into(),
+                            String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into()
                         ));
                     }
                     Err(ExprError::MissingArgument(_)) => {
                         return Err(ExprError::ExpectedClosingBraceAfter(
-                            String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into(),
+                            String::from_utf8_lossy(self.input[self.index - 1].as_ref()).into()
                         ));
                     }
                     Err(e) => return Err(e),
@@ -1019,7 +1019,7 @@ mod test {
     fn substr(
         string: impl Into<AstNode>,
         pos: impl Into<AstNode>,
-        length: impl Into<AstNode>,
+        length: impl Into<AstNode>
     ) -> AstNode {
         AstNode {
             id: get_next_id(),
@@ -1058,16 +1058,16 @@ mod test {
     fn other_operators() {
         assert_eq!(
             AstNode::parse(&["match", "1", "2"]),
-            Ok(op(BinOp::String(StringOp::Match), "1", "2")),
+            Ok(op(BinOp::String(StringOp::Match), "1", "2"))
         );
         assert_eq!(
             AstNode::parse(&["index", "1", "2"]),
-            Ok(op(BinOp::String(StringOp::Index), "1", "2")),
+            Ok(op(BinOp::String(StringOp::Index), "1", "2"))
         );
         assert_eq!(AstNode::parse(&["length", "1"]), Ok(length("1")));
         assert_eq!(
             AstNode::parse(&["substr", "1", "2", "3"]),
-            Ok(substr("1", "2", "3")),
+            Ok(substr("1", "2", "3"))
         );
     }
 
@@ -1097,7 +1097,7 @@ mod test {
                 BinOp::Numeric(NumericOp::Add),
                 op(BinOp::Numeric(NumericOp::Mul), "1", "2"),
                 "3"
-            )),
+            ))
         );
     }
 

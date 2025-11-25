@@ -50,7 +50,7 @@ pub fn uu_app() -> Command {
                 .short('o')
                 .long("obj")
                 .help("Output result as JSON object")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }
 

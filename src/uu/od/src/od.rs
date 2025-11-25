@@ -87,7 +87,7 @@ fn parse_bytes_option(matches: &ArgMatches, option_name: &str) -> UResult<Option
             Ok(n) => Ok(Some(n)),
             Err(e) => Err(USimpleError::new(
                 1,
-                format_error_message(&e, s, option_name),
+                format_error_message(&e, s, option_name)
             )),
         },
     }
@@ -102,7 +102,7 @@ impl OdOptions {
                 _ => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("od-error-invalid-endian", "endian" => s),
+                        translate!("od-error-invalid-endian", "endian" => s)
                     ));
                 }
             }
@@ -137,7 +137,7 @@ impl OdOptions {
                         Err(e) => {
                             return Err(USimpleError::new(
                                 1,
-                                format_error_message(&e, s, options::WIDTH),
+                                format_error_message(&e, s, options::WIDTH)
                             ));
                         }
                     }
@@ -167,7 +167,7 @@ impl OdOptions {
             Some(n) => Some(usize::try_from(n).map_err(|_| {
                 USimpleError::new(
                     1,
-                    translate!("od-error-argument-too-large", "option" => "-S", "value" => n.to_string()),
+                    translate!("od-error-argument-too-large", "option" => "-S", "value" => n.to_string())
                 )
             })?),
         };
@@ -190,7 +190,7 @@ impl OdOptions {
                         _ => {
                             return Err(USimpleError::new(
                                 1,
-                                translate!("od-error-radix-invalid", "radix" => s),
+                                translate!("od-error-radix-invalid", "radix" => s)
                             ));
                         }
                     }
@@ -235,7 +235,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             od_options.skip_bytes,
             od_options.read_bytes,
             min_length,
-            od_options.radix,
+            od_options.radix
         )
     } else {
         let mut input_offset =
@@ -244,19 +244,19 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         let mut input = open_input_peek_reader(
             &od_options.input_strings,
             od_options.skip_bytes,
-            od_options.read_bytes,
+            od_options.read_bytes
         );
         let mut input_decoder = InputDecoder::new(
             &mut input,
             od_options.line_bytes,
             PEEK_BUFFER_SIZE,
-            od_options.byte_order,
+            od_options.byte_order
         );
 
         let output_info = OutputInfo::new(
             od_options.line_bytes,
             &od_options.formats[..],
-            od_options.output_duplicates,
+            od_options.output_duplicates
         );
 
         odfunc(&mut input_offset, &mut input_decoder, &output_info)
@@ -278,35 +278,35 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("od-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::ADDRESS_RADIX)
                 .short('A')
                 .long(options::ADDRESS_RADIX)
                 .help(translate!("od-help-address-radix"))
-                .value_name("RADIX"),
+                .value_name("RADIX")
         )
         .arg(
             Arg::new(options::SKIP_BYTES)
                 .short('j')
                 .long(options::SKIP_BYTES)
                 .help(translate!("od-help-skip-bytes"))
-                .value_name("BYTES"),
+                .value_name("BYTES")
         )
         .arg(
             Arg::new(options::READ_BYTES)
                 .short('N')
                 .long(options::READ_BYTES)
                 .help(translate!("od-help-read-bytes"))
-                .value_name("BYTES"),
+                .value_name("BYTES")
         )
         .arg(
             Arg::new(options::ENDIAN)
                 .long(options::ENDIAN)
                 .help(translate!("od-help-endian"))
                 .value_parser(ShortcutValueParser::new(["big", "little"]))
-                .value_name("big|little"),
+                .value_name("big|little")
         )
         .arg(
             Arg::new(options::STRINGS)
@@ -315,121 +315,121 @@ pub fn uu_app() -> Command {
                 .help(translate!("od-help-strings"))
                 .num_args(0..=1)
                 .default_missing_value("3")
-                .value_name("BYTES"),
+                .value_name("BYTES")
         )
         .arg(
             Arg::new("a")
                 .short('a')
                 .help(translate!("od-help-a"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("b")
                 .short('b')
                 .help(translate!("od-help-b"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("c")
                 .short('c')
                 .help(translate!("od-help-c"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("d")
                 .short('d')
                 .help(translate!("od-help-d"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("D")
                 .short('D')
                 .help(translate!("od-help-d4"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("o")
                 .short('o')
                 .help(translate!("od-help-o"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("I")
                 .short('I')
                 .help(translate!("od-help-capital-i"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("L")
                 .short('L')
                 .help(translate!("od-help-capital-l"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("i")
                 .short('i')
                 .help(translate!("od-help-i"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("l")
                 .short('l')
                 .help(translate!("od-help-l"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("x")
                 .short('x')
                 .help(translate!("od-help-x"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("h")
                 .short('h')
                 .help(translate!("od-help-h"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("O")
                 .short('O')
                 .help(translate!("od-help-capital-o"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("s")
                 .short('s')
                 .help(translate!("od-help-s"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("X")
                 .short('X')
                 .help(translate!("od-help-capital-x"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("H")
                 .short('H')
                 .help(translate!("od-help-capital-h"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("e")
                 .short('e')
                 .help(translate!("od-help-e"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("f")
                 .short('f')
                 .help(translate!("od-help-f"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("F")
                 .short('F')
                 .help(translate!("od-help-capital-f"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FORMAT)
@@ -438,14 +438,14 @@ pub fn uu_app() -> Command {
                 .help(translate!("od-help-format"))
                 .action(ArgAction::Append)
                 .num_args(1)
-                .value_name("TYPE"),
+                .value_name("TYPE")
         )
         .arg(
             Arg::new(options::OUTPUT_DUPLICATES)
                 .short('v')
                 .long(options::OUTPUT_DUPLICATES)
                 .help(translate!("od-help-output-duplicates"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WIDTH)
@@ -454,19 +454,19 @@ pub fn uu_app() -> Command {
                 .help(translate!("od-help-width"))
                 .default_missing_value("32")
                 .value_name("BYTES")
-                .num_args(..=1),
+                .num_args(..=1)
         )
         .arg(
             Arg::new(options::TRADITIONAL)
                 .long(options::TRADITIONAL)
                 .help(translate!("od-help-traditional"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILENAME)
                 .hide(true)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -474,7 +474,7 @@ pub fn uu_app() -> Command {
 fn odfunc<I>(
     input_offset: &mut InputOffset,
     input_decoder: &mut InputDecoder<I>,
-    output_info: &OutputInfo,
+    output_info: &OutputInfo
 ) -> UResult<()>
 where
     I: PeekRead + HasError,
@@ -524,7 +524,7 @@ where
                     print_bytes(
                         &input_offset.format_byte_offset(),
                         &memory_decoder,
-                        output_info,
+                        output_info
                     );
                 }
 
@@ -551,7 +551,7 @@ fn extract_strings_from_input(
     skip_bytes: u64,
     read_bytes: Option<u64>,
     min_length: usize,
-    radix: Radix,
+    radix: Radix
 ) -> UResult<()> {
     let inputs = map_input_strings(input_strings);
     let mut mf = MultifileReader::new(inputs);
@@ -689,7 +689,7 @@ fn print_bytes(prefix: &str, input_decoder: &MemoryDecoder, output_info: &Output
                 output_text,
                 "{:>missing_spacing$}  {}",
                 "",
-                format_ascii_dump(input_decoder.get_buffer(0)),
+                format_ascii_dump(input_decoder.get_buffer(0))
             )
             .unwrap();
         }
@@ -725,7 +725,7 @@ fn map_input_strings(input_strings: &[String]) -> Vec<InputSource<'_>> {
 fn open_input_peek_reader(
     input_strings: &[String],
     skip_bytes: u64,
-    read_bytes: Option<u64>,
+    read_bytes: Option<u64>
 ) -> PeekReader<BufReader<PartialReader<MultifileReader<'_>>>> {
     // should return  "impl PeekRead + Read + HasError" when supported in (stable) rust
     let inputs = map_input_strings(input_strings);

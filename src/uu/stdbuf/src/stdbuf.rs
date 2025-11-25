@@ -32,7 +32,7 @@ mod options {
     not(feature = "feat_external_libstdbuf"),
     any(
         target_os = "linux",
-        target_os = "android",
+        
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "openbsd",
@@ -80,7 +80,7 @@ enum ProgramOptionsError {
 
 #[cfg(any(
     target_os = "linux",
-    target_os = "android",
+    
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",
@@ -97,7 +97,7 @@ fn preload_strings() -> UResult<(&'static str, &'static str)> {
 
 #[cfg(not(any(
     target_os = "linux",
-    target_os = "android",
+    
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",
@@ -107,7 +107,7 @@ fn preload_strings() -> UResult<(&'static str, &'static str)> {
 fn preload_strings() -> UResult<(&'static str, &'static str)> {
     Err(USimpleError::new(
         1,
-        translate!("stdbuf-error-command-not-supported"),
+        translate!("stdbuf-error-command-not-supported")
     ))
 }
 
@@ -127,7 +127,7 @@ fn check_option(matches: &ArgMatches, name: &str) -> Result<BufferType, ProgramO
                     Ok(BufferType::Size(m.try_into().map_err(|_| {
                         ProgramOptionsError::ValueTooLarge(x.to_string())
                     })?))
-                },
+                }
             ),
         },
         None => Ok(BufferType::Default),
@@ -176,7 +176,7 @@ fn get_preload_env(_tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
 
     Err(USimpleError::new(
         1,
-        translate!("stdbuf-error-external-libstdbuf-not-found", "path" => path_buf.display()),
+        translate!("stdbuf-error-external-libstdbuf-not-found", "path" => path_buf.display())
     ))
 }
 
@@ -206,15 +206,15 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             return match e.kind() {
                 std::io::ErrorKind::PermissionDenied => Err(USimpleError::new(
                     126,
-                    translate!("stdbuf-error-permission-denied"),
+                    translate!("stdbuf-error-permission-denied")
                 )),
                 std::io::ErrorKind::NotFound => Err(USimpleError::new(
                     127,
-                    translate!("stdbuf-error-no-such-file"),
+                    translate!("stdbuf-error-no-such-file")
                 )),
                 _ => Err(USimpleError::new(
                     1,
-                    translate!("stdbuf-error-failed-to-execute", "error" => e),
+                    translate!("stdbuf-error-failed-to-execute", "error" => e)
                 )),
             };
         }
@@ -231,7 +231,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         }
         None => Err(USimpleError::new(
             1,
-            translate!("stdbuf-error-killed-by-signal", "signal" => status.signal().unwrap()),
+            translate!("stdbuf-error-killed-by-signal", "signal" => status.signal().unwrap())
         )),
     }
 }
@@ -251,7 +251,7 @@ pub fn uu_app() -> Command {
                 .short(options::INPUT_SHORT)
                 .help(translate!("stdbuf-help-input"))
                 .value_name("MODE")
-                .required_unless_present_any([options::OUTPUT, options::ERROR]),
+                .required_unless_present_any([options::OUTPUT, options::ERROR])
         )
         .arg(
             Arg::new(options::OUTPUT)
@@ -259,7 +259,7 @@ pub fn uu_app() -> Command {
                 .short(options::OUTPUT_SHORT)
                 .help(translate!("stdbuf-help-output"))
                 .value_name("MODE")
-                .required_unless_present_any([options::INPUT, options::ERROR]),
+                .required_unless_present_any([options::INPUT, options::ERROR])
         )
         .arg(
             Arg::new(options::ERROR)
@@ -267,7 +267,7 @@ pub fn uu_app() -> Command {
                 .short(options::ERROR_SHORT)
                 .help(translate!("stdbuf-help-error"))
                 .value_name("MODE")
-                .required_unless_present_any([options::INPUT, options::OUTPUT]),
+                .required_unless_present_any([options::INPUT, options::OUTPUT])
         )
         .arg(
             Arg::new(options::COMMAND)
@@ -275,6 +275,6 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .required(true)
                 .value_hint(clap::ValueHint::CommandName)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }

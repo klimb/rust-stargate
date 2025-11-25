@@ -193,41 +193,41 @@ pub fn uu_app() -> Command {
             Arg::new(OPT_IGNORED)
                 .short('c')
                 .help(translate!("install-help-ignored"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_COMPARE)
                 .short('C')
                 .long(OPT_COMPARE)
                 .help(translate!("install-help-compare"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_DIRECTORY)
                 .short('d')
                 .long(OPT_DIRECTORY)
                 .help(translate!("install-help-directory"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CREATE_LEADING)
                 .short('D')
                 .help(translate!("install-help-create-leading"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_GROUP)
                 .short('g')
                 .long(OPT_GROUP)
                 .help(translate!("install-help-group"))
-                .value_name("GROUP"),
+                .value_name("GROUP")
         )
         .arg(
             Arg::new(OPT_MODE)
                 .short('m')
                 .long(OPT_MODE)
                 .help(translate!("install-help-mode"))
-                .value_name("MODE"),
+                .value_name("MODE")
         )
         .arg(
             Arg::new(OPT_OWNER)
@@ -235,28 +235,28 @@ pub fn uu_app() -> Command {
                 .long(OPT_OWNER)
                 .help(translate!("install-help-owner"))
                 .value_name("OWNER")
-                .value_hint(clap::ValueHint::Username),
+                .value_hint(clap::ValueHint::Username)
         )
         .arg(
             Arg::new(OPT_PRESERVE_TIMESTAMPS)
                 .short('p')
                 .long(OPT_PRESERVE_TIMESTAMPS)
                 .help(translate!("install-help-preserve-timestamps"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_STRIP)
                 .short('s')
                 .long(OPT_STRIP)
                 .help(translate!("install-help-strip"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_STRIP_PROGRAM)
                 .long(OPT_STRIP_PROGRAM)
                 .help(translate!("install-help-strip-program"))
                 .value_name("PROGRAM")
-                .value_hint(clap::ValueHint::CommandName),
+                .value_hint(clap::ValueHint::CommandName)
         )
         .arg(backup_control::arguments::suffix())
         .arg(
@@ -265,34 +265,34 @@ pub fn uu_app() -> Command {
                 .long(OPT_TARGET_DIRECTORY)
                 .help(translate!("install-help-target-directory"))
                 .value_name("DIRECTORY")
-                .value_hint(clap::ValueHint::DirPath),
+                .value_hint(clap::ValueHint::DirPath)
         )
         .arg(
             Arg::new(OPT_NO_TARGET_DIRECTORY)
                 .short('T')
                 .long(OPT_NO_TARGET_DIRECTORY)
                 .help(translate!("install-help-no-target-directory"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_VERBOSE)
                 .short('v')
                 .long(OPT_VERBOSE)
                 .help(translate!("install-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PRESERVE_CONTEXT)
                 .short('P')
                 .long(OPT_PRESERVE_CONTEXT)
                 .help(translate!("install-help-preserve-context"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_DEFAULT_CONTEXT)
                 .short('Z')
                 .help(translate!("install-help-default-context"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CONTEXT)
@@ -300,14 +300,14 @@ pub fn uu_app() -> Command {
                 .help(translate!("install-help-context"))
                 .value_name("CONTEXT")
                 .value_parser(clap::value_parser!(String))
-                .num_args(0..=1),
+                .num_args(0..=1)
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .num_args(1..)
                 .value_hint(clap::ValueHint::AnyPath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 
@@ -423,7 +423,7 @@ fn behavior(matches: &ArgMatches) -> UResult<Behavior> {
         strip_program: String::from(
             matches
                 .get_one::<String>(OPT_STRIP_PROGRAM)
-                .map_or(DEFAULT_STRIP_PROGRAM, |s| s.as_str()),
+                .map_or(DEFAULT_STRIP_PROGRAM, |s| s.as_str())
         ),
         create_leading: matches.get_flag(OPT_CREATE_LEADING),
         target_dir,
@@ -526,13 +526,13 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
     if paths.is_empty() {
         return Err(UUsageError::new(
             1,
-            translate!("install-error-missing-file-operand"),
+            translate!("install-error-missing-file-operand")
         ));
     }
     if b.no_target_dir && paths.len() > 2 {
         return Err(InstallError::ExtraOperand(
             paths[2].to_string_lossy().into_owned(),
-            format_usage(&translate!("install-usage")),
+            format_usage(&translate!("install-usage"))
         )
         .into());
     }
@@ -547,7 +547,7 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
         if paths.is_empty() {
             return Err(UUsageError::new(
                 1,
-                translate!("install-error-missing-destination-operand", "path" => last_path.to_string_lossy()),
+                translate!("install-error-missing-destination-operand", "path" => last_path.to_string_lossy())
             ));
         }
 
@@ -624,7 +624,7 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
 
         if b.no_target_dir && target.is_dir() {
             return Err(
-                InstallError::OverrideDirectoryFailed(target.clone(), source.clone()).into(),
+                InstallError::OverrideDirectoryFailed(target.clone(), source.clone()).into()
             );
         }
 
@@ -795,7 +795,7 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
     if to.is_dir() && !from.is_dir() {
         return Err(InstallError::OverrideDirectoryFailed(
             to.to_path_buf().clone(),
-            from.to_path_buf().clone(),
+            from.to_path_buf().clone()
         )
         .into());
     }
@@ -814,7 +814,7 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
         Ok(ft) => ft.file_type(),
         Err(err) => {
             return Err(
-                InstallError::InstallFailed(from.to_path_buf(), to.to_path_buf(), err).into(),
+                InstallError::InstallFailed(from.to_path_buf(), to.to_path_buf(), err).into()
             );
         }
     };
@@ -860,7 +860,7 @@ fn strip_file(to: &Path, b: &Behavior) -> UResult<()> {
                 // Follow GNU's behavior: if strip fails, removes the target
                 let _ = fs::remove_file(to);
                 return Err(InstallError::StripProgramFailed(
-                    translate!("install-error-strip-abnormal", "code" => status.code().unwrap()),
+                    translate!("install-error-strip-abnormal", "code" => status.code().unwrap())
                 )
                 .into());
             }

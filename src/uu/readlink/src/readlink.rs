@@ -62,7 +62,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if files.is_empty() {
         return Err(UUsageError::new(
             1,
-            translate!("readlink-error-missing-operand"),
+            translate!("readlink-error-missing-operand")
         ));
     }
 
@@ -119,62 +119,62 @@ pub fn uu_app() -> Command {
                 .short('f')
                 .long(OPT_CANONICALIZE)
                 .help(translate!("readlink-help-canonicalize"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CANONICALIZE_EXISTING)
                 .short('e')
                 .long("canonicalize-existing")
                 .help(translate!("readlink-help-canonicalize-existing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CANONICALIZE_MISSING)
                 .short('m')
                 .long(OPT_CANONICALIZE_MISSING)
                 .help(translate!("readlink-help-canonicalize-missing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_NO_NEWLINE)
                 .short('n')
                 .long(OPT_NO_NEWLINE)
                 .help(translate!("readlink-help-no-newline"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_QUIET)
                 .short('q')
                 .long(OPT_QUIET)
                 .help(translate!("readlink-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_SILENT)
                 .short('s')
                 .long(OPT_SILENT)
                 .help(translate!("readlink-help-silent"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_VERBOSE)
                 .short('v')
                 .long(OPT_VERBOSE)
                 .help(translate!("readlink-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_ZERO)
                 .short('z')
                 .long(OPT_ZERO)
                 .help(translate!("readlink-help-zero"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 

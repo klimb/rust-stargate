@@ -47,7 +47,7 @@ fn tabstops_parse(s: &str) -> Result<Vec<usize>, ParseError> {
                 return match e.kind() {
                     IntErrorKind::PosOverflow => Err(ParseError::TabSizeTooLarge),
                     _ => Err(ParseError::InvalidCharacter(
-                        word.trim_start_matches(char::is_numeric).to_string(),
+                        word.trim_start_matches(char::is_numeric).to_string()
                     )),
                 };
             }
@@ -168,21 +168,21 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::ALL)
                 .short('a')
                 .long(options::ALL)
                 .help(translate!("unexpand-help-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FIRST_ONLY)
                 .short('f')
                 .long(options::FIRST_ONLY)
                 .help(translate!("unexpand-help-first-only"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TABS)
@@ -190,14 +190,14 @@ pub fn uu_app() -> Command {
                 .long(options::TABS)
                 .help(translate!("unexpand-help-tabs"))
                 .action(ArgAction::Append)
-                .value_name("N, LIST"),
+                .value_name("N, LIST")
         )
         .arg(
             Arg::new(options::NO_UTF8)
                 .short('U')
                 .long(options::NO_UTF8)
                 .help(translate!("unexpand-help-no-utf8"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }
 
@@ -234,7 +234,7 @@ fn write_tabs(
     col: usize,
     prevtab: bool,
     init: bool,
-    amode: bool,
+    amode: bool
 ) -> UResult<()> {
     // This conditional establishes the following:
     // We never turn a single space before a non-blank into
@@ -282,7 +282,7 @@ fn next_char_info(uflag: bool, buf: &[u8], byte: usize) -> (CharType, usize, usi
                 Some(c) => (
                     CharType::Other,
                     UnicodeWidthChar::width(c).unwrap_or(0),
-                    nbytes,
+                    nbytes
                 ),
                 None => {
                     // invalid char snuck past the utf8_validation_iterator somehow???
@@ -303,7 +303,7 @@ fn next_char_info(uflag: bool, buf: &[u8], byte: usize) -> (CharType, usize, usi
                 _ => CharType::Other,
             },
             1,
-            1,
+            1
         )
     };
 
@@ -316,7 +316,7 @@ fn unexpand_line(
     output: &mut BufWriter<Stdout>,
     options: &Options,
     lastcol: usize,
-    ts: &[usize],
+    ts: &[usize]
 ) -> UResult<()> {
     // Fast path: if we're not converting all spaces (-a flag not set)
     // and the line doesn't start with spaces, just write it directly
@@ -401,7 +401,7 @@ fn unexpand_line(
                     col,
                     pctype == CharType::Tab,
                     init,
-                    options.aflag,
+                    options.aflag
                 )?;
                 init = false; // no longer at the start of a line
                 col = if ctype == CharType::Other {

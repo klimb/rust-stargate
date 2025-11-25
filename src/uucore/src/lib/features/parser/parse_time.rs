@@ -69,7 +69,7 @@ pub fn from_str(string: &str, allow_suffixes: bool) -> Result<Duration, String> 
             &[('s', 1), ('m', 60), ('h', 60 * 60), ('d', 60 * 60 * 24)]
         } else {
             &[]
-        },
+        }
     ) {
         Ok(ebd) | Err(ExtendedParserError::Overflow(ebd)) => ebd,
         Err(ExtendedParserError::Underflow(_)) => return Ok(NANOSECOND_DURATION),

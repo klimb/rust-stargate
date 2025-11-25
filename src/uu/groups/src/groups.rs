@@ -89,6 +89,6 @@ pub fn uu_app() -> Command {
             Arg::new(options::USERS)
                 .action(ArgAction::Append)
                 .value_name(options::USERS)
-                .value_hint(clap::ValueHint::Username),
+                .value_hint(clap::ValueHint::Username)
         )
 }

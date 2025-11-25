@@ -65,7 +65,7 @@ impl Default for Config {
 
 fn read_word_filter_file(
     matches: &clap::ArgMatches,
-    option: &str,
+    option: &str
 ) -> std::io::Result<HashSet<String>> {
     let filename = matches
         .get_one::<OsString>(option)
@@ -86,7 +86,7 @@ fn read_word_filter_file(
 /// reads contents of file as unique set of characters to be used with the break-file option
 fn read_char_filter_file(
     matches: &clap::ArgMatches,
-    option: &str,
+    option: &str
 ) -> std::io::Result<HashSet<char>> {
     let filename = matches
         .get_one::<OsString>(option)
@@ -298,7 +298,7 @@ fn read_input(input_files: &[OsString]) -> std::io::Result<FileMap> {
                 lines,
                 chars_lines,
                 offset,
-            },
+            }
         );
         offset += size;
     }
@@ -418,7 +418,7 @@ fn get_output_chunks(
     all_before: &[char],
     keyword: &str,
     all_after: &[char],
-    config: &Config,
+    config: &Config
 ) -> (String, String, String, String) {
     // Chunk size logics are mostly copied from the GNU ptx source.
     // https://github.com/MaiZure/coreutils-8.3/blob/master/src/ptx.c#L1234
@@ -429,7 +429,7 @@ fn get_output_chunks(
             - (2 * config.trunc_str.len()) as isize
             - keyword.len() as isize
             - 1,
-        0,
+        0
     ) as usize;
 
     // Allocate plenty space for all the chunks.
@@ -476,7 +476,7 @@ fn get_output_chunks(
     // max size of the tail chunk = max size of left half - space taken by before chunk - gap size.
     let max_tail_size = cmp::max(
         max_before_size as isize - before.len() as isize - config.gap_size as isize,
-        0,
+        0
     ) as usize;
 
     // the tail chunk takes text starting from where the after chunk ends (with whitespace trimmed).
@@ -510,7 +510,7 @@ fn get_output_chunks(
     // max size of the head chunk = max size of right half - space taken by after chunk - gap size.
     let max_head_size = cmp::max(
         max_after_size as isize - after.len() as isize - config.gap_size as isize,
-        0,
+        0
     ) as usize;
 
     // the head chunk takes text from before the before chunk
@@ -567,7 +567,7 @@ fn format_tex_line(
     word_ref: &WordRef,
     line: &str,
     chars_line: &[char],
-    reference: &str,
+    reference: &str
 ) -> String {
     let mut output = String::new();
     write!(output, "\\{} ", config.macro_name).unwrap();
@@ -580,7 +580,7 @@ fn format_tex_line(
         format_tex_field(&before),
         format_tex_field(&keyword),
         format_tex_field(&after),
-        format_tex_field(&head),
+        format_tex_field(&head)
     )
     .unwrap();
     if config.auto_ref || config.input_ref {
@@ -598,7 +598,7 @@ fn format_roff_line(
     word_ref: &WordRef,
     line: &str,
     chars_line: &[char],
-    reference: &str,
+    reference: &str
 ) -> String {
     let mut output = String::new();
     write!(output, ".{}", config.macro_name).unwrap();
@@ -626,7 +626,7 @@ fn prepare_line_chunks(
     word_ref: &WordRef,
     line: &str,
     chars_line: &[char],
-    reference: &str,
+    reference: &str
 ) -> (String, String, String, String, String) {
     // Convert byte positions to character positions
     let ref_char_position = line[..word_ref.position].chars().count();
@@ -664,7 +664,7 @@ fn write_traditional_output(
     config: &mut Config,
     file_map: &FileMap,
     words: &BTreeSet<WordRef>,
-    output_filename: &OsStr,
+    output_filename: &OsStr
 ) -> UResult<()> {
     let mut writer: BufWriter<Box<dyn Write>> =
         BufWriter::new(if output_filename == OsStr::new("-") {
@@ -699,7 +699,7 @@ fn write_traditional_output(
             config,
             word_ref,
             &lines[word_ref.local_line_nr],
-            &context_reg,
+            &context_reg
         );
         let output_line: String = match config.format {
             OutFormat::Tex => format_tex_line(
@@ -707,14 +707,14 @@ fn write_traditional_output(
                 word_ref,
                 &lines[word_ref.local_line_nr],
                 &chars_lines[word_ref.local_line_nr],
-                &reference,
+                &reference
             ),
             OutFormat::Roff => format_roff_line(
                 config,
                 word_ref,
                 &lines[word_ref.local_line_nr],
                 &chars_lines[word_ref.local_line_nr],
-                &reference,
+                &reference
             ),
             OutFormat::Dumb => {
                 return Err(PtxError::DumbFormat.into());
@@ -809,7 +809,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         if let Some(file) = files.next() {
             return Err(UUsageError::new(
                 1,
-                translate!("ptx-error-extra-operand", "operand" => file.to_string_lossy().quote()),
+                translate!("ptx-error-extra-operand", "operand" => file.to_string_lossy().quote())
             ));
         }
     }
@@ -832,77 +832,77 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::AUTO_REFERENCE)
                 .short('A')
                 .long(options::AUTO_REFERENCE)
                 .help(translate!("ptx-help-auto-reference"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TRADITIONAL)
                 .short('G')
                 .long(options::TRADITIONAL)
                 .help(translate!("ptx-help-traditional"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FLAG_TRUNCATION)
                 .short('F')
                 .long(options::FLAG_TRUNCATION)
                 .help(translate!("ptx-help-flag-truncation"))
-                .value_name("STRING"),
+                .value_name("STRING")
         )
         .arg(
             Arg::new(options::MACRO_NAME)
                 .short('M')
                 .long(options::MACRO_NAME)
                 .help(translate!("ptx-help-macro-name"))
-                .value_name("STRING"),
+                .value_name("STRING")
         )
         .arg(
             Arg::new(options::FORMAT)
                 .long(options::FORMAT)
                 .hide(true)
                 .value_parser(["roff", "tex"])
-                .overrides_with_all([options::FORMAT, options::format::ROFF, options::format::TEX]),
+                .overrides_with_all([options::FORMAT, options::format::ROFF, options::format::TEX])
         )
         .arg(
             Arg::new(options::format::ROFF)
                 .short('O')
                 .help(translate!("ptx-help-roff"))
                 .overrides_with_all([options::FORMAT, options::format::ROFF, options::format::TEX])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::format::TEX)
                 .short('T')
                 .help(translate!("ptx-help-tex"))
                 .overrides_with_all([options::FORMAT, options::format::ROFF, options::format::TEX])
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::RIGHT_SIDE_REFS)
                 .short('R')
                 .long(options::RIGHT_SIDE_REFS)
                 .help(translate!("ptx-help-right-side-refs"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SENTENCE_REGEXP)
                 .short('S')
                 .long(options::SENTENCE_REGEXP)
                 .help(translate!("ptx-help-sentence-regexp"))
-                .value_name("REGEXP"),
+                .value_name("REGEXP")
         )
         .arg(
             Arg::new(options::WORD_REGEXP)
                 .short('W')
                 .long(options::WORD_REGEXP)
                 .help(translate!("ptx-help-word-regexp"))
-                .value_name("REGEXP"),
+                .value_name("REGEXP")
         )
         .arg(
             Arg::new(options::BREAK_FILE)
@@ -911,21 +911,21 @@ pub fn uu_app() -> Command {
                 .help(translate!("ptx-help-break-file"))
                 .value_name("FILE")
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::IGNORE_CASE)
                 .short('f')
                 .long(options::IGNORE_CASE)
                 .help(translate!("ptx-help-ignore-case"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::GAP_SIZE)
                 .short('g')
                 .long(options::GAP_SIZE)
                 .help(translate!("ptx-help-gap-size"))
-                .value_name("NUMBER"),
+                .value_name("NUMBER")
         )
         .arg(
             Arg::new(options::IGNORE_FILE)
@@ -934,7 +934,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("ptx-help-ignore-file"))
                 .value_name("FILE")
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::ONLY_FILE)
@@ -943,7 +943,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("ptx-help-only-file"))
                 .value_name("FILE")
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::REFERENCES)
@@ -951,13 +951,13 @@ pub fn uu_app() -> Command {
                 .long(options::REFERENCES)
                 .help(translate!("ptx-help-references"))
                 .value_name("FILE")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WIDTH)
                 .short('w')
                 .long(options::WIDTH)
                 .help(translate!("ptx-help-width"))
-                .value_name("NUMBER"),
+                .value_name("NUMBER")
         )
 }

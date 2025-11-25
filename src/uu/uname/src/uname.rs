@@ -150,7 +150,7 @@ pub fn uu_app() -> Command {
                 .short('a')
                 .long(options::ALL)
                 .help(translate!("uname-help-all"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::KERNEL_NAME)
@@ -158,14 +158,14 @@ pub fn uu_app() -> Command {
                 .long(options::KERNEL_NAME)
                 .alias("sysname") // Obsolescent option in GNU uname
                 .help(translate!("uname-help-kernel-name"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NODENAME)
                 .short('n')
                 .long(options::NODENAME)
                 .help(translate!("uname-help-nodename"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::KERNEL_RELEASE)
@@ -173,28 +173,28 @@ pub fn uu_app() -> Command {
                 .long(options::KERNEL_RELEASE)
                 .alias("release") // Obsolescent option in GNU uname
                 .help(translate!("uname-help-kernel-release"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::KERNEL_VERSION)
                 .short('v')
                 .long(options::KERNEL_VERSION)
                 .help(translate!("uname-help-kernel-version"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::MACHINE)
                 .short('m')
                 .long(options::MACHINE)
                 .help(translate!("uname-help-machine"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OS)
                 .short('o')
                 .long(options::OS)
                 .help(translate!("uname-help-os"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PROCESSOR)
@@ -202,7 +202,7 @@ pub fn uu_app() -> Command {
                 .long(options::PROCESSOR)
                 .help(translate!("uname-help-processor"))
                 .action(ArgAction::SetTrue)
-                .hide(true),
+                .hide(true)
         )
         .arg(
             Arg::new(options::HARDWARE_PLATFORM)
@@ -210,6 +210,6 @@ pub fn uu_app() -> Command {
                 .long(options::HARDWARE_PLATFORM)
                 .help(translate!("uname-help-hardware-platform"))
                 .action(ArgAction::SetTrue)
-                .hide(true),
+                .hide(true)
         )
 }

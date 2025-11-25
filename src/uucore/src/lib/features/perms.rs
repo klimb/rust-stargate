@@ -84,7 +84,7 @@ pub fn wrap_chown<P: AsRef<Path>>(
     dest_uid: Option<u32>,
     dest_gid: Option<u32>,
     follow: bool,
-    verbosity: Verbosity,
+    verbosity: Verbosity
 ) -> Result<String, String> {
     let dest_uid = dest_uid.unwrap_or_else(|| meta.uid());
     let dest_gid = dest_gid.unwrap_or_else(|| meta.gid());
@@ -102,7 +102,7 @@ pub fn wrap_chown<P: AsRef<Path>>(
                     } else {
                         "ownership"
                     },
-                    path.quote(),
+                    path.quote()
                 );
                 if level == VerbosityLevel::Verbose {
                     out = if verbosity.groups_only {
@@ -329,7 +329,7 @@ impl ChownExecutor {
                     self.dest_uid,
                     self.dest_gid,
                     self.dereference,
-                    self.verbosity.clone(),
+                    self.verbosity.clone()
                 )
             };
 
@@ -340,7 +340,7 @@ impl ChownExecutor {
                 self.dest_uid,
                 self.dest_gid,
                 self.dereference,
-                self.verbosity.clone(),
+                self.verbosity.clone()
             );
 
             match chown_result {
@@ -361,7 +361,7 @@ impl ChownExecutor {
             self.print_verbose_ownership_retained_as(
                 path,
                 meta.uid(),
-                self.dest_gid.map(|_| meta.gid()),
+                self.dest_gid.map(|_| meta.gid())
             );
             0
         };
@@ -535,7 +535,7 @@ impl ChownExecutor {
                 self.print_verbose_ownership_retained_as(
                     &entry_path,
                     meta.uid(),
-                    self.dest_gid.map(|_| meta.gid()),
+                    self.dest_gid.map(|_| meta.gid())
                 );
             }
 
@@ -619,7 +619,7 @@ impl ChownExecutor {
                 self.print_verbose_ownership_retained_as(
                     path,
                     meta.uid(),
-                    self.dest_gid.map(|_| meta.gid()),
+                    self.dest_gid.map(|_| meta.gid())
                 );
                 continue;
             }
@@ -630,7 +630,7 @@ impl ChownExecutor {
                 self.dest_uid,
                 self.dest_gid,
                 self.dereference,
-                self.verbosity.clone(),
+                self.verbosity.clone()
             ) {
                 Ok(n) => {
                     if !n.is_empty() {
@@ -715,7 +715,7 @@ impl ChownExecutor {
         &self,
         path: &Path,
         original_uid: u32,
-        original_gid: u32,
+        original_gid: u32
     ) -> i32 {
         let dest_uid = self.dest_uid.unwrap_or(original_uid);
         let dest_gid = self.dest_gid.unwrap_or(original_gid);
@@ -810,7 +810,7 @@ type GidUidFilterOwnerParser = fn(&ArgMatches) -> UResult<GidUidOwnerFilter>;
 /// Returns the updated `dereference` and `traverse_symlinks` values.
 pub fn configure_symlink_and_recursion(
     matches: &ArgMatches,
-    default_traverse_symlinks: TraverseSymlinks,
+    default_traverse_symlinks: TraverseSymlinks
 ) -> Result<(bool, bool, TraverseSymlinks), Box<dyn crate::error::UError>> {
     let mut dereference = if matches.get_flag(options::dereference::DEREFERENCE) {
         Some(true) // Follow symlinks
@@ -836,7 +836,7 @@ pub fn configure_symlink_and_recursion(
             if dereference == Some(true) {
                 return Err(USimpleError::new(
                     1,
-                    "-R --dereference requires -H or -L".to_string(),
+                    "-R --dereference requires -H or -L".to_string()
                 ));
             }
             dereference = Some(false);
@@ -861,7 +861,7 @@ pub fn chown_base(
     args: impl crate::Args,
     add_arg_if_not_reference: &'static str,
     parse_gid_uid_and_filter: GidUidFilterOwnerParser,
-    groups_only: bool,
+    groups_only: bool
 ) -> UResult<()> {
     let args: Vec<_> = args.collect();
     let mut reference = false;
@@ -884,7 +884,7 @@ pub fn chown_base(
         command = command.arg(
             Arg::new(add_arg_if_not_reference)
                 .value_name(add_arg_if_not_reference)
-                .required(true),
+                .required(true)
         );
     }
     command = command.arg(
@@ -894,7 +894,7 @@ pub fn chown_base(
             .action(clap::ArgAction::Append)
             .required(true)
             .num_args(1..)
-            .value_parser(clap::value_parser!(std::ffi::OsString)),
+            .value_parser(clap::value_parser!(std::ffi::OsString))
     );
     let matches = crate::clap_localization::handle_clap_result(command, args)?;
 
@@ -964,7 +964,7 @@ pub fn common_args() -> Vec<Arg> {
             .long(options::dereference::DEREFERENCE)
             .help(
                 "affect the referent of each symbolic link (this is the default), \
-    rather than the symbolic link itself",
+    rather than the symbolic link itself"
             )
             .action(clap::ArgAction::SetTrue),
         Arg::new(options::dereference::NO_DEREFERENCE)
@@ -972,7 +972,7 @@ pub fn common_args() -> Vec<Arg> {
             .long(options::dereference::NO_DEREFERENCE)
             .help(
                 "affect symbolic links instead of any referenced file \
-        (useful only on systems that can change the ownership of a symlink)",
+        (useful only on systems that can change the ownership of a symlink)"
             )
             .action(clap::ArgAction::SetTrue),
     ]

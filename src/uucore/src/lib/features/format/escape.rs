@@ -120,7 +120,7 @@ pub enum EscapeError {
 /// Parse an escape sequence, like `\n` or `\xff`, etc.
 pub fn parse_escape_code(
     rest: &mut &[u8],
-    zero_octal_parsing: OctalParsing,
+    zero_octal_parsing: OctalParsing
 ) -> Result<EscapedChar, FormatError> {
     if let [c, new_rest @ ..] = rest {
         // This is for the \NNN syntax for octal sequences.
@@ -153,7 +153,7 @@ pub fn parse_escape_code(
                 }
             }
             b'0' => Ok(EscapedChar::Byte(
-                parse_code(rest, Base::Oct(zero_octal_parsing)).unwrap_or(b'\0'),
+                parse_code(rest, Base::Oct(zero_octal_parsing)).unwrap_or(b'\0')
             )),
             b'u' => match parse_unicode(rest, 4) {
                 Ok(c) => Ok(EscapedChar::Char(c)),

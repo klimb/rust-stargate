@@ -44,7 +44,7 @@ pub fn ext_sort(
     files: &mut impl Iterator<Item = UResult<Box<dyn Read + Send>>>,
     settings: &GlobalSettings,
     output: Output,
-    tmp_dir: &mut TmpDirWrapper,
+    tmp_dir: &mut TmpDirWrapper
 ) -> UResult<()> {
     let (sorted_sender, sorted_receiver) = std::sync::mpsc::sync_channel(1);
     let (recycled_sender, recycled_receiver) = std::sync::mpsc::sync_channel(1);
@@ -86,7 +86,7 @@ pub fn ext_sort(
             &sorted_receiver,
             recycled_sender,
             output,
-            tmp_dir,
+            tmp_dir
         )
     } else {
         reader_writer::<_, WriteablePlainTmpFile>(
@@ -95,7 +95,7 @@ pub fn ext_sort(
             &sorted_receiver,
             recycled_sender,
             output,
-            tmp_dir,
+            tmp_dir
         )
     }
 }
@@ -109,7 +109,7 @@ fn reader_writer<
     receiver: &Receiver<Chunk>,
     sender: SyncSender<Chunk>,
     output: Output,
-    tmp_dir: &mut TmpDirWrapper,
+    tmp_dir: &mut TmpDirWrapper
 ) -> UResult<()> {
     let separator = settings.line_ending.into();
 
@@ -129,7 +129,7 @@ fn reader_writer<
         buffer_size,
         settings,
         receiver,
-        sender,
+        sender
     )?;
     match read_result {
         ReadResult::WroteChunksToFile { tmp_files } => {
@@ -137,7 +137,7 @@ fn reader_writer<
                 tmp_files.into_iter().map(|c| c.reopen()),
                 settings,
                 output,
-                tmp_dir,
+                tmp_dir
             )?;
         }
         ReadResult::SortedSingleChunk(chunk) => {
@@ -148,7 +148,7 @@ fn reader_writer<
                             == Ordering::Equal
                     }),
                     settings,
-                    output,
+                    output
                 )?;
             } else {
                 print_sorted(chunk.lines().iter(), settings, output)?;
@@ -160,7 +160,7 @@ fn reader_writer<
                 |(line_a, a), (line_b, b)| {
                     compare_by(line_a, line_b, settings, a.line_data(), b.line_data())
                         != Ordering::Greater
-                },
+                }
             );
             if settings.unique {
                 print_sorted(
@@ -171,7 +171,7 @@ fn reader_writer<
                         })
                         .map(|(line, _)| line),
                     settings,
-                    output,
+                    output
                 )?;
             } else {
                 print_sorted(merged_iter.map(|(line, _)| line), settings, output)?;
@@ -217,7 +217,7 @@ fn read_write_loop<I: WriteableTmpFile>(
     buffer_size: usize,
     settings: &GlobalSettings,
     receiver: &Receiver<Chunk>,
-    sender: SyncSender<Chunk>,
+    sender: SyncSender<Chunk>
 ) -> UResult<ReadResult<I>> {
     let mut file = files.next().unwrap()?;
 
@@ -236,7 +236,7 @@ fn read_write_loop<I: WriteableTmpFile>(
             &mut file,
             &mut files,
             separator,
-            settings,
+            settings
         )?;
 
         if !should_continue {
@@ -267,7 +267,7 @@ fn read_write_loop<I: WriteableTmpFile>(
             &chunk,
             tmp_dir.next_file()?,
             settings.compress_prog.as_deref(),
-            separator,
+            separator
         )?;
         tmp_files.push(tmp_file);
 
@@ -282,7 +282,7 @@ fn read_write_loop<I: WriteableTmpFile>(
                 &mut file,
                 &mut files,
                 separator,
-                settings,
+                settings
             )?;
             if !should_continue {
                 sender_option = None;
@@ -297,7 +297,7 @@ fn write<I: WriteableTmpFile>(
     chunk: &Chunk,
     file: (File, PathBuf),
     compress_prog: Option<&str>,
-    separator: u8,
+    separator: u8
 ) -> UResult<I::Closed> {
     let mut tmp_file = I::create(file, compress_prog)?;
     write_lines(chunk.lines(), tmp_file.as_write(), separator);

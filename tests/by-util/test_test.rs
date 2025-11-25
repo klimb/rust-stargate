@@ -322,7 +322,6 @@ fn test_file_is_itself() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_file_is_newer_than_and_older_than_itself() {
     // odd but matches GNU
     new_ucmd!()
@@ -379,7 +378,6 @@ fn test_same_device_inode() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_newer_file() {
     let scenario = TestScenario::new(util_name!());
 

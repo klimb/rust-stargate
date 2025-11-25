@@ -27,7 +27,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         .ok_or_else(|| {
             USimpleError::new(
                 1,
-                translate!("sleep-error-missing-operand", "program" => uucore::execution_phrase()),
+                translate!("sleep-error-missing-operand", "program" => uucore::execution_phrase())
             )
         })?
         .map(|s| s.as_str())
@@ -48,7 +48,7 @@ pub fn uu_app() -> Command {
             Arg::new(options::NUMBER)
                 .help(translate!("sleep-help-number"))
                 .value_name(options::NUMBER)
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
 }
 

@@ -208,18 +208,18 @@ impl FmtOptions {
 fn process_file(
     file_name: &OsString,
     fmt_opts: &FmtOptions,
-    ostream: &mut BufWriter<Stdout>,
+    ostream: &mut BufWriter<Stdout>
 ) -> UResult<()> {
     let mut fp = BufReader::new(if file_name == "-" {
         Box::new(stdin()) as Box<dyn Read + 'static>
     } else {
         let path = Path::new(file_name);
         let f = File::open(path).map_err_context(
-            || translate!("fmt-error-cannot-open-for-reading", "file" => path.quote()),
+            || translate!("fmt-error-cannot-open-for-reading", "file" => path.quote())
         )?;
         if f.metadata()
             .map_err_context(
-                || translate!("fmt-error-cannot-get-metadata", "file" => path.quote()),
+                || translate!("fmt-error-cannot-get-metadata", "file" => path.quote())
             )?
             .is_dir()
         {
@@ -334,7 +334,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             && first_arg.chars().skip(2).any(|c| !c.is_ascii_digit());
         if malformed_number {
             return Err(FmtError::InvalidWidthMalformed(
-                first_arg.strip_prefix('-').unwrap().to_string(),
+                first_arg.strip_prefix('-').unwrap().to_string()
             )
             .into());
         }
@@ -368,63 +368,63 @@ pub fn uu_app() -> Command {
                 .short('c')
                 .long(options::CROWN_MARGIN)
                 .help(translate!("fmt-crown-margin-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TAGGED_PARAGRAPH)
                 .short('t')
                 .long("tagged-paragraph")
                 .help(translate!("fmt-tagged-paragraph-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PRESERVE_HEADERS)
                 .short('m')
                 .long("preserve-headers")
                 .help(translate!("fmt-preserve-headers-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SPLIT_ONLY)
                 .short('s')
                 .long("split-only")
                 .help(translate!("fmt-split-only-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::UNIFORM_SPACING)
                 .short('u')
                 .long("uniform-spacing")
                 .help(translate!("fmt-uniform-spacing-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::PREFIX)
                 .short('p')
                 .long("prefix")
                 .help(translate!("fmt-prefix-help"))
-                .value_name("PREFIX"),
+                .value_name("PREFIX")
         )
         .arg(
             Arg::new(options::SKIP_PREFIX)
                 .short('P')
                 .long("skip-prefix")
                 .help(translate!("fmt-skip-prefix-help"))
-                .value_name("PSKIP"),
+                .value_name("PSKIP")
         )
         .arg(
             Arg::new(options::EXACT_PREFIX)
                 .short('x')
                 .long("exact-prefix")
                 .help(translate!("fmt-exact-prefix-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::EXACT_SKIP_PREFIX)
                 .short('X')
                 .long("exact-skip-prefix")
                 .help(translate!("fmt-exact-skip-prefix-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WIDTH)
@@ -432,7 +432,7 @@ pub fn uu_app() -> Command {
                 .long("width")
                 .help(translate!("fmt-width-help"))
                 // We must accept invalid values if they are overridden later. This is not supported by clap, so accept all strings instead.
-                .value_name("WIDTH"),
+                .value_name("WIDTH")
         )
         .arg(
             Arg::new(options::GOAL)
@@ -440,21 +440,21 @@ pub fn uu_app() -> Command {
                 .long("goal")
                 .help(translate!("fmt-goal-help"))
                 // We must accept invalid values if they are overridden later. This is not supported by clap, so accept all strings instead.
-                .value_name("GOAL"),
+                .value_name("GOAL")
         )
         .arg(
             Arg::new(options::QUICK)
                 .short('q')
                 .long("quick")
                 .help(translate!("fmt-quick-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TAB_WIDTH)
                 .short('T')
                 .long("tab-width")
                 .help(translate!("fmt-tab-width-help"))
-                .value_name("TABWIDTH"),
+                .value_name("TABWIDTH")
         )
         .arg(
             Arg::new(options::FILES_OR_WIDTH)
@@ -462,7 +462,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILES")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
-                .allow_negative_numbers(true),
+                .allow_negative_numbers(true)
         )
 }
 

@@ -103,7 +103,7 @@ impl<'a> ErrorFormatter<'a> {
         &self,
         err: &Error,
         exit_code: i32,
-        callback: F,
+        callback: F
     ) -> !
     where
         F: FnOnce(),
@@ -140,7 +140,7 @@ impl<'a> ErrorFormatter<'a> {
         &self,
         err: &Error,
         exit_code: i32,
-        callback: F,
+        callback: F
     ) -> !
     where
         F: FnOnce(),
@@ -182,7 +182,7 @@ impl<'a> ErrorFormatter<'a> {
             self.print_simple_error_with_callback(
                 &translate!("clap-error-unexpected-argument-simple"),
                 exit_code,
-                || {},
+                || {}
             );
         }
         callback();
@@ -266,7 +266,7 @@ impl<'a> ErrorFormatter<'a> {
         &self,
         err: &Error,
         exit_code: i32,
-        callback: F,
+        callback: F
     ) -> !
     where
         F: FnOnce(),
@@ -468,7 +468,7 @@ where
 pub fn handle_clap_result_with_exit_code<I, T>(
     cmd: Command,
     itr: I,
-    exit_code: i32,
+    exit_code: i32
 ) -> UResult<ArgMatches>
 where
     I: IntoIterator<Item = T>,
@@ -556,7 +556,7 @@ pub fn configure_localized_command(mut cmd: Command) -> Command {
 
     cmd = cmd.help_template(crate::localized_help_template_with_colors(
         crate::util_name(),
-        colors_enabled,
+        colors_enabled
     ));
     cmd
 }
@@ -593,20 +593,20 @@ mod tests {
                     .short('i')
                     .long("input")
                     .value_name("FILE")
-                    .help("Input file"),
+                    .help("Input file")
             )
             .arg(
                 Arg::new("output")
                     .short('o')
                     .long("output")
                     .value_name("FILE")
-                    .help("Output file"),
+                    .help("Output file")
             )
             .arg(
                 Arg::new("format")
                     .long("format")
                     .value_parser(["json", "xml", "csv"])
-                    .help("Output format"),
+                    .help("Output format")
             )
     }
 

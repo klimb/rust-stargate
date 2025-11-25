@@ -32,7 +32,7 @@ pub fn is_readable(path: &Path) -> bool {
 pub fn safe_remove_file(
     path: &Path,
     options: &Options,
-    progress_bar: Option<&ProgressBar>,
+    progress_bar: Option<&ProgressBar>
 ) -> Option<bool> {
     let parent = path.parent()?;
     let file_name = path.file_name()?;
@@ -63,7 +63,7 @@ pub fn safe_remove_file(
 pub fn safe_remove_empty_dir(
     path: &Path,
     options: &Options,
-    progress_bar: Option<&ProgressBar>,
+    progress_bar: Option<&ProgressBar>
 ) -> Option<bool> {
     let parent = path.parent()?;
     let dir_name = path.file_name()?;
@@ -109,7 +109,7 @@ fn handle_permission_denied(
     dir_fd: &DirFd,
     entry_name: &OsStr,
     entry_path: &Path,
-    options: &Options,
+    options: &Options
 ) -> bool {
     // When we can't open a subdirectory due to permission denied,
     // try to remove it directly (it might be empty).
@@ -122,7 +122,7 @@ fn handle_permission_denied(
             return true;
         } else if !options.force {
             let remove_err = remove_err.map_err_context(
-                || translate!("rm-error-cannot-remove", "file" => entry_path.quote()),
+                || translate!("rm-error-cannot-remove", "file" => entry_path.quote())
             );
             show_error!("{remove_err}");
             return true;
@@ -141,7 +141,7 @@ fn handle_unlink(
     entry_name: &OsStr,
     entry_path: &Path,
     is_dir: bool,
-    options: &Options,
+    options: &Options
 ) -> bool {
     if let Err(e) = dir_fd.unlink_at(entry_name, is_dir) {
         let e = e
@@ -192,7 +192,7 @@ pub fn remove_dir_with_special_cases(path: &Path, options: &Options, error_occur
 pub fn safe_remove_dir_recursive(
     path: &Path,
     options: &Options,
-    progress_bar: Option<&ProgressBar>,
+    progress_bar: Option<&ProgressBar>
 ) -> bool {
     // Base case 1: this is a file or a symbolic link.
     // Use lstat to avoid race condition between check and use
@@ -309,7 +309,7 @@ pub fn safe_remove_dir_recursive_impl(path: &Path, dir_fd: &DirFd, options: &Opt
                             dir_fd,
                             entry_name.as_ref(),
                             &entry_path,
-                            options,
+                            options
                         );
                     } else {
                         error = handle_error_with_force(e, &entry_path, options);

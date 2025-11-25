@@ -68,7 +68,7 @@ impl From<SafeTraversalError> for io::Error {
         match err {
             SafeTraversalError::PathContainsNull => Self::new(
                 io::ErrorKind::InvalidInput,
-                translate!("safe-traversal-error-path-contains-null"),
+                translate!("safe-traversal-error-path-contains-null")
             ),
             SafeTraversalError::OpenFailed { source, .. } => source,
             SafeTraversalError::StatFailed { source, .. } => source,
@@ -215,7 +215,7 @@ impl DirFd {
         name: &OsStr,
         uid: Option<u32>,
         gid: Option<u32>,
-        follow_symlinks: bool,
+        follow_symlinks: bool
     ) -> io::Result<()> {
         let name_cstr =
             CString::new(name.as_bytes()).map_err(|_| SafeTraversalError::PathContainsNull)?;
@@ -279,7 +279,7 @@ impl DirFd {
         if fd < 0 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                translate!("safe-traversal-error-invalid-fd"),
+                translate!("safe-traversal-error-invalid-fd")
             ));
         }
         // SAFETY: We've verified fd >= 0, and the caller is transferring ownership

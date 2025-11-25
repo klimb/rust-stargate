@@ -127,7 +127,7 @@ fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
                                     "+".to_string()
                                 };
                                 return Err(ParseError::SpecifierOnlyAllowedWithLastValue(
-                                    specifier,
+                                    specifier
                                 ));
                             } else if remaining_mode != RemainingMode::None {
                                 is_specifier_already_used = true;
@@ -146,7 +146,7 @@ fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
                             return if s.starts_with('/') || s.starts_with('+') {
                                 Err(ParseError::SpecifierNotAtStartOfNumber(
                                     s[0..1].to_string(),
-                                    s.to_string(),
+                                    s.to_string()
                                 ))
                             } else {
                                 Err(ParseError::InvalidCharacter(s.to_string()))
@@ -255,7 +255,7 @@ pub fn uu_app() -> Command {
             .version(uucore::crate_version!())
             .about(translate!("expand-about"))
             .after_help(LONG_HELP)
-            .override_usage(format_usage(&translate!("expand-usage"))),
+            .override_usage(format_usage(&translate!("expand-usage")))
     )
     .infer_long_args(true)
     .args_override_self(true)
@@ -264,7 +264,7 @@ pub fn uu_app() -> Command {
             .long(options::INITIAL)
             .short('i')
             .help(translate!("expand-help-initial"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::TABS)
@@ -272,21 +272,21 @@ pub fn uu_app() -> Command {
             .short('t')
             .value_name("N, LIST")
             .action(ArgAction::Append)
-            .help(translate!("expand-help-tabs")),
+            .help(translate!("expand-help-tabs"))
     )
     .arg(
         Arg::new(options::NO_UTF8)
             .long(options::NO_UTF8)
             .short('U')
             .help(translate!("expand-help-no-utf8"))
-            .action(ArgAction::SetTrue),
+            .action(ArgAction::SetTrue)
     )
     .arg(
         Arg::new(options::FILES)
             .action(ArgAction::Append)
             .hide(true)
             .value_hint(clap::ValueHint::FilePath)
-            .value_parser(clap::value_parser!(OsString)),
+            .value_parser(clap::value_parser!(OsString))
     )
 }
 
@@ -354,7 +354,7 @@ fn expand_line(
     buf: &mut Vec<u8>,
     output: &mut BufWriter<std::io::Stdout>,
     tabstops: &[usize],
-    options: &Options,
+    options: &Options
 ) -> std::io::Result<()> {
     use self::CharType::{Backspace, Other, Tab};
 
@@ -400,7 +400,7 @@ fn expand_line(
                     _ => Other,
                 },
                 1,
-                1,
+                1
             )
         };
 

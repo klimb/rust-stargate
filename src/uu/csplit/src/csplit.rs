@@ -60,7 +60,7 @@ impl CsplitOptions {
             split_name: SplitName::new(
                 matches.get_one::<String>(options::PREFIX).cloned(),
                 matches.get_one::<String>(options::SUFFIX_FORMAT).cloned(),
-                matches.get_one::<String>(options::DIGITS).cloned(),
+                matches.get_one::<String>(options::DIGITS).cloned()
             )?,
             keep_files,
             quiet,
@@ -154,7 +154,7 @@ where
 fn do_csplit<I>(
     split_writer: &mut SplitWriter,
     patterns: Vec<patterns::Pattern>,
-    input_iter: &mut InputSplitter<I>,
+    input_iter: &mut InputSplitter<I>
 ) -> Result<(), CsplitError>
 where
     I: Iterator<Item = (usize, UResult<String>)>,
@@ -173,7 +173,7 @@ where
                         Err(CsplitError::LineOutOfRange(_)) if ith != 1 => {
                             return Err(CsplitError::LineOutOfRangeOnRepetition(
                                 pattern_as_str,
-                                ith - 1,
+                                ith - 1
                             ));
                         }
                         Err(err) => return Err(err),
@@ -194,7 +194,7 @@ where
                     }
                     match (
                         split_writer.do_to_match(&pattern_as_str, &regex, offset, input_iter),
-                        max,
+                        max
                     ) {
                         // in case of ::pattern::ExecutePattern::Always, then it's fine not to find a
                         // matching line
@@ -205,7 +205,7 @@ where
                         (Err(CsplitError::MatchNotFound(_)), Some(m)) if m != 1 && ith != 1 => {
                             return Err(CsplitError::MatchNotFoundOnRepetition(
                                 pattern_as_str,
-                                ith - 1,
+                                ith - 1
                             ));
                         }
                         (Err(err), _) => return Err(err),
@@ -346,7 +346,7 @@ impl SplitWriter<'_> {
         &mut self,
         pattern_as_str: &str,
         n: usize,
-        input_iter: &mut InputSplitter<I>,
+        input_iter: &mut InputSplitter<I>
     ) -> Result<(), CsplitError>
     where
         I: Iterator<Item = (usize, UResult<String>)>,
@@ -399,7 +399,7 @@ impl SplitWriter<'_> {
         pattern_as_str: &str,
         regex: &Regex,
         mut offset: i32,
-        input_iter: &mut InputSplitter<I>,
+        input_iter: &mut InputSplitter<I>
     ) -> Result<(), CsplitError>
     where
         I: Iterator<Item = (usize, UResult<String>)>,
@@ -448,7 +448,7 @@ impl SplitWriter<'_> {
                             None => {
                                 self.finish_split();
                                 return Err(CsplitError::LineOutOfRange(
-                                    pattern_as_str.to_string(),
+                                    pattern_as_str.to_string()
                                 ));
                             }
                         }
@@ -649,34 +649,34 @@ pub fn uu_app() -> Command {
                 .short('b')
                 .long(options::SUFFIX_FORMAT)
                 .value_name("FORMAT")
-                .help(translate!("csplit-help-suffix-format")),
+                .help(translate!("csplit-help-suffix-format"))
         )
         .arg(
             Arg::new(options::PREFIX)
                 .short('f')
                 .long(options::PREFIX)
                 .value_name("PREFIX")
-                .help(translate!("csplit-help-prefix")),
+                .help(translate!("csplit-help-prefix"))
         )
         .arg(
             Arg::new(options::KEEP_FILES)
                 .short('k')
                 .long(options::KEEP_FILES)
                 .help(translate!("csplit-help-keep-files"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SUPPRESS_MATCHED)
                 .long(options::SUPPRESS_MATCHED)
                 .help(translate!("csplit-help-suppress-matched"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DIGITS)
                 .short('n')
                 .long(options::DIGITS)
                 .value_name("DIGITS")
-                .help(translate!("csplit-help-digits")),
+                .help(translate!("csplit-help-digits"))
         )
         .arg(
             Arg::new(options::QUIET)
@@ -685,27 +685,27 @@ pub fn uu_app() -> Command {
                 .visible_short_alias('s')
                 .visible_alias("silent")
                 .help(translate!("csplit-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ELIDE_EMPTY_FILES)
                 .short('z')
                 .long(options::ELIDE_EMPTY_FILES)
                 .help(translate!("csplit-help-elide-empty-files"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .required(true)
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::PATTERN)
                 .hide(true)
                 .action(ArgAction::Append)
-                .required(true),
+                .required(true)
         )
         .after_help(translate!("csplit-after-help"))
 }

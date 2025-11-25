@@ -122,7 +122,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if (state.nflag || state.rflag) && default_format {
         return Err(USimpleError::new(
             1,
-            translate!("id-error-names-real-ids-require-flags"),
+            translate!("id-error-names-real-ids-require-flags")
         ));
     }
 
@@ -178,7 +178,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                     (getuid(), getgid())
                 }
             },
-            |p| (p.uid, p.gid),
+            |p| (p.uid, p.gid)
         );
         state.ids = Some(Ids {
             uid,
@@ -282,7 +282,7 @@ pub fn uu_app() -> Command {
                 .short('a')
                 .long(options::OPT_IGNORE)
                 .help(translate!("id-help-ignore"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_AUDIT)
@@ -296,7 +296,7 @@ pub fn uu_app() -> Command {
                     options::OPT_ZERO,
                 ])
                 .help(translate!("id-help-audit"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_EFFECTIVE_USER)
@@ -304,7 +304,7 @@ pub fn uu_app() -> Command {
                 .long(options::OPT_EFFECTIVE_USER)
                 .conflicts_with(options::OPT_GROUP)
                 .help(translate!("id-help-user"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_GROUP)
@@ -312,7 +312,7 @@ pub fn uu_app() -> Command {
                 .long(options::OPT_GROUP)
                 .conflicts_with(options::OPT_EFFECTIVE_USER)
                 .help(translate!("id-help-group"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_GROUPS)
@@ -327,41 +327,41 @@ pub fn uu_app() -> Command {
                     options::OPT_AUDIT,
                 ])
                 .help(translate!("id-help-groups"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_HUMAN_READABLE)
                 .short('p')
                 .help(translate!("id-help-human-readable"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_NAME)
                 .short('n')
                 .long(options::OPT_NAME)
                 .help(translate!("id-help-name"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_PASSWORD)
                 .short('P')
                 .help(translate!("id-help-password"))
                 .conflicts_with(options::OPT_HUMAN_READABLE)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_REAL_ID)
                 .short('r')
                 .long(options::OPT_REAL_ID)
                 .help(translate!("id-help-real"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_ZERO)
                 .short('z')
                 .long(options::OPT_ZERO)
                 .help(translate!("id-help-zero"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::OPT_CONTEXT)
@@ -369,13 +369,13 @@ pub fn uu_app() -> Command {
                 .long(options::OPT_CONTEXT)
                 .conflicts_with_all([options::OPT_GROUP, options::OPT_EFFECTIVE_USER])
                 .help(get_context_help_text())
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::ARG_USERS)
                 .action(ArgAction::Append)
                 .value_name(options::ARG_USERS)
-                .value_hint(clap::ValueHint::Username),
+                .value_hint(clap::ValueHint::Username)
         )
 }
 
@@ -458,7 +458,7 @@ fn pline(possible_uid: Option<uid_t>) {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd"))]
+#[cfg(any(target_os = "linux", target_os = "openbsd"))]
 fn pline(possible_uid: Option<uid_t>) {
     let uid = possible_uid.unwrap_or_else(getuid);
     let pw = Passwd::locate(uid).unwrap();
@@ -475,10 +475,10 @@ fn pline(possible_uid: Option<uid_t>) {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd"))]
+#[cfg(any(target_os = "linux", target_os = "openbsd"))]
 fn auditid() {}
 
-#[cfg(not(any(target_os = "linux", target_os = "android", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "linux", target_os = "openbsd")))]
 fn auditid() {
     use std::mem::MaybeUninit;
 
@@ -574,7 +574,7 @@ fn id_print(state: &State, groups: &[u32]) {
     );
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "android", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "linux", target_os = "openbsd")))]
 mod audit {
     use super::libc::{c_int, c_uint, dev_t, pid_t, uid_t};
 

@@ -32,25 +32,25 @@ impl ShortcutValueParser {
         cmd: &clap::Command,
         arg: Option<&clap::Arg>,
         value: &str,
-        possible_values: &[&PossibleValue],
+        possible_values: &[&PossibleValue]
     ) -> clap::Error {
         let mut err = clap::Error::new(ErrorKind::InvalidValue).with_cmd(cmd);
 
         if let Some(arg) = arg {
             err.insert(
                 ContextKind::InvalidArg,
-                ContextValue::String(arg.to_string()),
+                ContextValue::String(arg.to_string())
             );
         }
 
         err.insert(
             ContextKind::InvalidValue,
-            ContextValue::String(value.to_string()),
+            ContextValue::String(value.to_string())
         );
 
         err.insert(
             ContextKind::ValidValue,
-            ContextValue::Strings(self.0.iter().map(|x| x.get_name().to_string()).collect()),
+            ContextValue::Strings(self.0.iter().map(|x| x.get_name().to_string()).collect())
         );
 
         // if `possible_values` is not empty then that means this error is because of an ambiguous value.
@@ -65,7 +65,7 @@ impl ShortcutValueParser {
 fn add_ambiguous_value_tip(
     possible_values: &[&PossibleValue],
     err: &mut clap::error::Error,
-    value: &str,
+    value: &str
 ) {
     let mut formatted_possible_values = String::new();
     for (i, s) in possible_values.iter().enumerate() {
@@ -81,7 +81,7 @@ fn add_ambiguous_value_tip(
         ContextValue::StyledStrs(vec![format!(
             "It looks like '{value}' could match several values. Did you mean {formatted_possible_values}?"
         )
-        .into()]),
+        .into()])
     );
 }
 
@@ -92,7 +92,7 @@ impl TypedValueParser for ShortcutValueParser {
         &self,
         cmd: &clap::Command,
         arg: Option<&clap::Arg>,
-        value: &std::ffi::OsStr,
+        value: &std::ffi::OsStr
     ) -> Result<Self::Value, clap::Error> {
         let value = value
             .to_str()

@@ -49,13 +49,13 @@ impl TypedValueParser for NonEmptyOsStringParser {
         &self,
         _cmd: &Command,
         _arg: Option<&Arg>,
-        value: &OsStr,
+        value: &OsStr
     ) -> Result<Self::Value, clap::Error> {
         if value.is_empty() {
             let mut err = clap::Error::new(clap::error::ErrorKind::ValueValidation);
             err.insert(
                 clap::error::ContextKind::Custom,
-                clap::error::ContextValue::String(translate!("realpath-invalid-empty-operand")),
+                clap::error::ContextValue::String(translate!("realpath-invalid-empty-operand"))
             );
             return Err(err);
         }
@@ -113,7 +113,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             resolve_mode,
             can_mode,
             relative_to.as_deref(),
-            relative_base.as_deref(),
+            relative_base.as_deref()
         );
         if !quiet {
             show_if_err!(result.map_err_context(|| path.maybe_quote().to_string()));
@@ -137,7 +137,7 @@ pub fn uu_app() -> Command {
                 .short('q')
                 .long(OPT_QUIET)
                 .help(translate!("realpath-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_STRIP)
@@ -145,21 +145,21 @@ pub fn uu_app() -> Command {
                 .long(OPT_STRIP)
                 .visible_alias("no-symlinks")
                 .help(translate!("realpath-help-strip"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_ZERO)
                 .short('z')
                 .long(OPT_ZERO)
                 .help(translate!("realpath-help-zero"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_LOGICAL)
                 .short('L')
                 .long(OPT_LOGICAL)
                 .help(translate!("realpath-help-logical"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_PHYSICAL)
@@ -167,7 +167,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_PHYSICAL)
                 .overrides_with_all([OPT_STRIP, OPT_LOGICAL])
                 .help(translate!("realpath-help-physical"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CANONICALIZE)
@@ -175,7 +175,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_CANONICALIZE)
                 .overrides_with_all([OPT_CANONICALIZE_EXISTING, OPT_CANONICALIZE_MISSING])
                 .help(translate!("realpath-help-canonicalize"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CANONICALIZE_EXISTING)
@@ -183,7 +183,7 @@ pub fn uu_app() -> Command {
                 .long(OPT_CANONICALIZE_EXISTING)
                 .overrides_with_all([OPT_CANONICALIZE, OPT_CANONICALIZE_MISSING])
                 .help(translate!("realpath-help-canonicalize-existing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_CANONICALIZE_MISSING)
@@ -191,28 +191,28 @@ pub fn uu_app() -> Command {
                 .long(OPT_CANONICALIZE_MISSING)
                 .overrides_with_all([OPT_CANONICALIZE, OPT_CANONICALIZE_EXISTING])
                 .help(translate!("realpath-help-canonicalize-missing"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_RELATIVE_TO)
                 .long(OPT_RELATIVE_TO)
                 .value_name("DIR")
                 .value_parser(NonEmptyOsStringParser)
-                .help(translate!("realpath-help-relative-to")),
+                .help(translate!("realpath-help-relative-to"))
         )
         .arg(
             Arg::new(OPT_RELATIVE_BASE)
                 .long(OPT_RELATIVE_BASE)
                 .value_name("DIR")
                 .value_parser(NonEmptyOsStringParser)
-                .help(translate!("realpath-help-relative-base")),
+                .help(translate!("realpath-help-relative-base"))
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .required(true)
                 .value_parser(NonEmptyOsStringParser)
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
 }
 
@@ -223,7 +223,7 @@ pub fn uu_app() -> Command {
 fn prepare_relative_options(
     matches: &ArgMatches,
     can_mode: MissingHandling,
-    resolve_mode: ResolveMode,
+    resolve_mode: ResolveMode
 ) -> UResult<(Option<PathBuf>, Option<PathBuf>)> {
     let relative_to = matches
         .get_one::<OsString>(OPT_RELATIVE_TO)
@@ -245,13 +245,13 @@ fn prepare_relative_options(
 fn canonicalize_relative_option(
     relative: Option<PathBuf>,
     can_mode: MissingHandling,
-    resolve_mode: ResolveMode,
+    resolve_mode: ResolveMode
 ) -> UResult<Option<PathBuf>> {
     Ok(match relative {
         None => None,
         Some(p) => Some(
             canonicalize_relative(&p, can_mode, resolve_mode)
-                .map_err_context(|| p.maybe_quote().to_string())?,
+                .map_err_context(|| p.maybe_quote().to_string())?
         ),
     })
 }
@@ -266,7 +266,7 @@ fn canonicalize_relative_option(
 fn canonicalize_relative(
     r: &Path,
     can_mode: MissingHandling,
-    resolve: ResolveMode,
+    resolve: ResolveMode
 ) -> std::io::Result<PathBuf> {
     let abs = canonicalize(r, can_mode, resolve)?;
     if can_mode == MissingHandling::Existing && !abs.is_dir() {
@@ -294,7 +294,7 @@ fn resolve_path(
     resolve: ResolveMode,
     can_mode: MissingHandling,
     relative_to: Option<&Path>,
-    relative_base: Option<&Path>,
+    relative_base: Option<&Path>
 ) -> std::io::Result<()> {
     let abs = canonicalize(p, can_mode, resolve)?;
 
@@ -319,7 +319,7 @@ fn resolve_path(
 fn process_relative(
     path: PathBuf,
     relative_base: Option<&Path>,
-    relative_to: Option<&Path>,
+    relative_to: Option<&Path>
 ) -> PathBuf {
     if let Some(base) = relative_base {
         if path.starts_with(base) {

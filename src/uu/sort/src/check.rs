@@ -66,7 +66,7 @@ pub fn check(path: &OsStr, settings: &GlobalSettings) -> UResult<()> {
                 new_first,
                 settings,
                 prev_chunk.line_data(),
-                chunk.line_data(),
+                chunk.line_data()
             ) > max_allowed_cmp
             {
                 return Err(SortError::Disorder {
@@ -103,7 +103,7 @@ fn reader(
     mut file: Box<dyn Read + Send>,
     receiver: &Receiver<RecycledChunk>,
     sender: &SyncSender<Chunk>,
-    settings: &GlobalSettings,
+    settings: &GlobalSettings
 ) -> UResult<()> {
     let mut carry_over = vec![];
     for recycled_chunk in receiver {
@@ -115,7 +115,7 @@ fn reader(
             &mut file,
             &mut iter::empty(),
             settings.line_ending.into(),
-            settings,
+            settings
         )?;
         if !should_continue {
             break;

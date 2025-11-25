@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(
             version_cmp(b"100", b"20"),
             Ordering::Greater,
-            "Greater numbers are greater even if they start with a smaller digit",
+            "Greater numbers are greater even if they start with a smaller digit"
         );
 
         assert_eq!(

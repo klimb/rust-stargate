@@ -32,7 +32,7 @@ impl PreciseNumber {
     pub fn new(
         number: ExtendedBigDecimal,
         num_integral_digits: usize,
-        num_fractional_digits: Option<usize>,
+        num_fractional_digits: Option<usize>
     ) -> Self {
         Self {
             number,

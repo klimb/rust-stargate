@@ -60,14 +60,14 @@ impl Chunk {
                 // Transmuting is necessary to make recycling possible. See https://github.com/rust-lang/rfcs/pull/2802
                 // for a rfc to make this unnecessary. Its example is similar to the code here.
                 std::mem::transmute::<Vec<Line<'_>>, Vec<Line<'static>>>(std::mem::take(
-                    &mut contents.lines,
+                    &mut contents.lines
                 ))
             };
             let selections = unsafe {
                 // SAFETY: (same as above) It is safe to (temporarily) transmute to a vector of &str with a longer lifetime,
                 // because the vector is empty.
                 std::mem::transmute::<Vec<&'_ [u8]>, Vec<&'static [u8]>>(std::mem::take(
-                    &mut contents.line_data.selections,
+                    &mut contents.line_data.selections
                 ))
             };
             (
@@ -75,7 +75,7 @@ impl Chunk {
                 selections,
                 std::mem::take(&mut contents.line_data.num_infos),
                 std::mem::take(&mut contents.line_data.parsed_floats),
-                std::mem::take(&mut contents.line_data.line_num_floats),
+                std::mem::take(&mut contents.line_data.line_num_floats)
             )
         });
         RecycledChunk {
@@ -149,7 +149,7 @@ pub fn read<T: Read>(
     file: &mut T,
     next_files: &mut impl Iterator<Item = UResult<T>>,
     separator: u8,
-    settings: &GlobalSettings,
+    settings: &GlobalSettings
 ) -> UResult<bool> {
     let RecycledChunk {
         lines,
@@ -169,7 +169,7 @@ pub fn read<T: Read>(
         &mut buffer,
         max_buffer_size,
         carry_over.len(),
-        separator,
+        separator
     )?;
     carry_over.clear();
     carry_over.extend_from_slice(&buffer[read..]);
@@ -207,7 +207,7 @@ fn parse_lines<'a>(
     lines: &mut Vec<Line<'a>>,
     line_data: &mut LineData<'a>,
     separator: u8,
-    settings: &GlobalSettings,
+    settings: &GlobalSettings
 ) {
     let read = read.strip_suffix(&[separator]).unwrap_or(read);
 
@@ -220,7 +220,7 @@ fn parse_lines<'a>(
     lines.extend(
         read.split(|&c| c == separator)
             .enumerate()
-            .map(|(index, line)| Line::create(line, index, line_data, &mut token_buffer, settings)),
+            .map(|(index, line)| Line::create(line, index, line_data, &mut token_buffer, settings))
     );
 }
 
@@ -256,7 +256,7 @@ fn read_to_buffer<T: Read>(
     buffer: &mut Vec<u8>,
     max_buffer_size: Option<usize>,
     start_offset: usize,
-    separator: u8,
+    separator: u8
 ) -> UResult<(usize, bool)> {
     let mut read_target = &mut buffer[start_offset..];
     let mut last_file_empty = true;

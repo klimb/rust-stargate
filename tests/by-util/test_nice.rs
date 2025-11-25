@@ -6,7 +6,6 @@
 use uutests::new_ucmd;
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_get_current_niceness() {
     // Test that the nice command with no arguments returns the default nice
     // value, which we determine by querying libc's `nice` in our own process.
@@ -16,7 +15,6 @@ fn test_get_current_niceness() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_negative_adjustment() {
     // This assumes the test suite is run as a normal (non-root) user, and as
     // such attempting to set a negative niceness value will be rejected by

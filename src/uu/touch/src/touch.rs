@@ -157,7 +157,7 @@ fn is_first_filename_timestamp(
     reference: Option<&OsString>,
     date: Option<&str>,
     timestamp: Option<&str>,
-    files: &[&OsString],
+    files: &[&OsString]
 ) -> bool {
     timestamp.is_none()
         && reference.is_none()
@@ -194,7 +194,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         .ok_or_else(|| {
             USimpleError::new(
                 1,
-                translate!("touch-error-missing-file-operand", "help_command" => uucore::execution_phrase().to_string(),),
+                translate!("touch-error-missing-file-operand", "help_command" => uucore::execution_phrase().to_string(),)
             )
         })?
         .collect();
@@ -265,19 +265,19 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("touch-help-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::ACCESS)
                 .short('a')
                 .help(translate!("touch-help-access"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::sources::TIMESTAMP)
                 .short('t')
                 .help(translate!("touch-help-timestamp"))
-                .value_name("STAMP"),
+                .value_name("STAMP")
         )
         .arg(
             Arg::new(options::sources::DATE)
@@ -286,33 +286,33 @@ pub fn uu_app() -> Command {
                 .allow_hyphen_values(true)
                 .help(translate!("touch-help-date"))
                 .value_name("STRING")
-                .conflicts_with(options::sources::TIMESTAMP),
+                .conflicts_with(options::sources::TIMESTAMP)
         )
         .arg(
             Arg::new(options::FORCE)
                 .short('f')
                 .help("(ignored)")
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::MODIFICATION)
                 .short('m')
                 .help(translate!("touch-help-modification"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_CREATE)
                 .short('c')
                 .long(options::NO_CREATE)
                 .help(translate!("touch-help-no-create"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::NO_DEREF)
                 .short('h')
                 .long(options::NO_DEREF)
                 .help(translate!("touch-help-no-deref"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::sources::REFERENCE)
@@ -322,7 +322,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE")
                 .value_parser(ValueParser::os_string())
                 .value_hint(clap::ValueHint::AnyPath)
-                .conflicts_with(options::sources::TIMESTAMP),
+                .conflicts_with(options::sources::TIMESTAMP)
         )
         .arg(
             Arg::new(options::TIME)
@@ -332,14 +332,14 @@ pub fn uu_app() -> Command {
                 .value_parser(ShortcutValueParser::new([
                     PossibleValue::new("atime").alias("access").alias("use"),
                     PossibleValue::new("mtime").alias("modify"),
-                ])),
+                ]))
         )
         .arg(
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .num_args(1..)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
         .group(
             ArgGroup::new(options::SOURCES)
@@ -348,7 +348,7 @@ pub fn uu_app() -> Command {
                     options::sources::DATE,
                     options::sources::REFERENCE,
                 ])
-                .multiple(true),
+                .multiple(true)
         )
 }
 
@@ -386,12 +386,12 @@ pub fn touch(files: &[InputFile], opts: &Options) -> Result<(), TouchError> {
         (
             parse_date(
                 filetime_to_datetime(&atime).ok_or_else(|| TouchError::InvalidFiletime(atime))?,
-                date,
+                date
             )?,
             parse_date(
                 filetime_to_datetime(&mtime).ok_or_else(|| TouchError::InvalidFiletime(mtime))?,
-                date,
-            )?,
+                date
+            )?
         )
     } else {
         (atime, mtime)
@@ -427,7 +427,7 @@ fn touch_file(
     is_stdout: bool,
     opts: &Options,
     atime: FileTime,
-    mtime: FileTime,
+    mtime: FileTime
 ) -> UResult<()> {
     let filename = if is_stdout {
         String::from("-")
@@ -444,7 +444,7 @@ fn touch_file(
     if let Err(e) = metadata_result {
         if e.kind() != ErrorKind::NotFound {
             return Err(e.map_err_context(
-                || translate!("touch-error-setting-times-of", "filename" => filename.quote()),
+                || translate!("touch-error-setting-times-of", "filename" => filename.quote())
             ));
         }
 
@@ -455,7 +455,7 @@ fn touch_file(
         if opts.no_deref {
             let e = USimpleError::new(
                 1,
-                translate!("touch-error-setting-times-no-such-file", "filename" => filename.quote()),
+                translate!("touch-error-setting-times-no-such-file", "filename" => filename.quote())
             );
             if opts.strict {
                 return Err(e);
@@ -477,11 +477,11 @@ fn touch_file(
             if is_directory {
                 let custom_err = Error::other(translate!("touch-error-no-such-file-or-directory"));
                 return Err(custom_err.map_err_context(
-                    || translate!("touch-error-cannot-touch", "filename" => filename.quote()),
+                    || translate!("touch-error-cannot-touch", "filename" => filename.quote())
                 ));
             }
             let e = e.map_err_context(
-                || translate!("touch-error-cannot-touch", "filename" => path.quote()),
+                || translate!("touch-error-cannot-touch", "filename" => path.quote())
             );
             if opts.strict {
                 return Err(e);
@@ -538,7 +538,7 @@ fn update_times(
     is_stdout: bool,
     opts: &Options,
     atime: FileTime,
-    mtime: FileTime,
+    mtime: FileTime
 ) -> UResult<()> {
     // If changing "only" atime or mtime, grab the existing value of the other.
     let (atime, mtime) = match opts.change_times {
@@ -546,17 +546,17 @@ fn update_times(
             atime,
             stat(path, !opts.no_deref)
                 .map_err_context(
-                    || translate!("touch-error-failed-to-get-attributes", "path" => path.quote()),
+                    || translate!("touch-error-failed-to-get-attributes", "path" => path.quote())
                 )?
-                .1,
+                .1
         ),
         ChangeTimes::MtimeOnly => (
             stat(path, !opts.no_deref)
                 .map_err_context(
-                    || translate!("touch-error-failed-to-get-attributes", "path" => path.quote()),
+                    || translate!("touch-error-failed-to-get-attributes", "path" => path.quote())
                 )?
                 .0,
-            mtime,
+            mtime
         ),
         ChangeTimes::Both => (atime, mtime),
     };
@@ -584,7 +584,7 @@ fn stat(path: &Path, follow: bool) -> std::io::Result<(FileTime, FileTime)> {
 
     Ok((
         FileTime::from_last_access_time(&metadata),
-        FileTime::from_last_modification_time(&metadata),
+        FileTime::from_last_modification_time(&metadata)
     ))
 }
 
@@ -660,7 +660,7 @@ fn parse_date(ref_time: DateTime<Local>, s: &str) -> Result<FileTime, TouchError
     let ref_zoned = {
         let ts = Timestamp::new(
             ref_time.timestamp(),
-            ref_time.timestamp_subsec_nanos() as i32,
+            ref_time.timestamp_subsec_nanos() as i32
         )
         .map_err(|_| TouchError::InvalidDateFormat(s.to_owned()))?;
         Zoned::new(ts, jiff::tz::TimeZone::system())
@@ -688,7 +688,7 @@ fn prepend_century(s: &str) -> UResult<String> {
     let first_two_digits = s[..2].parse::<u32>().map_err(|_| {
         USimpleError::new(
             1,
-            translate!("touch-error-invalid-date-ts-format", "date" => s.quote()),
+            translate!("touch-error-invalid-date-ts-format", "date" => s.quote())
         )
     })?;
     Ok(format!(
@@ -721,7 +721,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
         _ => {
             return Err(USimpleError::new(
                 1,
-                translate!("touch-error-invalid-date-format", "date" => s.quote()),
+                translate!("touch-error-invalid-date-format", "date" => s.quote())
             ));
         }
     };
@@ -729,13 +729,13 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
     let local = NaiveDateTime::parse_from_str(&ts, format).map_err(|_| {
         USimpleError::new(
             1,
-            translate!("touch-error-invalid-date-ts-format", "date" => ts.quote()),
+            translate!("touch-error-invalid-date-ts-format", "date" => ts.quote())
         )
     })?;
     let LocalResult::Single(mut local) = Local.from_local_datetime(&local) else {
         return Err(USimpleError::new(
             1,
-            translate!("touch-error-invalid-date-ts-format", "date" => ts.quote()),
+            translate!("touch-error-invalid-date-ts-format", "date" => ts.quote())
         ));
     };
 
@@ -756,7 +756,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
     if local.hour() != local2.hour() {
         return Err(USimpleError::new(
             1,
-            translate!("touch-error-invalid-date-format", "date" => s.quote()),
+            translate!("touch-error-invalid-date-format", "date" => s.quote())
         ));
     }
 
@@ -823,7 +823,7 @@ mod tests {
                 date: Some("yesterday".to_owned()),
                 change_times: ChangeTimes::Both,
                 strict: false,
-            },
+            }
         ) {
             Err(TouchError::InvalidFiletime(filetime)) => assert_eq!(filetime, invalid_filetime),
             Err(e) => panic!("Expected TouchError::InvalidFiletime, got {e}"),

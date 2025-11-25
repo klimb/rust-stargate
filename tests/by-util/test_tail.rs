@@ -16,14 +16,14 @@
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd")
 ))]
 use nix::sys::signal::{Signal, kill};
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd")
 ))]
 use nix::unistd::Pid;
@@ -37,7 +37,7 @@ use std::io::Write;
 use std::io::{Seek, SeekFrom};
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -47,7 +47,7 @@ use std::process::Stdio;
 use tail::chunks::BUFFER_SIZE as CHUNK_BUFFER_SIZE;
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -297,7 +297,7 @@ fn test_follow_redirect_stdin_name_retry() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -694,7 +694,7 @@ fn test_follow_invalid_pid() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd")
 ))] // FIXME: for currently not working platforms
 fn test_follow_with_pid() {
@@ -1250,7 +1250,7 @@ fn test_retry2() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1295,7 +1295,7 @@ fn test_retry3() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1353,7 +1353,7 @@ fn test_retry4() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1397,7 +1397,7 @@ fn test_retry5() {
 // ==> existing <==
 // >X
 #[test]
-#[cfg(all(not(target_os = "windows"), not(target_os = "android")))] // FIXME: for currently not working platforms
+#[cfg(all(not(target_os = "windows"), not(target_os = "unused")))] // FIXME: for currently not working platforms
 fn test_retry6() {
     // inspired by: gnu/tests/tail-2/retry.sh
     // Ensure that --follow=descriptor (without --retry) does *not* try
@@ -1440,7 +1440,7 @@ fn test_retry6() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1515,7 +1515,7 @@ fn test_retry7() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1583,7 +1583,7 @@ fn test_retry8() {
 #[test]
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -1665,7 +1665,7 @@ fn test_retry9() {
 #[test]
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -1729,7 +1729,7 @@ fn test_follow_descriptor_vs_rename1() {
 #[test]
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -1783,7 +1783,7 @@ fn test_follow_descriptor_vs_rename2() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -1852,7 +1852,7 @@ fn test_follow_name_retry_headers() {
 }
 
 #[test]
-#[cfg(all(not(target_os = "windows"), not(target_os = "android")))] // FIXME: for currently not working platforms
+#[cfg(all(not(target_os = "windows"), not(target_os = "unused")))] // FIXME: for currently not working platforms
 fn test_follow_name_remove() {
     // This test triggers a remove event while `tail --follow=name file` is running.
     // ((sleep 2 && rm file &)>/dev/null 2>&1 &) ; tail --follow=name file
@@ -1914,7 +1914,7 @@ fn test_follow_name_remove() {
 #[test]
 #[cfg(all(
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd")
 ))] // FIXME: for currently not working platforms
 fn test_follow_name_truncate1() {
@@ -1955,7 +1955,7 @@ fn test_follow_name_truncate1() {
 #[test]
 #[cfg(all(
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd")
 ))] // FIXME: for currently not working platforms
 fn test_follow_name_truncate2() {
@@ -2083,7 +2083,7 @@ fn test_follow_truncate_fast() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -2138,7 +2138,7 @@ fn test_follow_name_move_create1() {
 #[test]
 #[cfg(all(
     not(target_vendor = "apple"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
@@ -2219,7 +2219,7 @@ fn test_follow_name_move_create2() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -2281,7 +2281,7 @@ fn test_follow_name_move1() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -2369,7 +2369,7 @@ fn test_follow_name_move2() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -2429,7 +2429,7 @@ fn test_follow_name_move_retry1() {
 #[cfg(all(
     not(target_vendor = "apple"),
     not(target_os = "windows"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_os = "freebsd"),
     not(target_os = "openbsd")
 ))] // FIXME: for currently not working platforms
@@ -3384,7 +3384,7 @@ fn test_seek_bytes_forward_outside_file() {
 // Some basic tests for ---presume-input-pipe. These tests build upon the
 // debug_assert in bounded tail to detect that we're using the bounded_tail in
 // case the option is given on command line.
-#[cfg(all(not(target_os = "android"), not(target_os = "windows")))] // FIXME:
+#[cfg(all(not(target_os = "unused"), not(target_os = "windows")))] // FIXME:
 #[test]
 fn test_args_when_presume_input_pipe_given_input_is_pipe() {
     let random_string = RandomizedString::generate(AlphanumericNewline, 1000);
@@ -3549,11 +3549,11 @@ fn test_when_argument_file_is_a_faulty_symlink_then_error() {
 
     at.symlink_file("self", "self");
 
-    #[cfg(all(not(target_env = "musl"), not(target_os = "android")))]
+    #[cfg(all(not(target_env = "musl"), not(target_os = "unused")))]
     let expected = "tail: cannot open 'self' for reading: Too many levels of symbolic links";
-    #[cfg(all(not(target_env = "musl"), target_os = "android"))]
+    #[cfg(all(not(target_env = "musl")))]
     let expected = "tail: cannot open 'self' for reading: Too many symbolic links encountered";
-    #[cfg(all(target_env = "musl", not(target_os = "android")))]
+    #[cfg(all(target_env = "musl", not(target_os = "unused")))]
     let expected = "tail: cannot open 'self' for reading: Symbolic link loop";
 
     ts.ucmd()

@@ -110,7 +110,7 @@ pub fn uu_app() -> Command {
                 .long(options::LIST)
                 .help(translate!("kill-help-list"))
                 .conflicts_with(options::TABLE)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TABLE)
@@ -118,7 +118,7 @@ pub fn uu_app() -> Command {
                 .short_alias('L')
                 .long(options::TABLE)
                 .help(translate!("kill-help-table"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SIGNAL)
@@ -127,12 +127,12 @@ pub fn uu_app() -> Command {
                 .long(options::SIGNAL)
                 .value_name("signal")
                 .help(translate!("kill-help-signal"))
-                .conflicts_with_all([options::LIST, options::TABLE]),
+                .conflicts_with_all([options::LIST, options::TABLE])
         )
         .arg(
             Arg::new(options::PIDS_OR_SIGNALS)
                 .hide(true)
-                .action(ArgAction::Append),
+                .action(ArgAction::Append)
         )
 }
 
@@ -189,7 +189,7 @@ fn print_signal(signal_name_or_value: &str) -> UResult<()> {
     }
     Err(USimpleError::new(
         1,
-        translate!("kill-error-invalid-signal", "signal" => signal_name_or_value.quote()),
+        translate!("kill-error-invalid-signal", "signal" => signal_name_or_value.quote())
     ))
 }
 
@@ -217,7 +217,7 @@ fn parse_signal_value(signal_name: &str) -> UResult<usize> {
         Some(x) => Ok(x),
         None => Err(USimpleError::new(
             1,
-            translate!("kill-error-invalid-signal", "signal" => signal_name.quote()),
+            translate!("kill-error-invalid-signal", "signal" => signal_name.quote())
         )),
     }
 }
@@ -228,7 +228,7 @@ fn parse_pids(pids: &[String]) -> UResult<Vec<i32>> {
             x.parse::<i32>().map_err(|e| {
                 USimpleError::new(
                     1,
-                    translate!("kill-error-parse-argument", "argument" => x.quote(), "error" => e),
+                    translate!("kill-error-parse-argument", "argument" => x.quote(), "error" => e)
                 )
             })
         })

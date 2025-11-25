@@ -43,7 +43,7 @@ impl<I> InputDecoder<'_, I> {
         input: &mut I,
         normal_length: usize,
         peek_length: usize,
-        byte_order: ByteOrder,
+        byte_order: ByteOrder
     ) -> InputDecoder<'_, I> {
         let bytes = vec![0; normal_length + peek_length];
 
@@ -151,7 +151,7 @@ impl MemoryDecoder<'_> {
     pub fn read_float(&self, start: usize, byte_size: usize) -> f64 {
         match byte_size {
             2 => f64::from(f16::from_bits(
-                self.byte_order.read_u16(&self.data[start..start + 2]),
+                self.byte_order.read_u16(&self.data[start..start + 2])
             )),
             4 => f64::from(self.byte_order.read_f32(&self.data[start..start + 4])),
             8 => self.byte_order.read_f64(&self.data[start..start + 8]),

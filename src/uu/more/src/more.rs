@@ -119,7 +119,7 @@ impl Options {
     fn from(matches: &ArgMatches) -> Self {
         let lines = match (
             matches.get_one::<u16>(options::LINES).copied(),
-            matches.get_one::<u16>(options::NUMBER).copied(),
+            matches.get_one::<u16>(options::NUMBER).copied()
         ) {
             // We add 1 to the number of lines to display because the last line
             // is used for the banner
@@ -163,14 +163,14 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             if file.is_dir() {
                 show!(UUsageError::new(
                     0,
-                    MoreError::IsDirectory(file.to_string_lossy().to_string()).to_string(),
+                    MoreError::IsDirectory(file.to_string_lossy().to_string()).to_string()
                 ));
                 continue;
             }
             if !file.exists() {
                 show!(USimpleError::new(
                     0,
-                    MoreError::CannotOpenNoSuchFile(file.to_string_lossy().to_string()).to_string(),
+                    MoreError::CannotOpenNoSuchFile(file.to_string_lossy().to_string()).to_string()
                 ));
                 continue;
             }
@@ -182,7 +182,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                             file.to_string_lossy().to_string(),
                             why.kind()
                         )
-                        .to_string(),
+                        .to_string()
                     ));
                     continue;
                 }
@@ -194,7 +194,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 length > 1,
                 Some(&file.to_string_lossy()),
                 next_file_str.as_deref(),
-                &mut options,
+                &mut options
             )?;
         }
     } else {
@@ -221,49 +221,49 @@ pub fn uu_app() -> Command {
                 .short('d')
                 .long(options::SILENT)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-silent")),
+                .help(translate!("more-help-silent"))
         )
         .arg(
             Arg::new(options::LOGICAL)
                 .short('l')
                 .long(options::LOGICAL)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-logical")),
+                .help(translate!("more-help-logical"))
         )
         .arg(
             Arg::new(options::EXIT_ON_EOF)
                 .short('e')
                 .long(options::EXIT_ON_EOF)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-exit-on-eof")),
+                .help(translate!("more-help-exit-on-eof"))
         )
         .arg(
             Arg::new(options::NO_PAUSE)
                 .short('f')
                 .long(options::NO_PAUSE)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-no-pause")),
+                .help(translate!("more-help-no-pause"))
         )
         .arg(
             Arg::new(options::PRINT_OVER)
                 .short('p')
                 .long(options::PRINT_OVER)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-print-over")),
+                .help(translate!("more-help-print-over"))
         )
         .arg(
             Arg::new(options::CLEAN_PRINT)
                 .short('c')
                 .long(options::CLEAN_PRINT)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-clean-print")),
+                .help(translate!("more-help-clean-print"))
         )
         .arg(
             Arg::new(options::SQUEEZE)
                 .short('s')
                 .long(options::SQUEEZE)
                 .action(ArgAction::SetTrue)
-                .help(translate!("more-help-squeeze")),
+                .help(translate!("more-help-squeeze"))
         )
         .arg(
             Arg::new(options::PLAIN)
@@ -271,7 +271,7 @@ pub fn uu_app() -> Command {
                 .long(options::PLAIN)
                 .action(ArgAction::SetTrue)
                 .hide(true)
-                .help(translate!("more-help-plain")),
+                .help(translate!("more-help-plain"))
         )
         .arg(
             Arg::new(options::LINES)
@@ -280,14 +280,14 @@ pub fn uu_app() -> Command {
                 .value_name("number")
                 .num_args(1)
                 .value_parser(value_parser!(u16).range(0..))
-                .help(translate!("more-help-lines")),
+                .help(translate!("more-help-lines"))
         )
         .arg(
             Arg::new(options::NUMBER)
                 .long(options::NUMBER)
                 .num_args(1)
                 .value_parser(value_parser!(u16).range(0..))
-                .help(translate!("more-help-number")),
+                .help(translate!("more-help-number"))
         )
         .arg(
             Arg::new(options::FROM_LINE)
@@ -296,7 +296,7 @@ pub fn uu_app() -> Command {
                 .num_args(1)
                 .value_name("number")
                 .value_parser(value_parser!(usize))
-                .help(translate!("more-help-from-line")),
+                .help(translate!("more-help-from-line"))
         )
         .arg(
             Arg::new(options::PATTERN)
@@ -305,7 +305,7 @@ pub fn uu_app() -> Command {
                 .allow_hyphen_values(true)
                 .required(false)
                 .value_name("pattern")
-                .help(translate!("more-help-pattern")),
+                .help(translate!("more-help-pattern"))
         )
         .arg(
             Arg::new(options::FILES)
@@ -313,7 +313,7 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .help(translate!("more-help-files"))
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
 }
 
@@ -423,7 +423,7 @@ fn more(
     multiple_file: bool,
     file_name: Option<&str>,
     next_file: Option<&str>,
-    options: &mut Options,
+    options: &mut Options
 ) -> UResult<()> {
     // Initialize output
     let out = setup_term()?;
@@ -485,7 +485,7 @@ impl<'a> Pager<'a> {
         file_name: Option<&'a str>,
         next_file: Option<&'a str>,
         options: &Options,
-        stdout: OutputType,
+        stdout: OutputType
     ) -> UResult<Self> {
         // Reserve one line for the status bar, ensuring at least one content row
         let content_rows = rows.saturating_sub(1).max(1) as usize;
@@ -520,7 +520,7 @@ impl<'a> Pager<'a> {
                     "line" => (self.upper_mark + 1)
                 ),
                 translate!("more-press-return"),
-                Attribute::Reset,
+                Attribute::Reset
             )?;
             self.stdout.flush()?;
             self.wait_for_enter_key()?;
@@ -582,7 +582,7 @@ impl<'a> Pager<'a> {
                     Attribute::Reverse,
                     translate!("more-error-pattern-not-found"),
                     translate!("more-press-return"),
-                    Attribute::Reset,
+                    Attribute::Reset
                 )?;
                 self.stdout.flush()?;
                 self.wait_for_enter_key()?;
@@ -615,7 +615,7 @@ impl<'a> Pager<'a> {
         self.stdout.write_all(
             MULTI_FILE_TOP_PROMPT
                 .replace("{}", self.file_name.unwrap_or_default())
-                .as_bytes(),
+                .as_bytes()
         )?;
         self.content_rows = self
             .content_rows
@@ -663,7 +663,7 @@ impl<'a> Pager<'a> {
                         modifiers: KeyModifiers::CONTROL,
                         kind: KeyEventKind::Press,
                         ..
-                    },
+                    }
                 ) => {
                     reset_term()?;
                     std::process::exit(0);
@@ -807,7 +807,7 @@ impl<'a> Pager<'a> {
                 // Highlight the pattern in the line
                 line = line.replace(
                     pattern,
-                    &format!("{}{pattern}{}", Attribute::Reverse, Attribute::Reset),
+                    &format!("{}{pattern}{}", Attribute::Reverse, Attribute::Reset)
                 );
             }
             self.stdout.write_all(format!("\r{line}\n").as_bytes())?;
@@ -875,7 +875,7 @@ impl<'a> Pager<'a> {
                 "{status}[{}]",
                 translate!(
                     "more-error-unknown-key",
-                    "key" => key,
+                    "key" => key
                 )
             ),
             (true, None) => format!("{status}{}", translate!("more-help-message")),
@@ -974,7 +974,7 @@ mod tests {
                 None,
                 self.next_file,
                 &self.options,
-                out,
+                out
             )
             .unwrap()
         }

@@ -54,7 +54,7 @@ pub fn format_system_time<W: Write>(
     out: &mut W,
     time: SystemTime,
     fmt: &str,
-    mode: FormatSystemTimeFallback,
+    mode: FormatSystemTimeFallback
 ) -> UResult<()> {
     let zoned: Result<Zoned, _> = time.try_into();
     match zoned {
@@ -103,7 +103,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M",
-            FormatSystemTimeFallback::Integer,
+            FormatSystemTimeFallback::Integer
         )
         .expect("Formatting error.");
         assert_eq!(String::from_utf8(out).unwrap(), "1970-01-01 00:00");
@@ -113,7 +113,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M:%S.%N %z",
-            FormatSystemTimeFallback::Integer,
+            FormatSystemTimeFallback::Integer
         )
         .expect("Formatting error.");
         assert_eq!(
@@ -131,7 +131,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M",
-            FormatSystemTimeFallback::Integer,
+            FormatSystemTimeFallback::Integer
         )
         .expect("Formatting error.");
         assert_eq!(String::from_utf8(out).unwrap(), "67768036191763200");
@@ -142,7 +142,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M",
-            FormatSystemTimeFallback::Integer,
+            FormatSystemTimeFallback::Integer
         )
         .expect("Formatting error.");
         assert_eq!(String::from_utf8(out).unwrap(), "-67768040922076800");
@@ -158,7 +158,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M",
-            FormatSystemTimeFallback::Float,
+            FormatSystemTimeFallback::Float
         )
         .expect("Formatting error.");
         assert_eq!(
@@ -173,7 +173,7 @@ mod tests {
             &mut out,
             time,
             "%Y-%m-%d %H:%M",
-            FormatSystemTimeFallback::Float,
+            FormatSystemTimeFallback::Float
         )
         .expect("Formatting error.");
         assert_eq!(

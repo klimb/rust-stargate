@@ -46,7 +46,7 @@ impl Base64SimdWrapper {
         use_padding: bool,
         valid_decoding_multiple: usize,
         unpadded_multiple: usize,
-        alphabet: &'static [u8],
+        alphabet: &'static [u8]
     ) -> Self {
         assert!(valid_decoding_multiple > 0);
         assert!(unpadded_multiple > 0);
@@ -197,7 +197,7 @@ impl EncodingWrapper {
         encoding: Encoding,
         valid_decoding_multiple: usize,
         unpadded_multiple: usize,
-        alphabet: &'static [u8],
+        alphabet: &'static [u8]
     ) -> Self {
         assert!(valid_decoding_multiple > 0);
 
@@ -451,7 +451,7 @@ impl SupportsFastDecodeAndEncode for Z85Wrapper {
         if input.len() % 4 != 0 {
             return Err(USimpleError::new(
                 1,
-                "error: invalid input (length must be multiple of 4 characters)".to_owned(),
+                "error: invalid input (length must be multiple of 4 characters)".to_owned()
             ));
         }
 
@@ -532,14 +532,14 @@ impl Base32Wrapper {
         encoding: Encoding,
         valid_decoding_multiple: usize,
         unpadded_multiple: usize,
-        alphabet: &'static [u8],
+        alphabet: &'static [u8]
     ) -> Self {
         Self {
             inner: EncodingWrapper::new(
                 encoding,
                 valid_decoding_multiple,
                 unpadded_multiple,
-                alphabet,
+                alphabet
             ),
         }
     }

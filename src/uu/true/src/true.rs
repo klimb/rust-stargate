@@ -51,12 +51,12 @@ pub fn uu_app() -> Command {
             Arg::new("help")
                 .long("help")
                 .help(translate!("true-help-text"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new("version")
                 .long("version")
                 .help(translate!("true-version-text"))
-                .action(ArgAction::Version),
+                .action(ArgAction::Version)
         )
 }

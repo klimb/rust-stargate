@@ -222,7 +222,7 @@ impl Strategy {
             matches: &ArgMatches,
             option: &str,
             strategy: fn(u64) -> Strategy,
-            error: fn(ParseSizeError) -> StrategyError,
+            error: fn(ParseSizeError) -> StrategyError
         ) -> Result<Strategy, StrategyError> {
             let s = matches.get_one::<String>(option).unwrap();
             let n = parse_size_u64_max(s).map_err(error)?;
@@ -241,7 +241,7 @@ impl Strategy {
             matches.value_source(OPT_LINES) == Some(ValueSource::CommandLine),
             matches.value_source(OPT_BYTES) == Some(ValueSource::CommandLine),
             matches.value_source(OPT_LINE_BYTES) == Some(ValueSource::CommandLine),
-            matches.value_source(OPT_NUMBER) == Some(ValueSource::CommandLine),
+            matches.value_source(OPT_NUMBER) == Some(ValueSource::CommandLine)
         ) {
             (Some(v), false, false, false, false) => {
                 let v = parse_size_u64_max(v).map_err(|_| {
@@ -251,7 +251,7 @@ impl Strategy {
                     Ok(Self::Lines(v))
                 } else {
                     Err(StrategyError::Lines(ParseSizeError::ParseFailure(
-                        v.to_string(),
+                        v.to_string()
                     )))
                 }
             }
@@ -266,7 +266,7 @@ impl Strategy {
                 matches,
                 OPT_LINE_BYTES,
                 Self::LineBytes,
-                StrategyError::Bytes,
+                StrategyError::Bytes
             ),
             (None, false, false, false, true) => {
                 let s = matches.get_one::<String>(OPT_NUMBER).unwrap();

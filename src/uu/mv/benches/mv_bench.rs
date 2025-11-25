@@ -21,7 +21,7 @@ fn mv_single_file(bencher: Bencher) {
                     let dst = temp_dir.path().join(format!("moved_{i}"));
                     (
                         src.to_str().unwrap().to_string(),
-                        dst.to_str().unwrap().to_string(),
+                        dst.to_str().unwrap().to_string()
                     )
                 })
                 .collect();
@@ -79,7 +79,7 @@ fn mv_directory(bencher: Bencher) {
             (
                 temp_dir,
                 src_dir.to_str().unwrap().to_string(),
-                dst_dir.to_str().unwrap().to_string(),
+                dst_dir.to_str().unwrap().to_string()
             )
         })
         .bench_values(|(temp_dir, src, dst)| {
@@ -101,7 +101,7 @@ fn mv_force_overwrite(bencher: Bencher) {
                     let dst = temp_dir.path().join(format!("f{}", i + 1000));
                     (
                         src.to_str().unwrap().to_string(),
-                        dst.to_str().unwrap().to_string(),
+                        dst.to_str().unwrap().to_string()
                     )
                 })
                 .collect();

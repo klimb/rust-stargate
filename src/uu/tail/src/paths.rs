@@ -134,7 +134,7 @@ impl HeaderPrinter {
         if self.verbose {
             println!(
                 "{}==> {string} <==",
-                if self.first_header { "" } else { "\n" },
+                if self.first_header { "" } else { "\n" }
             );
             self.first_header = false;
         }

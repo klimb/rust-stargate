@@ -77,12 +77,12 @@ fn split_short_args_with_value(args: impl uucore::Args) -> impl uucore::Args {
 fn select_precision(
     first: &PreciseNumber,
     increment: &PreciseNumber,
-    last: &PreciseNumber,
+    last: &PreciseNumber
 ) -> Option<usize> {
     match (
         first.num_fractional_digits,
         increment.num_fractional_digits,
-        last.num_fractional_digits,
+        last.num_fractional_digits
     ) {
         (Some(0), Some(0), Some(0)) => Some(0),
         (Some(f), Some(i), Some(_)) => Some(f.max(i)),
@@ -156,7 +156,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         Some(str) => (
             Format::<num_format::Float, &ExtendedBigDecimal>::parse(str)?,
             0,
-            false,
+            false
         ),
         None => {
             let precision = select_precision(&first, &increment, &last);
@@ -195,7 +195,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             (
                 Format::from_formatter(formatter),
                 padding,
-                precision == Some(0),
+                precision == Some(0)
             )
         }
     };
@@ -206,7 +206,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         &options.terminator,
         &format,
         fast_allowed,
-        padding,
+        padding
     );
 
     match result {
@@ -229,27 +229,27 @@ pub fn uu_app() -> Command {
                 .short('s')
                 .long("separator")
                 .help(translate!("seq-help-separator"))
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(OPT_TERMINATOR)
                 .short('t')
                 .long("terminator")
                 .help(translate!("seq-help-terminator"))
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(OPT_EQUAL_WIDTH)
                 .short('w')
                 .long("equal-width")
                 .help(translate!("seq-help-equal-width"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(OPT_FORMAT)
                 .short('f')
                 .long(OPT_FORMAT)
-                .help(translate!("seq-help-format")),
+                .help(translate!("seq-help-format"))
         )
         .arg(
             // we use allow_hyphen_values instead of allow_negative_numbers because clap removed
@@ -257,7 +257,7 @@ pub fn uu_app() -> Command {
             Arg::new(ARG_NUMBERS)
                 .allow_hyphen_values(true)
                 .action(ArgAction::Append)
-                .num_args(1..=3),
+                .num_args(1..=3)
         )
 }
 
@@ -270,7 +270,7 @@ fn fast_print_seq(
     last: &BigUint,
     separator: &OsStr,
     terminator: &OsStr,
-    padding: usize,
+    padding: usize
 ) -> std::io::Result<()> {
     // Nothing to do, just return.
     if last < first {
@@ -354,7 +354,7 @@ fn print_seq(
         let (first_bui, increment_u64, last_bui) = (
             first.to_biguint(),
             increment.to_biguint().and_then(|x| x.to_u64()),
-            last.to_biguint(),
+            last.to_biguint()
         );
         if let (Some(first_bui), Some(increment_u64), Some(last_bui)) =
             (first_bui, increment_u64, last_bui)
@@ -366,7 +366,7 @@ fn print_seq(
                 &last_bui,
                 separator,
                 terminator,
-                padding,
+                padding
             );
         }
     }

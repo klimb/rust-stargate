@@ -46,7 +46,7 @@ fn get_dest_gid(matches: &ArgMatches) -> UResult<(Option<u32>, String)> {
                 Some(gid)
             })
             .map_err_context(
-                || translate!("chgrp-error-failed-to-get-attributes", "file" => path.quote()),
+                || translate!("chgrp-error-failed-to-get-attributes", "file" => path.quote())
             )?
     } else {
         let group = matches
@@ -76,7 +76,7 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
             Err(_) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("chgrp-error-invalid-user", "from_group" => from_group),
+                    translate!("chgrp-error-invalid-user", "from_group" => from_group)
                 ));
             }
         }
@@ -109,45 +109,45 @@ pub fn uu_app() -> Command {
             Arg::new(options::HELP)
                 .long(options::HELP)
                 .help(translate!("chgrp-help-print-help"))
-                .action(ArgAction::Help),
+                .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::verbosity::CHANGES)
                 .short('c')
                 .long(options::verbosity::CHANGES)
                 .help(translate!("chgrp-help-changes"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::SILENT)
                 .short('f')
                 .long(options::verbosity::SILENT)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::QUIET)
                 .long(options::verbosity::QUIET)
                 .help(translate!("chgrp-help-quiet"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::VERBOSE)
                 .short('v')
                 .long(options::verbosity::VERBOSE)
                 .help(translate!("chgrp-help-verbose"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::preserve_root::PRESERVE)
                 .long(options::preserve_root::PRESERVE)
                 .help(translate!("chgrp-help-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::preserve_root::NO_PRESERVE)
                 .long(options::preserve_root::NO_PRESERVE)
                 .help(translate!("chgrp-help-no-preserve-root"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::REFERENCE)
@@ -155,20 +155,20 @@ pub fn uu_app() -> Command {
                 .value_name("RFILE")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(std::ffi::OsString))
-                .help(translate!("chgrp-help-reference")),
+                .help(translate!("chgrp-help-reference"))
         )
         .arg(
             Arg::new(options::FROM)
                 .long(options::FROM)
                 .value_name("GROUP")
-                .help(translate!("chgrp-help-from")),
+                .help(translate!("chgrp-help-from"))
         )
         .arg(
             Arg::new(options::RECURSIVE)
                 .short('R')
                 .long(options::RECURSIVE)
                 .help(translate!("chgrp-help-recursive"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         // Add common arguments with chgrp, change_owner & chmod
         .args(uucore::perms::common_args())

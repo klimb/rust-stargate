@@ -221,7 +221,7 @@ impl<'a, Sep: Separator> Repr<'a, Sep> {
     fn print_field(
         &self,
         writer: &mut impl Write,
-        field: Option<&[u8]>,
+        field: Option<&[u8]>
     ) -> Result<(), std::io::Error> {
         let value = match field {
             Some(field) => field,
@@ -236,7 +236,7 @@ impl<'a, Sep: Separator> Repr<'a, Sep> {
         &self,
         writer: &mut impl Write,
         line: &Line,
-        index: usize,
+        index: usize
     ) -> Result<(), std::io::Error> {
         for i in 0..line.field_ranges.len() {
             if i != index {
@@ -360,7 +360,7 @@ impl Spec {
                 }
                 return Err(USimpleError::new(
                     1,
-                    translate!("join-error-invalid-field-specifier", "spec" => format.quote()),
+                    translate!("join-error-invalid-field-specifier", "spec" => format.quote())
                 ));
             }
             Some('1') => FileNum::File1,
@@ -368,7 +368,7 @@ impl Spec {
             _ => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("join-error-invalid-file-number", "spec" => format.quote()),
+                    translate!("join-error-invalid-file-number", "spec" => format.quote())
                 ));
             }
         };
@@ -379,7 +379,7 @@ impl Spec {
 
         Err(USimpleError::new(
             1,
-            translate!("join-error-invalid-field-specifier", "spec" => format.quote()),
+            translate!("join-error-invalid-field-specifier", "spec" => format.quote())
         ))
     }
 }
@@ -430,7 +430,7 @@ impl<'a> State<'a> {
         stdin: &'a Stdin,
         key: usize,
         line_ending: LineEnding,
-        print_unpaired: bool,
+        print_unpaired: bool
     ) -> UResult<Self> {
         let file_buf = if name == "-" {
             Box::new(stdin.lock()) as Box<dyn BufRead>
@@ -459,7 +459,7 @@ impl<'a> State<'a> {
         &mut self,
         writer: &mut impl Write,
         input: &Input<Sep>,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> UResult<()> {
         if self.print_unpaired {
             self.print_first_line(writer, repr)?;
@@ -490,7 +490,7 @@ impl<'a> State<'a> {
         &self,
         writer: &mut impl Write,
         other: &State,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> Result<(), std::io::Error> {
         if self.has_line() {
             if other.has_line() {
@@ -510,7 +510,7 @@ impl<'a> State<'a> {
         &self,
         writer: &mut impl Write,
         other: &State,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> Result<(), std::io::Error> {
         let key = self.get_current_key();
 
@@ -555,7 +555,7 @@ impl<'a> State<'a> {
 
     fn reset_read_line<Sep: Separator>(
         &mut self,
-        input: &Input<Sep>,
+        input: &Input<Sep>
     ) -> Result<(), std::io::Error> {
         let line = self.read_line(&input.separator)?;
         self.reset(line);
@@ -575,7 +575,7 @@ impl<'a> State<'a> {
     fn initialize<Sep: Separator>(
         &mut self,
         read_sep: &Sep,
-        autoformat: bool,
+        autoformat: bool
     ) -> std::io::Result<usize> {
         if let Some(line) = self.read_line(read_sep)? {
             self.seq.push(line);
@@ -591,7 +591,7 @@ impl<'a> State<'a> {
         &mut self,
         writer: &mut impl Write,
         input: &Input<Sep>,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> UResult<()> {
         if self.has_line() {
             if self.print_unpaired {
@@ -663,7 +663,7 @@ impl<'a> State<'a> {
         &self,
         writer: &mut impl Write,
         line: &Line,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> Result<(), std::io::Error> {
         if repr.uses_format() {
             repr.print_format(writer, |spec| match *spec {
@@ -687,7 +687,7 @@ impl<'a> State<'a> {
     fn print_first_line<Sep: Separator>(
         &self,
         writer: &mut impl Write,
-        repr: &Repr<'a, Sep>,
+        repr: &Repr<'a, Sep>
     ) -> Result<(), std::io::Error> {
         self.print_line(writer, &self.seq[0], repr)
     }
@@ -719,7 +719,7 @@ fn parse_separator(value_os: &OsString) -> UResult<SepSetting> {
         #[cfg(not(unix))]
         return Err(USimpleError::new(
             1,
-            translate!("join-error-unprintable-separators"),
+            translate!("join-error-unprintable-separators")
         ));
     };
 
@@ -730,7 +730,7 @@ fn parse_separator(value_os: &OsString) -> UResult<SepSetting> {
         Some('0') if c == '\\' => Ok(SepSetting::Byte(0)),
         _ => Err(USimpleError::new(
             1,
-            translate!("join-error-multi-character-tab", "value" => value),
+            translate!("join-error-multi-character-tab", "value" => value)
         )),
     }
 }
@@ -832,7 +832,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if file1 == "-" && file2 == "-" {
         return Err(USimpleError::new(
             1,
-            translate!("join-error-both-files-stdin"),
+            translate!("join-error-both-files-stdin")
         ));
     }
 
@@ -845,7 +845,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             settings,
             MultiByteSep {
                 finder: Finder::new(&c),
-            },
+            }
         ),
         SepSetting::Whitespaces => exec(file1, file2, settings, WhitespaceSep {}),
         SepSetting::Line => exec(file1, file2, settings, LineSep {}),
@@ -866,7 +866,7 @@ pub fn uu_app() -> Command {
                 .num_args(1)
                 .value_parser(["1", "2"])
                 .value_name("FILENUM")
-                .help(translate!("join-help-a")),
+                .help(translate!("join-help-a"))
         )
         .arg(
             Arg::new("v")
@@ -875,76 +875,76 @@ pub fn uu_app() -> Command {
                 .num_args(1)
                 .value_parser(["1", "2"])
                 .value_name("FILENUM")
-                .help(translate!("join-help-v")),
+                .help(translate!("join-help-v"))
         )
         .arg(
             Arg::new("e")
                 .short('e')
                 .value_name("EMPTY")
-                .help(translate!("join-help-e")),
+                .help(translate!("join-help-e"))
         )
         .arg(
             Arg::new("i")
                 .short('i')
                 .long("ignore-case")
                 .help(translate!("join-help-i"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("j")
                 .short('j')
                 .value_name("FIELD")
-                .help(translate!("join-help-j")),
+                .help(translate!("join-help-j"))
         )
         .arg(
             Arg::new("o")
                 .short('o')
                 .value_name("FORMAT")
-                .help(translate!("join-help-o")),
+                .help(translate!("join-help-o"))
         )
         .arg(
             Arg::new("t")
                 .short('t')
                 .value_name("CHAR")
                 .value_parser(ValueParser::os_string())
-                .help(translate!("join-help-t")),
+                .help(translate!("join-help-t"))
         )
         .arg(
             Arg::new("1")
                 .short('1')
                 .value_name("FIELD")
-                .help(translate!("join-help-1")),
+                .help(translate!("join-help-1"))
         )
         .arg(
             Arg::new("2")
                 .short('2')
                 .value_name("FIELD")
-                .help(translate!("join-help-2")),
+                .help(translate!("join-help-2"))
         )
         .arg(
             Arg::new("check-order")
                 .long("check-order")
                 .help(translate!("join-help-check-order"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("nocheck-order")
                 .long("nocheck-order")
                 .help(translate!("join-help-nocheck-order"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("header")
                 .long("header")
                 .help(translate!("join-help-header"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("z")
                 .short('z')
                 .long("zero-terminated")
                 .help(translate!("join-help-z"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new("file1")
@@ -952,7 +952,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE1")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
-                .hide(true),
+                .hide(true)
         )
         .arg(
             Arg::new("file2")
@@ -960,7 +960,7 @@ pub fn uu_app() -> Command {
                 .value_name("FILE2")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(OsString))
-                .hide(true),
+                .hide(true)
         )
 }
 
@@ -968,7 +968,7 @@ fn exec<Sep: Separator>(
     file1: &OsString,
     file2: &OsString,
     settings: Settings,
-    sep: Sep,
+    sep: Sep
 ) -> UResult<()> {
     let stdin = stdin();
 
@@ -978,7 +978,7 @@ fn exec<Sep: Separator>(
         &stdin,
         settings.key1,
         settings.line_ending,
-        settings.print_unpaired1,
+        settings.print_unpaired1
     )?;
 
     let mut state2 = State::new(
@@ -987,7 +987,7 @@ fn exec<Sep: Separator>(
         &stdin,
         settings.key2,
         settings.line_ending,
-        settings.print_unpaired2,
+        settings.print_unpaired2
     )?;
 
     let input = Input::new(sep.clone(), settings.ignore_case, settings.check_order);
@@ -1100,7 +1100,7 @@ fn get_field_number(keys: Option<usize>, key: Option<usize>) -> UResult<usize> {
                 // Show zero-based field numbers as one-based.
                 return Err(USimpleError::new(
                     1,
-                    translate!("join-error-incompatible-fields", "field1" => (keys + 1), "field2" => (key + 1)),
+                    translate!("join-error-incompatible-fields", "field1" => (keys + 1), "field2" => (key + 1))
                 ));
             }
         }
@@ -1119,7 +1119,7 @@ fn parse_field_number(value: &str) -> UResult<usize> {
         Err(e) if e.kind() == &IntErrorKind::PosOverflow => Ok(usize::MAX),
         _ => Err(USimpleError::new(
             1,
-            translate!("join-error-invalid-field-number", "value" => value.quote()),
+            translate!("join-error-invalid-field-number", "value" => value.quote())
         )),
     }
 }
@@ -1130,7 +1130,7 @@ fn parse_file_number(value: &str) -> UResult<FileNum> {
         "2" => Ok(FileNum::File2),
         value => Err(USimpleError::new(
             1,
-            translate!("join-error-invalid-file-number-simple", "value" => value.quote()),
+            translate!("join-error-invalid-file-number-simple", "value" => value.quote())
         )),
     }
 }

@@ -97,7 +97,7 @@ impl NumInfo {
                         );
                     (
                         Self { exponent, sign },
-                        start..if has_si_unit { idx + 1 } else { idx },
+                        start..if has_si_unit { idx + 1 } else { idx }
                     )
                 } else {
                     (
@@ -113,7 +113,7 @@ impl NumInfo {
                             // This was no number at all.
                             // For debug output to work properly, we have to match 0..0.
                             0..0
-                        },
+                        }
                     )
                 };
             }
@@ -153,7 +153,7 @@ impl NumInfo {
                     // This was no number at all.
                     // For debug output to work properly, we have to claim to match the start of the number.
                     0..0
-                },
+                }
             )
         }
     }
@@ -161,7 +161,7 @@ impl NumInfo {
     fn is_invalid_char(
         c: u8,
         had_decimal_pt: &mut bool,
-        parse_settings: &NumInfoParseSettings,
+        parse_settings: &NumInfoParseSettings
     ) -> bool {
         if Some(c) == parse_settings.decimal_pt {
             if *had_decimal_pt {
@@ -201,7 +201,7 @@ fn get_unit(unit: Option<u8>) -> u8 {
 /// The SI-Unit takes precedence over the actual value (i.e. 2000M < 1G).
 pub fn human_numeric_str_cmp(
     (a, a_info): (&[u8], &NumInfo),
-    (b, b_info): (&[u8], &NumInfo),
+    (b, b_info): (&[u8], &NumInfo)
 ) -> Ordering {
     // 1. Sign
     if a_info.sign != b_info.sign {
@@ -409,7 +409,7 @@ mod tests {
         let (b_info, b_range) = NumInfo::parse(b, &NumInfoParseSettings::default());
         let ordering = numeric_str_cmp(
             (&a[a_range.clone()], &a_info),
-            (&b[b_range.clone()], &b_info),
+            (&b[b_range.clone()], &b_info)
         );
         assert_eq!(ordering, expected);
         let ordering = numeric_str_cmp((&b[b_range], &b_info), (&a[a_range], &a_info));
@@ -500,7 +500,7 @@ mod tests {
             &NumInfoParseSettings {
                 accept_si_units: true,
                 ..Default::default()
-            },
+            }
         );
         assert_eq!(
             info,

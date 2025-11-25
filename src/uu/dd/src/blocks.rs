@@ -80,7 +80,7 @@ fn unblock(buf: &[u8], cbs: usize) -> Vec<u8> {
 pub(crate) fn conv_block_unblock_helper(
     buf: Vec<u8>,
     mode: &ConversionMode,
-    rstat: &mut ReadStat,
+    rstat: &mut ReadStat
 ) -> Vec<u8> {
     fn apply_conversion(buf: Vec<u8>, ct: &ConversionTable) -> impl Iterator<Item = u8> + '_ {
         buf.into_iter().map(|b| ct[b as usize])
@@ -333,7 +333,7 @@ mod tests {
 
         assert_eq!(
             res,
-            vec![0u8, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, 7u8, NEWLINE],
+            vec![0u8, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, 7u8, NEWLINE]
         );
     }
 

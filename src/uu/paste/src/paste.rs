@@ -52,7 +52,7 @@ pub fn uu_app() -> Command {
                 .long(options::SERIAL)
                 .short('s')
                 .help(translate!("paste-help-serial"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::DELIMITER)
@@ -61,7 +61,7 @@ pub fn uu_app() -> Command {
                 .help(translate!("paste-help-delimiter"))
                 .value_name("LIST")
                 .default_value("\t")
-                .hide_default_value(true),
+                .hide_default_value(true)
         )
         .arg(
             Arg::new(options::FILE)
@@ -69,14 +69,14 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .default_value("-")
                 .value_hint(clap::ValueHint::FilePath)
-                .value_parser(clap::value_parser!(OsString)),
+                .value_parser(clap::value_parser!(OsString))
         )
         .arg(
             Arg::new(options::ZERO_TERMINATED)
                 .long(options::ZERO_TERMINATED)
                 .short('z')
                 .help(translate!("paste-help-zero-terminated"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
 }
 
@@ -85,7 +85,7 @@ fn paste(
     filenames: Vec<OsString>,
     serial: bool,
     delimiters: &str,
-    line_ending: LineEnding,
+    line_ending: LineEnding
 ) -> UResult<()> {
     let unescaped_and_encoded_delimiters = parse_delimiters(delimiters)?;
 
@@ -98,7 +98,7 @@ fn paste(
             InputSource::StandardInput(
                 stdin_once_cell
                     .get_or_init(|| Rc::new(RefCell::new(stdin())))
-                    .clone(),
+                    .clone()
             )
         } else {
             let path = Path::new(&filename);
@@ -239,7 +239,7 @@ fn parse_delimiters(delimiters: &str) -> UResult<Box<[Box<[u8]>]>> {
                 None => {
                     return Err(USimpleError::new(
                         1,
-                        translate!("paste-error-delimiter-unescaped-backslash", "delimiters" => delimiters),
+                        translate!("paste-error-delimiter-unescaped-backslash", "delimiters" => delimiters)
                     ));
                 }
             },

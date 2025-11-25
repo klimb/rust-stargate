@@ -131,7 +131,7 @@ fn test_stdbuf_invalid_mode_fails() {
 #[cfg(all(
     not(target_os = "openbsd"),
     not(target_os = "macos"),
-    not(target_os = "android"),
+    not(target_os = "unused"),
     not(target_env = "musl")
 ))]
 #[test]

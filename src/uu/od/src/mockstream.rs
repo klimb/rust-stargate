@@ -101,7 +101,7 @@ fn test_failing_mock_stream_chain_interrupted() {
         .chain(FailingMockStream::new(
             ErrorKind::Interrupted,
             "Interrupted",
-            5,
+            5
         ))
         .chain(Cursor::new(&b"ABCD"[..]));
 

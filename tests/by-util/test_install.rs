@@ -440,7 +440,7 @@ fn test_install_copy_file() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_install_target_file_dev_null() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -637,7 +637,7 @@ fn test_install_copy_then_compare_file() {
 }
 
 #[test]
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux"))]
 fn test_install_copy_then_compare_file_with_extra_mode() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;

@@ -63,7 +63,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         Some(inp_width) => inp_width.parse::<usize>().map_err(|e| {
             USimpleError::new(
                 1,
-                translate!("fold-error-illegal-width", "width" => inp_width.quote(), "error" => e),
+                translate!("fold-error-illegal-width", "width" => inp_width.quote(), "error" => e)
             )
         })?,
         None => 80,
@@ -89,21 +89,21 @@ pub fn uu_app() -> Command {
                 .long(options::BYTES)
                 .short('b')
                 .help(translate!("fold-bytes-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::CHARACTERS)
                 .long(options::CHARACTERS)
                 .help(translate!("fold-characters-help"))
                 .conflicts_with(options::BYTES)
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::SPACES)
                 .long(options::SPACES)
                 .short('s')
                 .help(translate!("fold-spaces-help"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::WIDTH)
@@ -111,13 +111,13 @@ pub fn uu_app() -> Command {
                 .short('w')
                 .help(translate!("fold-width-help"))
                 .value_name("WIDTH")
-                .allow_hyphen_values(true),
+                .allow_hyphen_values(true)
         )
         .arg(
             Arg::new(options::FILE)
                 .hide(true)
                 .action(ArgAction::Append)
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -138,7 +138,7 @@ fn fold(
     bytes: bool,
     characters: bool,
     spaces: bool,
-    width: usize,
+    width: usize
 ) -> UResult<()> {
     let mut output = BufWriter::new(stdout());
 
@@ -184,7 +184,7 @@ fn fold_file_bytewise<T: Read, W: Write>(
     mut file: BufReader<T>,
     spaces: bool,
     width: usize,
-    output: &mut W,
+    output: &mut W
 ) -> UResult<()> {
     let mut line = Vec::new();
 
@@ -561,7 +561,7 @@ fn fold_file<T: Read, W: Write>(
     spaces: bool,
     width: usize,
     mode: WidthMode,
-    writer: &mut W,
+    writer: &mut W
 ) -> UResult<()> {
     let mut line = Vec::new();
     let mut output = Vec::new();

@@ -206,7 +206,7 @@ fn format_type_category(t: FormatType) -> FormatTypeCategory {
 fn is_format_size_char(
     ch: Option<char>,
     format_type: FormatTypeCategory,
-    byte_size: &mut u8,
+    byte_size: &mut u8
 ) -> bool {
     match (format_type, ch) {
         (FormatTypeCategory::Integer, Some('C')) => {
@@ -246,7 +246,7 @@ fn is_format_size_char(
 fn is_format_size_decimal(
     ch: Option<char>,
     format_type: FormatTypeCategory,
-    decimal_size: &mut String,
+    decimal_size: &mut String
 ) -> bool {
     if format_type == FormatTypeCategory::Char {
         return false;

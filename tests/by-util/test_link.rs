@@ -10,7 +10,6 @@ fn test_invalid_arg() {
     new_ucmd!().arg("--definitely-invalid").fails_with_code(1);
 }
 
-#[cfg(not(target_os = "android"))]
 #[test]
 fn test_link_existing_file() {
     let (at, mut ucmd) = at_and_ucmd!();

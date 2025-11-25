@@ -52,7 +52,7 @@ impl Config {
                 if let Some(extra_op) = values.next() {
                     return Err(UUsageError::new(
                         BASE_CMD_PARSE_ERROR,
-                        translate!("base-common-extra-operand", "operand" => extra_op.to_string_lossy().quote()),
+                        translate!("base-common-extra-operand", "operand" => extra_op.to_string_lossy().quote())
                     ));
                 }
 
@@ -64,7 +64,7 @@ impl Config {
                     if !path.exists() {
                         return Err(USimpleError::new(
                             BASE_CMD_PARSE_ERROR,
-                            translate!("base-common-no-such-file", "file" => path.maybe_quote()),
+                            translate!("base-common-no-such-file", "file" => path.maybe_quote())
                         ));
                     }
 
@@ -80,7 +80,7 @@ impl Config {
                 num.parse::<usize>().map_err(|_| {
                     USimpleError::new(
                         BASE_CMD_PARSE_ERROR,
-                        translate!("base-common-invalid-wrap-size", "size" => num.quote()),
+                        translate!("base-common-invalid-wrap-size", "size" => num.quote())
                     )
                 })
             })
@@ -98,7 +98,7 @@ impl Config {
 pub fn parse_base_cmd_args(
     args: impl uucore::Args,
     about: &'static str,
-    usage: &str,
+    usage: &str
 ) -> UResult<Config> {
     let command = base_app(about, usage);
     let matches = uucore::clap_localization::handle_clap_result(command, args)?;
@@ -120,7 +120,7 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
                 .long(options::DECODE)
                 .help(translate!("base-common-help-decode"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::DECODE),
+                .overrides_with(options::DECODE)
         )
         .arg(
             Arg::new(options::IGNORE_GARBAGE)
@@ -128,7 +128,7 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
                 .long(options::IGNORE_GARBAGE)
                 .help(translate!("base-common-help-ignore-garbage"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::IGNORE_GARBAGE),
+                .overrides_with(options::IGNORE_GARBAGE)
         )
         .arg(
             Arg::new(options::WRAP)
@@ -136,7 +136,7 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
                 .long(options::WRAP)
                 .value_name("COLS")
                 .help(translate!("base-common-help-wrap", "default" => WRAP_DEFAULT))
-                .overrides_with(options::WRAP),
+                .overrides_with(options::WRAP)
         )
         // "multiple" arguments are used to check whether there is more than one
         // file passed in.
@@ -145,7 +145,7 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
                 .index(1)
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -198,14 +198,14 @@ pub fn handle_input<R: Read + Seek>(input: &mut R, format: Format, config: Confi
             read,
             &mut stdout_lock,
             supports_fast_decode_and_encode_ref,
-            config.ignore_garbage,
+            config.ignore_garbage
         )
     } else {
         fast_encode::fast_encode(
             read,
             &mut stdout_lock,
             supports_fast_decode_and_encode_ref,
-            config.wrap_cols,
+            config.wrap_cols
         )
     };
 
@@ -221,7 +221,7 @@ pub fn handle_input<R: Read + Seek>(input: &mut R, format: Format, config: Confi
 pub fn get_supports_fast_decode_and_encode(
     format: Format,
     decode: bool,
-    has_padding: bool,
+    has_padding: bool
 ) -> Box<dyn SupportsFastDecodeAndEncode> {
     const BASE16_VALID_DECODING_MULTIPLE: usize = 2;
     const BASE2_VALID_DECODING_MULTIPLE: usize = 8;
@@ -239,35 +239,35 @@ pub fn get_supports_fast_decode_and_encode(
             BASE16_VALID_DECODING_MULTIPLE,
             BASE16_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"0123456789ABCDEFabcdef",
+            b"0123456789ABCDEFabcdef"
         )),
         Format::Base2Lsbf => Box::from(EncodingWrapper::new(
             BASE2LSBF,
             BASE2_VALID_DECODING_MULTIPLE,
             BASE2_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"01",
+            b"01"
         )),
         Format::Base2Msbf => Box::from(EncodingWrapper::new(
             BASE2MSBF,
             BASE2_VALID_DECODING_MULTIPLE,
             BASE2_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"01",
+            b"01"
         )),
         Format::Base32 => Box::from(Base32Wrapper::new(
             BASE32,
             BASE32_VALID_DECODING_MULTIPLE,
             BASE32_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=",
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567="
         )),
         Format::Base32Hex => Box::from(Base32Wrapper::new(
             BASE32HEX,
             BASE32_VALID_DECODING_MULTIPLE,
             BASE32_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"0123456789ABCDEFGHIJKLMNOPQRSTUV=",
+            b"0123456789ABCDEFGHIJKLMNOPQRSTUV="
         )),
         Format::Base64 => {
             let alphabet: &[u8] = if has_padding {
@@ -280,7 +280,7 @@ pub fn get_supports_fast_decode_and_encode(
                 use_padding,
                 BASE64_VALID_DECODING_MULTIPLE,
                 BASE64_UNPADDED_MULTIPLE,
-                alphabet,
+                alphabet
             ))
         }
         Format::Base64Url => Box::from(EncodingWrapper::new(
@@ -288,7 +288,7 @@ pub fn get_supports_fast_decode_and_encode(
             BASE64_VALID_DECODING_MULTIPLE,
             BASE64_UNPADDED_MULTIPLE,
             // spell-checker:disable-next-line
-            b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=_-",
+            b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=_-"
         )),
         Format::Z85 => Box::from(Z85Wrapper {}),
         Format::Base58 => Box::from(Base58Wrapper {}),
@@ -314,7 +314,7 @@ pub mod fast_encode {
     fn encode_in_chunks_to_buffer(
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         read_buffer: &[u8],
-        encoded_buffer: &mut VecDeque<u8>,
+        encoded_buffer: &mut VecDeque<u8>
     ) -> UResult<()> {
         supports_fast_decode_and_encode.encode_to_vec_deque(read_buffer, encoded_buffer)?;
         Ok(())
@@ -324,7 +324,7 @@ pub mod fast_encode {
         encoded_buffer: &mut VecDeque<u8>,
         output: &mut dyn Write,
         is_cleanup: bool,
-        empty_wrap: bool,
+        empty_wrap: bool
     ) -> io::Result<()> {
         // TODO
         // `encoded_buffer` only has to be a VecDeque if line wrapping is enabled
@@ -350,7 +350,7 @@ pub mod fast_encode {
         }: &mut LineWrapping,
         encoded_buffer: &mut VecDeque<u8>,
         output: &mut dyn Write,
-        is_cleanup: bool,
+        is_cleanup: bool
     ) -> io::Result<()> {
         let line_length = line_length.get();
 
@@ -392,7 +392,7 @@ pub mod fast_encode {
         encoded_buffer: &mut VecDeque<u8>,
         output: &mut dyn Write,
         is_cleanup: bool,
-        empty_wrap: bool,
+        empty_wrap: bool
     ) -> io::Result<()> {
         // Write all data in `encoded_buffer` to `output`
         if let &mut Some(ref mut li) = line_wrapping {
@@ -409,7 +409,7 @@ pub mod fast_encode {
         input: Vec<u8>,
         output: &mut dyn Write,
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
-        wrap: Option<usize>,
+        wrap: Option<usize>
     ) -> UResult<()> {
         // Based on performance testing
 
@@ -472,7 +472,7 @@ pub mod fast_encode {
                     encode_in_chunks_to_buffer(
                         supports_fast_decode_and_encode,
                         read_buffer,
-                        &mut encoded_buffer,
+                        &mut encoded_buffer
                     )
                     .unwrap();
                     // Write all data in `encoded_buffer` to `output`
@@ -481,7 +481,7 @@ pub mod fast_encode {
                         &mut encoded_buffer,
                         output,
                         false,
-                        wrap == Some(0),
+                        wrap == Some(0)
                     )
                     .unwrap();
                 }
@@ -501,7 +501,7 @@ pub mod fast_encode {
                 &mut encoded_buffer,
                 output,
                 true,
-                wrap == Some(0),
+                wrap == Some(0)
             )?;
         }
         Ok(())
@@ -530,7 +530,7 @@ pub mod fast_decode {
     fn decode_in_chunks_to_buffer(
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         read_buffer_filtered: &[u8],
-        decoded_buffer: &mut Vec<u8>,
+        decoded_buffer: &mut Vec<u8>
     ) -> UResult<()> {
         supports_fast_decode_and_encode.decode_into_vec(read_buffer_filtered, decoded_buffer)?;
         Ok(())
@@ -552,7 +552,7 @@ pub mod fast_decode {
         valid_multiple: usize,
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         decoded_buffer: &mut Vec<u8>,
-        output: &mut dyn Write,
+        output: &mut dyn Write
     ) -> UResult<()> {
         // While at least one full decode block is buffered, keep draining
         // it and never yield more than block_limit per chunk.
@@ -567,7 +567,7 @@ pub mod fast_decode {
             decode_in_chunks_to_buffer(
                 supports_fast_decode_and_encode,
                 &buffer[..aligned_take],
-                decoded_buffer,
+                decoded_buffer
             )?;
 
             write_to_output(decoded_buffer, output)?;
@@ -583,7 +583,7 @@ pub mod fast_decode {
         input: Vec<u8>,
         output: &mut dyn Write,
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
-        ignore_garbage: bool,
+        ignore_garbage: bool
     ) -> UResult<()> {
         const DECODE_IN_CHUNKS_OF_SIZE_MULTIPLE: usize = 1_024;
 
@@ -626,13 +626,13 @@ pub mod fast_decode {
                     valid_multiple,
                     supports_fast_decode_and_encode,
                     &mut decoded_buffer,
-                    output,
+                    output
                 )?;
             } else if buffer.len() == decode_in_chunks_of_size {
                 decode_in_chunks_to_buffer(
                     supports_fast_decode_and_encode,
                     &buffer,
-                    &mut decoded_buffer,
+                    &mut decoded_buffer
                 )?;
                 write_to_output(&mut decoded_buffer, output)?;
                 buffer.clear();
@@ -646,7 +646,7 @@ pub mod fast_decode {
                 valid_multiple,
                 supports_fast_decode_and_encode,
                 &mut decoded_buffer,
-                output,
+                output
             )?;
         }
 

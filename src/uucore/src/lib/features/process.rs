@@ -93,7 +93,7 @@ pub trait ChildExt {
     fn wait_or_timeout(
         &mut self,
         timeout: Duration,
-        signaled: Option<&AtomicBool>,
+        signaled: Option<&AtomicBool>
     ) -> io::Result<Option<ExitStatus>>;
 }
 
@@ -121,7 +121,7 @@ impl ChildExt for Child {
     fn wait_or_timeout(
         &mut self,
         timeout: Duration,
-        signaled: Option<&AtomicBool>,
+        signaled: Option<&AtomicBool>
     ) -> io::Result<Option<ExitStatus>> {
         if timeout == Duration::from_micros(0) {
             return self.wait().map(Some);

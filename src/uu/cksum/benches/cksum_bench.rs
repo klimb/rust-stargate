@@ -18,7 +18,7 @@ macro_rules! bench_algorithm {
             bencher.bench(|| {
                 black_box(run_util_function(
                     uumain,
-                    &["--algorithm", $algo_str, file_path.to_str().unwrap()],
+                    &["--algorithm", $algo_str, file_path.to_str().unwrap()]
                 ));
             });
         }
@@ -38,7 +38,7 @@ macro_rules! bench_algorithm {
                         "--length",
                         $length,
                         file_path.to_str().unwrap(),
-                    ],
+                    ]
                 ));
             });
         }
@@ -128,7 +128,7 @@ fn cksum_raw_output(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
             uumain,
-            &["--raw", file_path.to_str().unwrap()],
+            &["--raw", file_path.to_str().unwrap()]
         ));
     });
 }
@@ -155,7 +155,7 @@ fn cksum_multiple_files(bencher: Bencher) {
                     file1.to_str().unwrap(),
                     file2.to_str().unwrap(),
                     file3.to_str().unwrap(),
-                ],
+                ]
             ));
         });
 }

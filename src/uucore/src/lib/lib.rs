@@ -135,13 +135,13 @@ pub fn disable_rust_signal_handlers() -> Result<(), Errno> {
     unsafe {
         sigaction(
             SIGSEGV,
-            &SigAction::new(SigDfl, SaFlags::empty(), SigSet::all()),
+            &SigAction::new(SigDfl, SaFlags::empty(), SigSet::all())
         )
     }?;
     unsafe {
         sigaction(
             SIGBUS,
-            &SigAction::new(SigDfl, SaFlags::empty(), SigSet::all()),
+            &SigAction::new(SigDfl, SaFlags::empty(), SigSet::all())
         )
     }?;
     Ok(())
@@ -302,7 +302,7 @@ pub fn localized_help_template(util_name: &str) -> clap::builder::StyledStr {
 /// This ensures color detection consistency between clap and our template
 pub fn localized_help_template_with_colors(
     util_name: &str,
-    colors_enabled: bool,
+    colors_enabled: bool
 ) -> clap::builder::StyledStr {
     use std::fmt::Write;
 
@@ -451,7 +451,7 @@ impl std::fmt::Display for NonUtf8OsStrError {
         use os_display::Quotable;
         let quoted = self.input_lossy_string.quote();
         f.write_fmt(format_args!(
-            "invalid UTF-8 input {quoted} encountered when converting to bytes on a platform that doesn't expose byte arguments",
+            "invalid UTF-8 input {quoted} encountered when converting to bytes on a platform that doesn't expose byte arguments"
         ))
     }
 }
@@ -502,7 +502,7 @@ pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::UResult<Cow<'_, OsStr>> {
 
     #[cfg(not(unix))]
     Ok(Cow::Owned(OsString::from(str::from_utf8(bytes).map_err(
-        |_| mods::error::UUsageError::new(1, "Unable to transform bytes into OsStr"),
+        |_| mods::error::UUsageError::new(1, "Unable to transform bytes into OsStr")
     )?)))
 }
 
@@ -541,7 +541,7 @@ pub fn os_string_to_vec(s: OsString) -> mods::error::UResult<Vec<u8>> {
 /// Equivalent to `std::BufRead::lines` which outputs each line as a `Vec<u8>`,
 /// which avoids panicking on non UTF-8 input.
 pub fn read_byte_lines<R: std::io::Read>(
-    mut buf_reader: BufReader<R>,
+    mut buf_reader: BufReader<R>
 ) -> impl Iterator<Item = Vec<u8>> {
     iter::from_fn(move || {
         let mut buf = Vec::with_capacity(256);
@@ -567,7 +567,7 @@ pub fn read_byte_lines<R: std::io::Read>(
 /// This won't panic on non UTF-8 characters on Unix,
 /// but it still will on Windows.
 pub fn read_os_string_lines<R: std::io::Read>(
-    buf_reader: BufReader<R>,
+    buf_reader: BufReader<R>
 ) -> impl Iterator<Item = OsString> {
     read_byte_lines(buf_reader).map(|byte_line| os_string_from_vec(byte_line).expect("UTF-8 error"))
 }
@@ -649,7 +649,7 @@ impl<'a> From<Utf8Chunk<'a>> for Utf8ChunkIterator<'a> {
                 chk.valid()
                     .chars()
                     .map(CharByte::from)
-                    .chain(chk.invalid().iter().map(CharByte::from)),
+                    .chain(chk.invalid().iter().map(CharByte::from))
             ),
         }
     }

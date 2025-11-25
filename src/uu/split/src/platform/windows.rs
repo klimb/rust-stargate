@@ -16,7 +16,7 @@ use uucore::translate;
 pub fn instantiate_current_writer(
     _filter: Option<&str>,
     filename: &str,
-    is_new: bool,
+    is_new: bool
 ) -> Result<BufWriter<Box<dyn Write>>> {
     let file = if is_new {
         // create new file

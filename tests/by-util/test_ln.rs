@@ -808,7 +808,6 @@ fn test_force_same_file_detected_after_canonicalization() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_force_ln_existing_hard_link_entry() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -840,7 +839,6 @@ fn test_force_ln_existing_hard_link_entry() {
 }
 
 #[test]
-#[cfg(not(target_os = "android"))]
 fn test_ln_seen_file() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;

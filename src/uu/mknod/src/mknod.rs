@@ -110,20 +110,20 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let dev = match (
         file_type,
         matches.get_one::<u64>(options::MAJOR),
-        matches.get_one::<u64>(options::MINOR),
+        matches.get_one::<u64>(options::MINOR)
     ) {
         (FileType::Fifo, None, None) => 0,
         (FileType::Fifo, _, _) => {
             return Err(UUsageError::new(
                 1,
-                translate!("mknod-error-fifo-no-major-minor"),
+                translate!("mknod-error-fifo-no-major-minor")
             ));
         }
         (_, Some(&major), Some(&minor)) => makedev(major, minor),
         _ => {
             return Err(UUsageError::new(
                 1,
-                translate!("mknod-error-special-require-major-minor"),
+                translate!("mknod-error-special-require-major-minor")
             ));
         }
     };
@@ -152,33 +152,33 @@ pub fn uu_app() -> Command {
                 .short('m')
                 .long("mode")
                 .value_name("MODE")
-                .help(translate!("mknod-help-mode")),
+                .help(translate!("mknod-help-mode"))
         )
         .arg(
             Arg::new("name")
                 .value_name("NAME")
                 .help(translate!("mknod-help-name"))
                 .required(true)
-                .value_hint(clap::ValueHint::AnyPath),
+                .value_hint(clap::ValueHint::AnyPath)
         )
         .arg(
             Arg::new(options::TYPE)
                 .value_name("TYPE")
                 .help(translate!("mknod-help-type"))
                 .required(true)
-                .value_parser(parse_type),
+                .value_parser(parse_type)
         )
         .arg(
             Arg::new(options::MAJOR)
                 .value_name(options::MAJOR)
                 .help(translate!("mknod-help-major"))
-                .value_parser(value_parser!(u64)),
+                .value_parser(value_parser!(u64))
         )
         .arg(
             Arg::new(options::MINOR)
                 .value_name(options::MINOR)
                 .help(translate!("mknod-help-minor"))
-                .value_parser(value_parser!(u64)),
+                .value_parser(value_parser!(u64))
         )
 }
 

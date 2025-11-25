@@ -40,7 +40,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if name_args.is_empty() {
         return Err(UUsageError::new(
             1,
-            translate!("basename-error-missing-operand"),
+            translate!("basename-error-missing-operand")
         ));
     }
     let multiple_paths = matches.get_one::<OsString>(options::SUFFIX).is_some()
@@ -60,7 +60,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 return Err(UUsageError::new(
                     1,
                     translate!("basename-error-extra-operand",
-                               "operand" => name_args[2].quote()),
+                               "operand" => name_args[2].quote())
                 ));
             }
         }
@@ -91,7 +91,7 @@ pub fn uu_app() -> Command {
                 .long(options::MULTIPLE)
                 .help(translate!("basename-help-multiple"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::MULTIPLE),
+                .overrides_with(options::MULTIPLE)
         )
         .arg(
             Arg::new(options::NAME)
@@ -99,7 +99,7 @@ pub fn uu_app() -> Command {
                 .value_parser(ValueParser::os_string())
                 .value_hint(clap::ValueHint::AnyPath)
                 .hide(true)
-                .trailing_var_arg(true),
+                .trailing_var_arg(true)
         )
         .arg(
             Arg::new(options::SUFFIX)
@@ -108,7 +108,7 @@ pub fn uu_app() -> Command {
                 .value_name("SUFFIX")
                 .value_parser(ValueParser::os_string())
                 .help(translate!("basename-help-suffix"))
-                .overrides_with(options::SUFFIX),
+                .overrides_with(options::SUFFIX)
         )
         .arg(
             Arg::new(options::ZERO)
@@ -116,7 +116,7 @@ pub fn uu_app() -> Command {
                 .long(options::ZERO)
                 .help(translate!("basename-help-zero"))
                 .action(ArgAction::SetTrue)
-                .overrides_with(options::ZERO),
+                .overrides_with(options::ZERO)
         )
 }
 

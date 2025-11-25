@@ -27,7 +27,7 @@ pub struct WatcherRx {
 impl WatcherRx {
     fn new(
         watcher: Box<dyn Watcher>,
-        receiver: Receiver<Result<notify::Event, notify::Error>>,
+        receiver: Receiver<Result<notify::Event, notify::Error>>
     ) -> Self {
         Self { watcher, receiver }
     }
@@ -58,7 +58,7 @@ impl WatcherRx {
             } else {
                 return Err(USimpleError::new(
                     1,
-                    translate!("tail-error-cannot-watch-parent-directory", "path" => path.display()),
+                    translate!("tail-error-cannot-watch-parent-directory", "path" => path.display())
                 ));
             }
         }
@@ -109,7 +109,7 @@ impl Observer {
         follow: Option<FollowMode>,
         use_polling: bool,
         files: FileHandling,
-        pid: platform::Pid,
+        pid: platform::Pid
     ) -> Self {
         let pid = if platform::supports_pid_checks(pid) {
             pid
@@ -134,7 +134,7 @@ impl Observer {
             settings.follow,
             settings.use_polling,
             FileHandling::from(settings),
-            settings.pid,
+            settings.pid
         )
     }
 
@@ -143,7 +143,7 @@ impl Observer {
         path: &Path,
         display_name: &str,
         reader: Option<Box<dyn BufRead>>,
-        update_last: bool,
+        update_last: bool
     ) -> UResult<()> {
         if self.follow.is_some() {
             let path = if path.is_relative() {
@@ -155,7 +155,7 @@ impl Observer {
             self.files.insert(
                 &path,
                 PathData::new(reader, metadata, display_name),
-                update_last,
+                update_last
             );
         }
 
@@ -166,14 +166,14 @@ impl Observer {
         &mut self,
         display_name: &str,
         reader: Option<Box<dyn BufRead>>,
-        update_last: bool,
+        update_last: bool
     ) -> UResult<()> {
         if self.follow == Some(FollowMode::Descriptor) {
             return self.add_path(
                 &PathBuf::from(text::DEV_STDIN),
                 display_name,
                 reader,
-                update_last,
+                update_last
             );
         }
 
@@ -184,7 +184,7 @@ impl Observer {
         &mut self,
         path: &Path,
         display_name: &str,
-        update_last: bool,
+        update_last: bool
     ) -> UResult<()> {
         if self.retry && self.follow.is_some() {
             return self.add_path(path, display_name, None, update_last);
@@ -311,7 +311,7 @@ impl Observer {
     fn handle_event(
         &mut self,
         event: &notify::Event,
-        settings: &Settings,
+        settings: &Settings
     ) -> UResult<Vec<PathBuf>> {
         use notify::event::*;
 
@@ -578,13 +578,13 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
             })) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("tail-error-backend-resources-exhausted", "backend" => text::BACKEND),
+                    translate!("tail-error-backend-resources-exhausted", "backend" => text::BACKEND)
                 ));
             }
             Ok(Err(e)) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("tail-error-notify-error", "error" => e),
+                    translate!("tail-error-notify-error", "error" => e)
                 ));
             }
             Err(mpsc::RecvTimeoutError::Timeout) => {
@@ -593,7 +593,7 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
             Err(e) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("tail-error-recv-timeout-error", "error" => e),
+                    translate!("tail-error-recv-timeout-error", "error" => e)
                 ));
             }
         }

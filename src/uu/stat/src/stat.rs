@@ -82,7 +82,7 @@ fn check_bound(slice: &str, bound: usize, beg: usize, end: usize) -> UResult<()>
             StatError::InvalidDirective {
                 directive: slice[beg..end].quote().to_string(),
             }
-            .to_string(),
+            .to_string()
         ));
     }
     Ok(())
@@ -120,7 +120,7 @@ fn pad_and_print_bytes<W: Write>(
     bytes: &[u8],
     left: bool,
     width: usize,
-    precision: Precision,
+    precision: Precision
 ) -> Result<(), std::io::Error> {
     let display_bytes = match precision {
         Precision::Number(p) if p < bytes.len() => &bytes[..p],
@@ -451,7 +451,7 @@ fn get_quoted_file_name(
     display_name: &str,
     file: &OsString,
     file_type: &FileType,
-    from_user: bool,
+    from_user: bool
 ) -> Result<String, i32> {
     let quoting_style = env::var("QUOTING_STYLE")
         .ok()
@@ -537,7 +537,7 @@ fn print_integer(
     flags: &Flags,
     width: usize,
     precision: Precision,
-    padding_char: Padding,
+    padding_char: Padding
 ) {
     let num = num.to_string();
     let arg = if flags.group {
@@ -626,7 +626,7 @@ fn print_unsigned(
     flags: &Flags,
     width: usize,
     precision: Precision,
-    padding_char: Padding,
+    padding_char: Padding
 ) {
     let num = num.to_string();
     let s = if flags.group {
@@ -656,7 +656,7 @@ fn print_unsigned_oct(
     flags: &Flags,
     width: usize,
     precision: Precision,
-    padding_char: Padding,
+    padding_char: Padding
 ) {
     let prefix = if flags.alter { "0" } else { "" };
     let s = match precision {
@@ -681,7 +681,7 @@ fn print_unsigned_hex(
     flags: &Flags,
     width: usize,
     precision: Precision,
-    padding_char: Padding,
+    padding_char: Padding
 ) {
     let prefix = if flags.alter { "0x" } else { "" };
     let s = match precision {
@@ -730,7 +730,7 @@ impl Stater {
         chars: &[char],
         i: &mut usize,
         bound: usize,
-        format_str: &str,
+        format_str: &str
     ) -> UResult<Token> {
         let old = *i;
 
@@ -764,7 +764,7 @@ impl Stater {
                     StatError::InvalidDirective {
                         directive: invalid_directive.quote().to_string(),
                     }
-                    .to_string(),
+                    .to_string()
                 ));
             }
         }
@@ -818,7 +818,7 @@ impl Stater {
         chars: &[char],
         i: &mut usize,
         bound: usize,
-        format_str: &str,
+        format_str: &str
     ) -> Token {
         *i += 1;
         if *i >= bound {
@@ -886,12 +886,12 @@ impl Stater {
         while i < bound {
             match chars.get(i) {
                 Some('%') => tokens.push(Self::handle_percent_case(
-                    &chars, &mut i, bound, format_str,
+                    &chars, &mut i, bound, format_str
                 )?),
                 Some('\\') => {
                     if use_printf {
                         tokens.push(Self::handle_escape_sequences(
-                            &chars, &mut i, bound, format_str,
+                            &chars, &mut i, bound, format_str
                         ));
                     } else {
                         tokens.push(Token::Char('\\'));
@@ -949,7 +949,7 @@ impl Stater {
                         StatError::CannotReadFilesystem {
                             error: e.to_string(),
                         }
-                        .to_string(),
+                        .to_string()
                     )
                 })?
                 .iter()
@@ -1004,7 +1004,7 @@ impl Stater {
         file: &OsString,
         file_type: &FileType,
         from_user: bool,
-        _follow_symbolic_links: bool,
+        _follow_symbolic_links: bool
     ) -> Result<(), i32> {
         match *t {
             Token::Byte(byte) => write_raw_byte(byte),
@@ -1086,7 +1086,7 @@ impl Stater {
                     // time of file birth, seconds since Epoch; 0 if unknown
                     'W' => OutputType::Integer(
                         metadata_get_time(meta, MetadataTimeField::Birth)
-                            .map_or(0, |x| system_time_to_sec(x).0),
+                            .map_or(0, |x| system_time_to_sec(x).0)
                     ),
 
                     // time of last access, human-readable
@@ -1192,7 +1192,7 @@ impl Stater {
                             &file,
                             &file_type,
                             self.from_user,
-                            follow_symbolic_links,
+                            follow_symbolic_links
                         ) {
                             return code;
                         }
@@ -1306,40 +1306,40 @@ pub fn uu_app() -> Command {
                 .short('L')
                 .long(options::DEREFERENCE)
                 .help(translate!("stat-help-dereference"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FILE_SYSTEM)
                 .short('f')
                 .long(options::FILE_SYSTEM)
                 .help(translate!("stat-help-file-system"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::TERSE)
                 .short('t')
                 .long(options::TERSE)
                 .help(translate!("stat-help-terse"))
-                .action(ArgAction::SetTrue),
+                .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::FORMAT)
                 .short('c')
                 .long(options::FORMAT)
                 .help(translate!("stat-help-format"))
-                .value_name("FORMAT"),
+                .value_name("FORMAT")
         )
         .arg(
             Arg::new(options::PRINTF)
                 .long(options::PRINTF)
                 .value_name("FORMAT")
-                .help(translate!("stat-help-printf")),
+                .help(translate!("stat-help-printf"))
         )
         .arg(
             Arg::new(options::FILES)
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::FilePath),
+                .value_hint(clap::ValueHint::FilePath)
         )
 }
 
@@ -1352,7 +1352,7 @@ fn pretty_time(meta: &Metadata, md_time_field: MetadataTimeField) -> String {
             &mut tmp,
             time,
             PRETTY_DATETIME_FORMAT,
-            FormatSystemTimeFallback::Float,
+            FormatSystemTimeFallback::Float
         )
         .is_ok()
         {

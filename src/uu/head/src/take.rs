@@ -54,7 +54,7 @@ impl TakeAllBuffer {
     fn write_bytes_limit(
         &mut self,
         writer: &mut impl Write,
-        max_bytes: usize,
+        max_bytes: usize
     ) -> std::io::Result<usize> {
         let bytes_to_write = self.remaining_bytes().min(max_bytes);
         self.write_bytes_exact(writer, bytes_to_write)?;
@@ -94,7 +94,7 @@ impl TakeAllBuffer {
 pub fn copy_all_but_n_bytes(
     reader: &mut impl Read,
     writer: &mut impl Write,
-    n: usize,
+    n: usize
 ) -> std::io::Result<usize> {
     let mut buffers: VecDeque<TakeAllBuffer> = VecDeque::new();
     let mut empty_buffer_pool: Vec<TakeAllBuffer> = vec![];
@@ -161,7 +161,7 @@ impl TakeAllLinesBuffer {
     fn fill_buffer(
         &mut self,
         reader: &mut impl Read,
-        separator: u8,
+        separator: u8
     ) -> std::io::Result<BytesAndLines> {
         let bytes_read = self.inner.fill_buffer(reader)?;
         // Count the number of lines...
@@ -181,7 +181,7 @@ impl TakeAllLinesBuffer {
         &mut self,
         writer: &mut impl Write,
         max_lines: usize,
-        separator: u8,
+        separator: u8
     ) -> std::io::Result<BytesAndLines> {
         assert!(max_lines > 0, "Must request at least 1 line.");
         let ret;
@@ -251,7 +251,7 @@ pub fn copy_all_but_n_lines<R: Read, W: Write>(
     mut reader: R,
     writer: &mut W,
     n: usize,
-    separator: u8,
+    separator: u8
 ) -> std::io::Result<usize> {
     // This function requires `n` > 0. Assert it!
     assert!(n > 0);
@@ -562,7 +562,7 @@ mod tests {
         let bytes_copied = copy_all_but_n_bytes(
             &mut input_reader,
             &mut output_reader,
-            input_buffer.len() + 1,
+            input_buffer.len() + 1
         )
         .unwrap();
         assert_eq!(bytes_copied, 0);
@@ -581,7 +581,7 @@ mod tests {
         let bytes_copied = copy_all_but_n_bytes(
             &mut input_reader,
             &mut output_reader,
-            input_buffer.len() - 1,
+            input_buffer.len() - 1
         )
         .unwrap();
         assert_eq!(bytes_copied, 1);
