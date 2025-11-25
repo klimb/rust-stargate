@@ -9,6 +9,7 @@ pub mod display;
 pub mod error;
 #[cfg(feature = "fs")]
 pub mod io;
+pub mod json_output;
 pub mod line_ending;
 pub mod locale;
 pub mod os;

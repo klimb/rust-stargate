@@ -8,14 +8,25 @@ use std::ffi::OsString;
 use uucore::display::println_verbatim;
 use uucore::error::{FromIo, UResult};
 use uucore::translate;
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 mod platform;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
     let username = whoami()?;
-    println_verbatim(username).map_err_context(|| translate!("whoami-error-failed-to-print"))?;
+
+    if opts.json_output {
+        let username_str = username.to_string_lossy().to_string();
+        json_output::output(opts, json!({"username": username_str}), || {
+            Ok(())
+        })?;
+    } else {
+        println_verbatim(username).map_err_context(|| translate!("whoami-error-failed-to-print"))?;
+    }
     Ok(())
 }
 
@@ -25,10 +36,12 @@ pub fn whoami() -> UResult<OsString> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
         .about(translate!("whoami-about"))
         .override_usage(uucore::util_name())
-        .infer_long_args(true)
+        .infer_long_args(true);
+
+    json_output::add_json_args(cmd)
 }

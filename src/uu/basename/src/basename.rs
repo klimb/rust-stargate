@@ -16,6 +16,8 @@ use uucore::format_usage;
 use uucore::line_ending::LineEnding;
 
 use uucore::translate;
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 pub mod options {
     pub static MULTIPLE: &str = "multiple";
@@ -32,6 +34,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
+    let opts = JsonOutputOptions::from_matches(&matches);
 
     let mut name_args = matches
         .get_many::<OsString>(options::NAME)
@@ -70,16 +73,26 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // Main Program Processing
     //
 
-    for path in name_args {
-        stdout().write_all(&basename(path, &suffix)?)?;
-        print!("{line_ending}");
+    if opts.json_output {
+        let mut results = Vec::new();
+        for path in name_args {
+            let basename_bytes = basename(path, &suffix)?;
+            let basename_str = String::from_utf8_lossy(&basename_bytes).to_string();
+            results.push(basename_str);
+        }
+        json_output::output(opts, json!({"basenames": results}), || Ok(()))?;
+    } else {
+        for path in name_args {
+            stdout().write_all(&basename(path, &suffix)?)?;
+            print!("{line_ending}");
+        }
     }
 
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
         .about(translate!("basename-about"))
@@ -117,7 +130,9 @@ pub fn uu_app() -> Command {
                 .help(translate!("basename-help-zero"))
                 .action(ArgAction::SetTrue)
                 .overrides_with(options::ZERO)
-        )
+        );
+
+    json_output::add_json_args(cmd)
 }
 
 // We return a Vec<u8>. Returning a seemingly more proper `OsString` would

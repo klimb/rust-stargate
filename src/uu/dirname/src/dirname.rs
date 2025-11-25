@@ -12,6 +12,8 @@ use uucore::format_usage;
 use uucore::line_ending::LineEnding;
 
 use uucore::translate;
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 mod options {
     pub const ZERO: &str = "zero";
@@ -70,6 +72,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
+    let opts = JsonOutputOptions::from_matches(&matches);
 
     let dirnames: Vec<OsString> = matches
         .get_many::<OsString>(options::DIR)
@@ -81,37 +84,66 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         return Err(UUsageError::new(1, translate!("dirname-missing-operand")));
     }
 
-    for path in &dirnames {
-        let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
-
-        if handle_trailing_dot(path_bytes).is_none() {
-            // Normal path handling using Path::parent()
-            let p = Path::new(path);
-            match p.parent() {
-                Some(d) => {
-                    if d.components().next().is_none() {
-                        print!(".");
-                    } else {
-                        print_verbatim(d).unwrap();
+    if opts.json_output {
+        // For JSON output, collect results into a vector
+        let mut results = Vec::new();
+        for path in &dirnames {
+            let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
+            if handle_trailing_dot(path_bytes).is_none() {
+                let p = Path::new(path);
+                let dirname_str = match p.parent() {
+                    Some(d) => {
+                        if d.components().next().is_none() {
+                            ".".to_string()
+                        } else {
+                            d.to_string_lossy().to_string()
+                        }
                     }
-                }
-                None => {
-                    if p.is_absolute() || path.as_os_str() == "/" {
-                        print!("/");
-                    } else {
-                        print!(".");
+                    None => {
+                        if p.is_absolute() || path.as_os_str() == "/" {
+                            "/".to_string()
+                        } else {
+                            ".".to_string()
+                        }
+                    }
+                };
+                results.push(dirname_str);
+            }
+        }
+        json_output::output(opts, json!({"dirnames": results}), || Ok(()))?;
+    } else {
+        for path in &dirnames {
+            let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
+
+            if handle_trailing_dot(path_bytes).is_none() {
+                // Normal path handling using Path::parent()
+                let p = Path::new(path);
+                match p.parent() {
+                    Some(d) => {
+                        if d.components().next().is_none() {
+                            print!(".");
+                        } else {
+                            print_verbatim(d).unwrap();
+                        }
+                    }
+                    None => {
+                        if p.is_absolute() || path.as_os_str() == "/" {
+                            print!("/");
+                        } else {
+                            print!(".");
+                        }
                     }
                 }
             }
+            print!("{line_ending}");
         }
-        print!("{line_ending}");
     }
 
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .about(translate!("dirname-about"))
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
@@ -132,5 +164,7 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString))
-        )
+        );
+
+    json_output::add_json_args(cmd)
 }

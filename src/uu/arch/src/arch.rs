@@ -8,23 +8,33 @@ use platform_info::*;
 use clap::Command;
 use uucore::error::{UResult, USimpleError};
 use uucore::translate;
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
 
     let uts =
         PlatformInfo::new().map_err(|_e| USimpleError::new(1, translate!("cannot-get-system")))?;
+    let arch = uts.machine().to_string_lossy().trim().to_string();
 
-    println!("{}", uts.machine().to_string_lossy().trim());
+    json_output::output(opts, json!({"architecture": arch}), || {
+        println!("{}", arch);
+        Ok(())
+    })?;
+
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
         .about(translate!("arch-about"))
         .after_help(translate!("arch-after-help"))
-        .infer_long_args(true)
+        .infer_long_args(true);
+
+    json_output::add_json_args(cmd)
 }
