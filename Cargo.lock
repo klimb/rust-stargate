@@ -573,6 +573,7 @@ dependencies = [
  "uu_join",
  "uu_kill",
  "uu_link",
+ "uu_list_directory",
  "uu_ln",
  "uu_logname",
  "uu_ls",
@@ -3387,6 +3388,26 @@ dependencies = [
  "clap",
  "fluent",
  "uucore",
+]
+
+[[package]]
+name = "uu_list_directory"
+version = "0.4.0"
+dependencies = [
+ "ansi-width",
+ "clap",
+ "codspeed-divan-compat",
+ "fluent",
+ "glob",
+ "hostname",
+ "lscolors",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "terminal_size",
+ "thiserror 2.0.17",
+ "uucore",
+ "uutils_term_grid",
 ]
 
 [[package]]

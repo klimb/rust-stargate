@@ -103,6 +103,7 @@ PROGS       := \
 	link \
 	ln \
 	ls \
+	list_directory \
 	mkdir \
 	mktemp \
 	more \
