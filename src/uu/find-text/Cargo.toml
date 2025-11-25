@@ -1,0 +1,28 @@
+[package]
+name = "uu_find_text"
+description = "find-text ~ search for text patterns in files"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/find-text"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/find_text.rs"
+
+[dependencies]
+clap = { workspace = true }
+uucore = { workspace = true }
+fluent = { workspace = true }
+serde_json = { workspace = true }
+
+[[bin]]
+name = "find-text"
+path = "src/main.rs"

@@ -69,6 +69,7 @@ feat_common_core = [
   "expr",
   "factor",
   "false",
+  "find_text",
   "fmt",
   "fold",
   "hashsum",
@@ -380,6 +381,7 @@ expand = { optional = true, version = "0.4.0", package = "uu_expand", path = "sr
 expr = { optional = true, version = "0.4.0", package = "uu_expr", path = "src/uu/expr" }
 factor = { optional = true, version = "0.4.0", package = "uu_factor", path = "src/uu/factor" }
 false = { optional = true, version = "0.4.0", package = "uu_false", path = "src/uu/false" }
+find_text = { optional = true, version = "0.4.0", package = "uu_find_text", path = "src/uu/find-text" }
 fmt = { optional = true, version = "0.4.0", package = "uu_fmt", path = "src/uu/fmt" }
 fold = { optional = true, version = "0.4.0", package = "uu_fold", path = "src/uu/fold" }
 groups = { optional = true, version = "0.4.0", package = "uu_groups", path = "src/uu/groups" }
