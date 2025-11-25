@@ -202,6 +202,42 @@ macro_rules! bin {
     };
 }
 
+/// Execute utility code for `util`.
+///
+/// This macro expands to a main function that invokes the `uumain` function in `util`
+/// Exits with code returned by `uumain`.
+#[macro_export]
+macro_rules! obj {
+    ($util:ident) => {
+        pub fn main() {
+            use std::io::Write;
+            use uucore::locale;
+            // suppress extraneous error output for SIGPIPE failures/panics
+            uucore::panic::mute_sigpipe_panic();
+            locale::setup_localization(uucore::get_canonical_util_name(stringify!($util)))
+                .unwrap_or_else(|err| {
+                    match err {
+                        uucore::locale::LocalizationError::ParseResource {
+                            error: err_msg,
+                            snippet,
+                        } => eprintln!("Localization parse error at {snippet}: {err_msg:?}"),
+                        other => eprintln!("Could not init the localization system: {other}"),
+                    }
+                    std::process::exit(99)
+                });
+
+            // execute utility code
+            let code = $util::uumain(uucore::args_os());
+            // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
+            if let Err(e) = std::io::stdout().flush() {
+                eprintln!("Error flushing stdout: {e}");
+            }
+
+            std::process::exit(code);
+        }
+    };
+}
+
 /// Generate the version string for clap.
 ///
 /// The generated string has the format `(<project name>) <version>`, for
@@ -367,6 +403,19 @@ pub trait Args: Iterator<Item = OsString> + Sized {
         self.filter_map(|s| s.into_string().ok()).collect()
     }
 }
+
+pub trait CommonArgs: Iterator<Item = OsString> + Sized {
+    /// Collects the iterator into a `Vec<String>`, lossily converting the `OsString`s to `Strings`.
+    fn collect_lossy(self) -> Vec<String> {
+        self.map(|s| s.to_string_lossy().into_owned()).collect()
+    }
+
+    /// Collects the iterator into a `Vec<String>`, removing any elements that contain invalid encoding.
+    fn collect_ignore(self) -> Vec<String> {
+        self.filter_map(|s| s.into_string().ok()).collect()
+    }
+}
+
 
 impl<T: Iterator<Item = OsString> + Sized> Args for T {}
 

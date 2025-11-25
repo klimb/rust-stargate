@@ -1,1 +1,1 @@
-uucore::bin!(uu_get_hostname);
+uucore::obj!(uu_get_hostname);

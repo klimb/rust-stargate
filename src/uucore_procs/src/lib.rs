@@ -11,6 +11,37 @@
 use proc_macro::TokenStream;
 use quote::quote;
 
+#[proc_macro_attribute]
+/// A procedural macro to define to_object
+pub fn to_obj(_args: TokenStream, stream: TokenStream) -> TokenStream {
+    let stream = proc_macro2::TokenStream::from(stream);
+
+    let new = quote!(
+        pub fn to_obj(args: impl uucore::CommonArgs) -> i32 {
+            #stream
+
+            // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)
+            #[cfg(unix)]
+            uucore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
+            let result = to_obj(args);
+            match result {
+                Success(()) => uucore::error::get_exit_code(),
+                Error(e) => {
+                    let s = format!("{e}");
+                    if s != "" {
+                        uucore::show_error!("{s}");
+                    }
+                    if e.usage() {
+                        eprintln!("Try '{} --help' for more information.", uucore::execution_phrase());
+                    }
+                    e.code()
+                }
+            }
+        }
+    );
+
+    TokenStream::from(new)
+}
 //## rust proc-macro background info
 //* ref: <https://dev.to/naufraghi/procedural-macro-in-rust-101-k3f> @@ <http://archive.is/Vbr5e>
 //* ref: [path construction from LitStr](https://oschwald.github.io/maxminddb-rust/syn/struct.LitStr.html) @@ <http://archive.is/8YDua>

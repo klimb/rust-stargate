@@ -273,6 +273,7 @@ lscolors = { version = "0.21.0", default-features = false, features = [
   "gnu_legacy",
 ] }
 memchr = "2.7.2"
+serde_json = "1.0"
 memmap2 = "0.9.4"
 nix = { version = "0.30", default-features = false }
 nom = "8.0.0"
