@@ -551,6 +551,7 @@ dependencies = [
  "uu_date",
  "uu_dd",
  "uu_df",
+ "uu_dice_object",
  "uu_dircolors",
  "uu_dirname",
  "uu_du",
@@ -3149,6 +3150,16 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
+ "uucore",
+]
+
+[[package]]
+name = "uu_dice_object"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "serde_json",
  "uucore",
 ]
 
