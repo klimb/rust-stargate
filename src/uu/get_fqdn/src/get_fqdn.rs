@@ -71,12 +71,21 @@ fn produce_json(_matches: &ArgMatches) -> UResult<()> {
         .to_string_lossy()
         .into_owned();
 
+    // Split FQDN into hostname and domain
+    let parts: Vec<&str> = fqdn.splitn(2, '.').collect();
+    let hostname = parts.first().map(|s| s.to_string()).unwrap_or_default();
+    let domain = if parts.len() > 1 {
+        parts[1].to_string()
+    } else {
+        String::new()
+    };
+
     let obj = json!({
-        "status": "success",
-        "value": fqdn,
-        "flags": {
-            "obj": true
-        }
+        "fqdn": fqdn,
+        "hostname": hostname,
+        "domain": domain,
+        "has_domain": !domain.is_empty(),
+        "length": fqdn.len()
     });
 
     println!("{}", obj.to_string());
