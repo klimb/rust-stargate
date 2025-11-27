@@ -181,7 +181,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         filter_flags(args.into_iter())
     };
 
-    // Check if JSON output is requested (filter -o/--obj from args)
+    // Check if object (JSON) output is requested (filter -o/--obj from args)
     let (args, options) = {
         let mut json_flag = false;
         let filtered: Vec<OsString> = args
@@ -197,7 +197,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             .collect();
         
         let (final_args, mut opts) = if is_posixly_correct || json_flag {
-            // If json output requested, we need to re-filter flags
+            // If object output requested, we need to re-filter flags
             filter_flags(filtered.into_iter())
         } else {
             (filtered, options)
@@ -292,7 +292,7 @@ fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UR
         
         writeln!(stdout, "{}", json_output)?;
     } else {
-        // Original non-JSON output logic
+        // Original non-object output logic
         for (i, arg) in args.into_iter().enumerate() {
             let bytes = os_str_as_bytes(&arg)?;
 
