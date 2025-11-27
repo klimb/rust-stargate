@@ -1,7 +1,7 @@
 [package]
-name = "uu_mkdir"
-description = "mkdir ~ (uutils) create DIRECTORY"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/mkdir"
+name = "uu_new_directory"
+description = "new-directory ~ (uutils) create DIRECTORY"
+repository = "https://github.com/uutils/coreutils/tree/main/src/uu/new_directory"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/mkdir.rs"
+path = "src/new_directory.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -23,5 +23,5 @@ uucore = { workspace = true, features = ["fs", "mode", "fsxattr"] }
 fluent = { workspace = true }
 
 [[bin]]
-name = "mkdir"
+name = "new-directory"
 path = "src/main.rs"

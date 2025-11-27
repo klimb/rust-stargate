@@ -104,7 +104,7 @@ PROGS       := \
 	ln \
 	ls \
 	list_directory \
-	mkdir \
+	new_directory \
 	mktemp \
 	more \
 	mv \
@@ -227,7 +227,7 @@ TEST_PROGS  := \
 	link \
 	ln \
 	ls \
-	mkdir \
+	new_directory \
 	mktemp \
 	mv \
 	nl \
