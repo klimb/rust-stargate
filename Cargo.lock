@@ -578,7 +578,6 @@ dependencies = [
  "uu_list_directory",
  "uu_ln",
  "uu_logname",
- "uu_ls",
  "uu_mkdir",
  "uu_mkfifo",
  "uu_mknod",
@@ -3455,25 +3454,6 @@ dependencies = [
  "fluent",
  "libc",
  "uucore",
-]
-
-[[package]]
-name = "uu_ls"
-version = "0.4.0"
-dependencies = [
- "ansi-width",
- "clap",
- "codspeed-divan-compat",
- "fluent",
- "fnv",
- "glob",
- "hostname",
- "lscolors",
- "tempfile",
- "terminal_size",
- "thiserror 2.0.17",
- "uucore",
- "uutils_term_grid",
 ]
 
 [[package]]
