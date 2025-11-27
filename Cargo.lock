@@ -579,12 +579,12 @@ dependencies = [
  "uu_list_directory",
  "uu_ln",
  "uu_logname",
- "uu_mkdir",
  "uu_mkfifo",
  "uu_mknod",
  "uu_mktemp",
  "uu_more",
  "uu_mv",
+ "uu_new_directory",
  "uu_nice",
  "uu_nl",
  "uu_nohup",
@@ -3469,15 +3469,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "uu_mkdir"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "uucore",
-]
-
-[[package]]
 name = "uu_mkfifo"
 version = "0.4.0"
 dependencies = [
@@ -3533,6 +3524,15 @@ dependencies = [
  "libc",
  "tempfile",
  "thiserror 2.0.17",
+ "uucore",
+]
+
+[[package]]
+name = "uu_new_directory"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
  "uucore",
 ]
 

@@ -189,8 +189,8 @@ mod test_ln;
 mod test_logname;
 
 #[cfg(feature = "mkdir")]
-#[path = "by-util/test_mkdir.rs"]
-mod test_mkdir;
+#[path = "by-util/test_new_directory.rs"]
+mod test_new_directory;
 
 #[cfg(feature = "mkfifo")]
 #[path = "by-util/test_mkfifo.rs"]

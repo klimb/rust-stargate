@@ -78,7 +78,7 @@ feat_common_core = [
   "link",
   "ln",
   "list_directory",
-  "mkdir",
+  "new_directory",
   "mktemp",
   "more",
   "mv",
@@ -399,7 +399,7 @@ link = { optional = true, version = "0.4.0", package = "uu_link", path = "src/uu
 ln = { optional = true, version = "0.4.0", package = "uu_ln", path = "src/uu/ln" }
 list_directory = { optional = true, version = "0.4.0", package = "uu_list_directory", path = "src/uu/list_directory" }
 logname = { optional = true, version = "0.4.0", package = "uu_logname", path = "src/uu/logname" }
-mkdir = { optional = true, version = "0.4.0", package = "uu_mkdir", path = "src/uu/mkdir" }
+new_directory = { optional = true, version = "0.4.0", package = "uu_new_directory", path = "src/uu/new_directory" }
 mkfifo = { optional = true, version = "0.4.0", package = "uu_mkfifo", path = "src/uu/mkfifo" }
 mknod = { optional = true, version = "0.4.0", package = "uu_mknod", path = "src/uu/mknod" }
 mktemp = { optional = true, version = "0.4.0", package = "uu_mktemp", path = "src/uu/mktemp" }
