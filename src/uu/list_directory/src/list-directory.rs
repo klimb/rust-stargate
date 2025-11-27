@@ -53,6 +53,7 @@ use uucore::{
     fs::FileInformation,
     fs::display_permissions,
     fsext::{MetadataTimeField, metadata_get_time},
+    json_output::{self, JsonOutputOptions},
     line_ending::LineEnding,
     os_str_as_bytes_lossy,
     parser::parse_glob,
@@ -64,6 +65,7 @@ use uucore::{
     translate,
     version_cmp::version_cmp,
 };
+use serde_json::json;
 
 
 mod dired;
@@ -357,6 +359,7 @@ pub struct Config {
     dired: bool,
     hyperlink: bool,
     tab_size: usize,
+    json_output: JsonOutputOptions,
 }
 
 // Fields that can be removed or added to the long format
@@ -1147,6 +1150,7 @@ impl Config {
             dired,
             hyperlink,
             tab_size,
+            json_output: JsonOutputOptions::from_matches(options),
         })
     }
 }
@@ -1165,7 +1169,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    uucore::clap_localization::configure_localized_command(
+    let cmd = uucore::clap_localization::configure_localized_command(
         Command::new(uucore::util_name())
             .version(uucore::crate_version!())
             .override_usage(format_usage(&translate!("ls-usage")))
@@ -1312,7 +1316,7 @@ pub fn uu_app() -> Command {
     )
     .arg(
         Arg::new(options::format::LONG_NO_GROUP)
-            .short('o')
+            .long("long-no-group")
             .help(translate!("ls-help-long-format-no-group"))
             .action(ArgAction::SetTrue)
     )
@@ -1514,7 +1518,7 @@ pub fn uu_app() -> Command {
     )
     .arg(
         Arg::new(options::sort::VERSION)
-            .short('v')
+            .long("sort-version")
             .help(translate!("ls-help-sort-by-version"))
             .overrides_with_all([
                 options::SORT,
@@ -1802,7 +1806,12 @@ pub fn uu_app() -> Command {
             .long(options::GROUP_DIRECTORIES_FIRST)
             .help(translate!("ls-help-group-directories-first"))
             .action(ArgAction::SetTrue)
-    )
+    );
+    
+    // Add JSON output arguments
+    let cmd = json_output::add_json_args(cmd);
+    
+    cmd
     // Positional arguments
     .arg(
         Arg::new(options::PATHS)
@@ -2025,8 +2034,134 @@ struct ListState<'a> {
     recent_time_range: RangeInclusive<SystemTime>,
 }
 
+fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
+    use serde_json::json;
+    
+    let mut all_entries = Vec::new();
+    
+    fn collect_entries(path: &Path, config: &Config, entries: &mut Vec<serde_json::Value>) -> UResult<()> {
+        let metadata = match path.metadata() {
+            Ok(m) => m,
+            Err(e) => {
+                show_error!("cannot access '{}': {}", path.display(), e);
+                return Ok(());
+            }
+        };
+        
+        if metadata.is_dir() && !config.directory {
+            // List directory contents
+            let read_dir = match fs::read_dir(path) {
+                Ok(rd) => rd,
+                Err(e) => {
+                    show_error!("cannot open directory '{}': {}", path.display(), e);
+                    return Ok(());
+                }
+            };
+            
+            for entry in read_dir {
+                let entry = match entry {
+                    Ok(e) => e,
+                    Err(e) => {
+                        show_error!("error reading directory entry: {}", e);
+                        continue;
+                    }
+                };
+                
+                let entry_path = entry.path();
+                let entry_metadata = match entry.metadata() {
+                    Ok(m) => m,
+                    Err(e) => {
+                        show_error!("cannot access '{}': {}", entry_path.display(), e);
+                        continue;
+                    }
+                };
+                
+                let mut file_info = json!({
+                    "path": entry_path.to_string_lossy(),
+                    "name": entry.file_name().to_string_lossy(),
+                    "type": if entry_metadata.is_dir() { "directory" }
+                           else if entry_metadata.is_symlink() { "symlink" }
+                           else if entry_metadata.is_file() { "file" }
+                           else { "other" },
+                    "size": entry_metadata.len(),
+                });
+                
+                #[cfg(unix)]
+                {
+                    file_info["permissions"] = json!(format!("{:o}", entry_metadata.mode() & 0o777));
+                    file_info["inode"] = json!(entry_metadata.ino());
+                    file_info["nlink"] = json!(entry_metadata.nlink());
+                    file_info["uid"] = json!(entry_metadata.uid());
+                    file_info["gid"] = json!(entry_metadata.gid());
+                }
+                
+                if let Ok(modified) = entry_metadata.modified() {
+                    if let Ok(duration) = modified.duration_since(UNIX_EPOCH) {
+                        file_info["modified"] = json!(duration.as_secs());
+                    }
+                }
+                
+                entries.push(file_info);
+                
+                // Recursive handling
+                if config.recursive && entry_metadata.is_dir() {
+                    collect_entries(&entry_path, config, entries)?;
+                }
+            }
+        } else {
+            // List single file/symlink
+            let mut file_info = json!({
+                "path": path.to_string_lossy(),
+                "name": path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default(),
+                "type": if metadata.is_dir() { "directory" }
+                       else if metadata.is_symlink() { "symlink" }
+                       else if metadata.is_file() { "file" }
+                       else { "other" },
+                "size": metadata.len(),
+            });
+            
+            #[cfg(unix)]
+            {
+                file_info["permissions"] = json!(format!("{:o}", metadata.mode() & 0o777));
+                file_info["inode"] = json!(metadata.ino());
+                file_info["nlink"] = json!(metadata.nlink());
+                file_info["uid"] = json!(metadata.uid());
+                file_info["gid"] = json!(metadata.gid());
+            }
+            
+            if let Ok(modified) = metadata.modified() {
+                if let Ok(duration) = modified.duration_since(UNIX_EPOCH) {
+                    file_info["modified"] = json!(duration.as_secs());
+                }
+            }
+            
+            entries.push(file_info);
+        }
+        
+        Ok(())
+    }
+    
+    for loc in locs {
+        collect_entries(loc, config, &mut all_entries)?;
+    }
+    
+    let output = json!({
+        "entries": all_entries,
+        "total_count": all_entries.len(),
+        "recursive": config.recursive,
+    });
+    
+    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+    Ok(())
+}
+
 #[allow(clippy::cognitive_complexity)]
 pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
+    // Handle JSON output
+    if config.json_output.json_output {
+        return list_json(locs, config);
+    }
+    
     let mut files = Vec::<PathData>::new();
     let mut dirs = Vec::<PathData>::new();
     let mut dired = DiredOutput::default();
