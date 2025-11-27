@@ -360,6 +360,7 @@ pub struct Config {
     hyperlink: bool,
     tab_size: usize,
     json_output: JsonOutputOptions,
+    object_fields: Vec<String>,
 }
 
 // Fields that can be removed or added to the long format
@@ -1151,6 +1152,13 @@ impl Config {
             hyperlink,
             tab_size,
             json_output: JsonOutputOptions::from_matches(options),
+            object_fields: if let Some(field) = options.get_one::<String>("object_field") {
+                vec![field.clone()]
+            } else if let Some(fields) = options.get_many::<String>("object_fields") {
+                fields.map(|s| s.to_string()).collect()
+            } else {
+                Vec::new()
+            },
         })
     }
 }
@@ -1811,6 +1819,24 @@ pub fn uu_app() -> Command {
     // Add JSON output arguments
     let cmd = json_output::add_json_args(cmd);
     
+    let cmd = cmd
+        .arg(
+            Arg::new("object_field")
+                .long("field")
+                .value_name("FIELD")
+                .help("Filter object output to a single field (use with -o)")
+                .conflicts_with("object_fields")
+                .action(ArgAction::Set),
+        )
+        .arg(
+            Arg::new("object_fields")
+                .long("fields")
+                .value_name("FIELD")
+                .help("Filter object output to multiple fields (use with -o)")
+                .conflicts_with("object_field")
+                .action(ArgAction::Append),
+        );
+    
     cmd
     // Positional arguments
     .arg(
@@ -2101,6 +2127,17 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
                     }
                 }
                 
+                // Apply field filtering if specified
+                // Only filter entry fields if they're not top-level output fields
+                if !config.object_fields.is_empty() {
+                    let is_top_level = config.object_fields.iter().all(|f| 
+                        f == "entries" || f == "total_count" || f == "recursive"
+                    );
+                    if !is_top_level {
+                        file_info = filter_object_fields(&file_info, &config.object_fields);
+                    }
+                }
+                
                 entries.push(file_info);
                 
                 // Recursive handling
@@ -2135,6 +2172,17 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
                 }
             }
             
+            // Apply field filtering if specified
+            // Only filter entry fields if they're not top-level output fields
+            if !config.object_fields.is_empty() {
+                let is_top_level = config.object_fields.iter().all(|f| 
+                    f == "entries" || f == "total_count" || f == "recursive"
+                );
+                if !is_top_level {
+                    file_info = filter_object_fields(&file_info, &config.object_fields);
+                }
+            }
+            
             entries.push(file_info);
         }
         
@@ -2145,14 +2193,41 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
         collect_entries(loc, config, &mut all_entries)?;
     }
     
-    let output = json!({
+    // Check if we're filtering individual entry fields or top-level output fields
+    // If fields contain "entries", "total_count", or "recursive", filter top-level
+    // Otherwise, the filtering was already applied to individual entries
+    let has_top_level_fields = !config.object_fields.is_empty() && 
+        config.object_fields.iter().any(|f| 
+            f == "entries" || f == "total_count" || f == "recursive"
+        );
+    
+    let mut output = json!({
         "entries": all_entries,
         "total_count": all_entries.len(),
         "recursive": config.recursive,
     });
     
+    // Apply top-level filtering if requested
+    if has_top_level_fields {
+        output = filter_object_fields(&output, &config.object_fields);
+    }
+    
     println!("{}", serde_json::to_string_pretty(&output).unwrap());
     Ok(())
+}
+
+fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_json::Value {
+    if let serde_json::Value::Object(map) = value {
+        let mut result = serde_json::Map::new();
+        for field in fields {
+            if let Some(v) = map.get(field) {
+                result.insert(field.clone(), v.clone());
+            }
+        }
+        serde_json::Value::Object(result)
+    } else {
+        value.clone()
+    }
 }
 
 #[allow(clippy::cognitive_complexity)]
