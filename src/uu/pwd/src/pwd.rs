@@ -12,6 +12,8 @@ use uucore::format_usage;
 
 use uucore::display::println_verbatim;
 use uucore::error::{FromIo, UResult};
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 use uucore::translate;
 const OPT_LOGICAL: &str = "logical";
@@ -91,6 +93,8 @@ fn logical_path() -> io::Result<PathBuf> {
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
+    
     // if POSIXLY_CORRECT is set, we want to a logical resolution.
     // This produces a different output when doing mkdir -p a/b && ln -s a/b c && cd c && pwd
     // We should get c in this case instead of a/b at the end of the path
@@ -103,13 +107,25 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
     .map_err_context(|| translate!("pwd-error-failed-to-get-current-directory"))?;
     
-    println_verbatim(cwd)
-        .map_err_context(|| translate!("pwd-error-failed-to-print-current-directory"))?;
+    if opts.json_output {
+        let path_str = cwd.to_string_lossy().to_string();
+        let output = json!({
+            "path": path_str,
+            "absolute": cwd.is_absolute(),
+            "mode": if matches.get_flag(OPT_PHYSICAL) { "physical" } 
+                    else if matches.get_flag(OPT_LOGICAL) { "logical" } 
+                    else { "physical" }
+        });
+        json_output::output(opts, output, || Ok(()))?;
+    } else {
+        println_verbatim(cwd)
+            .map_err_context(|| translate!("pwd-error-failed-to-print-current-directory"))?;
+    }
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
         .about(translate!("pwd-about"))
@@ -129,5 +145,7 @@ pub fn uu_app() -> Command {
                 .overrides_with(OPT_LOGICAL)
                 .help(translate!("pwd-help-physical"))
                 .action(ArgAction::SetTrue)
-        )
+        );
+    
+    json_output::add_json_args(cmd)
 }
