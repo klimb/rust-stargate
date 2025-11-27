@@ -1816,7 +1816,7 @@ pub fn uu_app() -> Command {
             .action(ArgAction::SetTrue)
     );
     
-    // Add JSON output arguments
+    // Add object output (JSON) arguments
     let cmd = json_output::add_json_args(cmd);
     
     let cmd = cmd
@@ -2232,7 +2232,7 @@ fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_j
 
 #[allow(clippy::cognitive_complexity)]
 pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
-    // Handle JSON output
+    // Handle object output (JSON)
     if config.json_output.json_output {
         return list_json(locs, config);
     }

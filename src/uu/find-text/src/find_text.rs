@@ -95,7 +95,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let case_insensitive = matches.get_flag(options::INSENSITIVE);
 
     if opts.json_output {
-        // JSON output mode
+        // Object (JSON) output mode
         let mut all_results = Vec::new();
         let mut total_matches = 0;
 

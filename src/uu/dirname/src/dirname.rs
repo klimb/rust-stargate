@@ -85,7 +85,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
 
     if opts.json_output {
-        // For JSON output, collect results into a vector
+        // For object (JSON) output, collect results into a vector
         let mut results = Vec::new();
         for path in &dirnames {
             let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);

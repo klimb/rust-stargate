@@ -3,20 +3,20 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-//! Common JSON output utilities for uutils commands
+//! Common object (JSON) output utilities for uutils commands
 //!
 //! This module provides shared functionality for outputting command results
-//! as JSON objects when the `-o`/`--obj` flag is specified, along with
+//! as structured JSON objects when the `-o`/`--obj` flag is specified, along with
 //! optional verbose mode via `-v`/`--verbose` flag.
 
 use clap::{Arg, ArgAction};
 use serde_json::json;
 use serde_json::Value as JsonValue;
 
-/// Options for JSON output and verbosity
+/// Options for object (JSON) output and verbosity
 #[derive(Debug, Clone, Copy)]
 pub struct JsonOutputOptions {
-    /// Whether to output as JSON object (-o/--obj flag)
+    /// Whether to output as object (JSON) (-o/--obj flag)
     pub json_output: bool,
     /// Whether to include verbose output (-v/--verbose flag)
     pub verbose: bool,
@@ -46,17 +46,17 @@ impl Default for JsonOutputOptions {
     }
 }
 
-/// Argument names for JSON output and verbose flags
+/// Argument names for object (JSON) output and verbose flags
 pub const ARG_JSON_OUTPUT: &str = "json_output";
 pub const ARG_VERBOSE: &str = "verbose";
 
-/// Add JSON output and verbose arguments to a clap Command
+/// Add object (JSON) output and verbose arguments to a clap Command
 pub fn add_json_args(cmd: clap::Command) -> clap::Command {
     cmd.arg(
         Arg::new(ARG_JSON_OUTPUT)
             .short('o')
             .long("obj")
-            .help("Output as JSON object")
+            .help("Output as object (JSON)")
             .action(ArgAction::SetTrue),
     )
     .arg(
@@ -68,15 +68,15 @@ pub fn add_json_args(cmd: clap::Command) -> clap::Command {
     )
 }
 
-/// Conditionally output JSON or print directly
+/// Conditionally output object (JSON) or perform default output
 ///
 /// If `options.json_output` is true, serializes the provided `value` as JSON and prints it.
-/// Otherwise, calls the provided `default_output` closure to perform default output.
+/// Otherwise, calls the provided `default_output` closure to perform default (text) output.
 ///
 /// # Arguments
-/// * `options` - JSON output options
-/// * `value` - The JSON value to output if JSON mode is enabled
-/// * `default_output` - Closure that performs default (non-JSON) output
+/// * `options` - Object (JSON) output options
+/// * `value` - The JSON value to output if object mode is enabled
+/// * `default_output` - Closure that performs default (non-object) output
 pub fn output<F>(options: JsonOutputOptions, value: JsonValue, default_output: F) -> std::io::Result<()>
 where
     F: FnOnce() -> std::io::Result<()>,
