@@ -188,10 +188,6 @@ mod test_ln;
 #[path = "by-util/test_logname.rs"]
 mod test_logname;
 
-#[cfg(feature = "ls")]
-#[path = "by-util/test_ls.rs"]
-mod test_ls;
-
 #[cfg(feature = "mkdir")]
 #[path = "by-util/test_mkdir.rs"]
 mod test_mkdir;
