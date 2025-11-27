@@ -97,6 +97,7 @@ feat_common_core = [
   "seq",
   "shred",
   "shuf",
+  "dice_object",
   "slice_object",
   "sleep",
   "sort",
@@ -425,6 +426,7 @@ rmdir = { optional = true, version = "0.4.0", package = "uu_rmdir", path = "src/
 seq = { optional = true, version = "0.4.0", package = "uu_seq", path = "src/uu/seq" }
 shred = { optional = true, version = "0.4.0", package = "uu_shred", path = "src/uu/shred" }
 shuf = { optional = true, version = "0.4.0", package = "uu_shuf", path = "src/uu/shuf" }
+dice_object = { optional = true, version = "0.4.0", package = "uu_dice_object", path = "src/uu/dice_object" }
 slice_object = { optional = true, version = "0.4.0", package = "uu_slice_object", path = "src/uu/slice_object" }
 sleep = { optional = true, version = "0.4.0", package = "uu_sleep", path = "src/uu/sleep" }
 sort = { optional = true, version = "0.4.0", package = "uu_sort", path = "src/uu/sort" }
