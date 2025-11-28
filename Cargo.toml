@@ -518,10 +518,6 @@ name = "stargate"
 path = "src/bin/stargate.rs"
 
 [[bin]]
-name = "coreutils"
-path = "src/bin/stargate.rs"
-
-[[bin]]
 name = "uudoc"
 path = "src/bin/uudoc.rs"
 required-features = ["uudoc"]
