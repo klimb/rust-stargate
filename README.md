@@ -1,5 +1,18 @@
 Stargate (Rust implementation of Dreamland):
 --------------------------------------------
+```
+git clone https://github.com/klimb/rust-stargate
+cd rust-stargate
+make
+
+./target/debug/list-directory --color
+./target/debug/list-directory -o --pretty 
+
+./target/debug/stargate_shell 
+list-directory | collect-count
+```
+
+
 - [UNIX userland was always as mess, you're just used to it](https://www.linkedin.com/pulse/unix-userland-always-mess-youre-just-used-dmitry-kalashnikov-2k6sc)
 - ever wondered why its rm -rf, yet its chown -Rf dvk:dvk? ls ("list" what? I think you mean directory files .. etc). Why does "rm" also handle recursive removal of sub-directories, when its supposed to just "remove directory entries"? Why do we need "rmdir -p a/b/c" to duplicate this ("recursively" removes empty directories only)? why is it -p (instead of r)? Better name and parameter: remove-directory -r 
 - standardizing UNIX "userland" (commands you type) naming with verb-noun and their parameters (-h always means help, -v verbose and so on). Its obvious that some parameters are common, some unique per command. Needs a thin parameter parsing
