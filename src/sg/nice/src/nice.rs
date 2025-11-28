@@ -11,8 +11,8 @@ use std::ffi::{CString, OsString};
 use std::io::{Error, Write};
 use std::ptr;
 
-use uucore::translate;
-use uucore::{
+use sgcore::translate;
+use sgcore::{
     error::{UResult, USimpleError, UUsageError, set_exit_code},
     format_usage, show_error,
 };
@@ -52,7 +52,7 @@ fn is_prefix_of(maybe_prefix: &str, target: &str, min_match: usize) -> bool {
 /// arguments to nice before clap starts work. Here, we insert a
 /// prefix of "-n" onto all arguments of the form "-{i}", "--{i}" and
 /// "-+{i}" which are not already preceded by "-n".
-fn standardize_nice_args(mut args: impl uucore::Args) -> impl uucore::Args {
+fn standardize_nice_args(mut args: impl sgcore::Args) -> impl sgcore::Args {
     let mut v = Vec::<OsString>::new();
     let mut saw_n = false;
     let mut saw_command = false;
@@ -99,12 +99,12 @@ fn standardize_nice_args(mut args: impl uucore::Args) -> impl uucore::Args {
     v.into_iter()
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args = standardize_nice_args(args);
 
     let matches =
-        uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
 
     nix::errno::Errno::clear();
     let mut niceness = unsafe { libc::getpriority(PRIO_PROCESS, 0) };
@@ -148,7 +148,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // exit code when failing to write the advisory is 125, but Rust
     // will produce an exit code of 101 when it panics.
     if unsafe { libc::setpriority(PRIO_PROCESS, 0, niceness) } == -1 {
-        let warning_msg = translate!("nice-warning-setpriority", "util_name" => uucore::util_name(), "error" => Error::last_os_error());
+        let warning_msg = translate!("nice-warning-setpriority", "util_name" => sgcore::util_name(), "error" => Error::last_os_error());
 
         if write!(std::io::stderr(), "{warning_msg}").is_err() {
             set_exit_code(125);
@@ -180,13 +180,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    Command::new(sgcore::util_name())
         .about(translate!("nice-about"))
         .override_usage(format_usage(&translate!("nice-usage")))
         .trailing_var_arg(true)
         .infer_long_args(true)
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .arg(
             Arg::new(options::ADJUSTMENT)
                 .short('n')

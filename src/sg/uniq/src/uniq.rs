@@ -11,12 +11,12 @@ use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write, stdin, stdout};
 use std::num::IntErrorKind;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult, USimpleError};
-use uucore::format_usage;
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::posix::{OBSOLETE, posix_version};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::posix::{OBSOLETE, posix_version};
+use sgcore::translate;
 
 pub mod options {
     pub static ALL_REPEATED: &str = "all-repeated";
@@ -376,7 +376,7 @@ fn opt_parsed(opt_name: &str, matches: &ArgMatches) -> UResult<Option<usize>> {
 /// `uniq +1 -s2 file` would equal `uniq -s2 file`
 /// `uniq -s2 +3 file` would equal `uniq -s3 file`
 ///
-fn handle_obsolete(args: impl uucore::Args) -> (Vec<OsString>, Option<usize>, Option<usize>) {
+fn handle_obsolete(args: impl sgcore::Args) -> (Vec<OsString>, Option<usize>, Option<usize>) {
     let mut skip_fields_old = None;
     let mut skip_chars_old = None;
     let mut preceding_long_opt_req_value = false;
@@ -656,8 +656,8 @@ fn map_clap_errors(clap_error: Error) -> Box<dyn UError> {
     USimpleError::new(1, error_message)
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let (args, skip_fields_old, skip_chars_old) = handle_obsolete(args);
 
     let matches = match uu_app().try_get_matches_from(args) {
@@ -668,7 +668,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 return Err(map_clap_errors(clap_error));
             }
             // Use ErrorFormatter directly to handle error
-            let formatter = uucore::clap_localization::ErrorFormatter::new(uucore::util_name());
+            let formatter = sgcore::clap_localization::ErrorFormatter::new(sgcore::util_name());
             formatter.print_error_and_exit_with_callback(&clap_error, 1, || {});
         }
     };
@@ -712,13 +712,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("uniq-about"))
         .override_usage(format_usage(&translate!("uniq-usage")))
         .infer_long_args(true)
         .after_help(translate!("uniq-after-help"));
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         .arg(
             Arg::new(options::ALL_REPEATED)
                 .short('D')

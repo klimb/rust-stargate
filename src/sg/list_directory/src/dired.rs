@@ -37,7 +37,7 @@
 use crate::Config;
 use std::fmt;
 use std::io::{BufWriter, Stdout, Write};
-use uucore::error::UResult;
+use sgcore::error::UResult;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BytePosition {

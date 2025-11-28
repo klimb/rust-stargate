@@ -1,1 +1,1 @@
-uucore::bin!(sg_unlink);
+sgcore::bin!(sg_unlink);

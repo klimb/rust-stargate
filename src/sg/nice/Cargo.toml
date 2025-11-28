@@ -21,7 +21,7 @@ path = "src/nice.rs"
 clap = { workspace = true }
 libc = { workspace = true }
 nix = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 
 [[bin]]

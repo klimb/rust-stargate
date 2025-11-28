@@ -139,7 +139,7 @@ fn test_too_many_args_output() {
 #[cfg(any(unix, target_os = "redox"))]
 #[test]
 fn test_invalid_utf8_args() {
-    let param = uucore::os_str_from_bytes(b"/tmp/some-\xc0-file.k\xf3")
+    let param = sgcore::os_str_from_bytes(b"/tmp/some-\xc0-file.k\xf3")
         .expect("Only unix platforms can test non-unicode names");
 
     new_ucmd!()
@@ -147,7 +147,7 @@ fn test_invalid_utf8_args() {
         .succeeds()
         .stdout_is_bytes(b"some-\xc0-file.k\xf3\n");
 
-    let suffix = uucore::os_str_from_bytes(b".k\xf3")
+    let suffix = sgcore::os_str_from_bytes(b".k\xf3")
         .expect("Only unix platforms can test non-unicode names");
 
     new_ucmd!()

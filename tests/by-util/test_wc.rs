@@ -290,9 +290,9 @@ fn test_gnu_compatible_quotation() {
 fn test_non_unicode_names() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    let target1 = uucore::os_str_from_bytes(b"some-dir1/1\xC0\n.txt")
+    let target1 = sgcore::os_str_from_bytes(b"some-dir1/1\xC0\n.txt")
         .expect("Only unix platforms can test non-unicode names");
-    let target2 = uucore::os_str_from_bytes(b"some-dir1/2\xC0\t.txt")
+    let target2 = sgcore::os_str_from_bytes(b"some-dir1/2\xC0\t.txt")
         .expect("Only unix platforms can test non-unicode names");
 
     at.mkdir("some-dir1");

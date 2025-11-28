@@ -15,7 +15,7 @@
 //! # Examples
 //! ```rust
 //! use std::path::Path;
-//! use uucore::display::{Quotable, println_verbatim};
+//! use sgcore::display::{Quotable, println_verbatim};
 //!
 //! let path = Path::new("foo/bar.baz");
 //!

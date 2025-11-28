@@ -1,1 +1,1 @@
-uucore::bin!(sg_sum);
+sgcore::bin!(sg_sum);

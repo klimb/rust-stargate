@@ -23,8 +23,8 @@ use nix::fcntl::OFlag;
 use parseargs::Parser;
 use progress::ProgUpdateType;
 use progress::{ProgUpdate, ReadStat, StatusLevel, WriteStat, gen_prog_updater};
-use uucore::io::OwnedFileDescriptorOrHandle;
-use uucore::translate;
+use sgcore::io::OwnedFileDescriptorOrHandle;
+use sgcore::translate;
 
 use std::cmp;
 use std::env;
@@ -54,13 +54,13 @@ use nix::{
     errno::Errno,
     fcntl::{PosixFadviseAdvice, posix_fadvise},
 };
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult};
 #[cfg(unix)]
-use uucore::error::{USimpleError, set_exit_code};
+use sgcore::error::{USimpleError, set_exit_code};
 #[cfg(target_os = "linux")]
-use uucore::show_if_err;
-use uucore::{format_usage, show_error};
+use sgcore::show_if_err;
+use sgcore::{format_usage, show_error};
 
 const BUF_INIT_BYTE: u8 = 0xDD;
 
@@ -1455,9 +1455,9 @@ fn is_fifo(filename: &str) -> bool {
     false
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let settings: Settings = Parser::new().parse(
         matches
@@ -1482,9 +1482,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("dd-about"))
         .override_usage(format_usage(&translate!("dd-usage")))
         .after_help(translate!("dd-after-help"))

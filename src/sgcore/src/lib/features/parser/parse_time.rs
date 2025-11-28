@@ -47,7 +47,7 @@ use std::time::Duration;
 ///
 /// ```rust
 /// use std::time::Duration;
-/// use uucore::parser::parse_time::from_str;
+/// use sgcore::parser::parse_time::from_str;
 /// assert_eq!(from_str("123", true), Ok(Duration::from_secs(123)));
 /// assert_eq!(from_str("123", false), Ok(Duration::from_secs(123)));
 /// assert_eq!(from_str("2d", true), Ok(Duration::from_secs(60 * 60 * 24 * 2)));

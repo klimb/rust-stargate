@@ -10,10 +10,10 @@ use libc::{S_IFBLK, S_IFCHR, S_IFIFO, S_IRGRP, S_IROTH, S_IRUSR, S_IWGRP, S_IWOT
 use libc::{dev_t, mode_t};
 use std::ffi::CString;
 
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError, UUsageError, set_exit_code};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError, UUsageError, set_exit_code};
+use sgcore::format_usage;
+use sgcore::translate;
 
 const MODE_RW_UGO: mode_t = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
 
@@ -77,7 +77,7 @@ fn mknod(file_name: &str, config: Config) -> i32 {
         }
 
         if errno == -1 {
-            let c_str = CString::new(uucore::execution_phrase().as_bytes())
+            let c_str = CString::new(sgcore::execution_phrase().as_bytes())
                 .expect("Failed to convert to CString");
             // shows the error from the mknod syscall
             libc::perror(c_str.as_ptr());
@@ -87,9 +87,9 @@ fn mknod(file_name: &str, config: Config) -> i32 {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let file_type = matches.get_one::<FileType>("type").unwrap();
 
@@ -140,9 +140,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("mknod-usage")))
         .after_help(translate!("mknod-after-help"))
         .about(translate!("mknod-about"))
@@ -183,7 +183,7 @@ pub fn uu_app() -> Command {
 }
 
 fn parse_mode(str_mode: &str) -> Result<mode_t, String> {
-    uucore::mode::parse_mode(str_mode)
+    sgcore::mode::parse_mode(str_mode)
         .map_err(|e| {
             translate!(
                 "mknod-error-invalid-mode",

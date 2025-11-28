@@ -1,1 +1,1 @@
-uucore::obj!(sg_get_hostname);
+sgcore::obj!(sg_get_hostname);

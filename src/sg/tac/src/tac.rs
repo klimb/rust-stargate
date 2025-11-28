@@ -15,13 +15,13 @@ use std::{
     fs::{File, read},
     path::Path,
 };
-use uucore::error::UError;
-use uucore::error::UResult;
-use uucore::{format_usage, show};
+use sgcore::error::UError;
+use sgcore::error::UResult;
+use sgcore::{format_usage, show};
 
 use crate::error::TacError;
 
-use uucore::translate;
+use sgcore::translate;
 
 mod options {
     pub static BEFORE: &str = "before";
@@ -30,9 +30,9 @@ mod options {
     pub static FILE: &str = "file";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let before = matches.get_flag(options::BEFORE);
     let regex = matches.get_flag(options::REGEX);
@@ -54,9 +54,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("tac-usage")))
         .about(translate!("tac-about"))
         .infer_long_args(true)

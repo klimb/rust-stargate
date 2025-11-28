@@ -16,11 +16,11 @@ use std::num::IntErrorKind;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
-use uucore::format_usage;
-use uucore::line_ending::LineEnding;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
+use sgcore::format_usage;
+use sgcore::line_ending::LineEnding;
+use sgcore::translate;
 
 #[derive(Debug, Error)]
 enum JoinError {
@@ -644,7 +644,7 @@ impl<'a> State<'a> {
                 if input.check_order == CheckOrder::Enabled {
                     return Err(JoinError::UnorderedInput(err_msg));
                 }
-                eprintln!("{}: {err_msg}", uucore::execution_phrase());
+                eprintln!("{}: {err_msg}", sgcore::execution_phrase());
                 self.has_failed = true;
             }
 
@@ -820,9 +820,9 @@ fn parse_settings(matches: &clap::ArgMatches) -> UResult<Settings> {
     Ok(settings)
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let settings = parse_settings(&matches)?;
 
@@ -853,9 +853,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("join-about"))
         .override_usage(format_usage(&translate!("join-usage")))
         .infer_long_args(true)
@@ -1083,7 +1083,7 @@ fn exec<Sep: Separator>(
     if state1.has_failed || state2.has_failed {
         eprintln!(
             "{}: {}",
-            uucore::execution_phrase(),
+            sgcore::execution_phrase(),
             translate!("join-error-input-not-sorted")
         );
         set_exit_code(1);

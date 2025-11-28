@@ -23,10 +23,10 @@
 //!
 //! ```
 //! #[macro_use]
-//! extern crate uucore;
+//! extern crate sgcore;
 //!
 //! use clap::{Command, Arg, ArgMatches};
-//! use uucore::update_control::{self, UpdateMode};
+//! use sgcore::update_control::{self, UpdateMode};
 //!
 //! fn main() {
 //!     let matches = Command::new("command")
@@ -111,8 +111,8 @@ pub mod arguments {
 ///
 /// ```
 /// #[macro_use]
-/// extern crate uucore;
-/// use uucore::update_control::{self, UpdateMode};
+/// extern crate sgcore;
+/// use sgcore::update_control::{self, UpdateMode};
 /// use clap::{Command, Arg, ArgMatches};
 ///
 /// fn main() {

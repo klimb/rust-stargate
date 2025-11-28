@@ -1,1 +1,1 @@
-uucore::bin!(sg_base64);
+sgcore::bin!(sg_base64);

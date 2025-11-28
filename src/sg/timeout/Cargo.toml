@@ -21,7 +21,7 @@ path = "src/timeout.rs"
 clap = { workspace = true }
 libc = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
-uucore = { workspace = true, features = ["parser", "process", "signals"] }
+sgcore = { workspace = true, features = ["parser", "process", "signals"] }
 fluent = { workspace = true }
 
 [[bin]]

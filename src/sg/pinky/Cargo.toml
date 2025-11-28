@@ -17,14 +17,14 @@ readme.workspace = true
 workspace = true
 
 [features]
-feat_systemd_logind = ["uucore/feat_systemd_logind"]
+feat_systemd_logind = ["sgcore/feat_systemd_logind"]
 
 [lib]
 path = "src/pinky.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["utmpx", "entries"] }
+sgcore = { workspace = true, features = ["utmpx", "entries"] }
 fluent = { workspace = true }
 
 [[bin]]

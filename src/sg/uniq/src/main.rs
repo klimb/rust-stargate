@@ -1,1 +1,1 @@
-uucore::bin!(sg_uniq);
+sgcore::bin!(sg_uniq);

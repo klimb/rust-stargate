@@ -6,8 +6,8 @@
 
 use crate::csplit_error::CsplitError;
 use regex::Regex;
-use uucore::show_warning;
-use uucore::translate;
+use sgcore::show_warning;
+use sgcore::translate;
 
 /// The definition of a pattern to match on a line.
 #[derive(Debug)]

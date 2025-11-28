@@ -12,10 +12,10 @@ use std::io::{self, Write, stdin, stdout};
 use clap::{Arg, ArgAction, Command};
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, set_exit_code};
-use uucore::translate;
-use uucore::{format_usage, show_error, show_warning};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::translate;
+use sgcore::{format_usage, show_error, show_warning};
 
 mod options {
     pub static EXPONENTS: &str = "exponents";
@@ -146,9 +146,9 @@ fn write_result_big_uint(
     w.flush()
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     // If matches find --exponents flag than variable print_exponents is true and p^e output format will be used.
     let print_exponents = matches.get_flag(options::EXPONENTS);
@@ -188,9 +188,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("factor-about"))
         .override_usage(format_usage(&translate!("factor-usage")))
         .infer_long_args(true)

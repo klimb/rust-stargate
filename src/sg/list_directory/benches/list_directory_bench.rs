@@ -7,7 +7,7 @@ use divan::{Bencher, black_box};
 use std::fs;
 use tempfile::TempDir;
 use sg_list_directory::uumain;
-use uucore::benchmark::{fs_tree, run_util_function};
+use sgcore::benchmark::{fs_tree, run_util_function};
 
 /// Helper to run ls with given arguments on a directory
 fn bench_ls_with_args(bencher: Bencher, temp_dir: &TempDir, args: &[&str]) {

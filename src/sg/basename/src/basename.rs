@@ -10,13 +10,13 @@ use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::io::{Write, stdout};
 use std::path::PathBuf;
-use uucore::display::Quotable;
-use uucore::error::{UResult, UUsageError};
-use uucore::format_usage;
-use uucore::line_ending::LineEnding;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, UUsageError};
+use sgcore::format_usage;
+use sgcore::line_ending::LineEnding;
 
-use uucore::translate;
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 pub mod options {
@@ -26,12 +26,12 @@ pub mod options {
     pub static ZERO: &str = "zero";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     //
     // Argument parsing
     //
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
     let opts = JsonOutputOptions::from_matches(&matches);
@@ -94,9 +94,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("basename-about"))
         .override_usage(format_usage(&translate!("basename-usage")))
         .infer_long_args(true)
@@ -140,7 +140,7 @@ pub fn uu_app() -> Command {
 // We return a Vec<u8>. Returning a seemingly more proper `OsString` would
 // require back and forth conversions as we need a &[u8] for printing anyway.
 fn basename(fullname: &OsString, suffix: &OsString) -> UResult<Vec<u8>> {
-    let fullname_bytes = uucore::os_str_as_bytes(fullname)?;
+    let fullname_bytes = sgcore::os_str_as_bytes(fullname)?;
 
     // Handle special case where path ends with /.
     if fullname_bytes.ends_with(b"/.") {
@@ -152,11 +152,11 @@ fn basename(fullname: &OsString, suffix: &OsString) -> UResult<Vec<u8>> {
 
     pb.components().next_back().map_or(Ok([].into()), |c| {
         let name = c.as_os_str();
-        let name_bytes = uucore::os_str_as_bytes(name)?;
+        let name_bytes = sgcore::os_str_as_bytes(name)?;
         if name == suffix {
             Ok(name_bytes.into())
         } else {
-            let suffix_bytes = uucore::os_str_as_bytes(suffix)?;
+            let suffix_bytes = sgcore::os_str_as_bytes(suffix)?;
             Ok(name_bytes
                 .strip_suffix(suffix_bytes)
                 .unwrap_or(name_bytes)

@@ -1,1 +1,1 @@
-uucore::bin!(sg_more);
+sgcore::bin!(sg_more);

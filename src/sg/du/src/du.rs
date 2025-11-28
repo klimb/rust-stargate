@@ -19,19 +19,19 @@ use std::str::FromStr;
 use std::sync::mpsc;
 use std::thread;
 use thiserror::Error;
-use uucore::display::{Quotable, print_verbatim};
-use uucore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
-use uucore::fsext::{MetadataTimeField, metadata_get_time};
-use uucore::line_ending::LineEnding;
+use sgcore::display::{Quotable, print_verbatim};
+use sgcore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
+use sgcore::fsext::{MetadataTimeField, metadata_get_time};
+use sgcore::line_ending::LineEnding;
 #[cfg(target_os = "linux")]
-use uucore::safe_traversal::DirFd;
-use uucore::translate;
+use sgcore::safe_traversal::DirFd;
+use sgcore::translate;
 
-use uucore::parser::parse_glob;
-use uucore::parser::parse_size::{ParseSizeError, parse_size_non_zero_u64, parse_size_u64};
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::time::{FormatSystemTimeFallback, format, format_system_time};
-use uucore::{format_usage, show, show_error, show_warning};
+use sgcore::parser::parse_glob;
+use sgcore::parser::parse_size::{ParseSizeError, parse_size_non_zero_u64, parse_size_u64};
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::time::{FormatSystemTimeFallback, format, format_system_time};
+use sgcore::{format_usage, show, show_error, show_warning};
 
 mod options {
     pub const HELP: &str = "help";
@@ -674,7 +674,7 @@ enum DuError {
     #[error("{}", translate!("du-error-summarize-depth-conflict", "depth" => _0.maybe_quote()))]
     SummarizeDepthConflict(String),
 
-    #[error("{}", translate!("du-error-invalid-time-style", "style" => _0.quote(), "help" => uucore::execution_phrase()))]
+    #[error("{}", translate!("du-error-invalid-time-style", "style" => _0.quote(), "help" => sgcore::execution_phrase()))]
     InvalidTimeStyleArg(String),
 
     #[error("{}", translate!("du-error-invalid-glob", "error" => _0))]
@@ -790,13 +790,13 @@ impl StatPrinter {
 
     fn convert_size(&self, size: u64) -> String {
         match self.size_format {
-            SizeFormat::HumanDecimal => uucore::format::human::human_readable(
+            SizeFormat::HumanDecimal => sgcore::format::human::human_readable(
                 size,
-                uucore::format::human::SizeFormat::Decimal
+                sgcore::format::human::SizeFormat::Decimal
             ),
-            SizeFormat::HumanBinary => uucore::format::human::human_readable(
+            SizeFormat::HumanBinary => sgcore::format::human::human_readable(
                 size,
-                uucore::format::human::SizeFormat::Binary
+                sgcore::format::human::SizeFormat::Binary
             ),
             SizeFormat::BlockSize(block_size) => {
                 if self.inodes {
@@ -872,7 +872,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
             );
             set_exit_code(1);
         } else {
-            let p = PathBuf::from(&*uucore::os_str_from_bytes(&path).unwrap());
+            let p = PathBuf::from(&*sgcore::os_str_from_bytes(&path).unwrap());
             if !paths.contains(&p) {
                 paths.push(p);
             }
@@ -882,10 +882,10 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
     Ok(paths)
 }
 
-#[uucore::main]
+#[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let summarize = matches.get_flag(options::SUMMARIZE);
 
@@ -1163,9 +1163,9 @@ fn parse_depth(max_depth_str: Option<&str>, summarize: bool) -> UResult<Option<u
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("du-about"))
         .after_help(translate!("du-after-help"))
         .override_usage(format_usage(&translate!("du-usage")))

@@ -20,7 +20,7 @@ path = "src/chroot.rs"
 [dependencies]
 clap = { workspace = true }
 thiserror = { workspace = true }
-uucore = { workspace = true, features = ["entries", "fs"] }
+sgcore = { workspace = true, features = ["entries", "fs"] }
 fluent = { workspace = true }
 
 [[bin]]

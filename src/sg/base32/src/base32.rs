@@ -6,10 +6,10 @@
 pub mod base_common;
 
 use clap::Command;
-use uucore::{encoding::Format, error::UResult, translate};
+use sgcore::{encoding::Format, error::UResult, translate};
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let format = Format::Base32;
     let (about, usage) = get_info();
     let config = base_common::parse_base_cmd_args(args, about, usage)?;

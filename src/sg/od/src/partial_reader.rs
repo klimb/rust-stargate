@@ -10,7 +10,7 @@ use std::io;
 use std::io::Read;
 
 use crate::multifile_reader::HasError;
-use uucore::translate;
+use sgcore::translate;
 
 /// When a large number of bytes must be skipped, it will be read into a
 /// dynamically allocated buffer. The buffer will be limited to this size.

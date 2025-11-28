@@ -36,16 +36,16 @@ use lscolors::{Colorable, LsColors};
 use term_grid::{DEFAULT_SEPARATOR_SIZE, Direction, Filling, Grid, GridOptions, SPACES_IN_TAB};
 use thiserror::Error;
 
-use uucore::entries;
-use uucore::libc::{S_IXGRP, S_IXOTH, S_IXUSR};
+use sgcore::entries;
+use sgcore::libc::{S_IXGRP, S_IXOTH, S_IXUSR};
 #[cfg(any(
     target_os = "linux",
     target_os = "macos",
     target_os = "freebsd",
     target_os = "openbsd"
 ))]
-use uucore::libc::{dev_t, major, minor};
-use uucore::{
+use sgcore::libc::{dev_t, major, minor};
+use sgcore::{
     display::Quotable,
     error::{UError, UResult, set_exit_code},
     format::human::{SizeFormat, human_readable},
@@ -271,7 +271,7 @@ fn parse_time_style(options: &clap::ArgMatches) -> Result<(String, Option<String
                 // See GNU documentation, set format to "locale" if LC_TIME="POSIX",
                 // else just strip the prefix and continue (even "posix+FORMAT" is
                 // supported).
-                // TODO: This needs to be moved to uucore and handled by icu?
+                // TODO: This needs to be moved to sgcore and handled by icu?
                 if std::env::var("LC_TIME").unwrap_or_default() == "POSIX"
                     || std::env::var("LC_ALL").unwrap_or_default() == "POSIX"
                 {
@@ -551,7 +551,7 @@ fn is_color_compatible_term() -> bool {
 
     // Search function in the TERM struct to manage the wildcards
     let term_matches = |term: &str| -> bool {
-        uucore::colors::TERMS.iter().any(|&pattern| {
+        sgcore::colors::TERMS.iter().any(|&pattern| {
             term == pattern
                 || (pattern.ends_with('*') && term.starts_with(&pattern[..pattern.len() - 1]))
         })
@@ -1163,9 +1163,9 @@ impl Config {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
 
     let config = Config::from(&matches)?;
 
@@ -1177,9 +1177,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = uucore::clap_localization::configure_localized_command(
-        Command::new(uucore::util_name())
-            .version(uucore::crate_version!())
+    let cmd = sgcore::clap_localization::configure_localized_command(
+        Command::new(sgcore::util_name())
+            .version(sgcore::crate_version!())
             .override_usage(format_usage(&translate!("ls-usage")))
             .about(translate!("ls-about"))
     )

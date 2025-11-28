@@ -21,10 +21,10 @@ use std::{
     fmt::{Debug, Display},
     io::{BufRead, Write},
 };
-use uucore::error::{FromIo, UError, UResult};
-use uucore::translate;
+use sgcore::error::{FromIo, UError, UResult};
+use sgcore::translate;
 
-use uucore::show_warning;
+use sgcore::show_warning;
 
 /// Common trait for operations that can process chunks of data
 pub trait ChunkProcessor {

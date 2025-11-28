@@ -7,9 +7,9 @@ use clap::{Arg, ArgAction, Command};
 use std::io::Write;
 use syntax_tree::{AstNode, is_truthy};
 use thiserror::Error;
-use uucore::os_string_to_vec;
-use uucore::translate;
-use uucore::{
+use sgcore::os_string_to_vec;
+use sgcore::translate;
+use sgcore::{
     display::Quotable,
     error::{UError, UResult},
     format_usage,
@@ -71,9 +71,9 @@ impl UError for ExprError {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("expr-about"))
         .override_usage(format_usage(&translate!("expr-usage")))
         .after_help(translate!("expr-after-help"))
@@ -99,8 +99,8 @@ pub fn uu_app() -> Command {
         )
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // For expr utility we do not want getopts.
     // The following usage should work without escaping hyphens: `expr -15 = 1 + 2 \* \( 3 - -4 \)`
     let args = args
@@ -111,7 +111,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     if args.len() == 1 && args[0] == b"--help" {
         let _ = uu_app().print_help();
     } else if args.len() == 1 && args[0] == b"--version" {
-        println!("{} {}", uucore::util_name(), uucore::crate_version!());
+        println!("{} {}", sgcore::util_name(), sgcore::crate_version!());
     } else {
         // The first argument may be "--" and should be be ignored.
         let args = if !args.is_empty() && args[0] == b"--" {

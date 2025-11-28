@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_nl::uumain;
-use uucore::benchmark::{create_test_file, run_util_function, text_data};
+use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark numbering many lines (default mode - most common use case)
 #[divan::bench(args = [100_000])]

@@ -4,18 +4,18 @@
 // file that was distributed with this source code.
 // spell-checker:ignore datetime
 
-use uucore::error::{UError, UResult, USimpleError};
-use uucore::translate;
+use sgcore::error::{UError, UResult, USimpleError};
+use sgcore::translate;
 
 use clap::builder::ValueParser;
-use uucore::display::Quotable;
-use uucore::fs::display_permissions;
-use uucore::fsext::{
+use sgcore::display::Quotable;
+use sgcore::fs::display_permissions;
+use sgcore::fsext::{
     FsMeta, MetadataTimeField, StatFs, metadata_get_time, pretty_filetype, pretty_fstype,
     read_fs_list, statfs,
 };
-use uucore::libc::mode_t;
-use uucore::{entries, format_usage, show_error, show_warning};
+use sgcore::libc::mode_t;
+use sgcore::{entries, format_usage, show_error, show_warning};
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::borrow::Cow;
@@ -27,7 +27,7 @@ use std::path::Path;
 use std::{env, fs};
 
 use thiserror::Error;
-use uucore::time::{FormatSystemTimeFallback, format_system_time, system_time_to_sec};
+use sgcore::time::{FormatSystemTimeFallback, format_system_time, system_time_to_sec};
 
 #[derive(Debug, Error)]
 enum StatError {
@@ -1280,9 +1280,9 @@ impl Stater {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let stater = Stater::new(&matches)?;
     let exit_status = stater.exec();
@@ -1294,9 +1294,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("stat-about"))
         .after_help(translate!("stat-after-help"))
         .override_usage(format_usage(&translate!("stat-usage")))

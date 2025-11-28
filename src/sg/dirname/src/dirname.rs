@@ -7,13 +7,13 @@
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::path::Path;
-use uucore::display::print_verbatim;
-use uucore::error::{UResult, UUsageError};
-use uucore::format_usage;
-use uucore::line_ending::LineEnding;
+use sgcore::display::print_verbatim;
+use sgcore::error::{UResult, UUsageError};
+use sgcore::format_usage;
+use sgcore::line_ending::LineEnding;
 
-use uucore::translate;
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 mod options {
@@ -68,9 +68,9 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
     let opts = JsonOutputOptions::from_matches(&matches);
@@ -90,7 +90,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         // For object (JSON) output, collect results into a vector without printing
         let mut results = Vec::new();
         for path in &dirnames {
-            let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
+            let path_bytes = sgcore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
 
             let dirname_str = if path_bytes.ends_with(b"/.") {
                 if path_bytes.len() == 2 {
@@ -139,7 +139,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         object_output::output(opts, output, || Ok(()))?;
     } else {
         for path in &dirnames {
-            let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
+            let path_bytes = sgcore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
 
             if handle_trailing_dot(path_bytes).is_none() {
                 // Normal path handling using Path::parent()
@@ -169,10 +169,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .about(translate!("dirname-about"))
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("dirname-usage")))
         .args_override_self(true)
         .infer_long_args(true)

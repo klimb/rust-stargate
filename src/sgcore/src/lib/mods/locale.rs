@@ -110,7 +110,7 @@ thread_local! {
     static LOCALIZER: OnceLock<Localizer> = const { OnceLock::new() };
 }
 
-/// Helper function to find the uucore locales directory from a utility's locales directory
+/// Helper function to find the sgcore locales directory from a utility's locales directory
 fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
     // Normalize the path to get absolute path
     let normalized_dir = utility_locales_dir
@@ -122,7 +122,7 @@ fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
         .parent()? // printenv
         .parent()? // uu
         .parent()? // src
-        .join("uucore")
+        .join("sgcore")
         .join("locales");
 
     // Only return if the directory actually exists
@@ -150,7 +150,7 @@ fn create_bundle(
         }
     };
 
-    // Load common strings from uucore locales directory
+    // Load common strings from sgcore locales directory
     try_add_resource_from(find_uucore_locales_dir(locales_dir));
     // Then, try to load utility-specific strings from the utility's locale directory
     try_add_resource_from(get_locales_dir(util_name).ok());
@@ -223,7 +223,7 @@ fn parse_fluent_resource(content: &str) -> Result<FluentResource, LocalizationEr
     )
 }
 
-/// Create a bundle from embedded English locale files with common uucore strings
+/// Create a bundle from embedded English locale files with common sgcore strings
 fn create_english_bundle_from_embedded(
     locale: &LanguageIdentifier,
     util_name: &str
@@ -238,8 +238,8 @@ fn create_english_bundle_from_embedded(
     let mut bundle = FluentBundle::new(vec![locale.clone()]);
     bundle.set_use_isolating(false);
 
-    // First, try to load common uucore strings
-    if let Some(uucore_content) = get_embedded_locale("uucore/en-US.ftl") {
+    // First, try to load common sgcore strings
+    if let Some(uucore_content) = get_embedded_locale("sgcore/en-US.ftl") {
         let uucore_resource = parse_fluent_resource(uucore_content)?;
         bundle.add_resource_overriding(uucore_resource);
     }
@@ -287,7 +287,7 @@ fn get_message_internal(id: &str, args: Option<FluentArgs>) -> String {
 /// # Examples
 ///
 /// ```
-/// use uucore::locale::get_message;
+/// use sgcore::locale::get_message;
 ///
 /// // Get a localized greeting (from .ftl files)
 /// let greeting = get_message("greeting");
@@ -317,7 +317,7 @@ pub fn get_message(id: &str) -> String {
 /// # Examples
 ///
 /// ```
-/// use uucore::locale::get_message_with_args;
+/// use sgcore::locale::get_message_with_args;
 /// use fluent::FluentArgs;
 ///
 /// // For a Fluent message like: "Hello, { $name }! You have { $count } notifications."
@@ -372,7 +372,7 @@ fn detect_system_locale() -> Result<LanguageIdentifier, LocalizationError> {
 /// # Examples
 ///
 /// ```
-/// use uucore::locale::setup_localization;
+/// use sgcore::locale::setup_localization;
 ///
 /// // Initialize localization using files in the "locales" directory
 /// // Make sure you have at least an "en-US.ftl" file in this directory
@@ -440,7 +440,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
     {
         // During development, use the project's locales directory
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
-        // from uucore path, load the locales directory from the program directory
+        // from sgcore path, load the locales directory from the program directory
         let dev_path = PathBuf::from(manifest_dir)
             .join("../uu")
             .join(p)
@@ -500,7 +500,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
 /// # Examples
 ///
 /// ```
-/// use uucore::translate;
+/// use sgcore::translate;
 /// use fluent::FluentArgs;
 ///
 /// // Simple message without arguments

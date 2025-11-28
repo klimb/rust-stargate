@@ -21,7 +21,7 @@ path = "src/cat.rs"
 clap = { workspace = true }
 memchr = { workspace = true }
 thiserror = { workspace = true }
-uucore = { workspace = true, features = ["fast-inc", "fs", "pipes"] }
+sgcore = { workspace = true, features = ["fast-inc", "fs", "pipes"] }
 fluent = { workspace = true }
 serde_json = { workspace = true }
 

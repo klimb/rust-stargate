@@ -5,17 +5,17 @@
 
 use clap::Command;
 use std::ffi::OsString;
-use uucore::display::println_verbatim;
-use uucore::error::{FromIo, UResult};
-use uucore::translate;
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::display::println_verbatim;
+use sgcore::error::{FromIo, UResult};
+use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 mod platform;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
     let username = whoami()?;
@@ -36,11 +36,11 @@ pub fn whoami() -> UResult<OsString> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("whoami-about"))
-        .override_usage(uucore::util_name())
+        .override_usage(sgcore::util_name())
         .infer_long_args(true);
 
     object_output::add_json_args(cmd)

@@ -3,9 +3,9 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-//! Macros for the uucore utilities.
+//! Macros for the sgcore utilities.
 //!
-//! This module bundles all macros used across the uucore utilities. These
+//! This module bundles all macros used across the sgcore utilities. These
 //! include macros for reporting errors in various formats, aborting program
 //! execution and more.
 //!
@@ -13,14 +13,14 @@
 //!
 //! ```ignore
 //! #[macro_use]
-//! extern crate uucore;
+//! extern crate sgcore;
 //! ```
 //!
 //! Alternatively, you can import single macros by importing them through their
 //! fully qualified name like this:
 //!
 //! ```no_run
-//! use uucore::show;
+//! use sgcore::show;
 //! ```
 //!
 //! Here's an overview of the macros sorted by purpose
@@ -59,9 +59,9 @@ pub static UTILITY_IS_SECOND_ARG: AtomicBool = AtomicBool::new(false);
 ///
 /// ```
 /// # #[macro_use]
-/// # extern crate uucore;
+/// # extern crate sgcore;
 ///
-/// use uucore::error::{self, USimpleError};
+/// use sgcore::error::{self, USimpleError};
 ///
 /// fn main() {
 ///     let err = USimpleError::new(2, "Some error occurred.");
@@ -75,9 +75,9 @@ pub static UTILITY_IS_SECOND_ARG: AtomicBool = AtomicBool::new(false);
 ///
 /// ```
 /// # #[macro_use]
-/// # extern crate uucore;
+/// # extern crate sgcore;
 ///
-/// use uucore::error::set_exit_code;
+/// use sgcore::error::set_exit_code;
 ///
 /// fn main() {
 ///     set_exit_code(2);
@@ -110,8 +110,8 @@ macro_rules! show(
 ///
 /// ```ignore
 /// # #[macro_use]
-/// # extern crate uucore;
-/// # use uucore::error::{UError, UIoError, UResult, USimpleError};
+/// # extern crate sgcore;
+/// # use sgcore::error::{UError, UIoError, UResult, USimpleError};
 ///
 /// # fn main() {
 /// let is_ok = Ok(1);
@@ -143,7 +143,7 @@ macro_rules! show_if_err(
 ///
 /// ```
 /// # #[macro_use]
-/// # extern crate uucore;
+/// # extern crate sgcore;
 /// # fn main() {
 /// show_error!("Couldn't apply {} to {}", "foo", "bar");
 /// # }
@@ -165,7 +165,7 @@ macro_rules! show_error(
 ///
 /// ```
 /// # #[macro_use]
-/// # extern crate uucore;
+/// # extern crate sgcore;
 /// # fn main() {
 /// // outputs <name>: warning: Couldn't apply foo to bar
 /// show_warning!("Couldn't apply {} to {}", "foo", "bar");

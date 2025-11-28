@@ -1,1 +1,1 @@
-uucore::bin!(sg_pathchk);
+sgcore::bin!(sg_pathchk);

@@ -5,7 +5,7 @@
 
 // spell-checker:ignore (flags) reflink (fs) tmpfs (linux) rlimit Rlim NOFILE clob btrfs neve ROOTDIR USERDIR outfile uufs xattrs
 // spell-checker:ignore bdfl hlsl IRWXO IRWXG nconfined matchpathcon prwx doesnotexist reftests subdirs mksocket srwx
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 
 use uutests::util::TestScenario;
 use uutests::{at_and_ucmd, new_ucmd, path_concat, util_name};
@@ -1955,7 +1955,7 @@ fn test_cp_preserve_links_case_7() {
 #[test]
 #[cfg(unix)]
 fn test_cp_no_preserve_mode() {
-    use uucore::fs as uufs;
+    use sgcore::fs as uufs;
     let (at, mut ucmd) = at_and_ucmd!();
 
     at.touch("a");
@@ -3066,7 +3066,7 @@ fn test_cp_fifo() {
     assert!(at.is_fifo("fifo2"));
 
     let metadata = std::fs::metadata(at.subdir.join("fifo2")).unwrap();
-    let permission = uucore::fs::display_permissions(&metadata, true);
+    let permission = sgcore::fs::display_permissions(&metadata, true);
     assert_eq!(permission, "prwx-wx--x".to_string());
 }
 
@@ -3086,7 +3086,7 @@ fn test_cp_socket() {
         .no_stdout();
 
     let metadata = std::fs::metadata(at.subdir.join("socket2")).unwrap();
-    let permission = uucore::fs::display_permissions(&metadata, true);
+    let permission = sgcore::fs::display_permissions(&metadata, true);
     assert!(metadata.file_type().is_socket());
     assert_eq!(permission, "srwx-wx--x".to_string());
 }
@@ -3122,13 +3122,13 @@ fn test_cp_r_symlink() {
     let metadata = std::fs::symlink_metadata(&symlink).unwrap();
     let other_gid = find_other_group(metadata.gid());
     if let Some(gid) = other_gid {
-        uucore::perms::wrap_chown(
+        sgcore::perms::wrap_chown(
             &symlink,
             &metadata,
             None,
             Some(gid),
             false,
-            uucore::perms::Verbosity::default(),
+            sgcore::perms::Verbosity::default(),
         )
         .expect("Cannot chgrp symlink.");
     } else {

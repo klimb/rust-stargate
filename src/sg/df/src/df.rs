@@ -11,12 +11,12 @@ mod table;
 use blocks::HumanReadable;
 use clap::builder::ValueParser;
 use table::HeaderMode;
-use uucore::display::Quotable;
-use uucore::error::{UError, UResult, USimpleError, get_exit_code};
-use uucore::fsext::{MountInfo, read_fs_list};
-use uucore::parser::parse_size::ParseSizeError;
-use uucore::translate;
-use uucore::{format_usage, show};
+use sgcore::display::Quotable;
+use sgcore::error::{UError, UResult, USimpleError, get_exit_code};
+use sgcore::fsext::{MountInfo, read_fs_list};
+use sgcore::parser::parse_size::ParseSizeError;
+use sgcore::translate;
+use sgcore::{format_usage, show};
 
 use clap::{Arg, ArgAction, ArgMatches, Command, parser::ValueSource};
 
@@ -131,7 +131,7 @@ enum OptionsError {
         .0.iter()
             .map(|t| translate!("df-error-filesystem-type-both-selected-and-excluded", "type" => t.quote()))
             .collect::<Vec<_>>()
-            .join(format!("\n{}: ", uucore::util_name()).as_str())
+            .join(format!("\n{}: ", sgcore::util_name()).as_str())
     )]
     FilesystemTypeBothSelectedAndExcluded(Vec<String>),
 }
@@ -296,10 +296,10 @@ fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
         if is_included(&mi, opt) && is_best(&mounts, &mi) {
             let dev_path: &Path = Path::new(&mi.dev_name);
             if dev_path.is_symlink() {
-                if let Ok(canonicalized_symlink) = uucore::fs::canonicalize(
+                if let Ok(canonicalized_symlink) = sgcore::fs::canonicalize(
                     dev_path,
-                    uucore::fs::MissingHandling::Existing,
-                    uucore::fs::ResolveMode::Logical
+                    sgcore::fs::MissingHandling::Existing,
+                    sgcore::fs::ResolveMode::Logical
                 ) {
                     mi.dev_name = canonicalized_symlink.to_string_lossy().to_string();
                 }
@@ -386,9 +386,9 @@ impl UError for DfError {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let opt = Options::from(&matches).map_err(DfError::OptionsError)?;
     // Get the list of filesystems to display in the output table.
@@ -431,9 +431,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("df-about"))
         .override_usage(format_usage(&translate!("df-usage")))
         .after_help(translate!("df-after-help"))
@@ -584,7 +584,7 @@ mod tests {
     mod mount_info_lt {
 
         use crate::mount_info_lt;
-        use uucore::fsext::MountInfo;
+        use sgcore::fsext::MountInfo;
 
         /// Instantiate a [`MountInfo`] with the given fields.
         fn mount_info(dev_name: &str, mount_root: &str, mount_dir: &str) -> MountInfo {
@@ -634,7 +634,7 @@ mod tests {
     mod is_best {
 
         use crate::is_best;
-        use uucore::fsext::MountInfo;
+        use sgcore::fsext::MountInfo;
 
         /// Instantiate a [`MountInfo`] with the given fields.
         fn mount_info(dev_id: &str, mount_dir: &str) -> MountInfo {
@@ -679,7 +679,7 @@ mod tests {
     mod is_included {
 
         use crate::{Options, is_included};
-        use uucore::fsext::MountInfo;
+        use sgcore::fsext::MountInfo;
 
         /// Instantiate a [`MountInfo`] with the given fields.
         fn mount_info(fs_type: &str, mount_dir: &str, remote: bool, dummy: bool) -> MountInfo {

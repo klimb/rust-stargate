@@ -30,7 +30,7 @@ const FILE_ATTRIBUTE_NORMAL: u32 = 128;
 #[cfg(any(target_os = "linux"))]
 use libc::S_IFIFO;
 #[cfg(any(target_os = "linux"))]
-use uucore::pipes::{pipe, splice, splice_exact};
+use sgcore::pipes::{pipe, splice, splice_exact};
 
 const BUF_SIZE: usize = 256 * 1024;
 #[cfg(any(target_os = "linux"))]

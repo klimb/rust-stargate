@@ -1,1 +1,1 @@
-uucore::bin!(sg_get_domainname);
+sgcore::bin!(sg_get_domainname);

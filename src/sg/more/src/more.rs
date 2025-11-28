@@ -23,11 +23,11 @@ use crossterm::{
     tty::IsTty,
 };
 
-use uucore::error::{UResult, USimpleError, UUsageError};
-use uucore::format_usage;
-use uucore::{display::Quotable, show};
+use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::format_usage;
+use sgcore::{display::Quotable, show};
 
-use uucore::translate;
+use sgcore::translate;
 
 #[derive(Debug)]
 enum MoreError {
@@ -146,13 +146,13 @@ impl Options {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     set_hook(Box::new(|panic_info| {
         print!("\r");
         println!("{panic_info}");
     }));
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let mut options = Options::from(&matches);
     if let Some(files) = matches.get_many::<OsString>(options::FILES) {
         let length = files.len();
@@ -210,11 +210,11 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    Command::new(sgcore::util_name())
         .about(translate!("more-about"))
         .override_usage(format_usage(&translate!("more-usage")))
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .infer_long_args(true)
         .arg(
             Arg::new(options::SILENT)

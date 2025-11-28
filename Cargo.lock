@@ -2361,7 +2361,7 @@ dependencies = [
  "fluent",
  "platform-info",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2371,7 +2371,7 @@ dependencies = [
  "base64-simd",
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2382,8 +2382,8 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "sg_base32",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2393,7 +2393,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2403,7 +2403,7 @@ dependencies = [
  "clap",
  "fluent",
  "sg_base32",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2415,9 +2415,9 @@ dependencies = [
  "memchr",
  "nix",
  "serde_json",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2426,7 +2426,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2435,7 +2435,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2444,8 +2444,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2454,8 +2454,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2466,8 +2466,8 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "hex",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2476,7 +2476,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2491,9 +2491,9 @@ dependencies = [
  "indicatif",
  "libc",
  "linux-raw-sys 0.12.0",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
  "walkdir",
  "xattr",
 ]
@@ -2505,8 +2505,8 @@ dependencies = [
  "clap",
  "fluent",
  "regex",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2518,8 +2518,8 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "memchr",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2531,7 +2531,7 @@ dependencies = [
  "jiff",
  "libc",
  "parse_datetime",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2543,9 +2543,9 @@ dependencies = [
  "gcd",
  "libc",
  "nix",
+ "sgcore",
  "signal-hook",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2554,10 +2554,10 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -2567,7 +2567,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2576,7 +2576,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2586,7 +2586,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2597,9 +2597,9 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "glob",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2609,7 +2609,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2620,8 +2620,8 @@ dependencies = [
  "fluent",
  "nix",
  "rust-ini",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2631,10 +2631,10 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -2646,8 +2646,8 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "onig",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2661,7 +2661,7 @@ dependencies = [
  "num-prime",
  "num-traits",
  "rand 0.9.2",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2670,7 +2670,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2680,7 +2680,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2689,9 +2689,9 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -2701,9 +2701,9 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -2714,7 +2714,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2726,7 +2726,7 @@ dependencies = [
  "fluent",
  "hostname",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2738,7 +2738,7 @@ dependencies = [
  "fluent",
  "hostname",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2747,8 +2747,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2758,8 +2758,8 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2769,8 +2769,8 @@ dependencies = [
  "clap",
  "fluent",
  "memchr",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2781,7 +2781,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2791,7 +2791,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2802,8 +2802,8 @@ dependencies = [
  "file_diff",
  "filetime",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2813,8 +2813,8 @@ dependencies = [
  "clap",
  "fluent",
  "memchr",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2824,7 +2824,7 @@ dependencies = [
  "clap",
  "fluent",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2833,7 +2833,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2849,10 +2849,10 @@ dependencies = [
  "lscolors",
  "serde",
  "serde_json",
+ "sgcore",
  "tempfile",
  "terminal_size",
  "thiserror 2.0.17",
- "uucore",
  "uutils_term_grid",
 ]
 
@@ -2862,8 +2862,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2873,7 +2873,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2883,7 +2883,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2893,7 +2893,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2903,9 +2903,9 @@ dependencies = [
  "clap",
  "fluent",
  "rand 0.9.2",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2916,8 +2916,8 @@ dependencies = [
  "crossterm",
  "fluent",
  "nix",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2930,9 +2930,9 @@ dependencies = [
  "fs_extra",
  "indicatif",
  "libc",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2941,7 +2941,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2952,7 +2952,7 @@ dependencies = [
  "fluent",
  "libc",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2963,8 +2963,8 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "regex",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -2974,8 +2974,8 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -2985,7 +2985,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -2996,7 +2996,7 @@ dependencies = [
  "clap",
  "fluent",
  "half",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3005,7 +3005,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3015,7 +3015,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3024,7 +3024,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3035,8 +3035,8 @@ dependencies = [
  "fluent",
  "itertools",
  "regex",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3045,7 +3045,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3054,7 +3054,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3064,8 +3064,8 @@ dependencies = [
  "clap",
  "fluent",
  "regex",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3075,7 +3075,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3084,7 +3084,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3093,7 +3093,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3105,9 +3105,9 @@ dependencies = [
  "fluent",
  "indicatif",
  "libc",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3117,7 +3117,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3130,9 +3130,9 @@ dependencies = [
  "fluent",
  "num-bigint",
  "num-traits",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3143,7 +3143,7 @@ dependencies = [
  "fluent",
  "libc",
  "rand 0.9.2",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3154,7 +3154,7 @@ dependencies = [
  "fluent",
  "rand 0.9.2",
  "rand_core 0.9.3",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3163,7 +3163,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3173,7 +3173,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3194,10 +3194,10 @@ dependencies = [
  "rand 0.9.2",
  "rayon",
  "self_cell",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -3208,9 +3208,9 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "memchr",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3219,8 +3219,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3230,9 +3230,9 @@ dependencies = [
  "clap",
  "fluent",
  "sg_stdbuf_libstdbuf",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3250,7 +3250,7 @@ dependencies = [
  "clap",
  "fluent",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3259,7 +3259,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3269,7 +3269,7 @@ dependencies = [
  "clap",
  "fluent",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3281,8 +3281,8 @@ dependencies = [
  "memchr",
  "memmap2",
  "regex",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3296,7 +3296,7 @@ dependencies = [
  "notify",
  "rstest",
  "same-file",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3306,7 +3306,7 @@ dependencies = [
  "clap",
  "fluent",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3316,9 +3316,9 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3329,7 +3329,7 @@ dependencies = [
  "fluent",
  "libc",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3342,8 +3342,8 @@ dependencies = [
  "fluent",
  "jiff",
  "parse_datetime",
+ "sgcore",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3354,7 +3354,7 @@ dependencies = [
  "clap",
  "fluent",
  "nom",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3363,7 +3363,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3372,7 +3372,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3382,9 +3382,9 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
- "uucore",
 ]
 
 [[package]]
@@ -3394,7 +3394,7 @@ dependencies = [
  "clap",
  "fluent",
  "nix",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3404,7 +3404,7 @@ dependencies = [
  "clap",
  "fluent",
  "platform-info",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3414,10 +3414,10 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -3427,8 +3427,8 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "sgcore",
  "tempfile",
- "uucore",
 ]
 
 [[package]]
@@ -3437,7 +3437,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3447,9 +3447,9 @@ dependencies = [
  "chrono",
  "clap",
  "fluent",
+ "sgcore",
  "thiserror 2.0.17",
  "utmp-classic",
- "uucore",
 ]
 
 [[package]]
@@ -3458,8 +3458,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "sgcore",
  "utmp-classic",
- "uucore",
 ]
 
 [[package]]
@@ -3472,10 +3472,10 @@ dependencies = [
  "fluent",
  "libc",
  "nix",
+ "sgcore",
  "tempfile",
  "thiserror 2.0.17",
  "unicode-width 0.2.2",
- "uucore",
 ]
 
 [[package]]
@@ -3484,7 +3484,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3494,7 +3494,7 @@ dependencies = [
  "clap",
  "fluent",
  "serde_json",
- "uucore",
+ "sgcore",
 ]
 
 [[package]]
@@ -3505,7 +3505,70 @@ dependencies = [
  "fluent",
  "itertools",
  "nix",
- "uucore",
+ "sgcore",
+]
+
+[[package]]
+name = "sgcore"
+version = "0.4.0"
+dependencies = [
+ "base64-simd",
+ "bigdecimal",
+ "blake2b_simd",
+ "blake3",
+ "bstr",
+ "chrono",
+ "clap",
+ "codspeed-divan-compat",
+ "crc-fast",
+ "data-encoding",
+ "data-encoding-macro",
+ "digest",
+ "dns-lookup",
+ "dunce",
+ "fluent",
+ "fluent-bundle",
+ "fluent-syntax",
+ "glob",
+ "hex",
+ "icu_collator",
+ "icu_decimal",
+ "icu_locale",
+ "icu_provider",
+ "itertools",
+ "jiff",
+ "libc",
+ "md-5",
+ "memchr",
+ "nix",
+ "num-traits",
+ "number_prefix",
+ "os_display",
+ "phf",
+ "procfs",
+ "serde_json",
+ "sgcore_procs",
+ "sha1",
+ "sha2",
+ "sha3",
+ "sm3",
+ "tempfile",
+ "thiserror 2.0.17",
+ "time",
+ "unic-langid",
+ "utmp-classic",
+ "walkdir",
+ "wild",
+ "xattr",
+ "z85",
+]
+
+[[package]]
+name = "sgcore_procs"
+version = "0.4.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]
@@ -3765,12 +3828,12 @@ dependencies = [
  "sg_who",
  "sg_whoami",
  "sg_yes",
+ "sgcore",
  "sha1",
  "tempfile",
  "textwrap",
  "time",
  "unindent",
- "uucore",
  "uutests",
  "walkdir",
  "xattr",
@@ -4103,69 +4166,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "uucore"
-version = "0.4.0"
-dependencies = [
- "base64-simd",
- "bigdecimal",
- "blake2b_simd",
- "blake3",
- "bstr",
- "chrono",
- "clap",
- "codspeed-divan-compat",
- "crc-fast",
- "data-encoding",
- "data-encoding-macro",
- "digest",
- "dns-lookup",
- "dunce",
- "fluent",
- "fluent-bundle",
- "fluent-syntax",
- "glob",
- "hex",
- "icu_collator",
- "icu_decimal",
- "icu_locale",
- "icu_provider",
- "itertools",
- "jiff",
- "libc",
- "md-5",
- "memchr",
- "nix",
- "num-traits",
- "number_prefix",
- "os_display",
- "phf",
- "procfs",
- "serde_json",
- "sha1",
- "sha2",
- "sha3",
- "sm3",
- "tempfile",
- "thiserror 2.0.17",
- "time",
- "unic-langid",
- "utmp-classic",
- "uucore_procs",
- "walkdir",
- "wild",
- "xattr",
- "z85",
-]
-
-[[package]]
-name = "uucore_procs"
-version = "0.4.0"
-dependencies = [
- "proc-macro2",
- "quote",
-]
-
-[[package]]
 name = "uuid"
 version = "1.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4186,8 +4186,8 @@ dependencies = [
  "rand 0.9.2",
  "regex",
  "rlimit",
+ "sgcore",
  "tempfile",
- "uucore",
  "xattr",
 ]
 

@@ -8,11 +8,11 @@ use clap::{Arg, ArgAction, Command};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::io::{self, StdoutLock, Write};
-use uucore::error::UResult;
-use uucore::format::{FormatChar, OctalParsing, parse_escape_only};
-use uucore::{format_usage, os_str_as_bytes};
+use sgcore::error::UResult;
+use sgcore::format::{FormatChar, OctalParsing, parse_escape_only};
+use sgcore::{format_usage, os_str_as_bytes};
 
-use uucore::translate;
+use sgcore::translate;
 use serde_json::json;
 
 mod options {
@@ -133,8 +133,8 @@ fn filter_flags(mut args: impl Iterator<Item = OsString>) -> (Vec<OsString>, Opt
     (arguments, options)
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // args[0] is the name of the binary.
     let args: Vec<OsString> = args.skip(1).collect();
 
@@ -226,17 +226,17 @@ pub fn uu_app() -> Command {
     // Note: echo is different from the other utils in that it should **not**
     // have `infer_long_args(true)`, because, for example, `--ver` should be
     // printed as `--ver` and not show the version text.
-    Command::new(uucore::util_name())
+    Command::new(sgcore::util_name())
         // TrailingVarArg specifies the final positional argument is a VarArg
         // and it doesn't attempts the parse any further args.
         // Final argument must have multiple(true) or the usage string equivalent.
         .trailing_var_arg(true)
         .allow_hyphen_values(true)
-        .version(uucore::crate_version!())
+        .version(sgcore::crate_version!())
         .about(translate!("echo-about"))
         .after_help(translate!("echo-after-help"))
         .override_usage(format_usage(&translate!("echo-usage")))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .arg(
             Arg::new(options::NO_NEWLINE)
                 .short('n')

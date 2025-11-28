@@ -1,1 +1,1 @@
-uucore::bin!(sg_hashsum);
+sgcore::bin!(sg_hashsum);

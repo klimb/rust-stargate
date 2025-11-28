@@ -42,9 +42,9 @@ use clap::ArgMatches;
 use std::ffi::{OsStr, OsString};
 use std::path::is_separator;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
 
 /// The format to use for suffixes in the filename for each output chunk.
 #[derive(Clone, Copy)]

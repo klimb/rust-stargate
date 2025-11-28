@@ -18,17 +18,17 @@ use std::fs::{self, metadata};
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::process;
 use thiserror::Error;
-use uucore::backup_control::{self, BackupMode};
-use uucore::buf_copy::copy_stream;
-use uucore::display::Quotable;
-use uucore::entries::{grp2gid, usr2uid};
-use uucore::error::{FromIo, UError, UResult, UUsageError};
-use uucore::fs::dir_strip_dot_for_creation;
-use uucore::perms::{Verbosity, VerbosityLevel, wrap_chown};
-use uucore::process::{getegid, geteuid};
+use sgcore::backup_control::{self, BackupMode};
+use sgcore::buf_copy::copy_stream;
+use sgcore::display::Quotable;
+use sgcore::entries::{grp2gid, usr2uid};
+use sgcore::error::{FromIo, UError, UResult, UUsageError};
+use sgcore::fs::dir_strip_dot_for_creation;
+use sgcore::perms::{Verbosity, VerbosityLevel, wrap_chown};
+use sgcore::process::{getegid, geteuid};
 
-use uucore::translate;
-use uucore::{format_usage, show, show_error, show_if_err};
+use sgcore::translate;
+use sgcore::{format_usage, show, show_error, show_if_err};
 
 #[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
@@ -61,7 +61,7 @@ pub struct Behavior {
 
 #[derive(Error, Debug)]
 enum InstallError {
-    #[error("{}", translate!("install-error-dir-needs-arg", "util_name" => uucore::util_name()))]
+    #[error("{}", translate!("install-error-dir-needs-arg", "util_name" => sgcore::util_name()))]
     DirNeedsArg,
 
     #[error("{}", translate!("install-error-create-dir-failed", "path" => .0.quote()))]
@@ -162,9 +162,9 @@ static ARG_FILES: &str = "files";
 ///
 /// Returns a program return code.
 ///
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let paths: Vec<OsString> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -180,9 +180,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("install-about"))
         .override_usage(format_usage(&translate!("install-usage")))
         .infer_long_args(true)
@@ -479,7 +479,7 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
 
             if mode::chmod(path, b.mode()).is_err() {
                 // Error messages are printed by the mode::chmod function!
-                uucore::error::set_exit_code(1);
+                sgcore::error::set_exit_code(1);
                 continue;
             }
 
@@ -570,7 +570,7 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
         if let Some(to_create) = to_create {
             // if the path ends in /, remove it
             let to_create_owned;
-            let to_create = match uucore::os_str_as_bytes(to_create.as_os_str()) {
+            let to_create = match sgcore::os_str_as_bytes(to_create.as_os_str()) {
                 Ok(path_bytes) if path_bytes.ends_with(b"/") => {
                     let mut trimmed_bytes = path_bytes;
                     while trimmed_bytes.ends_with(b"/") {

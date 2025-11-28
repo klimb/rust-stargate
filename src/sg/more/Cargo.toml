@@ -19,7 +19,7 @@ path = "src/more.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 crossterm = { workspace = true }
 fluent = { workspace = true }
 

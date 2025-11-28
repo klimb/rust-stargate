@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_tsort::uumain;
-use uucore::benchmark::{run_util_function, setup_test_file};
+use sgcore::benchmark::{run_util_function, setup_test_file};
 
 /// Generate topological sort test data - linear chain
 fn generate_linear_chain(num_nodes: usize) -> Vec<u8> {

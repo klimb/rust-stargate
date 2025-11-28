@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_seq::uumain;
-use uucore::benchmark::run_util_function;
+use sgcore::benchmark::run_util_function;
 
 /// Benchmark simple integer sequence
 #[divan::bench]

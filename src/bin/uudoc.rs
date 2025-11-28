@@ -22,7 +22,7 @@ use textwrap::{fill, indent, termwidth};
 use zip::ZipArchive;
 
 use coreutils::validation;
-use uucore::Args;
+use sgcore::Args;
 
 include!(concat!(env!("OUT_DIR"), "/uutils_map.rs"));
 
@@ -147,7 +147,7 @@ fn print_tldr_error() {
 /// Returns an error if the writer fails.
 #[allow(clippy::too_many_lines)]
 fn main() -> io::Result<()> {
-    let args: Vec<OsString> = uucore::args_os_filtered().collect();
+    let args: Vec<OsString> = sgcore::args_os_filtered().collect();
 
     let mut tldr_zip = File::open("docs/tldr.zip")
         .ok()

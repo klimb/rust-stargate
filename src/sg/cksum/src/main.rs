@@ -1,1 +1,1 @@
-uucore::bin!(sg_cksum);
+sgcore::bin!(sg_cksum);

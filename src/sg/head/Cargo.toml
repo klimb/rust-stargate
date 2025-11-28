@@ -21,7 +21,7 @@ path = "src/head.rs"
 clap = { workspace = true }
 memchr = { workspace = true }
 thiserror = { workspace = true }
-uucore = { workspace = true, features = [
+sgcore = { workspace = true, features = [
   "parser",
   "ringbuffer",
   "lines",

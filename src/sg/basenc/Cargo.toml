@@ -19,7 +19,7 @@ path = "src/basenc.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["encoding"] }
+sgcore = { workspace = true, features = ["encoding"] }
 sg_base32 = { workspace = true }
 fluent = { workspace = true }
 

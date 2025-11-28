@@ -13,7 +13,7 @@
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufRead, Read, Seek, SeekFrom, Write};
-use uucore::error::UResult;
+use sgcore::error::UResult;
 
 /// When reading files in reverse in `bounded_tail`, this is the size of each
 /// block read at a time.

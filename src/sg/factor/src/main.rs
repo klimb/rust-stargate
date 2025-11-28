@@ -1,1 +1,1 @@
-uucore::bin!(sg_factor);
+sgcore::bin!(sg_factor);

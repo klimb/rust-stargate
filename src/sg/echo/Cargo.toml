@@ -19,7 +19,7 @@ path = "src/echo.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["format"] }
+sgcore = { workspace = true, features = ["format"] }
 fluent = { workspace = true }
 serde_json = { workspace = true }
 

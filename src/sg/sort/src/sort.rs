@@ -42,18 +42,18 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::str::Utf8Error;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, strip_errno};
-use uucore::error::{UError, UResult, USimpleError, UUsageError};
-use uucore::extendedbigdecimal::ExtendedBigDecimal;
-use uucore::format_usage;
-use uucore::line_ending::LineEnding;
-use uucore::parser::num_parser::{ExtendedParser, ExtendedParserError};
-use uucore::parser::parse_size::{ParseSizeError, Parser};
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::show_error;
-use uucore::translate;
-use uucore::version_cmp::version_cmp;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, strip_errno};
+use sgcore::error::{UError, UResult, USimpleError, UUsageError};
+use sgcore::extendedbigdecimal::ExtendedBigDecimal;
+use sgcore::format_usage;
+use sgcore::line_ending::LineEnding;
+use sgcore::parser::num_parser::{ExtendedParser, ExtendedParserError};
+use sgcore::parser::parse_size::{ParseSizeError, Parser};
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::show_error;
+use sgcore::translate;
+use sgcore::version_cmp::version_cmp;
 
 use crate::buffer_hint::automatic_buffer_size;
 use crate::tmp_dir::TmpDirWrapper;
@@ -161,7 +161,7 @@ pub enum SortError {
     #[error("{}", translate!("sort-cannot-create-tmp-file", "path" => format!("{}", .path.display())))]
     TmpFileCreationFailed { path: PathBuf },
 
-    #[error("{}", translate!("sort-file-operands-combined", "file" => format!("{}", .file.display()), "help" => uucore::execution_phrase()))]
+    #[error("{}", translate!("sort-file-operands-combined", "file" => format!("{}", .file.display()), "help" => sgcore::execution_phrase()))]
     FileOperandsCombined { file: PathBuf },
 
     #[error("{error}")]
@@ -1111,12 +1111,12 @@ fn default_merge_batch_size() -> usize {
     }
 }
 
-#[uucore::main]
+#[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let mut settings = GlobalSettings::default();
 
-    let matches = uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
 
     // Prevent -o/--output to be specified multiple times
     if matches
@@ -1401,9 +1401,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    uucore::clap_localization::configure_localized_command(
-        Command::new(uucore::util_name())
-            .version(uucore::crate_version!())
+    sgcore::clap_localization::configure_localized_command(
+        Command::new(sgcore::util_name())
+            .version(sgcore::crate_version!())
             .about(translate!("sort-about"))
             .after_help(translate!("sort-after-help"))
             .override_usage(format_usage(&translate!("sort-usage")))

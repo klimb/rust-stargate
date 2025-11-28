@@ -20,7 +20,7 @@ path = "src/kill.rs"
 [dependencies]
 clap = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
-uucore = { workspace = true, features = ["signals"] }
+sgcore = { workspace = true, features = ["signals"] }
 fluent = { workspace = true }
 
 [[bin]]

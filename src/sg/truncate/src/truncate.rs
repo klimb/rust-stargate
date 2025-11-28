@@ -11,12 +11,12 @@ use std::io::ErrorKind;
 #[cfg(unix)]
 use std::os::unix::fs::FileTypeExt;
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, UUsageError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::format_usage;
+use sgcore::translate;
 
-use uucore::parser::parse_size::{ParseSizeError, parse_size_u64};
+use sgcore::parser::parse_size::{ParseSizeError, parse_size_u64};
 
 #[derive(Debug, Eq, PartialEq)]
 enum TruncateMode {
@@ -82,10 +82,10 @@ pub mod options {
     pub static ARG_FILES: &str = "files";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let app = uu_app();
-    let matches = uucore::clap_localization::handle_clap_result(app, args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(app, args)?;
 
     let files: Vec<OsString> = matches
         .get_many::<OsString>(options::ARG_FILES)
@@ -109,13 +109,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("truncate-about"))
         .override_usage(format_usage(&translate!("truncate-usage")))
         .after_help(translate!("truncate-after-help"))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         .arg(
             Arg::new(options::IO_BLOCKS)
                 .short('o')

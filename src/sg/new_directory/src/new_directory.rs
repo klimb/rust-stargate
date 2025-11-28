@@ -11,14 +11,14 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 #[cfg(not(windows))]
-use uucore::error::FromIo;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
+use sgcore::error::FromIo;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
 
 #[cfg(not(windows))]
-use uucore::mode;
-use uucore::{display::Quotable, fs::dir_strip_dot_for_creation};
-use uucore::{format_usage, show_if_err};
+use sgcore::mode;
+use sgcore::{display::Quotable, fs::dir_strip_dot_for_creation};
+use sgcore::{format_usage, show_if_err};
 
 static DEFAULT_PERM: u32 = 0o777;
 
@@ -60,9 +60,9 @@ fn get_mode(matches: &ArgMatches) -> Result<u32, String> {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let dirs = matches
         .get_many::<OsString>(options::DIRS)
@@ -84,9 +84,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("mkdir-about"))
         .override_usage(format_usage(&translate!("mkdir-usage")))
         .infer_long_args(true)
@@ -235,7 +235,7 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             if config.verbose {
                 println!(
                     "{}",
-                    translate!("mkdir-verbose-created-directory", "util_name" => uucore::util_name(), "path" => path.quote())
+                    translate!("mkdir-verbose-created-directory", "util_name" => sgcore::util_name(), "path" => path.quote())
                 );
             }
 
@@ -245,7 +245,7 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             } else {
                 // TODO: Make this macos and freebsd compatible by creating a function to get permission bits from
                 // acl in extended attributes
-                let acl_perm_bits = uucore::fsxattr::get_acl_perm_bits_from_xattr(path);
+                let acl_perm_bits = sgcore::fsxattr::get_acl_perm_bits_from_xattr(path);
 
                 if is_parent {
                     (!mode::get_umask() & 0o777) | 0o300 | acl_perm_bits
@@ -280,7 +280,7 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             if config.verbose && is_parent && config.recursive && !ends_with_parent_dir {
                 println!(
                     "{}",
-                    translate!("mkdir-verbose-created-directory", "util_name" => uucore::util_name(), "path" => path.quote())
+                    translate!("mkdir-verbose-created-directory", "util_name" => sgcore::util_name(), "path" => path.quote())
                 );
             }
             Ok(())

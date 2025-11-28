@@ -1,1 +1,1 @@
-uucore::bin!(sg_stat);
+sgcore::bin!(sg_stat);

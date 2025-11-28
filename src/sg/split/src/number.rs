@@ -16,7 +16,7 @@
 //! [positional notation]: https://en.wikipedia.org/wiki/Positional_notation
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
-use uucore::translate;
+use sgcore::translate;
 
 /// An overflow due to incrementing a number beyond its representable limit.
 #[derive(Debug)]

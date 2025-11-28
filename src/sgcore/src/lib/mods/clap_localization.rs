@@ -419,7 +419,7 @@ impl<'a> ErrorFormatter<'a> {
 ///
 /// ```no_run
 /// use clap::Command;
-/// use uucore::clap_localization::handle_clap_result;
+/// use sgcore::clap_localization::handle_clap_result;
 ///
 /// let cmd = Command::new("myutil");
 /// let args = vec!["myutil", "--help"];
@@ -459,7 +459,7 @@ where
 ///
 /// ```no_run
 /// use clap::Command;
-/// use uucore::clap_localization::handle_clap_result_with_exit_code;
+/// use sgcore::clap_localization::handle_clap_result_with_exit_code;
 ///
 /// let cmd = Command::new("myutil");
 /// let args = vec!["myutil", "--invalid"];
@@ -502,7 +502,7 @@ where
 ///
 /// ```no_run
 /// use clap::Command;
-/// use uucore::clap_localization::handle_clap_error_with_exit_code;
+/// use sgcore::clap_localization::handle_clap_error_with_exit_code;
 ///
 /// let cmd = Command::new("myutil");
 /// match cmd.try_get_matches() {
@@ -541,7 +541,7 @@ pub fn handle_clap_error_with_exit_code(err: Error, exit_code: i32) -> ! {
 ///
 /// ```no_run
 /// use clap::Command;
-/// use uucore::clap_localization::configure_localized_command;
+/// use sgcore::clap_localization::configure_localized_command;
 ///
 /// let cmd = Command::new("myutil")
 ///     .arg(clap::Arg::new("input").short('i'));

@@ -6,14 +6,14 @@
 use platform_info::*;
 
 use clap::Command;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
@@ -31,9 +31,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("arch-about"))
         .after_help(translate!("arch-after-help"))
         .infer_long_args(true);

@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_cksum::uumain;
-use uucore::benchmark::{run_util_function, setup_test_file, text_data};
+use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 // Macro to generate benchmarks for each algorithm
 macro_rules! bench_algorithm {
@@ -52,7 +52,7 @@ macro_rules! bench_shake_algorithm {
     ($algo_name:ident, $algo_str:expr, Shake128) => {
         #[divan::bench]
         fn $algo_name(bencher: Bencher) {
-            use uucore::sum::{Digest, Shake128};
+            use sgcore::sum::{Digest, Shake128};
 
             let data = text_data::generate_by_size(100, 80);
 
@@ -71,7 +71,7 @@ macro_rules! bench_shake_algorithm {
     ($algo_name:ident, $algo_str:expr, Shake256) => {
         #[divan::bench]
         fn $algo_name(bencher: Bencher) {
-            use uucore::sum::{Digest, Shake256};
+            use sgcore::sum::{Digest, Shake256};
 
             let data = text_data::generate_by_size(100, 80);
 

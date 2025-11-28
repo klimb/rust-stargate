@@ -20,7 +20,7 @@ path = "src/pathchk.rs"
 [dependencies]
 clap = { workspace = true }
 libc = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 
 [[bin]]

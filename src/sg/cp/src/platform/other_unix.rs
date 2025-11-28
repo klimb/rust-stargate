@@ -7,9 +7,9 @@ use std::fs::{self, File, OpenOptions};
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
 
-use uucore::buf_copy;
-use uucore::mode::get_umask;
-use uucore::translate;
+use sgcore::buf_copy;
+use sgcore::mode::get_umask;
+use sgcore::translate;
 
 use crate::{
     CopyDebug, CopyResult, CpError, OffloadReflinkDebug, ReflinkMode, SparseDebug, SparseMode,

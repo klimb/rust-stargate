@@ -5,12 +5,12 @@
 
 // spell-checker:ignore (ToDO) COMFOLLOW Chowner RFILE RFILE's derefer dgid nonblank nonprint nonprinting
 
-use uucore::display::Quotable;
-use uucore::entries;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::format_usage;
-use uucore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::entries;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
+use sgcore::translate;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
@@ -92,18 +92,18 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
     })
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     chown_base(uu_app(), args, options::ARG_GROUP, parse_gid_and_uid, true)
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("chgrp-about"))
         .override_usage(format_usage(&translate!("chgrp-usage")))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         .disable_help_flag(true)
         .arg(
             Arg::new(options::HELP)
@@ -171,5 +171,5 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         // Add common arguments with chgrp, change_owner & chmod
-        .args(uucore::perms::common_args())
+        .args(sgcore::perms::common_args())
 }

@@ -14,7 +14,7 @@ use std::collections::hash_map::Keys;
 use std::fs::{File, Metadata};
 use std::io::{BufRead, BufReader, BufWriter, Write, stdout};
 use std::path::{Path, PathBuf};
-use uucore::error::UResult;
+use sgcore::error::UResult;
 
 /// Data structure to keep a handle on files to follow.
 /// `last` always holds the path/key of the last file that was printed from.

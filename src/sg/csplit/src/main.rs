@@ -1,1 +1,1 @@
-uucore::bin!(sg_csplit);
+sgcore::bin!(sg_csplit);

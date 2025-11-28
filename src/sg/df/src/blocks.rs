@@ -7,7 +7,7 @@ use crate::{OPT_BLOCKSIZE, OPT_PORTABILITY};
 use clap::ArgMatches;
 use std::{env, fmt};
 
-use uucore::{
+use sgcore::{
     display::Quotable,
     parser::parse_size::{ParseSizeError, parse_size_non_zero_u64, parse_size_u64},
 };

@@ -12,12 +12,12 @@ use same_file::Handle;
 use std::ffi::OsString;
 use std::io::IsTerminal;
 use std::time::Duration;
-use uucore::error::{UResult, USimpleError, UUsageError};
-use uucore::parser::parse_size::{ParseSizeError, parse_size_u64};
-use uucore::parser::parse_time;
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::translate;
-use uucore::{format_usage, show_warning};
+use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::parser::parse_size::{ParseSizeError, parse_size_u64};
+use sgcore::parser::parse_time;
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::translate;
+use sgcore::{format_usage, show_warning};
 
 pub mod options {
     pub mod verbosity {
@@ -410,7 +410,7 @@ fn parse_num(src: &str) -> Result<Signum, ParseSizeError> {
     }
 }
 
-pub fn parse_args(args: impl uucore::Args) -> UResult<Settings> {
+pub fn parse_args(args: impl sgcore::Args) -> UResult<Settings> {
     let args_vec: Vec<OsString> = args.collect();
     let clap_args = uu_app().try_get_matches_from(args_vec.clone());
     let clap_result = match clap_args {
@@ -457,9 +457,9 @@ pub fn uu_app() -> Command {
     #[cfg(all(unix, not(target_os = "linux")))]
     let polling_help = translate!("tail-help-polling-unix");
     
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("tail-about"))
         .override_usage(format_usage(&translate!("tail-usage")))
         .infer_long_args(true)

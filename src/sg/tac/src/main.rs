@@ -1,1 +1,1 @@
-uucore::bin!(sg_tac);
+sgcore::bin!(sg_tac);

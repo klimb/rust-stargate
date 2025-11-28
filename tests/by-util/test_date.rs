@@ -8,7 +8,7 @@
 use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc}; // spell-checker:disable-line
 use regex::Regex;
 #[cfg(all(unix, not(target_os = "macos")))]
-use uucore::process::geteuid;
+use sgcore::process::geteuid;
 use uutests::util::TestScenario;
 use uutests::{at_and_ucmd, new_ucmd, util_name};
 
@@ -283,7 +283,7 @@ fn test_date_set_invalid() {
 #[test]
 #[cfg(all(unix, not(any(target_os = "macos"))))]
 fn test_date_set_permissions_error() {
-    if !(geteuid() == 0 || uucore::os::is_wsl_1()) {
+    if !(geteuid() == 0 || sgcore::os::is_wsl_1()) {
         let result = new_ucmd!()
             .arg("--set")
             .arg("2020-03-11 21:45:00+08:00")

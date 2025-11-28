@@ -5,11 +5,11 @@
 
 use clap::Command;
 use sg_base32::base_common;
-use uucore::translate;
-use uucore::{encoding::Format, error::UResult};
+use sgcore::translate;
+use sgcore::{encoding::Format, error::UResult};
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let format = Format::Base64;
     let (about, usage) = get_info();
     let config = base_common::parse_base_cmd_args(args, about, usage)?;

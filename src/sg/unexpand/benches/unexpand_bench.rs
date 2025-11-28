@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_unexpand::uumain;
-use uucore::benchmark::{create_test_file, run_util_function};
+use sgcore::benchmark::{create_test_file, run_util_function};
 
 /// Generate text data with leading spaces (typical unexpand use case)
 fn generate_indented_text(num_lines: usize) -> Vec<u8> {

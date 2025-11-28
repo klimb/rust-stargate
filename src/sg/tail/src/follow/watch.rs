@@ -13,11 +13,11 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher, WatcherKind};
 use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, channel};
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError, set_exit_code};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError, set_exit_code};
+use sgcore::translate;
 
-use uucore::show_error;
+use sgcore::show_error;
 
 pub struct WatcherRx {
     watcher: Box<dyn Watcher>,

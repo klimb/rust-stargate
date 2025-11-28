@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 use super::options;
 use clap::ArgMatches;
-use uucore::translate;
+use sgcore::translate;
 
 /// Abstraction for getopts
 pub trait CommandLineOpts {

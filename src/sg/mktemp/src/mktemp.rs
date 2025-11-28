@@ -7,10 +7,10 @@
 
 use clap::builder::{TypedValueParser, ValueParserFactory};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use uucore::display::{Quotable, println_verbatim};
-use uucore::error::{FromIo, UError, UResult, UUsageError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::{Quotable, println_verbatim};
+use sgcore::error::{FromIo, UError, UResult, UUsageError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 use std::env;
 use std::ffi::{OsStr, OsString};
@@ -332,13 +332,13 @@ impl ValueParserFactory for OptionalPathBufParser {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = args.collect();
     let matches = match uu_app().try_get_matches_from(&args) {
         Ok(m) => m,
         Err(e) => {
-            use uucore::clap_localization::handle_clap_error_with_exit_code;
+            use sgcore::clap_localization::handle_clap_error_with_exit_code;
             if e.kind() == clap::error::ErrorKind::UnknownArgument {
                 handle_clap_error_with_exit_code(e, 1);
             }
@@ -400,9 +400,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("mktemp-about"))
         .override_usage(format_usage(&translate!("mktemp-usage")))
         .infer_long_args(true)

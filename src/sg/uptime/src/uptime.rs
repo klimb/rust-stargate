@@ -10,18 +10,18 @@ use chrono::{Local, TimeZone, Utc};
 use std::ffi::OsString;
 use std::io;
 use thiserror::Error;
-use uucore::error::{UError, UResult};
-use uucore::libc::time_t;
-use uucore::translate;
-use uucore::uptime::*;
+use sgcore::error::{UError, UResult};
+use sgcore::libc::time_t;
+use sgcore::translate;
+use sgcore::uptime::*;
 
 use clap::{Arg, ArgAction, Command, ValueHint, builder::ValueParser};
 
-use uucore::format_usage;
+use sgcore::format_usage;
 
 #[cfg(unix)]
 #[cfg(not(target_os = "openbsd"))]
-use uucore::utmpx::*;
+use sgcore::utmpx::*;
 
 pub mod options {
     pub static SINCE: &str = "since";
@@ -45,9 +45,9 @@ impl UError for UptimeError {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let file_path = matches.get_one::<OsString>(options::PATH);
 
     if matches.get_flag(options::SINCE) {
@@ -65,9 +65,9 @@ pub fn uu_app() -> Command {
     #[cfg(target_env = "musl")]
     let about = translate!("uptime-about") + &translate!("uptime-about-musl-warning");
 
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(about)
         .override_usage(format_usage(&translate!("uptime-usage")))
         .infer_long_args(true)
@@ -93,8 +93,8 @@ pub fn uu_app() -> Command {
 fn uptime_with_file(file_path: &OsString) -> UResult<()> {
     use std::fs;
     use std::os::unix::fs::FileTypeExt;
-    use uucore::error::set_exit_code;
-    use uucore::show_error;
+    use sgcore::error::set_exit_code;
+    use sgcore::show_error;
 
     // Uptime will print loadavg and time to stderr unless we encounter an extra operand.
     let mut non_fatal_error = false;

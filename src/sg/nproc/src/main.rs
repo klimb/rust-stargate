@@ -1,1 +1,1 @@
-uucore::bin!(sg_nproc);
+sgcore::bin!(sg_nproc);

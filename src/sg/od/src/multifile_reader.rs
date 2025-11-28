@@ -9,8 +9,8 @@ use std::io;
 #[cfg(unix)]
 use std::os::fd::{AsRawFd, FromRawFd};
 
-use uucore::display::Quotable;
-use uucore::show_error;
+use sgcore::display::Quotable;
+use sgcore::show_error;
 
 pub enum InputSource<'a> {
     FileName(&'a str),

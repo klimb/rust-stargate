@@ -10,7 +10,7 @@
 //! # Examples:
 //!
 //! ```
-//! use uucore::entries::{self, Locate};
+//! use sgcore::entries::{self, Locate};
 //!
 //! let root_group = if cfg!(any(target_os = "linux")) {
 //!     "root"

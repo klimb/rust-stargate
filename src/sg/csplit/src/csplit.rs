@@ -15,9 +15,9 @@ use std::{
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use regex::Regex;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult};
-use uucore::format_usage;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult};
+use sgcore::format_usage;
 
 mod csplit_error;
 mod patterns;
@@ -26,7 +26,7 @@ mod split_name;
 use crate::csplit_error::CsplitError;
 use crate::split_name::SplitName;
 
-use uucore::translate;
+use sgcore::translate;
 
 mod options {
     pub const SUFFIX_FORMAT: &str = "suffix-format";
@@ -612,9 +612,9 @@ where
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     // get the file to split
     let file_name = matches.get_one::<OsString>(options::FILE).unwrap();
@@ -637,9 +637,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("csplit-about"))
         .override_usage(format_usage(&translate!("csplit-usage")))
         .args_override_self(true)

@@ -12,7 +12,7 @@
 //! # Examples:
 //!
 //! ```
-//! use uucore::utmpx::Utmpx;
+//! use sgcore::utmpx::Utmpx;
 //! for ut in Utmpx::iter_all_records() {
 //!     if ut.is_user_process() {
 //!         println!("{}: {}", ut.host(), ut.user())
@@ -23,7 +23,7 @@
 //! Specifying the path to login record:
 //!
 //! ```
-//! use uucore::utmpx::Utmpx;
+//! use sgcore::utmpx::Utmpx;
 //! for ut in Utmpx::iter_all_records_from("/some/where/else") {
 //!     if ut.is_user_process() {
 //!         println!("{}: {}", ut.host(), ut.user())

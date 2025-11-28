@@ -22,7 +22,7 @@ clap = { workspace = true }
 rand = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 
 [[bin]]

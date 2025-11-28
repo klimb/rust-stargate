@@ -5,7 +5,7 @@
 // spell-checker:ignore reflink
 use std::fs;
 use std::path::Path;
-use uucore::translate;
+use sgcore::translate;
 
 use crate::{
     CopyDebug, CopyResult, CpError, OffloadReflinkDebug, ReflinkMode, SparseDebug, SparseMode,

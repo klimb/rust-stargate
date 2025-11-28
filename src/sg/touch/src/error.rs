@@ -7,9 +7,9 @@
 use filetime::FileTime;
 use std::path::PathBuf;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{UError, UIoError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UError, UIoError};
+use sgcore::translate;
 
 #[derive(Debug, Error)]
 pub enum TouchError {

@@ -1827,8 +1827,8 @@ fn test_move_should_not_fallback_to_copy() {
         .create(true)
         .write(true)
         .share_mode(
-            uucore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ
-                | uucore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_WRITE,
+            sgcore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ
+                | sgcore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_WRITE,
         )
         .open(locked_file_path);
 

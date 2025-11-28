@@ -13,12 +13,12 @@ use nix::fcntl::{OFlag, open};
 #[cfg(any(target_os = "linux"))]
 use nix::sys::stat::Mode;
 use std::path::Path;
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 #[cfg(any(target_os = "linux"))]
-use uucore::error::FromIo;
-use uucore::error::{UResult, USimpleError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::error::FromIo;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 pub mod options {
     pub static FILE_SYSTEM: &str = "file-system";
@@ -34,7 +34,7 @@ mod platform {
     use nix::unistd::{fdatasync, syncfs};
     #[cfg(any(target_os = "linux"))]
     use std::fs::File;
-    use uucore::error::UResult;
+    use sgcore::error::UResult;
 
     pub fn do_sync() -> UResult<()> {
         sync();
@@ -60,9 +60,9 @@ mod platform {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let files: Vec<String> = matches
         .get_many::<String>(ARG_FILES)
         .map(|v| v.map(ToString::to_string).collect())
@@ -110,9 +110,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("sync-about"))
         .override_usage(format_usage(&translate!("sync-usage")))
         .infer_long_args(true)

@@ -20,7 +20,7 @@ path = "src/mkfifo.rs"
 [dependencies]
 clap = { workspace = true }
 libc = { workspace = true }
-uucore = { workspace = true, features = ["fs", "mode"] }
+sgcore = { workspace = true, features = ["fs", "mode"] }
 fluent = { workspace = true }
 
 [[bin]]

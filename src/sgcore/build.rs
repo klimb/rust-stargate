@@ -62,7 +62,7 @@ fn project_root() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let uucore_path = std::path::Path::new(&manifest_dir);
 
-    // Navigate from src/uucore to project root
+    // Navigate from src/sgcore to project root
     let project_root = uucore_path
         .parent() // src/
         .and_then(|p| p.parent()) // project root
@@ -134,9 +134,9 @@ fn embed_single_utility_locale(
             .join(format!("locales/{locale}.ftl"))
     })?;
 
-    // Always embed uucore locale file if it exists
-    embed_component_locales(embedded_file, locales_to_embed, "uucore", |locale| {
-        project_root.join(format!("src/uucore/locales/{locale}.ftl"))
+    // Always embed sgcore locale file if it exists
+    embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
+        project_root.join(format!("src/sgcore/locales/{locale}.ftl"))
     })?;
 
     Ok(())
@@ -153,7 +153,7 @@ fn embed_all_utility_locales(
     // Discover all uu_* directories
     let src_uu_dir = project_root.join("src/uu");
     if !src_uu_dir.exists() {
-        // When src/uu doesn't exist (e.g., standalone uucore from crates.io),
+        // When src/uu doesn't exist (e.g., standalone sgcore from crates.io),
         // embed a static list of utility locales that are commonly used
         embed_static_utility_locales(embedded_file, locales_to_embed)?;
         return Ok(());
@@ -179,9 +179,9 @@ fn embed_all_utility_locales(
         })?;
     }
 
-    // Also embed uucore locale file if it exists
-    embed_component_locales(embedded_file, locales_to_embed, "uucore", |locale| {
-        project_root.join(format!("src/uucore/locales/{locale}.ftl"))
+    // Also embed sgcore locale file if it exists
+    embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
+        project_root.join(format!("src/sgcore/locales/{locale}.ftl"))
     })?;
 
     embedded_file.flush()?;
@@ -204,8 +204,8 @@ fn embed_static_utility_locales(
         return Ok(()); // nothing to scan
     };
 
-    // First, try to embed uucore locales - critical for common translations like "Usage:"
-    embed_component_locales(embedded_file, locales_to_embed, "uucore", |locale| {
+    // First, try to embed sgcore locales - critical for common translations like "Usage:"
+    embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
         Path::new(&manifest_dir).join(format!("locales/{locale}.ftl"))
     })?;
 

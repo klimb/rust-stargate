@@ -8,7 +8,7 @@
 use crate::{OPT_BYTES, OPT_LINE_BYTES, OPT_LINES, OPT_NUMBER};
 use clap::{ArgMatches, parser::ValueSource};
 use thiserror::Error;
-use uucore::{
+use sgcore::{
     display::Quotable,
     parser::parse_size::{ParseSizeError, parse_size_u64, parse_size_u64_max},
     translate,

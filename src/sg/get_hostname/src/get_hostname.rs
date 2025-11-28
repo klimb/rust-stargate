@@ -10,13 +10,13 @@ use std::net::ToSocketAddrs;
 use std::str;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use uucore::translate;
+use sgcore::translate;
 
-use uucore::{
+use sgcore::{
     error::{CommandResult, FromIo, UResult, USimpleError},
     format_usage,
 };
-use uucore::error::CommandResult::{Success, Error};
+use sgcore::error::CommandResult::{Success, Error};
 use serde_json::json;
 
 static SHORT_FLAG: &str = "short";
@@ -24,9 +24,9 @@ static DOMAIN_FLAG: &str = "domain";
 static FQDN_FLAG: &str = "fqdn";
 static OBJ_FLAG: &str = "obj";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     // hostname https://datatracker.ietf.org/doc/html/rfc952
     //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
     //    sign (-), and period (.)
@@ -40,10 +40,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
 }
 
-// `CommandResult` is now available in `uucore::error` for shared use across all commands.
-#[uucore::to_obj]
-pub fn to_obj(args: impl uucore::Args) -> CommandResult<()> {
-    let matches = match uucore::clap_localization::handle_clap_result(uu_app(), args) {
+// `CommandResult` is now available in `sgcore::error` for shared use across all commands.
+#[sgcore::to_obj]
+pub fn to_obj(args: impl sgcore::Args) -> CommandResult<()> {
+    let matches = match sgcore::clap_localization::handle_clap_result(uu_app(), args) {
         Ok(m) => m,
         Err(e) => return CommandResult::Error(e),
     };
@@ -51,9 +51,9 @@ pub fn to_obj(args: impl uucore::Args) -> CommandResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("get_hostname-about"))
         .override_usage(format_usage(&translate!("get_hostname-usage")))
         .infer_long_args(true)

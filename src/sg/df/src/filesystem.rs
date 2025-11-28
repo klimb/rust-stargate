@@ -11,8 +11,8 @@
 use std::{ffi::OsString, path::Path};
 
 #[cfg(unix)]
-use uucore::fsext::statfs;
-use uucore::fsext::{FsUsage, MountInfo};
+use sgcore::fsext::statfs;
+use sgcore::fsext::{FsUsage, MountInfo};
 
 /// Summary representation of a filesystem.
 ///
@@ -187,7 +187,7 @@ mod tests {
 
         use std::ffi::OsString;
 
-        use uucore::fsext::MountInfo;
+        use sgcore::fsext::MountInfo;
 
         use crate::filesystem::{FsError, mount_info_from_path};
 
@@ -296,7 +296,7 @@ mod tests {
         use std::ffi::OsString;
 
         use crate::filesystem::{Filesystem, FsError, is_over_mounted};
-        use uucore::fsext::MountInfo;
+        use sgcore::fsext::MountInfo;
 
         fn mount_info_with_dev_name(mount_dir: &str, dev_name: Option<&str>) -> MountInfo {
             MountInfo {

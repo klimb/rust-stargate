@@ -29,7 +29,7 @@ impl FromStr for Range {
     ///
     /// ```
     /// use std::str::FromStr;
-    /// use uucore::ranges::Range;
+    /// use sgcore::ranges::Range;
     /// assert_eq!(Range::from_str("5"), Ok(Range { low: 5, high: 5 }));
     /// assert_eq!(Range::from_str("4-"), Ok(Range { low: 4, high: usize::MAX - 1 }));
     /// assert_eq!(Range::from_str("-4"), Ok(Range { low: 1, high: 4 }));
@@ -140,18 +140,18 @@ pub fn complement(ranges: &[Range]) -> Vec<Range> {
 /// Examples:
 ///
 /// ```
-/// let ranges = uucore::ranges::Range::from_list("11,2,6-8").unwrap();
+/// let ranges = sgcore::ranges::Range::from_list("11,2,6-8").unwrap();
 ///
-/// assert!(!uucore::ranges::contain(&ranges, 0));
-/// assert!(!uucore::ranges::contain(&ranges, 1));
-/// assert!(!uucore::ranges::contain(&ranges, 5));
-/// assert!(!uucore::ranges::contain(&ranges, 10));
+/// assert!(!sgcore::ranges::contain(&ranges, 0));
+/// assert!(!sgcore::ranges::contain(&ranges, 1));
+/// assert!(!sgcore::ranges::contain(&ranges, 5));
+/// assert!(!sgcore::ranges::contain(&ranges, 10));
 ///
-/// assert!(uucore::ranges::contain(&ranges, 2));
-/// assert!(uucore::ranges::contain(&ranges, 6));
-/// assert!(uucore::ranges::contain(&ranges, 7));
-/// assert!(uucore::ranges::contain(&ranges, 8));
-/// assert!(uucore::ranges::contain(&ranges, 11));
+/// assert!(sgcore::ranges::contain(&ranges, 2));
+/// assert!(sgcore::ranges::contain(&ranges, 6));
+/// assert!(sgcore::ranges::contain(&ranges, 7));
+/// assert!(sgcore::ranges::contain(&ranges, 8));
+/// assert!(sgcore::ranges::contain(&ranges, 11));
 /// ```
 pub fn contain(ranges: &[Range], n: usize) -> bool {
     for range in ranges {

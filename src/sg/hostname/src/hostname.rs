@@ -15,9 +15,9 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 
 #[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
 use dns_lookup::lookup_host;
-use uucore::translate;
+use sgcore::translate;
 
-use uucore::{
+use sgcore::{
     error::{FromIo, UResult},
     format_usage,
 };
@@ -29,9 +29,9 @@ static OPT_SHORT: &str = "short";
 static OPT_HOST: &str = "host";
 
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     match matches.get_one::<OsString>(OPT_HOST) {
         None => display_hostname(&matches),
         Some(host) => {
@@ -41,9 +41,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("hostname-about"))
         .override_usage(format_usage(&translate!("hostname-usage")))
         .infer_long_args(true)

@@ -1497,7 +1497,7 @@ mod locale_aware {
 mod gnu_expr_multibyte {
     use uutests::new_ucmd;
 
-    use uucore::os_str_from_bytes;
+    use sgcore::os_str_from_bytes;
 
     trait AsByteSlice<'a> {
         fn into_bytes(self) -> &'a [u8];

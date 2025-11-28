@@ -1,1 +1,1 @@
-uucore::bin!(sg_echo);
+sgcore::bin!(sg_echo);

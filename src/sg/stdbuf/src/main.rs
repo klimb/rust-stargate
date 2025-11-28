@@ -1,1 +1,1 @@
-uucore::bin!(sg_stdbuf);
+sgcore::bin!(sg_stdbuf);

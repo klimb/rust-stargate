@@ -19,7 +19,7 @@ path = "src/readlink.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["fs"] }
+sgcore = { workspace = true, features = ["fs"] }
 fluent = { workspace = true }
 
 [[bin]]

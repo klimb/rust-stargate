@@ -27,7 +27,7 @@ jiff = { workspace = true, features = [
   "tzdb-concatenated",
 ] }
 parse_datetime = { workspace = true }
-uucore = { workspace = true, features = ["parser"] }
+sgcore = { workspace = true, features = ["parser"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }

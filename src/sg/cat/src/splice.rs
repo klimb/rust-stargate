@@ -7,7 +7,7 @@ use super::{CatResult, FdReadable, InputHandle};
 use nix::unistd;
 use std::os::{fd::AsFd, unix::io::AsRawFd};
 
-use uucore::pipes::{pipe, splice, splice_exact};
+use sgcore::pipes::{pipe, splice, splice_exact};
 
 const SPLICE_SIZE: usize = 1024 * 128;
 const BUF_SIZE: usize = 1024 * 16;

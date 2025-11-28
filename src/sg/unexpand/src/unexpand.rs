@@ -14,10 +14,10 @@ use std::path::Path;
 use std::str::from_utf8;
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult, USimpleError};
-use uucore::translate;
-use uucore::{format_usage, show};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult, USimpleError};
+use sgcore::translate;
+use sgcore::{format_usage, show};
 
 const DEFAULT_TABSTOP: usize = 8;
 
@@ -148,18 +148,18 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
     processed_args
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result(uu_app(), expand_shortcuts(args.collect()))?;
+        sgcore::clap_localization::handle_clap_result(uu_app(), expand_shortcuts(args.collect()))?;
 
     unexpand(&Options::new(&matches)?)
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("unexpand-usage")))
         .about(translate!("unexpand-about"))
         .infer_long_args(true)

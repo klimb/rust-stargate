@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use std::fmt::Write;
 use sg_expand::uumain;
-use uucore::benchmark::{create_test_file, run_util_function};
+use sgcore::benchmark::{create_test_file, run_util_function};
 
 /// Helper function to run expand benchmark with generated data
 fn bench_expand(bencher: Bencher, data: impl AsRef<[u8]>, args: &[&str]) {

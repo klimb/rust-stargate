@@ -7,7 +7,7 @@ use divan::{Bencher, black_box};
 use std::env;
 use tempfile::NamedTempFile;
 use sg_sort::uumain;
-use uucore::benchmark::{run_util_function, setup_test_file, text_data};
+use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark ASCII-only data sorting with C locale (byte comparison)
 #[divan::bench]

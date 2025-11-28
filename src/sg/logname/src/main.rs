@@ -1,1 +1,1 @@
-uucore::bin!(sg_logname);
+sgcore::bin!(sg_logname);

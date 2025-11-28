@@ -10,11 +10,11 @@ use std::ffi::OsString;
 use std::fs::{File, metadata};
 use std::io::{self, BufRead, BufReader, Read, StdinLock, stdin};
 use std::path::Path;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::format_usage;
-use uucore::fs::paths_refer_to_same_file;
-use uucore::line_ending::LineEnding;
-use uucore::translate;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::fs::paths_refer_to_same_file;
+use sgcore::line_ending::LineEnding;
+use sgcore::translate;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
@@ -303,9 +303,9 @@ fn open_file(name: &OsString, line_ending: LineEnding) -> io::Result<LineReader>
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO_TERMINATED));
     let filename1 = matches.get_one::<OsString>(options::FILE_1).unwrap();
     let filename2 = matches.get_one::<OsString>(options::FILE_2).unwrap();
@@ -340,9 +340,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("comm-about"))
         .override_usage(format_usage(&translate!("comm-usage")))
         .infer_long_args(true)

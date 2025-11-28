@@ -144,9 +144,9 @@ cargo test --features "chmod mv tail" --no-default-features
 If you also want to test the core utilities:
 
 ```shell
-cargo test  -p uucore -p coreutils
+cargo test  -p sgcore -p coreutils
 # or
-cargo test --all-features -p uucore
+cargo test --all-features -p sgcore
 ```
 
 Running the complete test suite might take a while. We use [nextest](https://nexte.st/index.html) in

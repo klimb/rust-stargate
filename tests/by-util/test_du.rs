@@ -111,7 +111,7 @@ fn du_basics_subdir(s: &str) {
 ))]
 fn du_basics_subdir(s: &str) {
     // MS-WSL linux has altered expected output
-    if uucore::os::is_wsl_1() {
+    if sgcore::os::is_wsl_1() {
         assert_eq!(s, "0\tsubdir/deeper\n");
     } else {
         assert_eq!(s, "8\tsubdir/deeper\n");
@@ -371,7 +371,7 @@ fn du_hard_link(s: &str) {
 ))]
 fn du_hard_link(s: &str) {
     // MS-WSL linux has altered expected output
-    if uucore::os::is_wsl_1() {
+    if sgcore::os::is_wsl_1() {
         assert_eq!(s, "8\tsubdir/links\n");
     } else {
         assert_eq!(s, "16\tsubdir/links\n");

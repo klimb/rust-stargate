@@ -1,1 +1,1 @@
-uucore::bin!(sg_true);
+sgcore::bin!(sg_true);

@@ -20,14 +20,14 @@ use std::io;
 use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Read, Seek, SeekFrom, Write, stdin};
 use std::path::Path;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UIoError, UResult, USimpleError, UUsageError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UIoError, UResult, USimpleError, UUsageError};
+use sgcore::translate;
 
-use uucore::parser::parse_size::parse_size_u64;
+use sgcore::parser::parse_size::parse_size_u64;
 
-use uucore::format_usage;
-use uucore::uio_error;
+use sgcore::format_usage;
+use sgcore::uio_error;
 
 static OPT_BYTES: &str = "bytes";
 static OPT_LINE_BYTES: &str = "line-bytes";
@@ -48,10 +48,10 @@ static OPT_IO_BLKSIZE: &str = "-io-blksize";
 static ARG_INPUT: &str = "input";
 static ARG_PREFIX: &str = "prefix";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let (args, obs_lines) = handle_obsolete(args);
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     match Settings::from(&matches, obs_lines.as_deref()) {
         Ok(settings) => split(&settings),
@@ -66,7 +66,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 /// `split -x300e file` would mean `split -x -l 300 -e file`
 /// `split -x300e -22 file` would mean `split -x -e -l 22 file` (last obsolete lines option wins)
 /// following GNU `split` behavior
-fn handle_obsolete(args: impl uucore::Args) -> (Vec<OsString>, Option<String>) {
+fn handle_obsolete(args: impl sgcore::Args) -> (Vec<OsString>, Option<String>) {
     let mut obs_lines = None;
     let mut preceding_long_opt_req_value = false;
     let mut preceding_short_opt_req_value = false;
@@ -225,9 +225,9 @@ fn handle_preceding_options(
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("split-about"))
         .after_help(translate!("split-after-help"))
         .override_usage(format_usage(&translate!("split-usage")))
@@ -481,7 +481,7 @@ impl Settings {
         let io_blksize: Option<u64> = if let Some(s) = matches.get_one::<String>(OPT_IO_BLKSIZE) {
             match parse_size_u64(s) {
                 Ok(0) => return Err(SettingsError::InvalidIOBlockSize(s.to_owned())),
-                Ok(n) if n <= uucore::fs::sane_blksize::MAX => Some(n),
+                Ok(n) if n <= sgcore::fs::sane_blksize::MAX => Some(n),
                 _ => return Err(SettingsError::InvalidIOBlockSize(s.to_owned())),
             }
         } else {
@@ -605,7 +605,7 @@ where
         custom_blksize
     } else {
         // otherwise try to get it from filesystem, or use default
-        uucore::fs::sane_blksize::sane_blksize_from_path(Path::new(input))
+        sgcore::fs::sane_blksize::sane_blksize_from_path(Path::new(input))
     };
 
     // Try to read into buffer up to a limit
@@ -1020,7 +1020,7 @@ impl ManageOutFiles for OutFiles {
             }
 
             // If this fails - give up and propagate the error
-            uucore::show_error!(
+            sgcore::show_error!(
                 "{}",
                 translate!("split-error-file-descriptor-limit", "count" => count)
             );

@@ -1,1 +1,1 @@
-uucore::bin!(sg_mknod);
+sgcore::bin!(sg_mknod);

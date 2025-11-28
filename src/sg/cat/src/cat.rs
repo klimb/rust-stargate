@@ -23,12 +23,12 @@ use std::os::unix::fs::FileTypeExt;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::UResult;
-use uucore::libc;
-use uucore::translate;
-use uucore::{fast_inc::fast_inc_one, format_usage};
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::display::Quotable;
+use sgcore::error::UResult;
+use sgcore::libc;
+use sgcore::translate;
+use sgcore::{fast_inc::fast_inc_one, format_usage};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 use std::collections::HashSet;
 use std::io::BufRead; // for read_line on BufReader
@@ -54,7 +54,7 @@ struct LineNumber {
 // a `usize` and using the standard Rust formatting macros to format a `usize`
 // to a string each time it's needed.
 // Buffer is initialized to "     1\t" and incremented each time `increment` is
-// called, using uucore's fast_inc function that operates on strings.
+// called, using sgcore's fast_inc function that operates on strings.
 impl LineNumber {
     fn new() -> Self {
         let mut buf = [b'0'; LINE_NUMBER_BUF_SIZE];
@@ -223,8 +223,8 @@ mod options {
     pub static IGNORED_U: &str = "ignored-u";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // When we receive a SIGPIPE signal, we want to terminate the process so
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
@@ -233,7 +233,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)
     let opts = JsonOutputOptions { object_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(object_output::ARG_PRETTY) };
 
@@ -306,11 +306,11 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .override_usage(format_usage(&translate!("cat-usage")))
         .about(translate!("cat-about"))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .infer_long_args(true)
         .args_override_self(true)
         .arg(
@@ -429,7 +429,7 @@ fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &
 
     for file in files {
         // Open source (stdin or file)
-        let reader: Box<dyn Read> = if file == "-" { Box::new(io::stdin()) } else { Box::new(File::open(file).map_err(|e| uucore::error::USimpleError::new(1, e.to_string()))?) };
+        let reader: Box<dyn Read> = if file == "-" { Box::new(io::stdin()) } else { Box::new(File::open(file).map_err(|e| sgcore::error::USimpleError::new(1, e.to_string()))?) };
         let mut buf_reader = io::BufReader::new(reader);
         let mut raw = String::new();
         loop {
@@ -584,9 +584,9 @@ fn cat_files(files: &[OsString], options: &OutputOptions) -> UResult<()> {
         Ok(())
     } else {
         // each next line is expected to display "cat: …"
-        let line_joiner = format!("\n{}: ", uucore::util_name());
+        let line_joiner = format!("\n{}: ", sgcore::util_name());
 
-        Err(uucore::error::USimpleError::new(
+        Err(sgcore::error::USimpleError::new(
             error_messages.len() as i32,
             error_messages.join(&line_joiner)
         ))

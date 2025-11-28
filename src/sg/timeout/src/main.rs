@@ -1,1 +1,1 @@
-uucore::bin!(sg_timeout);
+sgcore::bin!(sg_timeout);

@@ -7,7 +7,7 @@
 use std::ffi::OsString;
 
 use crate::options;
-use uucore::translate;
+use sgcore::translate;
 
 // parse_options loads the options into the settings, returning an array of
 // error messages.

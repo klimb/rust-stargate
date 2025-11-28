@@ -42,13 +42,13 @@ use crate::peek_reader::{PeekRead, PeekReader};
 use crate::prn_char::format_ascii_dump;
 use clap::ArgAction;
 use clap::{Arg, ArgMatches, Command, parser::ValueSource};
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
 
-use uucore::parser::parse_size::ParseSizeError;
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::{format_usage, show_error, show_warning};
+use sgcore::parser::parse_size::ParseSizeError;
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::{format_usage, show_error, show_warning};
 
 const PEEK_BUFFER_SIZE: usize = 4; // utf-8 can be 4 bytes
 
@@ -218,13 +218,13 @@ impl OdOptions {
 
 /// parses and validates command line parameters, prepares data structures,
 /// opens the input and calls `odfunc` to process the input.
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_ignore();
 
     let clap_opts = uu_app();
 
-    let clap_matches = uucore::clap_localization::handle_clap_result(clap_opts, &args)?;
+    let clap_matches = sgcore::clap_localization::handle_clap_result(clap_opts, &args)?;
 
     let od_options = OdOptions::new(&clap_matches, &args)?;
 
@@ -264,9 +264,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("od-about"))
         .override_usage(format_usage(&translate!("od-usage")))
         .after_help(translate!("od-after-help"))

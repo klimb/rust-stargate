@@ -1,1 +1,1 @@
-uucore::bin!(sg_tsort);
+sgcore::bin!(sg_tsort);

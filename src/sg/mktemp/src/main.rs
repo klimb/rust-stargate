@@ -1,1 +1,1 @@
-uucore::bin!(sg_mktemp);
+sgcore::bin!(sg_mktemp);

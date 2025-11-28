@@ -16,11 +16,11 @@ use std::os::unix::fs::FileTypeExt;
 use std::time::SystemTime;
 use thiserror::Error;
 
-use uucore::display::Quotable;
-use uucore::error::UResult;
-use uucore::format_usage;
-use uucore::time::{FormatSystemTimeFallback, format, format_system_time};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::UResult;
+use sgcore::format_usage;
+use sgcore::time::{FormatSystemTimeFallback, format, format_system_time};
+use sgcore::translate;
 
 const TAB: char = '\t';
 const LINES_PER_PAGE: usize = 66;
@@ -155,9 +155,9 @@ enum PrError {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("pr-about"))
         .after_help(translate!("pr-after-help"))
         .override_usage(format_usage(&translate!("pr-usage")))
@@ -309,14 +309,14 @@ pub fn uu_app() -> Command {
         )
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_ignore();
 
     let opt_args = recreate_arguments(&args);
 
     let command = uu_app();
-    let matches = uucore::clap_localization::handle_clap_result(command, opt_args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(command, opt_args)?;
 
     let mut files = matches
         .get_many::<String>(options::FILES)
@@ -415,7 +415,7 @@ fn get_date_format(matches: &ArgMatches) -> String {
         None => {
             // Replicate behavior from GNU manual.
             if std::env::var("POSIXLY_CORRECT").is_ok()
-                // TODO: This needs to be moved to uucore and handled by icu?
+                // TODO: This needs to be moved to sgcore and handled by icu?
                 && (std::env::var("LC_TIME").unwrap_or_default() == "POSIX"
                     || std::env::var("LC_ALL").unwrap_or_default() == "POSIX")
             {

@@ -11,16 +11,16 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, IsTerminal, Read, Write, stdin, stdout};
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, set_exit_code};
-use uucore::line_ending::LineEnding;
-use uucore::os_str_as_bytes;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::line_ending::LineEnding;
+use sgcore::os_str_as_bytes;
 
 use self::searcher::Searcher;
 use matcher::{ExactMatcher, Matcher, WhitespaceMatcher};
-use uucore::ranges::Range;
-use uucore::translate;
-use uucore::{format_usage, show_error, show_if_err};
+use sgcore::ranges::Range;
+use sgcore::translate;
+use sgcore::{format_usage, show_error, show_if_err};
 
 mod matcher;
 mod searcher;
@@ -61,7 +61,7 @@ impl<'a> From<&'a OsString> for Delimiter<'a> {
 
 fn list_to_ranges(list: &str, complement: bool) -> Result<Vec<Range>, String> {
     if complement {
-        Range::from_list(list).map(|r| uucore::ranges::complement(&r))
+        Range::from_list(list).map(|r| sgcore::ranges::complement(&r))
     } else {
         Range::from_list(list)
     }
@@ -468,8 +468,8 @@ mod options {
     pub const NOTHING: &str = "nothing";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // GNU's `cut` supports `-d=` to set the delimiter to `=`.
     // Clap parsing is limited in this situation, see:
     // https://github.com/uutils/coreutils/issues/2424#issuecomment-863825242
@@ -484,7 +484,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         })
         .collect();
 
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let complement = matches.get_flag(options::COMPLEMENT);
     let only_delimited = matches.get_flag(options::ONLY_DELIMITED);
@@ -594,9 +594,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("cut-usage")))
         .about(translate!("cut-about"))
         .after_help(translate!("cut-after-help"))

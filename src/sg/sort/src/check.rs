@@ -19,7 +19,7 @@ use std::{
     sync::mpsc::{Receiver, SyncSender, sync_channel},
     thread,
 };
-use uucore::error::UResult;
+use sgcore::error::UResult;
 
 /// Check if the file at `path` is ordered.
 ///

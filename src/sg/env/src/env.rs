@@ -32,13 +32,13 @@ use std::io::{self, Write};
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 
-use uucore::display::Quotable;
-use uucore::error::{ExitCode, UError, UResult, USimpleError, UUsageError};
-use uucore::line_ending::LineEnding;
+use sgcore::display::Quotable;
+use sgcore::error::{ExitCode, UError, UResult, USimpleError, UUsageError};
+use sgcore::line_ending::LineEnding;
 #[cfg(unix)]
-use uucore::signals::signal_by_name_or_value;
-use uucore::translate;
-use uucore::{format_usage, show_warning};
+use sgcore::signals::signal_by_name_or_value;
+use sgcore::translate;
+use sgcore::{format_usage, show_warning};
 
 use thiserror::Error;
 
@@ -224,8 +224,8 @@ fn load_config_file(opts: &mut Options) -> UResult<()> {
 
 pub fn uu_app() -> Command {
     Command::new(crate_name!())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("env-about"))
         .override_usage(format_usage(&translate!("env-usage")))
         .after_help(translate!("env-after-help"))
@@ -393,12 +393,12 @@ struct EnvAppData {
 
 impl EnvAppData {
     fn make_error_no_such_file_or_dir(&self, prog: &OsStr) -> Box<dyn UError> {
-        uucore::show_error!(
+        sgcore::show_error!(
             "{}",
             translate!("env-error-no-such-file", "program" => prog.quote())
         );
         if !self.had_string_argument {
-            uucore::show_error!("{}", translate!("env-error-use-s-shebang"));
+            sgcore::show_error!("{}", translate!("env-error-use-s-shebang"));
         }
         ExitCode::new(127)
     }
@@ -487,7 +487,7 @@ impl EnvAppData {
 
     fn parse_arguments(
         &mut self,
-        original_args: impl uucore::Args
+        original_args: impl sgcore::Args
     ) -> Result<(Vec<OsString>, clap::ArgMatches), Box<dyn UError>> {
         let original_args: Vec<OsString> = original_args.collect();
         let args = self.process_all_string_arguments(&original_args)?;
@@ -501,11 +501,11 @@ impl EnvAppData {
                     _ => {
                         // Use ErrorFormatter directly to handle error with shebang message callback
                         let formatter =
-                            uucore::clap_localization::ErrorFormatter::new(uucore::util_name());
+                            sgcore::clap_localization::ErrorFormatter::new(sgcore::util_name());
                         formatter.print_error_and_exit_with_callback(&e, 125, || {
                             eprintln!(
                                 "{}: {}",
-                                uucore::util_name(),
+                                sgcore::util_name(),
                                 translate!("env-error-use-s-shebang")
                             );
                         });
@@ -516,7 +516,7 @@ impl EnvAppData {
         Ok((original_args, matches))
     }
 
-    fn run_env(&mut self, original_args: impl uucore::Args) -> UResult<()> {
+    fn run_env(&mut self, original_args: impl sgcore::Args) -> UResult<()> {
         let (original_args, matches) = self.parse_arguments(original_args)?;
 
         self.do_debug_printing = self.do_debug_printing || (0 != matches.get_count("debug"));
@@ -635,7 +635,7 @@ impl EnvAppData {
             match execvp(&prog_cstring, &argv) {
                 Err(nix::errno::Errno::ENOENT) => Err(self.make_error_no_such_file_or_dir(&prog)),
                 Err(nix::errno::Errno::EACCES) => {
-                    uucore::show_error!(
+                    sgcore::show_error!(
                         "{}",
                         translate!(
                             "env-error-permission-denied",
@@ -645,7 +645,7 @@ impl EnvAppData {
                     Err(126.into())
                 }
                 Err(_) => {
-                    uucore::show_error!(
+                    sgcore::show_error!(
                         "{}",
                         translate!(
                             "env-error-unknown",
@@ -673,14 +673,14 @@ impl EnvAppData {
                         Err(self.make_error_no_such_file_or_dir(&prog))
                     }
                     io::ErrorKind::PermissionDenied => {
-                        uucore::show_error!(
+                        sgcore::show_error!(
                             "{}",
                             translate!("env-error-permission-denied", "program" => prog.quote())
                         );
                         Err(126.into())
                     }
                     _ => {
-                        uucore::show_error!(
+                        sgcore::show_error!(
                             "{}",
                             translate!("env-error-unknown", "error" => format!("{err:?}"))
                         );
@@ -867,8 +867,8 @@ fn ignore_signal(sig: Signal) -> UResult<()> {
     Ok(())
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // Rust ignores SIGPIPE (see https://github.com/rust-lang/rust/issues/62569).
     // We restore its default action here.
     #[cfg(unix)]
@@ -881,7 +881,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uucore::locale;
+    use sgcore::locale;
 
     #[test]
     fn test_split_string_environment_vars_test() {
