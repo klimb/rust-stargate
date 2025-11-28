@@ -4,8 +4,8 @@
 # spell-checker:ignore (libs) bigdecimal datetime serde bincode kqueue mangen memmap uuhelp startswith constness expl unnested logind cfgs
 
 [package]
-name = "coreutils"
-description = "coreutils ~ GNU coreutils (updated); implemented as universal (cross-platform) utils, written in Rust"
+name = "stargate"
+description = "stargate ~ GNU coreutils (updated); implemented as universal (cross-platform) utils, written in Rust"
 default-run = "stargate"
 repository = "https://github.com/uutils/coreutils"
 rust-version = "1.85.0"
