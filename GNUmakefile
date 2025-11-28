@@ -80,7 +80,7 @@ PROGS       := \
 	cp \
 	csplit \
 	cut \
-	get-date \
+	get_date \
 	dd \
 	df \
 	dircolors \
@@ -210,7 +210,7 @@ TEST_PROGS  := \
 	cp \
 	csplit \
 	cut \
-	get-date \
+	get_date \
 	dircolors \
 	dirname \
 	echo \
