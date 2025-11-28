@@ -10,8 +10,10 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write, stdin, stdout};
 use std::path::Path;
+use serde_json::json;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 
 use sgcore::{format_usage, show};
@@ -99,6 +101,7 @@ mod options {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
 
     let files: Vec<OsString> = match matches.get_many::<OsString>(options::FILE) {
         Some(v) => v.cloned().collect(),
@@ -107,39 +110,78 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 
     let sysv = matches.get_flag(options::SYSTEM_V_COMPATIBLE);
 
-    let print_names = files.len() > 1 || files[0] != "-";
-    let width = if sysv { 1 } else { 5 };
-
-    for file in &files {
-        let reader = match open(file) {
-            Ok(f) => f,
-            Err(error) => {
-                show!(error);
-                continue;
-            }
+    if json_output_options.object_output {
+        let mut results = Vec::new();
+        
+        for file in &files {
+            let reader = match open(file) {
+                Ok(f) => f,
+                Err(error) => {
+                    results.push(json!({
+                        "file": file.to_string_lossy(),
+                        "error": error.to_string(),
+                        "success": false
+                    }));
+                    continue;
+                }
+            };
+            let (blocks, sum) = if sysv {
+                sysv_sum(reader)
+            } else {
+                bsd_sum(reader)
+            }?;
+            
+            results.push(json!({
+                "file": file.to_string_lossy(),
+                "checksum": sum,
+                "blocks": blocks,
+                "algorithm": if sysv { "sysv" } else { "bsd" },
+                "success": true
+            }));
+        }
+        
+        let output = if results.len() == 1 {
+            results.into_iter().next().unwrap()
+        } else {
+            json!({ "files": results })
         };
-        let (blocks, sum) = if sysv {
-            sysv_sum(reader)
-        } else {
-            bsd_sum(reader)
-        }?;
+        
+        object_output::output(json_output_options, output, || Ok(()))?;
+    } else {
+        let print_names = files.len() > 1 || files[0] != "-";
+        let width = if sysv { 1 } else { 5 };
 
-        let mut stdout = stdout().lock();
-        if print_names {
-            writeln!(
-                stdout,
-                "{sum:0width$} {blocks:width$} {}",
-                file.to_string_lossy()
-            )?;
-        } else {
-            writeln!(stdout, "{sum:0width$} {blocks:width$}")?;
+        for file in &files {
+            let reader = match open(file) {
+                Ok(f) => f,
+                Err(error) => {
+                    show!(error);
+                    continue;
+                }
+            };
+            let (blocks, sum) = if sysv {
+                sysv_sum(reader)
+            } else {
+                bsd_sum(reader)
+            }?;
+
+            let mut stdout = stdout().lock();
+            if print_names {
+                writeln!(
+                    stdout,
+                    "{sum:0width$} {blocks:width$} {}",
+                    file.to_string_lossy()
+                )?;
+            } else {
+                writeln!(stdout, "{sum:0width$} {blocks:width$}")?;
+            }
         }
     }
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("sum-usage")))
@@ -164,5 +206,7 @@ pub fn uu_app() -> Command {
                 .long(options::SYSTEM_V_COMPATIBLE)
                 .help(translate!("sum-help-sysv-compatible"))
                 .action(ArgAction::SetTrue)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
