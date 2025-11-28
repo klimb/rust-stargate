@@ -2475,6 +2475,7 @@ dependencies = [
  "fluent",
  "libc",
  "nix",
+ "serde",
  "serde_json",
  "sgcore",
  "tempfile",

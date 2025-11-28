@@ -142,7 +142,7 @@ PROGS       := \
 	unexpand \
 	uniq \
 	unlink \
-	wc \
+	collect_count \
 	whoami \
 	yes
 
@@ -263,7 +263,7 @@ TEST_PROGS  := \
 	uniq \
 	unlink \
 	uudoc \
-	wc \
+	collect_count \
 	who
 
 TESTS       := \
