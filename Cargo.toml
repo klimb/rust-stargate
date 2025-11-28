@@ -524,7 +524,7 @@ path = "src/bin/stargate.rs"
 
 [[bin]]
 name = "stargate-shell"
-path = "src/bin/stargate_shell.rs"
+path = "src/bin/stargate_shell_main.rs"
 
 [[bin]]
 name = "uudoc"
