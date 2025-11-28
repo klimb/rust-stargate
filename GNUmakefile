@@ -69,7 +69,7 @@ LN ?= ln -sf
 
 # Possible programs
 PROGS       := \
-	arch \
+	get_architecture \
 	base32 \
 	base64 \
 	basenc \

@@ -16,7 +16,7 @@ fn init() {
     }
 }
 
-#[cfg(feature = "arch")]
+#[cfg(feature = "get_architecture")]
 #[path = "by-util/test_arch.rs"]
 mod test_arch;
 
