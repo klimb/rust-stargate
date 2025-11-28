@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Demonstrate nested conditionals with object processing
 
 print "=== Nested Conditionals with Objects ===";

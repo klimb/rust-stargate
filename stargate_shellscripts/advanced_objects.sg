@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Advanced object manipulation with functions and conditionals
 
 print "=== Advanced Object Processing ===";

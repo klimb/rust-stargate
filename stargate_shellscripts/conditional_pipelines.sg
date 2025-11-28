@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Complex script demonstrating conditionals with command outputs
 
 print "=== Conditional Pipeline Processing ===";

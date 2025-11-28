@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Test variables and arithmetic
 
 print "=== Variables and Arithmetic ===";

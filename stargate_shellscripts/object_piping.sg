@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Test object piping with stargate commands
 
 print "=== Object Piping Pipeline ===";

@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Demonstrate variable reuse and complex pipeline construction
 
 print "=== Variable Reuse and Pipeline Building ===";
