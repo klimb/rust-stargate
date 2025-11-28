@@ -6,7 +6,7 @@ print "";
 
 # Store base command output
 print "Getting directory data...";
-let item_count = $(list-directory | wc -l);
+let item_count = list-directory | collect-count;
 
 print "Items found:";
 print item_count;

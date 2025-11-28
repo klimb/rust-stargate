@@ -5,8 +5,8 @@ print "=== Nested Conditionals with Objects ===";
 print "";
 
 # Get file statistics
-let total = $(list-directory | wc -l);
-let with_toml = $(list-directory | grep toml | wc -l);
+let total = list-directory | collect-count;
+let with_toml = list-directory | grep toml | collect-count;
 
 print "Total items:";
 print total;

@@ -9,7 +9,7 @@ fn process_directory(threshold) {
     print "Threshold:";
     print threshold;
     
-    let count = $(list-directory | wc -l);
+    let count = list-directory | collect-count;
     print "Actual count:";
     print count;
     
