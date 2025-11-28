@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Test command output substitution with object piping
 
 print "=== Command Output and Variables ===";

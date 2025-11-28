@@ -1,4 +1,4 @@
-#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+#!/usr/bin/env stargate-shell
 # Test the stargate-shell scripting language
 
 print "=== Stargate Shell Scripting Tests ===";
