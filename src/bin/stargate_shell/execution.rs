@@ -187,3 +187,39 @@ pub fn execute_pipeline(input: &str) -> Result<(), String> {
         Ok(())
     }
 }
+
+pub fn execute_pipeline_capture(input: &str) -> Result<String, String> {
+    let commands = parse_pipeline(input);
+    
+    if commands.is_empty() {
+        return Ok(String::new());
+    }
+
+    if commands.len() == 1 {
+        // Single command, no pipe
+        execute_single_command(&commands[0])
+    } else {
+        // Pipeline
+        let mut json_data: Option<String> = None;
+
+        for (idx, cmd) in commands.iter().enumerate() {
+            let is_last = idx == commands.len() - 1;
+            let should_output_json = !is_last;
+            
+            match execute_with_object_pipe(cmd, json_data.as_deref(), should_output_json) {
+                Ok(output) => {
+                    if is_last {
+                        // Last command, return output
+                        return Ok(output);
+                    } else {
+                        // Intermediate command, store JSON for next
+                        json_data = Some(output);
+                    }
+                }
+                Err(e) => return Err(e)
+            }
+        }
+
+        Ok(String::new())
+    }
+}

@@ -1,5 +1,5 @@
 use super::scripting::*;
-use super::execution::execute_pipeline;
+use super::execution::{execute_pipeline, execute_pipeline_capture};
 use std::collections::HashMap;
 use std::process::Command as ProcessCommand;
 
@@ -115,16 +115,11 @@ impl Interpreter {
                 self.call_function(&name, args)
             }
             Expression::CommandOutput(cmd) => {
-                // Execute command and capture output
-                use std::process::Command;
-                let output = Command::new("sh")
-                    .arg("-c")
-                    .arg(&cmd)
-                    .output()
-                    .map_err(|e| format!("Failed to execute command: {}", e))?;
+                // Execute command using stargate pipeline system
+                let output = execute_pipeline_capture(&cmd)
+                    .map_err(|e| format!("Pipeline error: {}", e))?;
                 
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                Ok(Value::String(stdout))
+                Ok(Value::String(output.trim().to_string()))
             }
         }
     }

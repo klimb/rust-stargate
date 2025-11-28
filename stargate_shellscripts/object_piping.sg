@@ -10,8 +10,8 @@ list-directory | head -5;
 print "";
 
 # Another example with filtering
-print "Running: list-directory | grep toml";
-list-directory | grep toml;
+print "Running: list-directory | find-text toml";
+list-directory | find-text toml;
 print "";
 
 print "Done!";
