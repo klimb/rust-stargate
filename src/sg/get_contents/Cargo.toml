@@ -1,6 +1,6 @@
 [package]
-name = "sg_cat"
-description = "cat ~ (uutils) concatenate and display input"
+name = "sg_get_contents"
+description = "get-contents ~ concatenate and display input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/cat"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/cat.rs"
+path = "src/get_contents.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -32,5 +32,5 @@ nix = { workspace = true }
 tempfile = { workspace = true }
 
 [[bin]]
-name = "cat"
+name = "get-contents"
 path = "src/main.rs"

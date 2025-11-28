@@ -36,7 +36,7 @@ mod test_basename;
 #[path = "by-util/test_basenc.rs"]
 mod test_basenc;
 
-#[cfg(feature = "cat")]
+#[cfg(feature = "get_contents")]
 #[path = "by-util/test_cat.rs"]
 mod test_cat;
 
