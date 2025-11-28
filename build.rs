@@ -59,8 +59,14 @@ pub fn main() {
     )
     .unwrap();
 
+    // Collect all utility names with hyphens instead of underscores
+    let util_names: Vec<String> = crates.iter()
+        .map(|name| name.replace('_', "-"))
+        .collect();
+
+    // Build the PHF map
     let mut phf_map = phf_codegen::OrderedMap::<&str>::new();
-    for krate in &crates {
+    for (idx, krate) in crates.iter().enumerate() {
         let map_value = format!("({krate}::uumain, {krate}::uu_app)");
         match krate.as_ref() {
             // 'test' is named uu_test to avoid collision with rust core crate 'test'.
@@ -69,14 +75,11 @@ pub fn main() {
                 phf_map.entry("test", map_value.clone());
                 phf_map.entry("[", map_value.clone());
             }
-            k if k.starts_with(OVERRIDE_PREFIX) => {
-                phf_map.entry(&k[OVERRIDE_PREFIX.len()..], map_value.clone());
-            }
             "false" | "true" => {
-                phf_map.entry(krate, format!("(r#{krate}::uumain, r#{krate}::uu_app)"));
+                phf_map.entry(&util_names[idx], format!("(r#{krate}::uumain, r#{krate}::uu_app)"));
             }
             "hashsum" => {
-                phf_map.entry(krate, format!("({krate}::uumain, {krate}::uu_app_custom)"));
+                phf_map.entry(&util_names[idx], format!("({krate}::uumain, {krate}::uu_app_custom)"));
 
                 let map_value = format!("({krate}::uumain, {krate}::uu_app_common)");
                 phf_map.entry("md5sum", map_value.clone());
@@ -88,7 +91,7 @@ pub fn main() {
                 phf_map.entry("b2sum", map_value.clone());
             }
             _ => {
-                phf_map.entry(krate, map_value.clone());
+                phf_map.entry(&util_names[idx], map_value.clone());
             }
         }
     }
