@@ -11,6 +11,7 @@ use rustyline::{Editor, Config, CompletionType};
 use stargate_shell::{StargateCompletion, execute_pipeline, describe_command, print_banner, print_help};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
 
 fn main() {
     print_banner();
@@ -38,8 +39,8 @@ fn main() {
                 match input {
                     "exit" | "quit" => break,
                     "help" => print_help(),
-                    _ if input.starts_with("describe-command ") => {
-                        let cmd_name = input[17..].trim();
+                    _ if input.starts_with(DESCRIBE_COMMAND_PREFIX) => {
+                        let cmd_name = input[DESCRIBE_COMMAND_PREFIX.len()..].trim();
                         if cmd_name.is_empty() {
                             eprintln!("Error: describe-command requires a command name");
                             eprintln!("Usage: describe-command <command>");
