@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use clap::Command;
-use coreutils::validation;
+use stargate::validation;
 use std::cmp;
 use std::ffi::OsString;
 use std::io::{self, Write};

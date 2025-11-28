@@ -32,13 +32,13 @@ PREFIX ?= /usr/local
 DESTDIR ?=
 BINDIR ?= $(PREFIX)/bin
 DATAROOTDIR ?= $(PREFIX)/share
-LIBSTDBUF_DIR ?= $(PREFIX)/libexec/coreutils
+LIBSTDBUF_DIR ?= $(PREFIX)/libexec/stargate
 # Export variable so that it is used during the build
 export LIBSTDBUF_DIR
 
 INSTALLDIR_BIN=$(DESTDIR)$(BINDIR)
 
-#prefix to apply to coreutils binary and all tool binaries
+#prefix to apply to stargate binary and all tool binaries
 PROG_PREFIX ?=
 
 # This won't support any directory with spaces in its name, but you can just
@@ -102,7 +102,6 @@ PROGS       := \
 	join \
 	link \
 	ln \
-	ls \
 	list_directory \
 	new_directory \
 	mktemp \
@@ -226,7 +225,7 @@ TEST_PROGS  := \
 	install \
 	link \
 	ln \
-	ls \
+	list_directory \
 	new_directory \
 	mktemp \
 	mv \
@@ -287,7 +286,7 @@ EXES        := \
 
 INSTALLEES  := ${EXES}
 ifeq (${MULTICALL}, y)
-INSTALLEES  := ${INSTALLEES} coreutils
+INSTALLEES  := ${INSTALLEES} stargate
 endif
 
 all: build
@@ -295,16 +294,16 @@ all: build
 build-pkgs:
 ifneq (${MULTICALL}, y)
 ifdef BUILD_SPEC_FEATURE
-	${CARGO} build ${CARGOFLAGS} --features "$(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} $(foreach pkg,$(EXES),-p uu_$(pkg)) $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} --features "$(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(pkg)) $(RUSTC_ARCH)
 else
-	${CARGO} build ${CARGOFLAGS} ${PROFILE_CMD} $(foreach pkg,$(EXES),-p uu_$(pkg)) $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(pkg)) $(RUSTC_ARCH)
 endif
 endif
 
-build-coreutils:
+build-stargate:
 	${CARGO} build ${CARGOFLAGS} --features "${EXES} $(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
 
-build: build-coreutils build-pkgs locales
+build: build-stargate build-pkgs locales
 
 $(foreach test,$(UTILS),$(eval $(call TEST_BUSYBOX,$(test))))
 
@@ -338,8 +337,8 @@ $(BUILDDIR)/.config: $(BASEDIR)/.busybox-config
 	$(INSTALL) -m 644 $< $@
 
 # Test under the busybox test suite
-$(BUILDDIR)/busybox: busybox-src build-coreutils $(BUILDDIR)/.config
-	$(INSTALL) -m 755 "$(BUILDDIR)/coreutils" "$(BUILDDIR)/busybox"
+$(BUILDDIR)/busybox: busybox-src build-stargate $(BUILDDIR)/.config
+	$(INSTALL) -m 755 "$(BUILDDIR)/stargate" "$(BUILDDIR)/busybox"
 
 prepare-busytest: $(BUILDDIR)/busybox
 	# disable inapplicable tests
@@ -432,14 +431,14 @@ ifneq (,$(and $(findstring stdbuf,$(UTILS)),$(findstring feat_external_libstdbuf
 	$(INSTALL) -m 755 $(BUILDDIR)/deps/libstdbuf* $(DESTDIR)$(LIBSTDBUF_DIR)/
 endif
 ifeq (${MULTICALL}, y)
-	$(INSTALL) -m 755 $(BUILDDIR)/coreutils $(INSTALLDIR_BIN)/$(PROG_PREFIX)coreutils
-	$(foreach prog, $(filter-out coreutils, $(INSTALLEES)), \
-		cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)coreutils $(PROG_PREFIX)$(prog) $(newline) \
+	$(INSTALL) -m 755 $(BUILDDIR)/stargate $(INSTALLDIR_BIN)/$(PROG_PREFIX)stargate
+	$(foreach prog, $(filter-out stargate, $(INSTALLEES)), \
+		cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)stargate $(PROG_PREFIX)$(prog) $(newline) \
 	)
 	$(foreach prog, $(HASHSUM_PROGS), \
-		cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)coreutils $(PROG_PREFIX)$(prog) $(newline) \
+		cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)stargate $(PROG_PREFIX)$(prog) $(newline) \
 	)
-	$(if $(findstring test,$(INSTALLEES)), cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)coreutils $(PROG_PREFIX)[)
+	$(if $(findstring test,$(INSTALLEES)), cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)stargate $(PROG_PREFIX)[)
 else
 	$(foreach prog, $(INSTALLEES), \
 		$(INSTALL) -m 755 $(BUILDDIR)/$(prog) $(INSTALLDIR_BIN)/$(PROG_PREFIX)$(prog) $(newline) \
@@ -456,7 +455,7 @@ ifneq ($(OS),Windows_NT)
 	-rm -d $(DESTDIR)$(LIBSTDBUF_DIR) 2>/dev/null || true
 endif
 ifeq (${MULTICALL}, y)
-	rm -f $(addprefix $(INSTALLDIR_BIN)/,$(PROG_PREFIX)coreutils)
+	rm -f $(addprefix $(INSTALLDIR_BIN)/,$(PROG_PREFIX)stargate)
 endif
 	rm -f $(addprefix $(INSTALLDIR_BIN)/$(PROG_PREFIX),$(PROGS))
 	rm -f $(INSTALLDIR_BIN)/$(PROG_PREFIX)[
@@ -465,4 +464,4 @@ endif
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d/$(PROG_PREFIX),$(addsuffix .fish,$(PROGS)))
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/man/man1/$(PROG_PREFIX),$(addsuffix .1,$(PROGS)))
 
-.PHONY: all build build-coreutils build-pkgs build-uudoc test distclean clean busytest install uninstall
+.PHONY: all build build-stargate build-pkgs build-uudoc test distclean clean busytest install uninstall
