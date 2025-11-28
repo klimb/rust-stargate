@@ -15,10 +15,8 @@ fn fibonacci(n) {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-print "Square of 7:";
 let sq = square(7);
-print sq;
+print "Square of 7: {sq}";
 
-print "Fibonacci of 8:";
 let fib8 = fibonacci(8);
-print fib8;
+print "Fibonacci of 8: {fib8}";
