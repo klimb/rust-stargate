@@ -6,7 +6,7 @@
 [package]
 name = "coreutils"
 description = "coreutils ~ GNU coreutils (updated); implemented as universal (cross-platform) utils, written in Rust"
-default-run = "coreutils"
+default-run = "stargate"
 repository = "https://github.com/uutils/coreutils"
 rust-version = "1.85.0"
 version.workspace = true
@@ -515,6 +515,10 @@ phf_codegen.workspace = true
 
 [[bin]]
 name = "coreutils"
+path = "src/bin/coreutils.rs"
+
+[[bin]]
+name = "stargate"
 path = "src/bin/coreutils.rs"
 
 [[bin]]
