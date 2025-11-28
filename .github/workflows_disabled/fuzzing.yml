@@ -257,7 +257,7 @@ jobs:
               EXPECTED="unknown"
             fi
 
-            # Extract runs
+            # Get runs
             if grep -q "stat::number_of_executed_units" "$stat_file"; then
               RUNS=$(grep "stat::number_of_executed_units" "$stat_file" | awk '{print $2}')
               TOTAL_RUNS=$((TOTAL_RUNS + RUNS))
@@ -265,14 +265,14 @@ jobs:
               RUNS="unknown"
             fi
 
-            # Extract execution rate
+            # Get exec rate
             if grep -q "stat::average_exec_per_sec" "$stat_file"; then
               EXEC_RATE=$(grep "stat::average_exec_per_sec" "$stat_file" | awk '{print $2}')
             else
               EXEC_RATE="unknown"
             fi
 
-            # Extract new units added
+            # Get new units
             if grep -q "stat::new_units_added" "$stat_file"; then
               NEW_UNITS=$(grep "stat::new_units_added" "$stat_file" | awk '{print $2}')
               if [[ "$NEW_UNITS" =~ ^[0-9]+$ ]]; then
@@ -282,7 +282,7 @@ jobs:
               NEW_UNITS="unknown"
             fi
 
-            # Extract status
+            # Status
             if grep -q "SUMMARY: " "$stat_file"; then
               STATUS=$(grep "SUMMARY: " "$stat_file" | head -1)
             else
@@ -299,7 +299,7 @@ jobs:
           echo "- **Total new units discovered:** $TOTAL_NEW_UNITS" >> fuzzing_summary.md
           echo "- **Average execution rate:** $(grep -h "stat::average_exec_per_sec" fuzz/stats/*.txt | awk '{sum += $2; count++} END {if (count > 0) print sum/count " execs/sec"; else print "unknown"}')" >> fuzzing_summary.md
 
-          # Add count by expected status
+          # Count by expected status
           echo "- **Tests expected to pass:** $(find fuzz/stats -name "*.should_pass" -exec cat {} \; | grep -c "true")" >> fuzzing_summary.md
           echo "- **Tests expected to fail:** $(find fuzz/stats -name "*.should_pass" -exec cat {} \; | grep -c "false")" >> fuzzing_summary.md
 

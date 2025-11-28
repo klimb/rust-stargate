@@ -1,6 +1,6 @@
-name: FreeBSD
+name: OpenBSD
 
-# spell-checker:ignore sshfs usesh vmactions taiki Swatinem esac fdescfs fdesc sccache nextest copyback logind
+# spell-checker:ignore sshfs usesh vmactions taiki Swatinem esac fdescfs fdesc sccache nextest copyback logind bindgen libclang
 
 env:
   # * style job configuration
@@ -23,33 +23,28 @@ concurrency:
 jobs:
   style:
     name: Style and Lint
-    runs-on: ${{ matrix.job.os }}
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         job:
-          - { os: ubuntu-24.04 , features: unix }
-    env:
-      SCCACHE_GHA_ENABLED: "true"
-      RUSTC_WRAPPER: "sccache"
+          - { features: unix }
     steps:
     - uses: actions/checkout@v5
       with:
         persist-credentials: false
-    - uses: Swatinem/rust-cache@v2
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.9
-      with:
-        disable_annotations: true
     - name: Prepare, build and test
-      uses: vmactions/freebsd-vm@v1.2.7
+      uses: vmactions/openbsd-vm@v1
       with:
         usesh: true
         sync: rsync
         copyback: false
+        mem: 4096
         # We need jq and GNU coreutils to run show-utils.sh and bash to use inline shell string replacement
-        prepare: pkg install -y curl sudo jq coreutils bash
+        # Use sudo-- to get the default sudo package without ambiguity
+        # Install rust and cargo from OpenBSD packages
+        prepare: pkg_add curl sudo-- jq coreutils bash rust rust-clippy rust-rustfmt llvm--
         run: |
           ## Prepare, build, and test
           # implementation modelled after ref: <https://github.com/rust-lang/rustup/pull/2783>
@@ -61,7 +56,7 @@ jobs:
           WORKSPACE_PARENT="/home/runner/work/${REPO_NAME}"
           WORKSPACE="${WORKSPACE_PARENT}/${REPO_NAME}"
           #
-          pw adduser -n ${TEST_USER} -d /root/ -g wheel -c "Coreutils user to build" -w random
+          useradd -m -G wheel ${TEST_USER}
           chown -R ${TEST_USER}:wheel /root/ "${WORKSPACE_PARENT}"/
           whoami
           #
@@ -69,19 +64,19 @@ jobs:
           sudo -i -u ${TEST_USER} bash << EOF
           set -e
           whoami
-          curl https://sh.rustup.rs -sSf --output rustup.sh
-          sh rustup.sh -y -c rustfmt,clippy --profile=minimal -t stable
-          . ${HOME}/.cargo/env
+          # Rust is installed from packages, no need for rustup
+          # Set up PATH for cargo
+          export PATH="/usr/local/bin:$PATH"
           ## VARs setup
           cd "${WORKSPACE}"
           unset FAIL_ON_FAULT ; case '${{ env.STYLE_FAIL_ON_FAULT }}' in
           ''|0|f|false|n|no|off) FAULT_TYPE=warning ;;
           *) FAIL_ON_FAULT=true ; FAULT_TYPE=error ;;
           esac;
-          FAULT_PREFIX=\$(echo "\${FAULT_TYPE}" | tr '[:lower:]' '[:upper:]')
+          FAULT_PREFIX=$(echo "${FAULT_TYPE}" | tr '[:lower:]' '[:upper:]')
           # * determine sub-crate utility list
-          UTILITY_LIST="\$(./util/show-utils.sh --features ${{ matrix.job.features }})"
-          CARGO_UTILITY_LIST_OPTIONS="\$(for u in \${UTILITY_LIST}; do echo -n "-puu_\${u} "; done;)"
+          UTILITY_LIST="$(./util/show-utils.sh --features ${{ matrix.job.features }})"
+          CARGO_UTILITY_LIST_OPTIONS="$(for u in ${UTILITY_LIST}; do echo -n "-puu_${u} "; done;)"
           ## Info
           # environment
           echo "## environment"
@@ -90,8 +85,8 @@ jobs:
           echo "TEST_USER='${TEST_USER}'"
           echo "WORKSPACE_PARENT='${WORKSPACE_PARENT}'"
           echo "WORKSPACE='${WORKSPACE}'"
-          echo "FAULT_PREFIX='\${FAULT_PREFIX}'"
-          echo "UTILITY_LIST='\${UTILITY_LIST}'"
+          echo "FAULT_PREFIX='${FAULT_PREFIX}'"
+          echo "UTILITY_LIST='${UTILITY_LIST}'"
           env | sort
           # tooling info
           echo "## tooling info"
@@ -104,75 +99,69 @@ jobs:
           ## cargo fmt testing
           echo "## cargo fmt testing"
           # * convert any errors/warnings to GHA UI annotations; ref: <https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-a-warning-message>
-          S=\$(cargo fmt -- --check) && printf "%s\n" "\$S" || { printf "%s\n" "\$S" ; printf "%s\n" "\$S" | sed -E -n -e "s/^Diff[[:space:]]+in[[:space:]]+\${PWD//\//\\\\/}\/(.*)[[:space:]]+at[[:space:]]+[^0-9]+([0-9]+).*\$/::\${FAULT_TYPE} file=\1,line=\2::\${FAULT_PREFIX}: \\\`cargo fmt\\\`: style violation (file:'\1', line:\2; use \\\`cargo fmt -- \"\1\"\\\`)/p" ; FAULT=true ; }
+          S=$(cargo fmt -- --check) && printf "%s\n" "$S" || { printf "%s\n" "$S" ; printf "%s\n" "$S" | sed -E -n -e "s/^Diff[[:space:]]+in[[:space:]]+${PWD//\//\\/}\/(.*)[[:space:]]+at[[:space:]]+[^0-9]+([0-9]+).*$/::${FAULT_TYPE} file=\1,line=\2::${FAULT_PREFIX}: \`cargo fmt\`: style violation (file:'\1', line:\2; use \`cargo fmt -- \"\1\"\`)/p" ; FAULT=true ; }
           ## cargo clippy lint testing
-          if [ -z "\${FAULT}" ]; then
+          if [ -z "${FAULT}" ]; then
             echo "## cargo clippy lint testing"
             # * convert any warnings to GHA UI annotations; ref: <https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-a-warning-message>
-            S=\$(cargo clippy --all-targets \${CARGO_UTILITY_LIST_OPTIONS} -- -D warnings 2>&1) && printf "%s\n" "\$S" || { printf "%s\n" "\$S" ; printf "%s" "\$S" | sed -E -n -e '/^error:/{' -e "N; s/^error:[[:space:]]+(.*)\\n[[:space:]]+-->[[:space:]]+(.*):([0-9]+):([0-9]+).*\$/::\${FAULT_TYPE} file=\2,line=\3,col=\4::\${FAULT_PREFIX}: \\\`cargo clippy\\\`: \1 (file:'\2', line:\3)/p;" -e '}' ; FAULT=true ; }
+            S=$(cargo clippy --all-targets ${CARGO_UTILITY_LIST_OPTIONS} -- -D warnings 2>&1) && printf "%s\n" "$S" || { printf "%s\n" "$S" ; printf "%s" "$S" | sed -E -n -e '/^error:/{' -e "N; s/^error:[[:space:]]+(.*)\n[[:space:]]+-->[[:space:]]+(.*):([0-9]+):([0-9]+).*$/::${FAULT_TYPE} file=\2,line=\3,col=\4::${FAULT_PREFIX}: \`cargo clippy\`: \1 (file:'\2', line:\3)/p;" -e '}' ; FAULT=true ; }
           fi
           # Clean to avoid to rsync back the files
           cargo clean
-          if [ -n "\${FAIL_ON_FAULT}" ] && [ -n "\${FAULT}" ]; then exit 1 ; fi
+          if [ -n "${FAIL_ON_FAULT}" ] && [ -n "${FAULT}" ]; then exit 1 ; fi
           EOF
 
   test:
     name: Tests
-    runs-on: ${{ matrix.job.os }}
-    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         job:
-          - { os: ubuntu-24.04 , features: unix }
-    env:
-      mem: 4096
-      SCCACHE_GHA_ENABLED: "true"
-      RUSTC_WRAPPER: "sccache"
+          - { features: unix }
     steps:
     - uses: actions/checkout@v5
       with:
         persist-credentials: false
-    - uses: Swatinem/rust-cache@v2
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.9
-      with:
-        disable_annotations: true
     - name: Prepare, build and test
-      uses: vmactions/freebsd-vm@v1.2.7
+      uses: vmactions/openbsd-vm@v1
       with:
         usesh: true
         sync: rsync
         copyback: false
-        prepare: pkg install -y curl gmake sudo jq
+        mem: 4096
+        # Install rust and build dependencies from OpenBSD packages (llvm provides libclang for bindgen)
+        prepare: pkg_add curl gmake sudo-- jq rust llvm--
         run: |
           ## Prepare, build, and test
           # implementation modelled after ref: <https://github.com/rust-lang/rustup/pull/2783>
           # * NOTE: All steps need to be run in this block, otherwise, we are operating back on the mac host
           set -e
           #
-          # We need a file-descriptor file system to test test_ls::test_ls_io_errors
-          mount -t fdescfs fdesc /dev/fd
-          #
           TEST_USER=tester
           REPO_NAME=${GITHUB_WORKSPACE##*/}
           WORKSPACE_PARENT="/home/runner/work/${REPO_NAME}"
           WORKSPACE="${WORKSPACE_PARENT}/${REPO_NAME}"
           #
-          pw adduser -n ${TEST_USER} -d /root/ -g wheel -c "Coreutils user to build" -w random
+          useradd -m -G wheel ${TEST_USER}
           chown -R ${TEST_USER}:wheel /root/ "${WORKSPACE_PARENT}"/
           whoami
+          # Add fake host for reverse DNS lookup (needed for hostname test)
+          printf "10.0.2.15\topenbsd.my.domain openbsd\n" >> /etc/hosts
           #
           # Further work needs to be done in a sudo as we are changing users
           sudo -i -u ${TEST_USER} sh << EOF
           set -e
           whoami
-          curl https://sh.rustup.rs -sSf --output rustup.sh
-          sh rustup.sh -y --profile=minimal
-          . $HOME/.cargo/env
+          # Increase max open files (512 by default)
+          ulimit -n 1024
+          # Rust is installed from packages, no need for rustup
+          # Set up PATH for cargo
+          export PATH="/usr/local/bin:$PATH"
           # Install nextest
           mkdir -p ~/.cargo/bin
-          curl -LsSf https://get.nexte.st/latest/freebsd | tar zxf - -C ~/.cargo/bin
+          # Note: nextest might not have OpenBSD builds, so we'll use regular cargo test
           ## Info
           # environment
           echo "## environment"
@@ -185,7 +174,6 @@ jobs:
           # tooling info
           echo "## tooling info"
           cargo -V
-          cargo nextest --version
           rustc -V
           #
           # To ensure that files are cleaned up, we don't want to exit on error
@@ -196,15 +184,16 @@ jobs:
           export PATH=~/.cargo/bin:${PATH}
           export RUST_BACKTRACE=1
           export CARGO_TERM_COLOR=always
-          if (test -z "\$FAULT"); then cargo nextest run --hide-progress-bar --profile ci --features '${{ matrix.job.features }}' || FAULT=1 ; fi
-          # There is no systemd-logind on FreeBSD, so test all features except feat_systemd_logind ( https://github.com/rust-lang/cargo/issues/3126#issuecomment-2523441905 )
-          if (test -z "\$FAULT"); then
-            UUCORE_FEATURES=\$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == "uucore") | .features | keys | .[]' | grep -v "feat_systemd_logind" | paste -s -d "," -)
-            cargo nextest run --hide-progress-bar --profile ci --features "\$UUCORE_FEATURES" -p uucore || FAULT=1
+          # Use cargo test since nextest might not support OpenBSD
+          if (test -z "$FAULT"); then cargo test --features '${{ matrix.job.features }}' || FAULT=1 ; fi
+          # There is no systemd-logind on OpenBSD, so test all features except feat_systemd_logind
+          if (test -z "$FAULT"); then
+            UUCORE_FEATURES=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == "uucore") | .features | keys | .[]' | grep -v "feat_systemd_logind" | paste -s -d "," -)
+            cargo test --features "$UUCORE_FEATURES" -p uucore || FAULT=1
           fi
           # Test building with make
-          if (test -z "\$FAULT"); then make || FAULT=1 ; fi
+          if (test -z "$FAULT"); then make || FAULT=1 ; fi
           # Clean to avoid to rsync back the files
           cargo clean
-          if (test -n "\$FAULT"); then exit 1 ; fi
+          if (test -n "$FAULT"); then exit 1 ; fi
           EOF
