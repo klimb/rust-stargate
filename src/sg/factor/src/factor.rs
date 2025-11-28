@@ -14,12 +14,13 @@ use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{format_usage, show_error, show_warning};
+use serde_json::json;
 
 mod options {
     pub static EXPONENTS: &str = "exponents";
-    pub static HELP: &str = "help";
     pub static NUMBER: &str = "NUMBER";
 }
 
@@ -146,68 +147,166 @@ fn write_result_big_uint(
     w.flush()
 }
 
+/// Collect factorization for JSON output
+fn factorize_to_json(num_str: &str, print_exponents: bool) -> UResult<serde_json::Value> {
+    let rx = num_str.trim().parse::<BigUint>();
+    let Ok(x) = rx else {
+        set_exit_code(1);
+        return Ok(json!({
+            "number": num_str,
+            "error": format!("{}", rx.unwrap_err()),
+            "factors": null
+        }));
+    };
+
+    if x > BigUint::from_u32(1).unwrap() {
+        let factors: Vec<serde_json::Value> = if x <= BigUint::from_u64(u64::MAX).unwrap() {
+            let prime_factors = num_prime::nt_funcs::factorize64(x.clone().to_u64_digits()[0]);
+            prime_factors.iter().map(|(factor, count)| {
+                if print_exponents {
+                    json!({"prime": factor, "exponent": count})
+                } else {
+                    json!({"prime": factor, "count": count})
+                }
+            }).collect()
+        } else if x <= BigUint::from_u128(u128::MAX).unwrap() {
+            let rx = num_str.trim().parse::<u128>();
+            let Ok(x_u128) = rx else {
+                set_exit_code(1);
+                return Ok(json!({
+                    "number": num_str,
+                    "error": format!("{}", rx.unwrap_err()),
+                    "factors": null
+                }));
+            };
+            let prime_factors = num_prime::nt_funcs::factorize128(x_u128);
+            prime_factors.iter().map(|(factor, count)| {
+                if print_exponents {
+                    json!({"prime": factor, "exponent": count})
+                } else {
+                    json!({"prime": factor, "count": count})
+                }
+            }).collect()
+        } else {
+            let (prime_factors, remaining) = num_prime::nt_funcs::factors(x.clone(), None);
+            if let Some(_remaining) = remaining {
+                return Err(USimpleError::new(
+                    1,
+                    translate!("factor-error-factorization-incomplete")
+                ));
+            }
+            prime_factors.iter().map(|(factor, count)| {
+                if print_exponents {
+                    json!({"prime": factor.to_string(), "exponent": count})
+                } else {
+                    json!({"prime": factor.to_string(), "count": count})
+                }
+            }).collect()
+        };
+
+        Ok(json!({
+            "number": x.to_string(),
+            "factors": factors
+        }))
+    } else {
+        Ok(json!({
+            "number": x.to_string(),
+            "factors": []
+        }))
+    }
+}
+
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
-    // If matches find --exponents flag than variable print_exponents is true and p^e output format will be used.
+    let opts = JsonOutputOptions::from_matches(&matches);
     let print_exponents = matches.get_flag(options::EXPONENTS);
 
-    let stdout = stdout();
-    // We use a smaller buffer here to pass a gnu test. 4KiB appears to be the default pipe size for bash.
-    let mut w = io::BufWriter::with_capacity(4 * 1024, stdout.lock());
+    if opts.object_output {
+        // JSON output mode
+        let mut results = Vec::new();
 
-    if let Some(values) = matches.get_many::<String>(options::NUMBER) {
-        for number in values {
-            print_factors_str(number, &mut w, print_exponents)?;
-        }
-    } else {
-        let stdin = stdin();
-        let lines = stdin.lock().lines();
-        for line in lines {
-            match line {
-                Ok(line) => {
-                    for number in line.split_whitespace() {
-                        print_factors_str(number, &mut w, print_exponents)?;
+        if let Some(values) = matches.get_many::<String>(options::NUMBER) {
+            for number in values {
+                results.push(factorize_to_json(number, print_exponents)?);
+            }
+        } else {
+            let stdin = stdin();
+            let lines = stdin.lock().lines();
+            for line in lines {
+                match line {
+                    Ok(line) => {
+                        for number in line.split_whitespace() {
+                            results.push(factorize_to_json(number, print_exponents)?);
+                        }
                     }
-                }
-                Err(e) => {
-                    set_exit_code(1);
-                    show_error!("{}", translate!("factor-error-reading-input", "error" => e));
-                    return Ok(());
+                    Err(e) => {
+                        set_exit_code(1);
+                        show_error!("{}", translate!("factor-error-reading-input", "error" => e));
+                        return Ok(());
+                    }
                 }
             }
         }
-    }
 
-    if let Err(e) = w.flush() {
-        show_error!("{e}");
+        let output = json!({
+            "results": results,
+            "exponent_format": print_exponents
+        });
+        object_output::output(opts, output, || Ok(()))?;
+    } else {
+        // Text output mode (original behavior)
+        let stdout = stdout();
+        let mut w = io::BufWriter::with_capacity(4 * 1024, stdout.lock());
+
+        if let Some(values) = matches.get_many::<String>(options::NUMBER) {
+            for number in values {
+                print_factors_str(number, &mut w, print_exponents)?;
+            }
+        } else {
+            let stdin = stdin();
+            let lines = stdin.lock().lines();
+            for line in lines {
+                match line {
+                    Ok(line) => {
+                        for number in line.split_whitespace() {
+                            print_factors_str(number, &mut w, print_exponents)?;
+                        }
+                    }
+                    Err(e) => {
+                        set_exit_code(1);
+                        show_error!("{}", translate!("factor-error-reading-input", "error" => e));
+                        return Ok(());
+                    }
+                }
+            }
+        }
+
+        if let Err(e) = w.flush() {
+            show_error!("{e}");
+        }
     }
 
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("factor-about"))
         .override_usage(format_usage(&translate!("factor-usage")))
         .infer_long_args(true)
-        .disable_help_flag(true)
         .args_override_self(true)
         .arg(Arg::new(options::NUMBER).action(ArgAction::Append))
         .arg(
             Arg::new(options::EXPONENTS)
-                .short('h')
+                .short('e')
                 .long(options::EXPONENTS)
                 .help(translate!("factor-help-exponents"))
                 .action(ArgAction::SetTrue)
-        )
-        .arg(
-            Arg::new(options::HELP)
-                .long(options::HELP)
-                .help(translate!("factor-help-help"))
-                .action(ArgAction::Help)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }

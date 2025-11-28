@@ -2762,6 +2762,7 @@ dependencies = [
  "num-prime",
  "num-traits",
  "rand 0.9.2",
+ "serde_json",
  "sgcore",
 ]
 
@@ -2940,6 +2941,7 @@ dependencies = [
  "clap",
  "fluent",
  "memchr",
+ "serde_json",
  "sgcore",
  "thiserror 2.0.17",
 ]
