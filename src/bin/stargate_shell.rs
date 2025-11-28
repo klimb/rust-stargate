@@ -22,12 +22,11 @@ fn print_help() {
     println!("  <cmd> | <cmd> | ...  - Chain commands with JSON pipes");
     println!();
     println!("Examples:");
-    println!("  list-directory -o");
-    println!("  list-directory -o | jq .entries");
-    println!("  pwd -o | jq -r .path");
+    println!("  list-directory | collect-count");
     println!();
     println!("When using pipes (|), commands automatically use -o for JSON output");
-    println!("and feed the JSON to the next command via stdin.");
+    println!("and feed the JSON to the next command via stdin. ");
+    println!("(Unless it's the last command)");
 }
 
 fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
@@ -84,7 +83,7 @@ fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
     }
 }
 
-fn execute_with_json_pipe(cmd_parts: &[String], json_input: Option<&str>) -> Result<String, String> {
+fn execute_with_json_pipe(cmd_parts: &[String], json_input: Option<&str>, should_output_json: bool) -> Result<String, String> {
     if cmd_parts.is_empty() {
         return Err("Empty command".to_string());
     }
@@ -98,7 +97,7 @@ fn execute_with_json_pipe(cmd_parts: &[String], json_input: Option<&str>) -> Res
     let has_obj_flag = cmd_parts.iter().any(|s| s == "-o" || s == "--obj");
     
     let mut args = cmd_parts.to_vec();
-    if !has_obj_flag {
+    if should_output_json && !has_obj_flag {
         // Insert -o after the command name (first arg)
         if args.len() > 0 {
             args.insert(1, "-o".to_string());
@@ -228,8 +227,9 @@ fn execute_pipeline(input: &str) -> Result<(), String> {
 
         for (idx, cmd) in commands.iter().enumerate() {
             let is_last = idx == commands.len() - 1;
+            let should_output_json = !is_last; // Only output JSON if not the last command
             
-            match execute_with_json_pipe(cmd, json_data.as_deref()) {
+            match execute_with_json_pipe(cmd, json_data.as_deref(), should_output_json) {
                 Ok(output) => {
                     if is_last {
                         // Last command, print output
