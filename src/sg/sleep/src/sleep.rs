@@ -6,6 +6,8 @@
 use clap::{Arg, ArgAction, Command};
 use std::thread;
 use std::time::Duration;
+use serde_json::json;
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{
     error::{UResult, USimpleError, UUsageError},
@@ -21,6 +23,8 @@ mod options {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
 
     let numbers = matches
         .get_many::<String>(options::NUMBER)
@@ -33,11 +37,11 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         .map(|s| s.as_str())
         .collect::<Vec<_>>();
 
-    sleep(&numbers)
+    sleep(&numbers, json_output_options)
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("sleep-about"))
@@ -49,10 +53,12 @@ pub fn uu_app() -> Command {
                 .help(translate!("sleep-help-number"))
                 .value_name(options::NUMBER)
                 .action(ArgAction::Append)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
-fn sleep(args: &[&str]) -> UResult<()> {
+fn sleep(args: &[&str], json_output_options: JsonOutputOptions) -> UResult<()> {
     let mut arg_error = false;
 
     let sleep_dur = args
@@ -70,6 +76,15 @@ fn sleep(args: &[&str]) -> UResult<()> {
     if arg_error {
         return Err(UUsageError::new(1, ""));
     }
+    
+    if json_output_options.object_output {
+        let output = json!({
+            "duration_seconds": sleep_dur.as_secs(),
+            "duration_nanos": sleep_dur.subsec_nanos(),
+        });
+        object_output::output(json_output_options, output, || Ok(()))?;
+    }
+    
     thread::sleep(sleep_dur);
     Ok(())
 }
