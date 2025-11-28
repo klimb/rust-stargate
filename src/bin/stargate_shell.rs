@@ -6,14 +6,156 @@
 use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
 use rustyline::error::ReadlineError;
-use rustyline::DefaultEditor;
+use rustyline::completion::{Completer, Pair};
+use rustyline::highlight::Highlighter;
+use rustyline::hint::Hinter;
+use rustyline::validate::Validator;
+use rustyline::{Context, Editor, Helper, Config, CompletionType};
+use std::borrow::Cow;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// List of built-in shell commands
+const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command"];
+
+// List of stargate commands (extracted from the binary)
+fn get_stargate_commands() -> Vec<String> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+
+    let output = Command::new(&stargate_bin)
+        .arg("--list")
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let text = String::from_utf8_lossy(&output.stdout);
+            // Parse line-by-line, skipping '[' and ']'
+            return text
+                .lines()
+                .map(|line| line.trim())
+                .filter(|line| !line.is_empty() && *line != "[" && *line != "]")
+                .map(|s| s.to_string())
+                .collect();
+        }
+    }
+
+    // Fallback: empty list - user can still type commands manually
+    Vec::new()
+}
+
+struct StargateCompletion {
+    commands: Vec<String>,
+}
+
+impl StargateCompletion {
+    fn new() -> Self {
+        let mut commands = get_stargate_commands();
+        commands.extend(SHELL_COMMANDS.iter().map(|s| s.to_string()));
+        commands.sort();
+        commands.dedup();
+        Self { commands }
+    }
+}
+
+impl Helper for StargateCompletion {}
+
+impl Completer for StargateCompletion {
+    type Candidate = Pair;
+
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        _ctx: &Context<'_>,
+    ) -> rustyline::Result<(usize, Vec<Pair>)> {
+        let line = &line[..pos];
+        
+        // Special handling for "describe-command "
+        if let Some(rest) = line.strip_prefix("describe-command ") {
+            let matches: Vec<Pair> = self.commands
+                .iter()
+                .filter(|cmd| !SHELL_COMMANDS.contains(&cmd.as_str())) // Exclude shell builtins
+                .filter(|cmd| cmd.starts_with(rest))
+                .map(|cmd| Pair {
+                    display: cmd.clone(),
+                    replacement: cmd.clone(),
+                })
+                .collect();
+            
+            return Ok((17, matches)); // "describe-command ".len() = 17
+        }
+        
+        // Find the start of the current word
+        let start = line.rfind(|c: char| c.is_whitespace() || c == '|')
+            .map(|i| i + 1)
+            .unwrap_or(0);
+        
+        let prefix = &line[start..];
+        
+        if prefix.is_empty() {
+            return Ok((start, vec![]));
+        }
+
+        let matches: Vec<Pair> = self.commands
+            .iter()
+            .filter(|cmd| cmd.starts_with(prefix))
+            .map(|cmd| Pair {
+                display: cmd.clone(),
+                replacement: cmd.clone(),
+            })
+            .collect();
+
+        Ok((start, matches))
+    }
+}
+
+impl Hinter for StargateCompletion {
+    type Hint = String;
+
+    fn hint(&self, line: &str, pos: usize, _ctx: &Context<'_>) -> Option<String> {
+        if pos < line.len() {
+            return None;
+        }
+        
+        // Find the start of the current word
+        let start = line.rfind(|c: char| c.is_whitespace() || c == '|')
+            .map(|i| i + 1)
+            .unwrap_or(0);
+        
+        let prefix = &line[start..];
+        
+        if prefix.len() < 2 {
+            return None;
+        }
+        
+        // Find the first matching command
+        self.commands
+            .iter()
+            .find(|cmd| cmd.starts_with(prefix) && cmd.len() > prefix.len())
+            .map(|cmd| cmd[prefix.len()..].to_string())
+    }
+}
+
+impl Highlighter for StargateCompletion {
+    fn highlight<'l>(&self, line: &'l str, _pos: usize) -> Cow<'l, str> {
+        Cow::Borrowed(line)
+    }
+
+    fn highlight_char(&self, _line: &str, _pos: usize, _forced: bool) -> bool {
+        false
+    }
+}
+
+impl Validator for StargateCompletion {}
 
 fn print_banner() {
     println!("Stargate Shell {VERSION}");
     println!("A Unix-like shell for chaining stargate commands with JSON pipes");
-    println!("Type 'help' for usage, 'exit' to quit\n");
+    println!("Type 'help' for usage, 'exit' to quit");
+    println!("Use Tab for command completion\n");
 }
 
 fn print_help() {
@@ -23,6 +165,12 @@ fn print_help() {
     println!("  describe-command <cmd>    - Show help for a stargate command");
     println!("  <cmd> [args...]           - Execute a stargate command");
     println!("  <cmd> | <cmd> | ...       - Chain commands with JSON pipes");
+    println!();
+    println!("Features:");
+    println!("  Tab completion            - Press Tab to see/cycle through completions");
+    println!("  Command hints             - Grayed suggestions appear as you type");
+    println!("  Command history           - Use Up/Down arrows or Ctrl-P/Ctrl-N");
+    println!("  Line editing              - Emacs-style keybindings (Ctrl-A, Ctrl-E, etc.)");
     println!();
     println!("Examples:");
     println!("  describe-command list-directory");
@@ -278,7 +426,13 @@ fn execute_pipeline(input: &str) -> Result<(), String> {
 fn main() {
     print_banner();
 
-    let mut rl = DefaultEditor::new().expect("Failed to create readline editor");
+    let helper = StargateCompletion::new();
+    let config = Config::builder()
+        .completion_type(CompletionType::List)
+        .auto_add_history(true)
+        .build();
+    let mut rl = Editor::with_config(config).expect("Failed to create readline editor");
+    rl.set_helper(Some(helper));
 
     loop {
         match rl.readline("stargate> ") {
