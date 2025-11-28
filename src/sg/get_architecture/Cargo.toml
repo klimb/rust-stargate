@@ -1,6 +1,6 @@
 [package]
-name = "sg_arch"
-description = "arch ~ (uutils) display machine architecture"
+name = "sg_get_architecture"
+description = "get-architecture ~ display machine architecture"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/arch"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/arch.rs"
+path = "src/get_architecture.rs"
 
 [dependencies]
 platform-info = { workspace = true }
@@ -25,5 +25,5 @@ fluent = { workspace = true }
 serde_json = { workspace = true }
 
 [[bin]]
-name = "arch"
+name = "get-architecture"
 path = "src/main.rs"

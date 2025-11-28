@@ -122,7 +122,7 @@ feat_common_core = [
 feat_Tier1 = [
   "feat_common_core",
   #
-  "arch",
+  "get_architecture",
   "hostname",
   "get_hostname",
   "get_domainname",
@@ -355,7 +355,7 @@ zip = { workspace = true, optional = true }
 # * uutils
 uu_test = { optional = true, version = "0.4.0", package = "sg_test", path = "src/sg/test" }
 #
-arch = { optional = true, version = "0.4.0", package = "sg_arch", path = "src/sg/arch" }
+get_architecture = { optional = true, version = "0.4.0", package = "sg_get_architecture", path = "src/sg/get_architecture" }
 base32 = { optional = true, version = "0.4.0", package = "sg_base32", path = "src/sg/base32" }
 base64 = { optional = true, version = "0.4.0", package = "sg_base64", path = "src/sg/base64" }
 basename = { optional = true, version = "0.4.0", package = "sg_basename", path = "src/sg/basename" }

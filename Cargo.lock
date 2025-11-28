@@ -2354,17 +2354,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_arch"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "platform-info",
- "serde_json",
- "sgcore",
-]
-
-[[package]]
 name = "sg_base32"
 version = "0.4.0"
 dependencies = [
@@ -2704,6 +2693,17 @@ dependencies = [
  "sgcore",
  "tempfile",
  "unicode-width 0.2.2",
+]
+
+[[package]]
+name = "sg_get_architecture"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "platform-info",
+ "serde_json",
+ "sgcore",
 ]
 
 [[package]]
@@ -3726,7 +3726,6 @@ dependencies = [
  "rstest",
  "serde",
  "serde-big-array",
- "sg_arch",
  "sg_base32",
  "sg_base64",
  "sg_basename",
@@ -3757,6 +3756,7 @@ dependencies = [
  "sg_find_text",
  "sg_fmt",
  "sg_fold",
+ "sg_get_architecture",
  "sg_get_domainname",
  "sg_get_fqdn",
  "sg_get_hostname",
