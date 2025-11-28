@@ -74,6 +74,7 @@ pub enum Expression {
         args: Vec<Expression>,
     },
     CommandOutput(String),
+    InterpolatedString(String), // String with {var} placeholders
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -571,6 +572,10 @@ impl Parser {
         // Check if it's a string literal (has quotes)
         if token.starts_with('"') && token.ends_with('"') {
             let string_content = &token[1..token.len()-1];
+            // Check if string contains interpolation {var}
+            if string_content.contains('{') {
+                return Ok(Expression::InterpolatedString(string_content.to_string()));
+            }
             return Ok(Expression::Value(Value::String(string_content.to_string())));
         }
 

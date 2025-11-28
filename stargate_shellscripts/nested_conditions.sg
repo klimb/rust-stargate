@@ -8,10 +8,8 @@ print "";
 let total = list-directory | collect-count;
 let with_toml = list-directory | find-text toml | collect-count;
 
-print "Total items:";
-print total;
-print "Items with 'toml':";
-print with_toml;
+print "Total items: {total}";
+print "Items with 'toml': {with_toml}";
 print "";
 
 # Calculate ratio (toml vs total) - avoid division by zero

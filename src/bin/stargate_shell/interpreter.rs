@@ -121,6 +121,31 @@ impl Interpreter {
                 
                 Ok(Value::String(output.trim().to_string()))
             }
+            Expression::InterpolatedString(template) => {
+                // Replace {var} with variable values
+                let mut result = template.clone();
+                let mut start = 0;
+                
+                while let Some(open_pos) = result[start..].find('{') {
+                    let open_pos = start + open_pos;
+                    if let Some(close_pos) = result[open_pos..].find('}') {
+                        let close_pos = open_pos + close_pos;
+                        let var_name = &result[open_pos + 1..close_pos];
+                        
+                        let value = self.variables
+                            .get(var_name)
+                            .ok_or(format!("Variable '{}' not found in interpolation", var_name))?;
+                        
+                        let replacement = value.to_string();
+                        result.replace_range(open_pos..=close_pos, &replacement);
+                        start = open_pos + replacement.len();
+                    } else {
+                        break;
+                    }
+                }
+                
+                Ok(Value::String(result))
+            }
         }
     }
 
