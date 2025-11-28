@@ -1,0 +1,39 @@
+#!/usr/bin/env stargate-shell
+# Demo: Property completion and access
+
+print "=== Property Completion Demo ===";
+print "";
+print "In the REPL, you can now use tab completion for properties!";
+print "";
+
+print "Examples that work in the REPL:";
+print "1. Type: get-hostname.<TAB>";
+print "   → Auto-completes to: (get-hostname).hostname or (get-hostname).flags";
+print "";
+
+print "2. Type: list-directory.<TAB>";
+print "   → Shows: entries, recursive, total_count";
+print "";
+
+print "3. Type: (get-hostname).h<TAB>";
+print "   → Completes to: (get-hostname).hostname";
+print "";
+
+print "Working examples in scripts:";
+print "";
+
+let host = (get-hostname).hostname;
+print "Hostname: {host}";
+print "";
+
+let count = (list-directory).total_count;
+print "Directory has {count} items";
+print "";
+
+let entries = (list-directory).entries;
+let first = entries[0].name;
+print "First entry: {first}";
+print "";
+
+print "Try the REPL for interactive completion!";
+print "Start with: ./target/debug/stargate-shell";

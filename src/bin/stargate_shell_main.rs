@@ -111,7 +111,14 @@ fn main() {
                         }
                     }
                     _ => {
-                        if let Err(e) = execute_pipeline(input) {
+                        // Check if this looks like a script expression (has property access or indexing)
+                        if input.contains('.') || (input.contains('[') && input.contains(']')) {
+                            // Treat as script expression - wrap in print statement
+                            let script_code = format!("print {};", input);
+                            if let Err(e) = execute_script(&script_code) {
+                                eprintln!("Script error: {}", e);
+                            }
+                        } else if let Err(e) = execute_pipeline(input) {
                             eprintln!("Error: {}", e);
                         }
                     }

@@ -97,7 +97,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn eval_expression(&mut self, expr: Expression) -> Result<Value, String> {
+    pub fn eval_expression(&mut self, expr: Expression) -> Result<Value, String> {
         match expr {
             Expression::Value(val) => Ok(val),
             Expression::Variable(name) => {
