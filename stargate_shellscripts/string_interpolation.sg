@@ -1,0 +1,56 @@
+#!/usr/bin/env stargate-shell
+# Demonstrate string interpolation in assignments and print statements
+
+print "=== String Interpolation Demo ===";
+print "";
+
+# Basic interpolation in assignment
+let x = 5;
+let x_string = "my number is {x}";
+
+if x_string == "my number is 5" {
+    print "all good";
+}
+print "";
+
+# Multiple variables in one string
+let name = "Alice";
+let age = 30;
+let greeting = "Hello {name}, you are {age} years old";
+print greeting;
+print "";
+
+# Interpolation with arithmetic
+let a = 10;
+let b = 5;
+let sum = a + b;
+let result = "The sum of {a} and {b} is {sum}";
+print result;
+print "";
+
+# Direct print interpolation
+let count = 42;
+print "Direct interpolation in print: count = {count}";
+print "";
+
+# Combining pipeline results with interpolation
+let file_count = list-directory | collect-count;
+let summary = "Directory contains {file_count} items";
+print summary;
+print "";
+
+# Using interpolation in conditionals
+let threshold = 20;
+let status = "File count {file_count} vs threshold {threshold}";
+print status;
+
+if file_count > threshold {
+    let message = "Large directory with {file_count} files";
+    print message;
+} else {
+    let message = "Small directory with {file_count} files";
+    print message;
+}
+
+print "";
+print "String interpolation demo complete!";
