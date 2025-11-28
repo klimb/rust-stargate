@@ -1,5 +1,5 @@
 [package]
-name = "uu_shuf"
+name = "sg_shuf"
 description = "shuf ~ (uutils) display random permutations of input lines"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/shuf"
 version.workspace = true

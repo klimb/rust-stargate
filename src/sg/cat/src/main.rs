@@ -1,1 +1,1 @@
-uucore::bin!(uu_cat);
+uucore::bin!(sg_cat);

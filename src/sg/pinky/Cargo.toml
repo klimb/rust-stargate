@@ -1,7 +1,7 @@
 # spell-checker:ignore logind
 
 [package]
-name = "uu_pinky"
+name = "sg_pinky"
 description = "pinky ~ (uutils) display user information"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/pinky"
 version.workspace = true

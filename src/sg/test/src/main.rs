@@ -1,1 +1,1 @@
-uucore::bin!(uu_test);
+uucore::bin!(sg_test);

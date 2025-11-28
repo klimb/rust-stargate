@@ -1,1 +1,1 @@
-uucore::bin!(uu_od);
+uucore::bin!(sg_od);

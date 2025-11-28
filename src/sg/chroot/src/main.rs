@@ -1,1 +1,1 @@
-uucore::bin!(uu_chroot);
+uucore::bin!(sg_chroot);

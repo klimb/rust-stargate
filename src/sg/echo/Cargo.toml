@@ -1,5 +1,5 @@
 [package]
-name = "uu_echo"
+name = "sg_echo"
 description = "echo ~ (uutils) display TEXT"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/echo"
 version.workspace = true

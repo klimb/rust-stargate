@@ -1,1 +1,1 @@
-uucore::bin!(uu_realpath);
+uucore::bin!(sg_realpath);

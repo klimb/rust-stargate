@@ -1,5 +1,5 @@
 [package]
-name = "uu_nohup"
+name = "sg_nohup"
 description = "nohup ~ (uutils) run COMMAND, ignoring hangup signals"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/nohup"
 version.workspace = true

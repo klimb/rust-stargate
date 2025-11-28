@@ -1,5 +1,5 @@
 [package]
-name = "uu_ln"
+name = "sg_ln"
 description = "ln ~ (uutils) create a (file system) link to TARGET"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/ln"
 version.workspace = true

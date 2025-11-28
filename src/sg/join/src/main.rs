@@ -1,1 +1,1 @@
-uucore::bin!(uu_join);
+uucore::bin!(sg_join);

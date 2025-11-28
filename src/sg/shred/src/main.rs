@@ -1,1 +1,1 @@
-uucore::bin!(uu_shred);
+uucore::bin!(sg_shred);

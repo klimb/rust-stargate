@@ -1,5 +1,5 @@
 [package]
-name = "uu_printf"
+name = "sg_printf"
 description = "printf ~ (uutils) FORMAT and display ARGUMENTS"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/printf"
 version.workspace = true

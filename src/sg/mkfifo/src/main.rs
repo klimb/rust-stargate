@@ -1,1 +1,1 @@
-uucore::bin!(uu_mkfifo);
+uucore::bin!(sg_mkfifo);

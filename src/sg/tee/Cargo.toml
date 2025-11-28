@@ -1,5 +1,5 @@
 [package]
-name = "uu_tee"
+name = "sg_tee"
 description = "tee ~ (uutils) display input and copy to FILE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tee"
 version.workspace = true

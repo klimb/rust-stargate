@@ -1,5 +1,5 @@
 [package]
-name = "uu_change_owner"
+name = "sg_change_owner"
 description = "change owner"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chown"
 version.workspace = true

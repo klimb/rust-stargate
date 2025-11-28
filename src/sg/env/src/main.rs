@@ -1,1 +1,1 @@
-uucore::bin!(uu_env);
+uucore::bin!(sg_env);

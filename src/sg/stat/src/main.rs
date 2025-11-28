@@ -1,1 +1,1 @@
-uucore::bin!(uu_stat);
+uucore::bin!(sg_stat);

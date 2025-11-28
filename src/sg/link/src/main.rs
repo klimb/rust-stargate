@@ -1,1 +1,1 @@
-uucore::bin!(uu_link);
+uucore::bin!(sg_link);

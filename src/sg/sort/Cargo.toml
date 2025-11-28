@@ -1,7 +1,7 @@
 # spell-checker:ignore bigdecimal
 
 [package]
-name = "uu_sort"
+name = "sg_sort"
 description = "sort ~ (uutils) sort input lines"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/sort"
 version.workspace = true

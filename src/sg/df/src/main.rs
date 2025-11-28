@@ -1,1 +1,1 @@
-uucore::bin!(uu_df);
+uucore::bin!(sg_df);

@@ -1,1 +1,1 @@
-uucore::bin!(uu_readlink);
+uucore::bin!(sg_readlink);

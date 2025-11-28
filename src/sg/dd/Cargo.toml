@@ -1,5 +1,5 @@
 [package]
-name = "uu_dd"
+name = "sg_dd"
 description = "dd ~ (uutils) copy and convert files"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/dd"
 version.workspace = true

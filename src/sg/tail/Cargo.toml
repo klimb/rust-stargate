@@ -1,6 +1,6 @@
 # spell-checker:ignore (libs) kqueue
 [package]
-name = "uu_tail"
+name = "sg_tail"
 description = "tail ~ (uutils) display the last lines of input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tail"
 version.workspace = true

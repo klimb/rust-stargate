@@ -1,5 +1,5 @@
 [package]
-name = "uu_new_directory"
+name = "sg_new_directory"
 description = "new-directory ~ (uutils) create DIRECTORY"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/new_directory"
 version.workspace = true

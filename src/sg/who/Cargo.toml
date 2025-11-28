@@ -2,7 +2,7 @@
 
 
 [package]
-name = "uu_who"
+name = "sg_who"
 description = "who ~ (uutils) display information about currently logged-in users"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/who"
 version.workspace = true

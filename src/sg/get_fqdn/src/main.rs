@@ -1,1 +1,1 @@
-uucore::bin!(uu_get_fqdn);
+uucore::bin!(sg_get_fqdn);

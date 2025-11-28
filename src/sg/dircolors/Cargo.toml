@@ -1,5 +1,5 @@
 [package]
-name = "uu_dircolors"
+name = "sg_dircolors"
 description = "dircolors ~ (uutils) display commands to set LS_COLORS"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/dircolors"
 version.workspace = true

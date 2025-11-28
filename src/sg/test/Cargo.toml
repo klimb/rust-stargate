@@ -1,5 +1,5 @@
 [package]
-name = "uu_test"
+name = "sg_test"
 description = "test ~ (uutils) evaluate comparison and file type expressions"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/test"
 version.workspace = true

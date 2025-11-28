@@ -1,5 +1,5 @@
 [package]
-name = "uu_false"
+name = "sg_false"
 
 description = "false ~ (uutils) do nothing and fail"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/false"

@@ -1,7 +1,7 @@
 # spell-checker:ignore tzdb zoneinfo
 
 [package]
-name = "uu_list_directory"
+name = "sg_list_directory"
 description = "list-directory"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/ls"
 version.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "uu_du"
+name = "sg_du"
 description = "du ~ (uutils) display disk usage"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/du"
 version.workspace = true

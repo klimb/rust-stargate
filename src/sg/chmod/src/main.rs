@@ -1,1 +1,1 @@
-uucore::bin!(uu_chmod);
+uucore::bin!(sg_chmod);

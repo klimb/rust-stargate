@@ -1,5 +1,5 @@
 [package]
-name = "uu_rm"
+name = "sg_rm"
 description = "rm ~ (uutils) remove PATHNAME"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/rm"
 version.workspace = true

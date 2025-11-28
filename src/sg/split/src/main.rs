@@ -1,1 +1,1 @@
-uucore::bin!(uu_split);
+uucore::bin!(sg_split);

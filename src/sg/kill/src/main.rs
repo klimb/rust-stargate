@@ -1,1 +1,1 @@
-uucore::bin!(uu_kill);
+uucore::bin!(sg_kill);

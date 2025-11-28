@@ -1,5 +1,5 @@
 [package]
-name = "uu_get_domainname"
+name = "sg_get_domainname"
 description = "domainname - display system domainname"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true

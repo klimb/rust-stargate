@@ -1,5 +1,5 @@
 [package]
-name = "uu_hostname"
+name = "sg_hostname"
 description = "hostname ~ (uutils) display or set the host name of the current host"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "uu_cut"
+name = "sg_cut"
 description = "cut ~ (uutils) display byte/field columns of input lines"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/cut"
 version.workspace = true

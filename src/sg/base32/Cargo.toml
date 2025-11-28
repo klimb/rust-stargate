@@ -1,5 +1,5 @@
 [package]
-name = "uu_base32"
+name = "sg_base32"
 description = "base32 ~ (uutils) decode/encode input (base32-encoding)"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/base32"
 version.workspace = true

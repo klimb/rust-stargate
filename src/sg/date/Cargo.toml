@@ -1,6 +1,6 @@
 # spell-checker:ignore datetime tzdb zoneinfo
 [package]
-name = "uu_date"
+name = "sg_date"
 description = "date ~ (uutils) display or set the current time"
 repository = "https://github.com/uutils/coreutils/tree/main/src/date"
 version.workspace = true

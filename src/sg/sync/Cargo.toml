@@ -1,5 +1,5 @@
 [package]
-name = "uu_sync"
+name = "sg_sync"
 description = "sync ~ (uutils) synchronize cache writes to storage"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/sync"
 version.workspace = true

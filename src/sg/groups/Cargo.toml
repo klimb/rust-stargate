@@ -1,5 +1,5 @@
 [package]
-name = "uu_groups"
+name = "sg_groups"
 description = "groups ~ (uutils) display group memberships for USERNAME"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/groups"
 version.workspace = true

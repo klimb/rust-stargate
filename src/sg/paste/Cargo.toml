@@ -1,5 +1,5 @@
 [package]
-name = "uu_paste"
+name = "sg_paste"
 description = "paste ~ (uutils) merge lines from inputs"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/paste"
 version.workspace = true

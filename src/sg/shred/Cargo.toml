@@ -1,5 +1,5 @@
 [package]
-name = "uu_shred"
+name = "sg_shred"
 description = "shred ~ (uutils) hide former FILE contents with repeated overwrites"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/shred"
 version.workspace = true

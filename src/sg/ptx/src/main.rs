@@ -1,1 +1,1 @@
-uucore::bin!(uu_ptx);
+uucore::bin!(sg_ptx);

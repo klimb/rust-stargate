@@ -1,1 +1,1 @@
-uucore::bin!(uu_tail);
+uucore::bin!(sg_tail);

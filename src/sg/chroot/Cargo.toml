@@ -1,5 +1,5 @@
 [package]
-name = "uu_chroot"
+name = "sg_chroot"
 description = "chroot ~ (uutils) run COMMAND under a new root directory"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chroot"
 version.workspace = true

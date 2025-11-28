@@ -1,5 +1,5 @@
 [package]
-name = "uu_factor"
+name = "sg_factor"
 description = "factor ~ (uutils) display the prime factors of each NUMBER"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/"
 version.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "uu_get_fqdn"
+name = "sg_get_fqdn"
 description = "fqdn - display system fully qualified domain name"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true

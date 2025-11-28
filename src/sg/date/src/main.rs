@@ -1,1 +1,1 @@
-uucore::bin!(uu_date);
+uucore::bin!(sg_date);

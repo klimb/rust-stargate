@@ -1,5 +1,5 @@
 [package]
-name = "uu_logname"
+name = "sg_logname"
 description = "logname ~ (uutils) display the login name of the current user"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/logname"
 version.workspace = true

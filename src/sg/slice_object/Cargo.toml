@@ -1,5 +1,5 @@
 [package]
-name = "uu_slice_object"
+name = "sg_slice_object"
 description = "slice-object ~ extract fields from JSON objects"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/slice_object"
 version.workspace = true

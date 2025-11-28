@@ -1,1 +1,1 @@
-uucore::bin!(uu_seq);
+uucore::bin!(sg_seq);
