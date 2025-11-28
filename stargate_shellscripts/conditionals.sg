@@ -1,5 +1,5 @@
 #!/usr/bin/env stargate-shell
-# Test conditional logic
+# Test conditional logic including >= and <= operators
 
 print "=== Conditional Logic ===";
 print "";
@@ -16,4 +16,43 @@ if sum > threshold {
     print diff;
 } else {
     print "Sum is below threshold";
+}
+
+print "";
+print "=== Testing >= operator ===";
+let score = 85;
+let passing = 60;
+
+if score >= passing {
+    print "PASSED - Score meets or exceeds passing grade";
+} else {
+    print "FAILED";
+}
+
+print "";
+print "=== Testing <= operator ===";
+let temperature = 32;
+let freezing = 32;
+
+if temperature <= freezing {
+    print "Temperature is at or below freezing";
+} else {
+    print "Temperature is above freezing";
+}
+
+print "";
+print "=== Edge case: exact equality ===";
+let value = 100;
+let limit = 100;
+
+if value >= limit {
+    print "value >= limit: TRUE";
+} else {
+    print "value >= limit: FALSE";
+}
+
+if value <= limit {
+    print "value <= limit: TRUE";
+} else {
+    print "value <= limit: FALSE";
 }

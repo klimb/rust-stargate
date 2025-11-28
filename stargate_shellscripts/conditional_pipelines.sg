@@ -6,7 +6,7 @@ print "";
 
 # Check directory size
 print "Analyzing directory contents...";
-let total_files = $(list-directory | wc -l);
+let total_files = list-directory | collect-count;
 print "Total items:";
 print total_files;
 print "";

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+// Scripting language parser for stargate-shell
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -278,7 +278,14 @@ impl Parser {
         self.expect("let")?;
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
-        let expr = self.parse_expression()?;
+        
+        // Check if the right-hand side is a pipeline
+        let expr = if self.contains_pipe_before_semicolon() {
+            self.parse_pipeline_expr()?
+        } else {
+            self.parse_expression()?
+        };
+        
         self.expect(";")?;
         Ok(Statement::VarDecl(name, expr))
     }
@@ -286,7 +293,14 @@ impl Parser {
     fn parse_assignment(&mut self) -> Result<Statement, String> {
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
-        let expr = self.parse_expression()?;
+        
+        // Check if the right-hand side is a pipeline
+        let expr = if self.contains_pipe_before_semicolon() {
+            self.parse_pipeline_expr()?
+        } else {
+            self.parse_expression()?
+        };
+        
         self.expect(";")?;
         Ok(Statement::Assignment(name, expr))
     }
@@ -389,6 +403,30 @@ impl Parser {
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_or()
+    }
+
+    fn contains_pipe_before_semicolon(&self) -> bool {
+        let mut lookahead = self.pos;
+        while lookahead < self.tokens.len() {
+            let token = &self.tokens[lookahead];
+            if token == ";" {
+                return false;
+            }
+            if token == "|" {
+                return true;
+            }
+            lookahead += 1;
+        }
+        false
+    }
+
+    fn parse_pipeline_expr(&mut self) -> Result<Expression, String> {
+        let mut pipeline_tokens = Vec::new();
+        while self.peek().is_some() && self.peek().map(|s| s.as_str()) != Some(";") {
+            pipeline_tokens.push(self.advance().ok_or("Unexpected end")?);
+        }
+        let pipeline_str = pipeline_tokens.join(" ");
+        Ok(Expression::CommandOutput(pipeline_str))
     }
 
     fn parse_or(&mut self) -> Result<Expression, String> {

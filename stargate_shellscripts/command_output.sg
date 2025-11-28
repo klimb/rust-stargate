@@ -6,7 +6,7 @@ print "";
 
 # Capture directory listing count
 print "Counting files in current directory...";
-let file_count = $(list-directory | wc -l);
+let file_count = list-directory | collect-count;
 print "File count:";
 print file_count;
 print "";
