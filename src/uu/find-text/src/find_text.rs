@@ -7,7 +7,7 @@ use clap::{Arg, ArgAction, Command};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Result as IoResult};
 use uucore::error::{UResult, USimpleError};
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 mod options {
@@ -94,7 +94,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
     let case_insensitive = matches.get_flag(options::INSENSITIVE);
 
-    if opts.json_output {
+    if opts.object_output {
         // Object (JSON) output mode
         let mut all_results = Vec::new();
         let mut total_matches = 0;
@@ -126,7 +126,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             }
         }
 
-        json_output::output(
+        object_output::output(
             opts,
             json!({
                 "pattern": pattern,
@@ -190,5 +190,5 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue),
         );
 
-    json_output::add_json_args(cmd)
+    object_output::add_json_args(cmd)
 }

@@ -8,7 +8,7 @@ use std::ffi::OsString;
 use uucore::display::println_verbatim;
 use uucore::error::{FromIo, UResult};
 use uucore::translate;
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 mod platform;
@@ -17,13 +17,13 @@ mod platform;
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
+    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
     let username = whoami()?;
 
-    if opts.json_output {
+    if opts.object_output {
         let username_str = username.to_string_lossy().to_string();
-        let output = json_output::filter_fields(json!({"username": username_str}), field_filter);
-        json_output::output(opts, output, || Ok(()))?;
+        let output = object_output::filter_fields(json!({"username": username_str}), field_filter);
+        object_output::output(opts, output, || Ok(()))?;
     } else {
         println_verbatim(username).map_err_context(|| translate!("whoami-error-failed-to-print"))?;
     }
@@ -43,5 +43,5 @@ pub fn uu_app() -> Command {
         .override_usage(uucore::util_name())
         .infer_long_args(true);
 
-    json_output::add_json_args(cmd)
+    object_output::add_json_args(cmd)
 }

@@ -4,7 +4,7 @@ This document outlines the standard pattern for adding `-o/--obj` object output 
 
 ## Pattern Overview
 
-All commands should support `-o/--obj` flag for object output (JSON) that works with `slice-object` and `dice-object` utilities.
+All commands should support `-o/--obj` flag for object output (JSON) that works with `slice-object` and `dice-object` utilities. Use `--pretty` to pretty-print JSON.
 
 ## Implementation Checklist
 
@@ -21,7 +21,7 @@ serde_json = { workspace = true }  # Add this
 ### 2. Add Imports to Source File
 
 ```rust
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 ```
 
@@ -35,7 +35,7 @@ pub fn uu_app() -> Command {
         // ... existing configuration ...
         ;
     
-    json_output::add_json_args(cmd)  // Add this line
+    object_output::add_json_args(cmd)  // Adds -o/--obj, --pretty, and -f/--field
 }
 ```
 
@@ -51,13 +51,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     
     // ... existing logic to get data ...
     
-    if opts.json_output {
+    if opts.object_output {
         let output = json!({
             "field1": value1,
             "field2": value2,
             // Include relevant metadata
         });
-        json_output::output(opts, output, || Ok(()))?;
+        object_output::output(opts, output, || Ok(()))?;
     } else {
         // ... existing output logic ...
     }
@@ -80,7 +80,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
 ### After
 ```rust
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 #[uucore::main]
@@ -89,13 +89,13 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let opts = JsonOutputOptions::from_matches(&matches);
     let cwd = physical_path()?;
     
-    if opts.json_output {
+    if opts.object_output {
         let path_str = cwd.to_string_lossy().to_string();
         let output = json!({
             "path": path_str,
             "absolute": cwd.is_absolute(),
         });
-        json_output::output(opts, output, || Ok(()))?;
+        object_output::output(opts, output, || Ok(()))?;
     } else {
         println_verbatim(cwd)?;
     }
@@ -106,7 +106,7 @@ pub fn uu_app() -> Command {
     let cmd = Command::new(uucore::util_name())
         // ... configuration ...
         ;
-    json_output::add_json_args(cmd)
+    object_output::add_json_args(cmd)
 }
 ```
 
@@ -115,6 +115,9 @@ pub fn uu_app() -> Command {
 ```bash
 # Test basic object output
 command -o
+
+# Pretty-printed JSON
+command -o --pretty
 
 # Test with dice-object (column filtering)
 command -o | dice-object -f field1 --pretty

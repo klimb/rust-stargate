@@ -17,25 +17,29 @@ use serde_json::Value as JsonValue;
 #[derive(Debug, Clone, Copy)]
 pub struct JsonOutputOptions {
     /// Whether to output as object (JSON) (-o/--obj flag)
-    pub json_output: bool,
+    pub object_output: bool,
     /// Whether to include verbose output (-v/--verbose flag)
     pub verbose: bool,
+    /// Whether to pretty-print JSON output (--pretty flag)
+    pub pretty: bool,
 }
 
 impl JsonOutputOptions {
     /// Create a new default instance
     pub fn new() -> Self {
         Self {
-            json_output: false,
+            object_output: false,
             verbose: false,
+            pretty: false,
         }
     }
 
     /// Create an instance from clap matches
     pub fn from_matches(matches: &clap::ArgMatches) -> Self {
         Self {
-            json_output: matches.get_flag(ARG_JSON_OUTPUT),
+            object_output: matches.get_flag(ARG_OBJECT_OUTPUT),
             verbose: matches.get_flag(ARG_VERBOSE),
+            pretty: matches.get_flag(ARG_PRETTY),
         }
     }
 }
@@ -47,14 +51,15 @@ impl Default for JsonOutputOptions {
 }
 
 /// Argument names for object (JSON) output and verbose flags
-pub const ARG_JSON_OUTPUT: &str = "json_output";
+pub const ARG_OBJECT_OUTPUT: &str = "object_output";
 pub const ARG_VERBOSE: &str = "verbose";
-pub const ARG_FIELD: &str = "object_field";
+pub const ARG_FIELD: &str = "field";
+pub const ARG_PRETTY: &str = "pretty";
 
 /// Add object (JSON) output and verbose arguments to a clap Command
 pub fn add_json_args(cmd: clap::Command) -> clap::Command {
     cmd.arg(
-        Arg::new(ARG_JSON_OUTPUT)
+        Arg::new(ARG_OBJECT_OUTPUT)
             .short('o')
             .long("obj")
             .help("Output as object (JSON)")
@@ -65,6 +70,12 @@ pub fn add_json_args(cmd: clap::Command) -> clap::Command {
             .short('v')
             .long("verbose")
             .help("Include additional details in output")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        Arg::new(ARG_PRETTY)
+            .long("pretty")
+            .help("Pretty-print object (JSON) output (use with -o)")
             .action(ArgAction::SetTrue),
     )
     .arg(
@@ -104,7 +115,7 @@ pub fn filter_fields(value: JsonValue, field_spec: Option<&str>) -> JsonValue {
 
 /// Conditionally output object (JSON) or perform default output
 ///
-/// If `options.json_output` is true, serializes the provided `value` as JSON and prints it.
+/// If `options.object_output` is true, serializes the provided `value` as JSON and prints it.
 /// Otherwise, calls the provided `default_output` closure to perform default (text) output.
 ///
 /// # Arguments
@@ -115,8 +126,15 @@ pub fn output<F>(options: JsonOutputOptions, value: JsonValue, default_output: F
 where
     F: FnOnce() -> std::io::Result<()>,
 {
-    if options.json_output {
-        println!("{}", value);
+    if options.object_output {
+        if options.pretty {
+            match serde_json::to_string_pretty(&value) {
+                Ok(s) => println!("{}", s),
+                Err(_) => println!("{}", value),
+            }
+        } else {
+            println!("{}", value);
+        }
     } else {
         default_output()?;
     }
@@ -146,7 +164,7 @@ mod tests {
     #[test]
     fn test_json_options_default() {
         let opts = JsonOutputOptions::default();
-        assert!(!opts.json_output);
+        assert!(!opts.object_output);
         assert!(!opts.verbose);
     }
 

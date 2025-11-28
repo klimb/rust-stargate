@@ -53,7 +53,7 @@ use uucore::{
     fs::FileInformation,
     fs::display_permissions,
     fsext::{MetadataTimeField, metadata_get_time},
-    json_output::{self, JsonOutputOptions},
+    object_output::{self, JsonOutputOptions},
     line_ending::LineEnding,
     os_str_as_bytes_lossy,
     parser::parse_glob,
@@ -359,7 +359,7 @@ pub struct Config {
     dired: bool,
     hyperlink: bool,
     tab_size: usize,
-    json_output: JsonOutputOptions,
+    object_output: JsonOutputOptions,
     object_fields: Vec<String>,
 }
 
@@ -1151,7 +1151,7 @@ impl Config {
             dired,
             hyperlink,
             tab_size,
-            json_output: JsonOutputOptions::from_matches(options),
+            object_output: JsonOutputOptions::from_matches(options),
             object_fields: if let Some(field) = options.get_one::<String>("object_field") {
                 vec![field.clone()]
             } else if let Some(fields) = options.get_many::<String>("object_fields") {
@@ -1816,8 +1816,28 @@ pub fn uu_app() -> Command {
             .action(ArgAction::SetTrue)
     );
     
-    // Add object output (JSON) arguments
-    let cmd = json_output::add_json_args(cmd);
+    // Add object output (JSON) arguments without -f short to avoid conflicts
+    let cmd = cmd
+        .arg(
+            Arg::new(object_output::ARG_OBJECT_OUTPUT)
+                .short('o')
+                .long("obj")
+                .help("Output as object (JSON)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new(object_output::ARG_VERBOSE)
+                .short('v')
+                .long("verbose")
+                .help("Include additional details in output")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new(object_output::ARG_PRETTY)
+                .long("pretty")
+                .help("Pretty-print object (JSON) output (use with -o)")
+                .action(ArgAction::SetTrue),
+        );
     
     let cmd = cmd
         .arg(
@@ -2212,8 +2232,7 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
         output = filter_object_fields(&output, &config.object_fields);
     }
     
-    println!("{}", serde_json::to_string_pretty(&output).unwrap());
-    Ok(())
+    Ok(object_output::output(config.object_output, output, || Ok(()))?)
 }
 
 fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_json::Value {
@@ -2233,7 +2252,7 @@ fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_j
 #[allow(clippy::cognitive_complexity)]
 pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
     // Handle object output (JSON)
-    if config.json_output.json_output {
+    if config.object_output.object_output {
         return list_json(locs, config);
     }
     
