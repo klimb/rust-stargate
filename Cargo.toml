@@ -115,7 +115,7 @@ feat_common_core = [
   "unexpand",
   "uniq",
   "unlink",
-  "wc",
+  "collect-count",
   "yes",
 ]
 # "feat_Tier1" == expanded set of utilities which can be built/run on the usual rust "Tier 1" target platforms (ref: <https://forge.rust-lang.org/release/platform-support.html>)
@@ -453,7 +453,7 @@ uniq = { optional = true, version = "0.4.0", package = "sg_uniq", path = "src/sg
 unlink = { optional = true, version = "0.4.0", package = "sg_unlink", path = "src/sg/unlink" }
 uptime = { optional = true, version = "0.4.0", package = "sg_uptime", path = "src/sg/uptime" }
 users = { optional = true, version = "0.4.0", package = "sg_users", path = "src/sg/users" }
-wc = { optional = true, version = "0.4.0", package = "sg_wc", path = "src/sg/wc" }
+collect-count = { optional = true, version = "0.4.0", package = "sg_collect_count", path = "src/sg/collect-count" }
 who = { optional = true, version = "0.4.0", package = "sg_who", path = "src/sg/who" }
 whoami = { optional = true, version = "0.4.0", package = "sg_whoami", path = "src/sg/whoami" }
 yes = { optional = true, version = "0.4.0", package = "sg_yes", path = "src/sg/yes" }

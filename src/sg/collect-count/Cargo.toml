@@ -1,7 +1,7 @@
 [package]
-name = "sg_wc"
-description = "wc ~ (uutils) display newline, word, and byte counts for input"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/wc"
+name = "sg_collect_count"
+description = "collect-count ~ collect and count file statistics from JSON pipelines"
+repository = "https://github.com/uutils/coreutils/tree/main/src/sg/collect-count"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/wc.rs"
+path = "src/collect_count.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -24,6 +24,7 @@ bytecount = { workspace = true, features = ["runtime-dispatch-simd"] }
 thiserror = { workspace = true }
 unicode-width = { workspace = true }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = { workspace = true }
@@ -35,9 +36,9 @@ tempfile = { workspace = true }
 sgcore = { workspace = true, features = ["benchmark"] }
 
 [[bin]]
-name = "wc"
+name = "collect-count"
 path = "src/main.rs"
 
 [[bench]]
-name = "wc_bench"
+name = "collect_count_bench"
 harness = false

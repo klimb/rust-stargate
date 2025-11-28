@@ -22,6 +22,7 @@ workspace = true
 path = "src/lib/lib.rs"
 
 [dependencies]
+atty = "0.2"
 bstr = { workspace = true }
 chrono = { workspace = true, optional = true }
 clap = { workspace = true }

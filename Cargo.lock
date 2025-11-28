@@ -2466,6 +2466,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_collect_count"
+version = "0.4.0"
+dependencies = [
+ "bytecount",
+ "clap",
+ "codspeed-divan-compat",
+ "fluent",
+ "libc",
+ "nix",
+ "serde_json",
+ "sgcore",
+ "tempfile",
+ "thiserror 2.0.17",
+ "unicode-width 0.2.2",
+]
+
+[[package]]
 name = "sg_comm"
 version = "0.4.0"
 dependencies = [
@@ -3484,22 +3501,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_wc"
-version = "0.4.0"
-dependencies = [
- "bytecount",
- "clap",
- "codspeed-divan-compat",
- "fluent",
- "libc",
- "nix",
- "sgcore",
- "tempfile",
- "thiserror 2.0.17",
- "unicode-width 0.2.2",
-]
-
-[[package]]
 name = "sg_who"
 version = "0.4.0"
 dependencies = [
@@ -3533,6 +3534,7 @@ dependencies = [
 name = "sgcore"
 version = "0.4.0"
 dependencies = [
+ "atty",
  "base64-simd",
  "bigdecimal",
  "blake2b_simd",
@@ -3756,6 +3758,7 @@ dependencies = [
  "sg_chmod",
  "sg_chroot",
  "sg_cksum",
+ "sg_collect_count",
  "sg_comm",
  "sg_cp",
  "sg_csplit",
@@ -3845,7 +3848,6 @@ dependencies = [
  "sg_unlink",
  "sg_uptime",
  "sg_users",
- "sg_wc",
  "sg_who",
  "sg_whoami",
  "sg_yes",
