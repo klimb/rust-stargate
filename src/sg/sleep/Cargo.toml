@@ -21,6 +21,8 @@ path = "src/sleep.rs"
 clap = { workspace = true }
 sgcore = { workspace = true, features = ["parser"] }
 fluent = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "sleep"

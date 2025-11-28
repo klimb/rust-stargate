@@ -2904,6 +2904,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3215,6 +3217,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3492,6 +3496,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3502,6 +3508,8 @@ dependencies = [
  "chrono",
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
  "thiserror 2.0.17",
  "utmp-classic",

@@ -10,8 +10,10 @@ use chrono::{Local, TimeZone, Utc};
 use std::ffi::OsString;
 use std::io;
 use thiserror::Error;
+use serde_json::json;
 use sgcore::error::{UError, UResult};
 use sgcore::libc::time_t;
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::uptime::*;
 
@@ -48,14 +50,15 @@ impl UError for UptimeError {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
     let file_path = matches.get_one::<OsString>(options::PATH);
 
     if matches.get_flag(options::SINCE) {
-        uptime_since()
+        uptime_since(json_output_options)
     } else if let Some(path) = file_path {
-        uptime_with_file(path)
+        uptime_with_file(path, json_output_options)
     } else {
-        default_uptime()
+        default_uptime(json_output_options)
     }
 }
 
@@ -79,18 +82,20 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     #[cfg(unix)]
-    cmd.arg(
+    let cmd = cmd.arg(
         Arg::new(options::PATH)
             .help(translate!("uptime-help-path"))
             .action(ArgAction::Set)
             .num_args(0..=1)
             .value_parser(ValueParser::os_string())
             .value_hint(ValueHint::AnyPath)
-    )
+    );
+    
+    object_output::add_json_args(cmd)
 }
 
 #[cfg(unix)]
-fn uptime_with_file(file_path: &OsString) -> UResult<()> {
+fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions) -> UResult<()> {
     use std::fs;
     use std::os::unix::fs::FileTypeExt;
     use sgcore::error::set_exit_code;
@@ -138,10 +143,59 @@ fn uptime_with_file(file_path: &OsString) -> UResult<()> {
     }
 
     if non_fatal_error {
-        print_time();
-        print!("{}", translate!("uptime-output-unknown-uptime"));
-        print_nusers(Some(0));
-        print_loadavg();
+        if json_output_options.object_output {
+            let output = json!({
+                "error": "Could not read file",
+                "time": get_formatted_time(),
+                "uptime": "unknown",
+                "users": "0",
+                "load_average": get_formatted_loadavg().ok(),
+            });
+            object_output::output(json_output_options, output, || Ok(()))?;
+        } else {
+            print_time();
+            print!("{}", translate!("uptime-output-unknown-uptime"));
+            print_nusers(Some(0));
+            print_loadavg();
+        }
+        return Ok(());
+    }
+
+    if json_output_options.object_output {
+        #[cfg(not(target_os = "openbsd"))]
+        let (boot_time, user_count) = {
+            let (boot_time, count) = process_utmpx(Some(file_path));
+            (boot_time, count)
+        };
+        
+        #[cfg(target_os = "openbsd")]
+        let (boot_time, user_count) = {
+            let upsecs = get_uptime(None)?;
+            let count = get_nusers(file_path.to_str().expect("invalid utmp path file"));
+            (if upsecs >= 0 { Some(upsecs) } else { None }, count)
+        };
+        
+        let output = if let Some(bt) = boot_time {
+            let uptime_str = get_formatted_uptime(Some(bt))?;
+            let uptime_secs = get_uptime(Some(bt))?;
+            json!({
+                "time": get_formatted_time(),
+                "uptime": uptime_str,
+                "uptime_seconds": uptime_secs,
+                "users": format_nusers(user_count),
+                "load_average": get_formatted_loadavg().ok(),
+            })
+        } else {
+            json!({
+                "error": "Could not get boot time",
+                "time": get_formatted_time(),
+                "uptime": "unknown",
+                "users": format_nusers(user_count),
+                "load_average": get_formatted_loadavg().ok(),
+            })
+        };
+        
+        object_output::output(json_output_options, output, || Ok(()))?;
         return Ok(());
     }
 
@@ -182,7 +236,7 @@ fn uptime_with_file(file_path: &OsString) -> UResult<()> {
     Ok(())
 }
 
-fn uptime_since() -> UResult<()> {
+fn uptime_since(json_output_options: JsonOutputOptions) -> UResult<()> {
     #[cfg(unix)]
     #[cfg(not(target_os = "openbsd"))]
     let uptime = {
@@ -195,17 +249,44 @@ fn uptime_since() -> UResult<()> {
     let since_date = Local
         .timestamp_opt(Utc::now().timestamp() - uptime, 0)
         .unwrap();
-    println!("{}", since_date.format("%Y-%m-%d %H:%M:%S"));
+    
+    if json_output_options.object_output {
+        let output = json!({
+            "since": since_date.format("%Y-%m-%d %H:%M:%S").to_string(),
+            "timestamp": since_date.timestamp(),
+        });
+        object_output::output(json_output_options, output, || Ok(()))?;
+    } else {
+        println!("{}", since_date.format("%Y-%m-%d %H:%M:%S"));
+    }
 
     Ok(())
 }
 
 /// Default uptime behaviour i.e. when no file argument is given.
-fn default_uptime() -> UResult<()> {
-    print_time();
-    print_uptime(None)?;
-    print_nusers(None);
-    print_loadavg();
+fn default_uptime(json_output_options: JsonOutputOptions) -> UResult<()> {
+    if json_output_options.object_output {
+        let uptime_secs = get_uptime(None)?;
+        let loadavg_result = get_formatted_loadavg();
+        let nusers = get_formatted_nusers();
+        let time_str = get_formatted_time();
+        let uptime_str = get_formatted_uptime(None)?;
+        
+        let output = json!({
+            "time": time_str,
+            "uptime": uptime_str,
+            "uptime_seconds": uptime_secs,
+            "users": nusers,
+            "load_average": loadavg_result.ok(),
+        });
+        
+        object_output::output(json_output_options, output, || Ok(()))?;
+    } else {
+        print_time();
+        print_uptime(None)?;
+        print_nusers(None);
+        print_loadavg();
+    }
 
     Ok(())
 }
