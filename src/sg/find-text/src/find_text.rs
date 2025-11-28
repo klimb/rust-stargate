@@ -5,10 +5,10 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Result as IoResult};
+use std::io::{BufRead, BufReader, Read, Result as IoResult};
 use sgcore::error::{UResult, USimpleError};
 use sgcore::object_output::{self, JsonOutputOptions};
-use serde_json::json;
+use serde_json::{json, Value};
 
 mod options {
     pub const PATTERN: &str = "pattern";
@@ -86,11 +86,74 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         .get_one::<String>(options::PATTERN)
         .ok_or_else(|| USimpleError::new(1, "Pattern is required"))?;
 
-    // Get files (at least one required)
-    let files: Vec<&String> = matches
-        .get_many::<String>(options::FILE)
-        .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
-        .collect();
+    // Try to get files from stdin JSON first, then from command line args
+    let files: Vec<String> = if atty::isnt(atty::Stream::Stdin) {
+        // We have data on stdin, try to parse as JSON
+        let mut stdin_data = String::new();
+        std::io::stdin()
+            .read_to_string(&mut stdin_data)
+            .map_err(|e| USimpleError::new(1, format!("Failed to read stdin: {}", e)))?;
+
+        if !stdin_data.trim().is_empty() {
+            // Try to parse as JSON
+            match serde_json::from_str::<Value>(&stdin_data) {
+                Ok(json_value) => {
+                    // Extract file paths from list-directory style JSON
+                    if let Some(entries) = json_value.get("entries").and_then(|e| e.as_array()) {
+                        entries
+                            .iter()
+                            .filter_map(|entry| {
+                                // Only include files (not directories)
+                                if entry.get("type").and_then(|t| t.as_str()) == Some("file") {
+                                    entry.get("path").and_then(|p| p.as_str()).map(String::from)
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect()
+                    } else {
+                        // Not the expected format, fall back to command line args
+                        matches
+                            .get_many::<String>(options::FILE)
+                            .ok_or_else(|| {
+                                USimpleError::new(1, "At least one file is required")
+                            })?
+                            .map(|s| s.to_string())
+                            .collect()
+                    }
+                }
+                Err(_) => {
+                    // Not valid JSON, fall back to command line args
+                    matches
+                        .get_many::<String>(options::FILE)
+                        .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+                        .map(|s| s.to_string())
+                        .collect()
+                }
+            }
+        } else {
+            // Empty stdin, fall back to command line args
+            matches
+                .get_many::<String>(options::FILE)
+                .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+                .map(|s| s.to_string())
+                .collect()
+        }
+    } else {
+        // No stdin, use command line args
+        matches
+            .get_many::<String>(options::FILE)
+            .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+            .map(|s| s.to_string())
+            .collect()
+    };
+
+    if files.is_empty() {
+        return Err(USimpleError::new(
+            1,
+            "No files to search (no files found in JSON input or command line)",
+        ));
+    }
 
     let case_insensitive = matches.get_flag(options::INSENSITIVE);
 
@@ -178,7 +241,7 @@ pub fn uu_app() -> Command {
             Arg::new(options::FILE)
                 .help("Files to search in")
                 .value_name("FILE")
-                .required(true)
+                .required(false)  // Optional when stdin has JSON
                 .action(ArgAction::Append)
                 .index(2),
         )
