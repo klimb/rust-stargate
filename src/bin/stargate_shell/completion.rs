@@ -8,6 +8,8 @@ use std::borrow::Cow;
 
 use super::commands::{get_stargate_commands, get_command_parameters, SHELL_COMMANDS};
 
+const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
+
 pub struct StargateCompletion {
     commands: Vec<String>,
 }
@@ -36,7 +38,7 @@ impl Completer for StargateCompletion {
         let line = &line[..pos];
         
         // Special handling for "describe-command "
-        if let Some(rest) = line.strip_prefix("describe-command ") {
+        if let Some(rest) = line.strip_prefix(DESCRIBE_COMMAND_PREFIX) {
             let matches: Vec<Pair> = self.commands
                 .iter()
                 .filter(|cmd| !SHELL_COMMANDS.contains(&cmd.as_str())) // Exclude shell builtins
@@ -47,7 +49,7 @@ impl Completer for StargateCompletion {
                 })
                 .collect();
             
-            return Ok((17, matches)); // "describe-command ".len() = 17
+            return Ok((DESCRIBE_COMMAND_PREFIX.len(), matches));
         }
         
         // Find the start of the current word
