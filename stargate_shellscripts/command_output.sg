@@ -1,0 +1,25 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test command output substitution with object piping
+
+print "=== Command Output and Variables ===";
+print "";
+
+# Capture directory listing count
+print "Counting files in current directory...";
+let file_count = $(list-directory | wc -l);
+print "File count:";
+print file_count;
+print "";
+
+# Use the count in a conditional
+if file_count > 10 {
+    print "Directory has many files";
+} else {
+    print "Directory has few files";
+}
+print "";
+
+# Capture and use output from echo
+let message = $(echo "Hello from command substitution");
+print "Message captured:";
+print message;

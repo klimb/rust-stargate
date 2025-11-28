@@ -16,6 +16,19 @@ pub fn print_help() {
     println!("  <cmd> [args...]           - Execute a stargate command");
     println!("  <cmd> | <cmd> | ...       - Chain commands with JSON pipes");
     println!();
+    println!("Scripting Language:");
+    println!("  script <code>             - Execute inline script");
+    println!("  script{{ ... }}             - Execute multi-line script block");
+    println!();
+    println!("  Variables:     let x = 5; let name = \"hello\";");
+    println!("  Conditionals:  if x > 3 {{ print x; }} else {{ print \"small\"; }}");
+    println!("  Functions:     fn add(a, b) {{ return a + b; }}");
+    println!("  Commands:      exec \"ls -la\";");
+    println!("  Substitution:  let files = $(ls);");
+    println!("  Print:         print x;");
+    println!();
+    println!("  Operators:     +, -, *, /, ==, !=, <, >, <=, >=, &&, ||");
+    println!();
     println!("Features:");
     println!("  Tab completion            - Press Tab to see/cycle through completions");
     println!("                              Works for commands, parameters (--flags), and options");
@@ -27,6 +40,8 @@ pub fn print_help() {
     println!("  describe-command list-directory");
     println!("  list-directory --long");
     println!("  list-directory | collect-count");
+    println!("  script let x = 10; if x > 5 {{ print \"big\"; }} else {{ print \"small\"; }}");
+    println!("  script fn factorial(n) {{ if n <= 1 {{ return 1; }} return n * factorial(n - 1); }} print factorial(5);");
     println!();
     println!("When using pipes (|), commands automatically use -o for JSON output");
     println!("and feed the JSON to the next command via stdin. ");

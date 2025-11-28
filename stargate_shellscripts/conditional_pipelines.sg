@@ -1,0 +1,29 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Complex script demonstrating conditionals with command outputs
+
+print "=== Conditional Pipeline Processing ===";
+print "";
+
+# Check directory size
+print "Analyzing directory contents...";
+let total_files = $(list-directory | wc -l);
+print "Total items:";
+print total_files;
+print "";
+
+# Execute different pipelines based on size
+if total_files > 20 {
+    print "Large directory - showing first 10 files only";
+    list-directory | head -10;
+} else {
+    if total_files > 10 {
+        print "Medium directory - showing all files";
+        list-directory;
+    } else {
+        print "Small directory - showing with grep filter";
+        list-directory | grep toml;
+    }
+}
+print "";
+
+print "Analysis complete!";

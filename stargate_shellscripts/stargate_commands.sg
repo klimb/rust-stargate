@@ -1,0 +1,11 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test executing stargate commands
+
+print "=== Stargate Commands ===";
+print "";
+
+print "Listing current directory...";
+list-directory | head -10;
+print "";
+
+print "Done!";

@@ -1,0 +1,39 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Demonstrate nested conditionals with object processing
+
+print "=== Nested Conditionals with Objects ===";
+print "";
+
+# Get file statistics
+let total = $(list-directory | wc -l);
+let with_toml = $(list-directory | grep toml | wc -l);
+
+print "Total items:";
+print total;
+print "Items with 'toml':";
+print with_toml;
+print "";
+
+# Calculate ratio (toml vs total)
+let ratio = with_toml / total;
+
+print "Processing based on composition...";
+if ratio > 0 {
+    if ratio == 1 {
+        print "All items contain 'toml'";
+        list-directory | head -8;
+    } else {
+        if ratio >= 0 {
+            print "Some items contain 'toml'";
+            list-directory | grep toml | head -5;
+        } else {
+            print "No toml files";
+            list-directory | head -5;
+        }
+    }
+} else {
+    print "No files found";
+}
+
+print "";
+print "Analysis complete!";

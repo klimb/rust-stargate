@@ -1,0 +1,24 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test function definitions and calls
+
+print "=== Functions ===";
+print "";
+
+fn square(n) {
+    return n * n;
+}
+
+fn fibonacci(n) {
+    if n <= 1 {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+print "Square of 7:";
+let sq = square(7);
+print sq;
+
+print "Fibonacci of 8:";
+let fib8 = fibonacci(8);
+print fib8;
