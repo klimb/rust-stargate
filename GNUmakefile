@@ -311,6 +311,16 @@ $(foreach test,$(UTILS),$(eval $(call TEST_BUSYBOX,$(test))))
 test:
 	${CARGO} test ${CARGOFLAGS} --features "$(TESTS) $(TEST_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(TEST_NO_FAIL_FAST)
 
+test-scripting:
+	@echo "Running stargate-shell scripting tests..."
+	@${CARGO} build --bin stargate-shell $(PROFILE_CMD)
+	@for script in $(BASEDIR)/stargate_shellscripts/*.sg; do \
+		echo "Running $$script..."; \
+		$(BUILDDIR)/stargate-shell "$$script" || exit 1; \
+		echo ""; \
+	done
+	@echo "All scripting tests passed!"
+
 nextest:
 	${CARGO} nextest run ${CARGOFLAGS} --features "$(TESTS) $(TEST_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(TEST_NO_FAIL_FAST)
 

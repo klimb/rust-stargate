@@ -14,25 +14,29 @@ print "Items with 'toml':";
 print with_toml;
 print "";
 
-# Calculate ratio (toml vs total)
-let ratio = with_toml / total;
-
+# Calculate ratio (toml vs total) - avoid division by zero
 print "Processing based on composition...";
-if ratio > 0 {
-    if ratio == 1 {
-        print "All items contain 'toml'";
-        list-directory | head -8;
-    } else {
-        if ratio >= 0 {
-            print "Some items contain 'toml'";
-            list-directory | grep toml | head -5;
+if total > 0 {
+    let ratio = with_toml / total;
+    
+    if ratio > 0 {
+        if ratio == 1 {
+            print "All items contain 'toml'";
+            list-directory | head -8;
         } else {
-            print "No toml files";
-            list-directory | head -5;
+            if ratio >= 0 {
+                print "Some items contain 'toml'";
+                list-directory | grep toml | head -5;
+            } else {
+                print "No toml files";
+                list-directory | head -5;
+            }
         }
+    } else {
+        print "No items with toml";
     }
 } else {
-    print "No files found";
+    print "Directory is empty";
 }
 
 print "";
