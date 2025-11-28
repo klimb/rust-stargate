@@ -8,14 +8,12 @@ print "";
 print "Getting directory data...";
 let item_count = list-directory | collect-count;
 
-print "Items found:";
-print item_count;
+print "Items found: {item_count}";
 print "";
 
 # Build different pipeline stages based on data
 fn show_summary(count) {
-    print "Building pipeline for count:";
-    print count;
+    print "Building pipeline for count: {count}";
     
     if count > 15 {
         # Large dataset - multi-stage filtering
@@ -37,8 +35,7 @@ fn show_summary(count) {
 
 let stages = show_summary(item_count);
 print "";
-print "Pipeline stages executed:";
-print stages;
+print "Pipeline stages executed: {stages}";
 
 # Additional conditional based on result
 if stages > 1 {

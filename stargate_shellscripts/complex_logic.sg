@@ -14,8 +14,7 @@ fn is_even(n) {
 }
 
 let test_num = 42;
-print "Testing number:";
-print test_num;
+print "Testing number: {test_num}";
 
 let result = is_even(test_num);
 if result == 1 {

@@ -12,8 +12,7 @@ let threshold = 10;
 if sum > threshold {
     print "Sum exceeds threshold";
     let diff = sum - threshold;
-    print "Difference:";
-    print diff;
+    print "Difference: {diff}";
 } else {
     print "Sum is below threshold";
 }

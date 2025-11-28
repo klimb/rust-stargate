@@ -6,12 +6,12 @@ print "";
 
 print "Test 1: Variables";
 let x = 5;
-print x;
+print "x = {x}";
 print "";
 
 print "Test 2: Arithmetic";
 let y = 10 + 5 * 2;
-print y;
+print "y = {y}";
 print "";
 
 print "Test 3: Comparisons";
@@ -28,7 +28,7 @@ fn add(a, b) {
     return a + b;
 }
 let sum = add(3, 4);
-print sum;
+print "sum = {sum}";
 print "";
 
 print "Test 5: Recursive factorial";
@@ -39,7 +39,7 @@ fn factorial(n) {
     return n * factorial(n - 1);
 }
 let fact5 = factorial(5);
-print fact5;
+print "factorial(5) = {fact5}";
 print "";
 
 print "Test 6: Boolean operators";
@@ -61,7 +61,7 @@ print "";
 
 print "Test 8: Command substitution";
 let greeting = "Hello from stargate-shell!";
-print greeting;
+print "greeting = {greeting}";
 print "";
 
 print "All tests completed!";
