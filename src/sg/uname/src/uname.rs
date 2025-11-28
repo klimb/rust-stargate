@@ -7,6 +7,8 @@
 
 use clap::{Arg, ArgAction, Command};
 use platform_info::*;
+use serde::Serialize;
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{
     error::{UResult, USimpleError},
@@ -25,14 +27,23 @@ pub mod options {
     pub static OS: &str = "operating-system";
 }
 
+#[derive(Serialize)]
 pub struct UNameOutput {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub kernel_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub nodename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub kernel_release: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub kernel_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub machine: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub os: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub processor: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hardware_platform: Option<String>,
 }
 
@@ -122,6 +133,8 @@ pub struct Options {
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
+
     let options = Options {
         all: matches.get_flag(options::ALL),
         kernel_name: matches.get_flag(options::KERNEL_NAME),
@@ -134,12 +147,19 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         os: matches.get_flag(options::OS),
     };
     let output = UNameOutput::new(&options)?;
-    println!("{}", output.display());
+    
+    if json_output_options.object_output {
+        let json_value = serde_json::to_value(&output)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        object_output::output(json_output_options, json_value, || Ok(()))?;
+    } else {
+        println!("{}", output.display());
+    }
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("uname-about"))
@@ -211,5 +231,6 @@ pub fn uu_app() -> Command {
                 .help(translate!("uname-help-hardware-platform"))
                 .action(ArgAction::SetTrue)
                 .hide(true)
-        )
+        );
+    object_output::add_json_args(cmd)
 }

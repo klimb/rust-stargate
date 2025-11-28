@@ -121,7 +121,7 @@ PROGS       := \
 	realpath \
 	rm \
 	rmdir \
-	seq \
+	get_range \
 	shred \
 	shuf \
 	sleep \
@@ -243,7 +243,7 @@ TEST_PROGS  := \
 	realpath \
 	rm \
 	rmdir \
-	seq \
+	get_range \
 	sleep \
 	sort \
 	split \

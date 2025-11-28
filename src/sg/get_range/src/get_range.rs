@@ -10,11 +10,13 @@ use clap::{Arg, ArgAction, Command};
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use num_traits::Zero;
+use serde_json::json;
 
 use sgcore::error::{FromIo, UResult};
 use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 use sgcore::format::num_format::FloatVariant;
 use sgcore::format::{Format, num_format};
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::{fast_inc::fast_inc, format_usage};
 
 mod error;
@@ -95,6 +97,8 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(uu_app(), split_short_args_with_value(args))?;
 
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
+
     let numbers_option = matches.get_many::<String>(ARG_NUMBERS);
 
     if numbers_option.is_none() {
@@ -150,6 +154,12 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         }
     };
 
+    // If JSON output is requested, use JSON path
+    if json_output_options.object_output {
+        let range = (first.number, increment.number, last.number);
+        return generate_seq_json(range, json_output_options);
+    }
+
     // If a format was passed on the command line, use that.
     // If not, use some default format based on parameters precision.
     let (format, padding, fast_allowed) = match options.format {
@@ -200,8 +210,10 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         }
     };
 
+    let range = (first.number, increment.number, last.number);
+    
     let result = print_seq(
-        (first.number, increment.number, last.number),
+        range,
         &options.separator,
         &options.terminator,
         &format,
@@ -217,7 +229,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .trailing_var_arg(true)
         .infer_long_args(true)
         .version(sgcore::crate_version!())
@@ -259,6 +271,35 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .num_args(1..=3)
         )
+        // Add JSON args manually without -f short flag to avoid conflict with --format
+        .arg(
+            Arg::new("object_output")
+                .short('o')
+                .long("obj")
+                .help("Output as object (JSON)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .help("Include additional details in output")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("pretty")
+                .long("pretty")
+                .help("Pretty-print object (JSON) output (use with -o)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("field")
+                .long("field")  // No short flag to avoid conflict with -f/--format
+                .value_name("FIELD")
+                .help("Filter object output to specific field(s) (comma-separated)")
+                .action(ArgAction::Set),
+        );
+    cmd
 }
 
 /// Integer print, default format, positive increment: fast code path
@@ -333,6 +374,34 @@ fn done_printing<T: Zero + PartialOrd>(next: &T, increment: &T, last: &T) -> boo
     } else {
         next < last
     }
+}
+
+/// Generate sequence as JSON array
+fn generate_seq_json(
+    range: RangeFloat,
+    json_output_options: JsonOutputOptions
+) -> UResult<()> {
+    let (first, increment, last) = range;
+    let mut values: Vec<String> = Vec::new();
+    let mut value = first;
+    
+    while !done_printing(&value, &increment, &last) {
+        // Convert ExtendedBigDecimal to string - it implements Debug but not Display
+        let str_value = match &value {
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::BigDecimal(bd) => bd.to_string(),
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::Infinity => "inf".to_string(),
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::MinusInfinity => "-inf".to_string(),
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::MinusZero => "-0".to_string(),
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::Nan => "nan".to_string(),
+            sgcore::extendedbigdecimal::ExtendedBigDecimal::MinusNan => "-nan".to_string(),
+        };
+        values.push(str_value);
+        value = value + increment.clone();
+    }
+    
+    let output = json!({ "sequence": values });
+    object_output::output(json_output_options, output, || Ok(()))?;
+    Ok(())
 }
 
 /// Arbitrary precision decimal number code path ("slow" path)

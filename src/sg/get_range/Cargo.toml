@@ -1,7 +1,7 @@
 # spell-checker:ignore bigdecimal extendedbigdecimal
 [package]
-name = "sg_seq"
-description = "seq ~ (uutils) display a sequence of numbers"
+name = "sg_get_range"
+description = "get-range ~ (uutils) display a sequence of numbers"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/seq"
 version.workspace = true
 authors.workspace = true
@@ -16,7 +16,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/seq.rs"
+path = "src/get_range.rs"
 
 [dependencies]
 bigdecimal = { workspace = true }
@@ -32,9 +32,10 @@ sgcore = { workspace = true, features = [
   "quoting-style",
 ] }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
-name = "seq"
+name = "get-range"
 path = "src/main.rs"
 
 [dev-dependencies]

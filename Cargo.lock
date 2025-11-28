@@ -2782,6 +2782,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_get_range"
+version = "0.4.0"
+dependencies = [
+ "bigdecimal",
+ "clap",
+ "codspeed-divan-compat",
+ "fluent",
+ "num-bigint",
+ "num-traits",
+ "serde_json",
+ "sgcore",
+ "tempfile",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "sg_get_username"
 version = "0.4.0"
 dependencies = [
@@ -2798,6 +2814,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
  "thiserror 2.0.17",
 ]
@@ -3087,6 +3105,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3136,6 +3156,8 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3161,21 +3183,6 @@ dependencies = [
  "fluent",
  "libc",
  "sgcore",
-]
-
-[[package]]
-name = "sg_seq"
-version = "0.4.0"
-dependencies = [
- "bigdecimal",
- "clap",
- "codspeed-divan-compat",
- "fluent",
- "num-bigint",
- "num-traits",
- "sgcore",
- "tempfile",
- "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -3448,6 +3455,8 @@ dependencies = [
  "clap",
  "fluent",
  "platform-info",
+ "serde",
+ "serde_json",
  "sgcore",
 ]
 
@@ -3790,6 +3799,7 @@ dependencies = [
  "sg_get_domainname",
  "sg_get_fqdn",
  "sg_get_hostname",
+ "sg_get_range",
  "sg_get_username",
  "sg_groups",
  "sg_hashsum",
@@ -3825,7 +3835,6 @@ dependencies = [
  "sg_realpath",
  "sg_rm",
  "sg_rmdir",
- "sg_seq",
  "sg_shred",
  "sg_shuf",
  "sg_sleep",
