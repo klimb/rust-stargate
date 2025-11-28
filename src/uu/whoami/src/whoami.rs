@@ -17,13 +17,13 @@ mod platform;
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
     let username = whoami()?;
 
     if opts.json_output {
         let username_str = username.to_string_lossy().to_string();
-        json_output::output(opts, json!({"username": username_str}), || {
-            Ok(())
-        })?;
+        let output = json_output::filter_fields(json!({"username": username_str}), field_filter);
+        json_output::output(opts, output, || Ok(()))?;
     } else {
         println_verbatim(username).map_err_context(|| translate!("whoami-error-failed-to-print"))?;
     }

@@ -49,6 +49,7 @@ impl Default for JsonOutputOptions {
 /// Argument names for object (JSON) output and verbose flags
 pub const ARG_JSON_OUTPUT: &str = "json_output";
 pub const ARG_VERBOSE: &str = "verbose";
+pub const ARG_FIELD: &str = "object_field";
 
 /// Add object (JSON) output and verbose arguments to a clap Command
 pub fn add_json_args(cmd: clap::Command) -> clap::Command {
@@ -66,6 +67,39 @@ pub fn add_json_args(cmd: clap::Command) -> clap::Command {
             .help("Include additional details in output")
             .action(ArgAction::SetTrue),
     )
+    .arg(
+        Arg::new(ARG_FIELD)
+            .short('f')
+            .long("field")
+            .value_name("FIELD")
+            .help("Filter object output to specific field(s) (comma-separated)")
+            .action(ArgAction::Set),
+    )
+}
+
+/// Filter a JSON object to include only specified fields
+///
+/// # Arguments
+/// * `value` - The JSON value to filter (must be an Object)
+/// * `field_spec` - Comma-separated field names (e.g., "architecture" or "path,absolute")
+///
+/// Returns filtered object, or original value if not an object or field_spec is empty
+pub fn filter_fields(value: JsonValue, field_spec: Option<&str>) -> JsonValue {
+    let Some(spec) = field_spec else { return value; };
+    let JsonValue::Object(mut obj) = value else { return value; };
+    
+    let fields: Vec<&str> = spec.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+    if fields.is_empty() {
+        return JsonValue::Object(obj);
+    }
+    
+    let mut filtered = serde_json::map::Map::new();
+    for field in fields {
+        if let Some(val) = obj.remove(field) {
+            filtered.insert(field.to_string(), val);
+        }
+    }
+    JsonValue::Object(filtered)
 }
 
 /// Conditionally output object (JSON) or perform default output

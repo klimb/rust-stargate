@@ -15,12 +15,14 @@ use serde_json::json;
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
 
     let uts =
         PlatformInfo::new().map_err(|_e| USimpleError::new(1, translate!("cannot-get-system")))?;
     let arch = uts.machine().to_string_lossy().trim().to_string();
 
-    json_output::output(opts, json!({"architecture": arch}), || {
+    let output = json_output::filter_fields(json!({"architecture": arch}), field_filter);
+    json_output::output(opts, output, || {
         println!("{}", arch);
         Ok(())
     })?;
