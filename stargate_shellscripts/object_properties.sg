@@ -1,0 +1,48 @@
+#!/usr/bin/env stargate-shell
+# Demonstrate object property access and array indexing
+
+print "=== Object Property Access Demo ===";
+print "";
+
+# Example 1: Simple property access
+print "Example 1: Accessing object properties";
+let hostname = (get-hostname).hostname;
+print "Hostname: {hostname}";
+print "";
+
+# Example 2: Accessing nested properties
+print "Example 2: Accessing array elements";
+let total_count = (list-directory).total_count;
+print "Total files in directory: {total_count}";
+print "";
+
+# Example 3: Array indexing (first element)
+print "Example 3: First directory entry";
+let first_name = (list-directory).entries[0].name;
+let first_type = (list-directory).entries[0].type;
+print "Name: {first_name}, Type: {first_type}";
+print "";
+
+# Example 4: Negative indexing (Python-style)
+print "Example 4: Last directory entry (negative index)";
+let last_name = (list-directory).entries[-1].name;
+let last_size = (list-directory).entries[-1].size;
+print "Name: {last_name}, Size: {last_size} bytes";
+print "";
+
+# Example 5: Store object and access multiple properties
+print "Example 5: Storing objects in variables";
+let dir_obj = list-directory;
+let count = dir_obj.total_count;
+let recursive = dir_obj.recursive;
+print "Directory has {count} items (recursive: {recursive})";
+print "";
+
+# Example 6: Access nested array element
+print "Example 6: Access specific entry by index";
+let entry = (list-directory).entries[2];
+print "Third entry:";
+print entry;
+print "";
+
+print "Object property access demo complete!";

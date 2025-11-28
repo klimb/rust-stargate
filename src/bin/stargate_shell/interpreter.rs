@@ -119,7 +119,13 @@ impl Interpreter {
                 let output = execute_pipeline_capture(&cmd)
                     .map_err(|e| format!("Pipeline error: {}", e))?;
                 
-                Ok(Value::String(output.trim().to_string()))
+                // Try to parse as JSON first
+                if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&output) {
+                    Ok(Value::Object(json_value))
+                } else {
+                    // Fallback to string
+                    Ok(Value::String(output.trim().to_string()))
+                }
             }
             Expression::InterpolatedString(template) => {
                 // Replace {var} with variable values
@@ -145,6 +151,55 @@ impl Interpreter {
                 }
                 
                 Ok(Value::String(result))
+            }
+            Expression::PropertyAccess { object, property } => {
+                let obj_value = self.eval_expression(*object)?;
+                match obj_value {
+                    Value::Object(json_obj) => {
+                        if let Some(value) = json_obj.get(&property) {
+                            Ok(self.json_to_value(value.clone()))
+                        } else {
+                            Err(format!("Property '{}' not found in object", property))
+                        }
+                    }
+                    _ => Err(format!("Cannot access property '{}' on non-object value", property))
+                }
+            }
+            Expression::IndexAccess { object, index } => {
+                let obj_value = self.eval_expression(*object)?;
+                let index_value = self.eval_expression(*index)?;
+                
+                match obj_value {
+                    Value::Object(json_obj) => {
+                        match json_obj {
+                            serde_json::Value::Array(arr) => {
+                                let idx = index_value.to_number() as i64;
+                                let actual_idx = if idx < 0 {
+                                    // Python-style negative indexing
+                                    (arr.len() as i64 + idx) as usize
+                                } else {
+                                    idx as usize
+                                };
+                                
+                                if actual_idx < arr.len() {
+                                    Ok(self.json_to_value(arr[actual_idx].clone()))
+                                } else {
+                                    Err(format!("Index {} out of bounds (array length: {})", idx, arr.len()))
+                                }
+                            }
+                            serde_json::Value::Object(map) => {
+                                let key = index_value.to_string();
+                                if let Some(value) = map.get(&key) {
+                                    Ok(self.json_to_value(value.clone()))
+                                } else {
+                                    Err(format!("Key '{}' not found in object", key))
+                                }
+                            }
+                            _ => Err("Cannot index non-array/non-object JSON value".to_string())
+                        }
+                    }
+                    _ => Err("Cannot index non-object value".to_string())
+                }
             }
         }
     }
@@ -236,6 +291,24 @@ impl Interpreter {
         self.variables = saved_vars;
 
         Ok(result)
+    }
+
+    fn json_to_value(&self, json: serde_json::Value) -> Value {
+        match json {
+            serde_json::Value::Null => Value::Null,
+            serde_json::Value::Bool(b) => Value::Bool(b),
+            serde_json::Value::Number(n) => {
+                if let Some(i) = n.as_i64() {
+                    Value::Number(i as f64)
+                } else if let Some(f) = n.as_f64() {
+                    Value::Number(f)
+                } else {
+                    Value::Number(0.0)
+                }
+            }
+            serde_json::Value::String(s) => Value::String(s),
+            serde_json::Value::Array(_) | serde_json::Value::Object(_) => Value::Object(json),
+        }
     }
 }
 
