@@ -1,12 +1,14 @@
 use super::scripting::*;
 use super::execution::{execute_pipeline, execute_pipeline_capture};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::process::Command as ProcessCommand;
+use std::sync::{Arc, Mutex};
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,
     functions: HashMap<String, (Vec<String>, Vec<Statement>)>,
     return_value: Option<Value>,
+    variable_names: Option<Arc<Mutex<HashSet<String>>>>,
 }
 
 impl Interpreter {
@@ -15,6 +17,16 @@ impl Interpreter {
             variables: HashMap::new(),
             functions: HashMap::new(),
             return_value: None,
+            variable_names: None,
+        }
+    }
+    
+    pub fn new_with_completion(variable_names: Arc<Mutex<HashSet<String>>>) -> Self {
+        Interpreter {
+            variables: HashMap::new(),
+            functions: HashMap::new(),
+            return_value: None,
+            variable_names: Some(variable_names),
         }
     }
 
@@ -30,16 +42,24 @@ impl Interpreter {
 
     fn execute_statement(&mut self, stmt: Statement) -> Result<(), String> {
         match stmt {
-            Statement::VarDecl(name, expr) => {
-                let value = self.eval_expression(expr)?;
-                self.variables.insert(name, value);
-            }
             Statement::Assignment(name, expr) => {
                 let value = self.eval_expression(expr)?;
-                if self.variables.contains_key(&name) {
-                    self.variables.insert(name, value);
-                } else {
-                    return Err(format!("Variable '{}' not declared", name));
+                self.variables.insert(name.clone(), value);
+                // Update completion list
+                if let Some(ref var_names) = self.variable_names {
+                    if let Ok(mut names) = var_names.lock() {
+                        names.insert(name);
+                    }
+                }
+            }
+            Statement::VarDecl(name, expr) => {
+                let value = self.eval_expression(expr)?;
+                self.variables.insert(name.clone(), value);
+                // Update completion list
+                if let Some(ref var_names) = self.variable_names {
+                    if let Ok(mut names) = var_names.lock() {
+                        names.insert(name);
+                    }
                 }
             }
             Statement::If {
@@ -316,6 +336,13 @@ pub fn execute_script(script: &str) -> Result<(), String> {
     let mut parser = Parser::new(script);
     let statements = parser.parse()?;
     let mut interpreter = Interpreter::new();
+    interpreter.execute(statements)?;
+    Ok(())
+}
+
+pub fn execute_script_with_interpreter(script: &str, interpreter: &mut Interpreter) -> Result<(), String> {
+    let mut parser = Parser::new(script);
+    let statements = parser.parse()?;
     interpreter.execute(statements)?;
     Ok(())
 }
