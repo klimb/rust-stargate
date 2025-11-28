@@ -24,6 +24,7 @@ bytecount = { workspace = true, features = ["runtime-dispatch-simd"] }
 thiserror = { workspace = true }
 unicode-width = { workspace = true }
 fluent = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]

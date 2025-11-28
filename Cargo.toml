@@ -115,7 +115,7 @@ feat_common_core = [
   "unexpand",
   "uniq",
   "unlink",
-  "collect-count",
+  "collect_count",
   "yes",
 ]
 # "feat_Tier1" == expanded set of utilities which can be built/run on the usual rust "Tier 1" target platforms (ref: <https://forge.rust-lang.org/release/platform-support.html>)
@@ -276,6 +276,7 @@ lscolors = { version = "0.21.0", default-features = false, features = [
   "gnu_legacy",
 ] }
 memchr = "2.7.2"
+serde = { version = "1.0.202", features = ["derive"] }
 serde_json = "1.0"
 memmap2 = "0.9.4"
 nix = { version = "0.30", default-features = false }
@@ -453,7 +454,7 @@ uniq = { optional = true, version = "0.4.0", package = "sg_uniq", path = "src/sg
 unlink = { optional = true, version = "0.4.0", package = "sg_unlink", path = "src/sg/unlink" }
 uptime = { optional = true, version = "0.4.0", package = "sg_uptime", path = "src/sg/uptime" }
 users = { optional = true, version = "0.4.0", package = "sg_users", path = "src/sg/users" }
-collect-count = { optional = true, version = "0.4.0", package = "sg_collect_count", path = "src/sg/collect-count" }
+collect_count = { optional = true, version = "0.4.0", package = "sg_collect_count", path = "src/sg/collect-count" }
 who = { optional = true, version = "0.4.0", package = "sg_who", path = "src/sg/who" }
 whoami = { optional = true, version = "0.4.0", package = "sg_whoami", path = "src/sg/whoami" }
 yes = { optional = true, version = "0.4.0", package = "sg_yes", path = "src/sg/yes" }

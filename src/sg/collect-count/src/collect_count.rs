@@ -5,6 +5,7 @@
 
 // cSpell:ignore ilog wc wc's
 
+mod collected_count;
 mod count_fast;
 mod countable;
 mod utf8;
@@ -27,7 +28,6 @@ use utf8::{BufReadDecoder, BufReadDecoderError};
 use sgcore::translate;
 use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::json_adapter;
-use serde_json::json;
 
 use sgcore::{
     error::{FromIo, UError, UResult},
@@ -38,6 +38,7 @@ use sgcore::{
 };
 
 use crate::{
+    collected_count::{CollectedCount, InputMetadata},
     count_fast::{count_bytes_chars_and_lines_fast, count_bytes_fast},
     countable::WordCountable,
     word_count::WordCount,
@@ -144,12 +145,6 @@ enum Inputs<'a> {
     Paths(Vec<Input<'a>>),
     /// --files0-from; "-" means stdin.
     Files0From(Input<'a>),
-}
-
-/// Metadata about the input source
-#[derive(Debug, Default)]
-struct InputMetadata {
-    json_input_detected: bool,
 }
 
 impl<'a> Inputs<'a> {
@@ -881,33 +876,16 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
     }
 
     if settings.object_output.object_output {
-        // JSON output mode
-        let files: Vec<_> = results.iter().map(|(title, wc)| {
-            json!({
-                "file": title,
-                "lines": wc.lines,
-                "words": wc.words,
-                "chars": wc.chars,
-                "bytes": wc.bytes,
-                "max_line_length": wc.max_line_length,
-            })
-        }).collect();
+        // Create the CollectedCount with all collected data
+        let collected_count = CollectedCount::new(
+            results,
+            &total_word_count,
+            num_inputs,
+            metadata,
+        );
 
-        let output = json!({
-            "files": files,
-            "total": {
-                "lines": total_word_count.lines,
-                "words": total_word_count.words,
-                "chars": total_word_count.chars,
-                "bytes": total_word_count.bytes,
-                "max_line_length": total_word_count.max_line_length,
-            },
-            "files_counted": num_inputs,
-            "metadata": {
-                "json_input": metadata.json_input_detected,
-            },
-        });
-
+        // Convert to JSON and output
+        let output = collected_count.to_json();
         object_output::output(settings.object_output, output, || Ok(()))?;
     } else if settings.total_when.is_total_row_visible(num_inputs) {
         let wc_total_msg = translate!("wc-total");
