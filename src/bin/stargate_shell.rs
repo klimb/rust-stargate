@@ -18,12 +18,14 @@ fn print_banner() {
 
 fn print_help() {
     println!("Stargate Shell Commands:");
-    println!("  help                 - Show this help message");
-    println!("  exit, quit           - Exit the shell");
-    println!("  <cmd> [args...]      - Execute a stargate command");
-    println!("  <cmd> | <cmd> | ...  - Chain commands with JSON pipes");
+    println!("  help                      - Show this help message");
+    println!("  exit, quit                - Exit the shell");
+    println!("  describe-command <cmd>    - Show help for a stargate command");
+    println!("  <cmd> [args...]           - Execute a stargate command");
+    println!("  <cmd> | <cmd> | ...       - Chain commands with JSON pipes");
     println!();
     println!("Examples:");
+    println!("  describe-command list-directory");
     println!("  list-directory | collect-count");
     println!();
     println!("When using pipes (|), commands automatically use -o for JSON output");
@@ -207,6 +209,30 @@ fn parse_pipeline(input: &str) -> Vec<Vec<String>> {
     pipelines
 }
 
+fn describe_command(cmd_name: &str) -> Result<(), String> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+
+    let output = Command::new(&stargate_bin)
+        .arg(cmd_name)
+        .arg("--help")
+        .output()
+        .map_err(|e| format!("Failed to execute command: {}", e))?;
+
+    if output.status.success() {
+        print!("{}", String::from_utf8_lossy(&output.stdout));
+        Ok(())
+    } else {
+        let error = String::from_utf8_lossy(&output.stderr);
+        if !error.is_empty() {
+            eprint!("{}", error);
+        }
+        Err(format!("Command '{}' not found or invalid", cmd_name))
+    }
+}
+
 fn execute_pipeline(input: &str) -> Result<(), String> {
     let commands = parse_pipeline(input);
     
@@ -269,6 +295,15 @@ fn main() {
                 match input {
                     "exit" | "quit" => break,
                     "help" => print_help(),
+                    _ if input.starts_with("describe-command ") => {
+                        let cmd_name = input[17..].trim();
+                        if cmd_name.is_empty() {
+                            eprintln!("Error: describe-command requires a command name");
+                            eprintln!("Usage: describe-command <command>");
+                        } else if let Err(e) = describe_command(cmd_name) {
+                            eprintln!("Error: {}", e);
+                        }
+                    }
                     _ => {
                         if let Err(e) = execute_pipeline(input) {
                             eprintln!("Error: {}", e);
