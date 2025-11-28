@@ -3877,6 +3877,7 @@ dependencies = [
  "rustyline",
  "serde",
  "serde-big-array",
+ "serde_json",
  "sg_base32",
  "sg_base64",
  "sg_basename",
