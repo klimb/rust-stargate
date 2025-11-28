@@ -57,7 +57,7 @@ feat_common_core = [
   "cp",
   "csplit",
   "cut",
-  "date",
+  "get_date",
   "dd",
   "df",
   "dircolors",
@@ -371,7 +371,7 @@ comm = { optional = true, version = "0.4.0", package = "sg_comm", path = "src/sg
 cp = { optional = true, version = "0.4.0", package = "sg_cp", path = "src/sg/cp" }
 csplit = { optional = true, version = "0.4.0", package = "sg_csplit", path = "src/sg/csplit" }
 cut = { optional = true, version = "0.4.0", package = "sg_cut", path = "src/sg/cut" }
-date = { optional = true, version = "0.4.0", package = "sg_date", path = "src/sg/date" }
+get_date = { optional = true, version = "0.4.0", package = "sg_get_date", path = "src/sg/get_date" }
 dd = { optional = true, version = "0.4.0", package = "sg_dd", path = "src/sg/dd" }
 df = { optional = true, version = "0.4.0", package = "sg_df", path = "src/sg/df" }
 dircolors = { optional = true, version = "0.4.0", package = "sg_dircolors", path = "src/sg/dircolors" }

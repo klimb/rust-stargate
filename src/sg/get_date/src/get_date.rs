@@ -13,6 +13,7 @@ use jiff::{Timestamp, Zoned};
 use libc::clock_settime;
 #[cfg(all(unix, not(target_os = "redox")))]
 use libc::{CLOCK_REALTIME, clock_getres, timespec};
+use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -20,6 +21,7 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 use sgcore::error::FromIo;
 use sgcore::error::{UResult, USimpleError};
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{format_usage, show};
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
@@ -169,6 +171,8 @@ fn parse_military_timezone_with_offset(s: &str) -> Option<i32> {
 #[allow(clippy::cognitive_complexity)]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
 
     let format = if let Some(form) = matches.get_one::<String>(OPT_FORMAT) {
         if !form.starts_with('+') {
@@ -384,22 +388,62 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let format_string = make_format_string(&settings);
 
     // Format all the dates
-    for date in dates {
-        match date {
-            // TODO: Switch to lenient formatting.
-            Ok(date) => match strtime::format(format_string, &date) {
-                Ok(s) => println!("{s}"),
-                Err(e) => {
-                    return Err(USimpleError::new(
-                        1,
-                        translate!("date-error-invalid-format", "format" => format_string, "error" => e)
-                    ));
+    if json_output_options.object_output {
+        let mut date_outputs = Vec::new();
+        
+        for date in dates {
+            match date {
+                Ok(date) => {
+                    let formatted = strtime::format(format_string, &date).map_err(|e| {
+                        USimpleError::new(
+                            1,
+                            translate!("date-error-invalid-format", "format" => format_string, "error" => e)
+                        )
+                    })?;
+                    
+                    date_outputs.push(json!({
+                        "formatted": formatted,
+                        "timestamp": date.timestamp().as_second(),
+                        "nanosecond": date.timestamp().subsec_nanosecond(),
+                        "timezone": date.time_zone().iana_name().unwrap_or("Unknown"),
+                        "offset": format!("{}", date.offset()),
+                    }));
                 }
-            },
-            Err((input, _err)) => show!(USimpleError::new(
-                1,
-                translate!("date-error-invalid-date", "date" => input)
-            )),
+                Err((input, _err)) => {
+                    date_outputs.push(json!({
+                        "input": input,
+                        "error": "Invalid date",
+                        "success": false
+                    }));
+                }
+            }
+        }
+        
+        let output_json = if date_outputs.len() == 1 {
+            date_outputs.into_iter().next().unwrap()
+        } else {
+            json!({ "dates": date_outputs })
+        };
+        
+        object_output::output(json_output_options, output_json, || Ok(()))?;
+    } else {
+        for date in dates {
+            match date {
+                // TODO: Switch to lenient formatting.
+                Ok(date) => match strtime::format(format_string, &date) {
+                    Ok(s) => println!("{s}"),
+                    Err(e) => {
+                        return Err(USimpleError::new(
+                            1,
+                            translate!("date-error-invalid-format", "format" => format_string, "error" => e)
+                        ));
+                    }
+                },
+                Err((input, _err)) => show!(USimpleError::new(
+                    1,
+                    translate!("date-error-invalid-date", "date" => input)
+                )),
+            }
         }
     }
 
@@ -407,7 +451,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("date-about"))
@@ -514,6 +558,34 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(Arg::new(OPT_FORMAT))
+        .arg(
+            Arg::new("object_output")
+                .short('o')
+                .long("obj")
+                .help("Output as structured object (JSON)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .help("Include verbose information in output")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("pretty")
+                .long("pretty")
+                .help("Pretty-print object (JSON) output (use with -o)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("field")
+                .long("field")  // No short flag to avoid conflict with -f/--file
+                .value_name("FIELD")
+                .help("Filter object output to specific field(s) (comma-separated)")
+                .action(ArgAction::Set),
+        );
+    cmd
 }
 
 /// Return the appropriate format string for the given settings.
