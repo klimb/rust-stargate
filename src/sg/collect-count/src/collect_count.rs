@@ -25,6 +25,9 @@ use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 use utf8::{BufReadDecoder, BufReadDecoderError};
 use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::json_adapter;
+use serde_json::json;
 
 use sgcore::{
     error::{FromIo, UError, UResult},
@@ -51,6 +54,7 @@ struct Settings<'a> {
     show_max_line_length: bool,
     files0_from: Option<Input<'a>>,
     total_when: TotalWhen,
+    object_output: JsonOutputOptions,
 }
 
 impl Default for Settings<'_> {
@@ -64,6 +68,7 @@ impl Default for Settings<'_> {
             show_max_line_length: false,
             files0_from: None,
             total_when: TotalWhen::default(),
+            object_output: JsonOutputOptions::default(),
         }
     }
 }
@@ -79,6 +84,8 @@ impl<'a> Settings<'a> {
             .map(Into::into)
             .unwrap_or_default();
 
+        let object_output = JsonOutputOptions::from_matches(matches);
+
         let settings = Self {
             show_bytes: matches.get_flag(options::BYTES),
             show_chars: matches.get_flag(options::CHAR),
@@ -87,6 +94,7 @@ impl<'a> Settings<'a> {
             show_max_line_length: matches.get_flag(options::MAX_LINE_LENGTH),
             files0_from,
             total_when,
+            object_output,
         };
 
         if settings.number_enabled() > 0 {
@@ -95,6 +103,7 @@ impl<'a> Settings<'a> {
             Self {
                 files0_from: settings.files0_from,
                 total_when,
+                object_output,
                 ..Default::default()
             }
         }
@@ -137,22 +146,33 @@ enum Inputs<'a> {
     Files0From(Input<'a>),
 }
 
+/// Metadata about the input source
+#[derive(Debug, Default)]
+struct InputMetadata {
+    json_input_detected: bool,
+}
+
 impl<'a> Inputs<'a> {
-    fn new(matches: &'a ArgMatches) -> UResult<Self> {
+    fn new(matches: &'a ArgMatches) -> UResult<(Self, InputMetadata)> {
         let arg_files = matches.get_many::<OsString>(ARG_FILES);
         let files0_from = matches.get_one::<OsString>(options::FILES0_FROM);
+        let mut metadata = InputMetadata::default();
 
         match (arg_files, files0_from) {
-            (None, None) => Ok(Self::Stdin),
-            (Some(files), None) => Ok(Self::Paths(files.map(Into::into).collect())),
+            (None, None) => {
+                // Try to extract file paths from JSON stdin if available
+                if let Some(paths) = Self::try_extract_paths_from_json()? {
+                    metadata.json_input_detected = true;
+                    return Ok((Self::Paths(paths), metadata));
+                }
+                Ok((Self::Stdin, metadata))
+            }
+            (Some(files), None) => Ok((Self::Paths(files.map(Into::into).collect()), metadata)),
             (None, Some(path)) => {
-                // If path is a file, and the file isn't too large, we'll load it ahead
-                // of time. Every path within the file will have its length checked to
-                // hopefully better align the output columns.
                 let input = Input::from(path);
                 match input.try_as_files0()? {
-                    Some(paths) => Ok(Self::Paths(paths)),
-                    None => Ok(Self::Files0From(input)),
+                    Some(paths) => Ok((Self::Paths(paths), metadata)),
+                    None => Ok((Self::Files0From(input), metadata)),
                 }
             }
             (Some(mut files), Some(_)) => {
@@ -160,6 +180,18 @@ impl<'a> Inputs<'a> {
             }
         }
     }
+
+    /// Extract file paths from JSON input on stdin using the json_adapter.
+    /// Returns None if stdin is a TTY or doesn't contain valid JSON.
+    fn try_extract_paths_from_json() -> UResult<Option<Vec<Input<'static>>>> {
+        Ok(json_adapter::try_extract_paths_from_stdin()
+            .map(|paths| {
+                paths.into_iter()
+                    .map(|p| Input::Path(Cow::Owned(p)))
+                    .collect()
+            }))
+    }
+
 
     /// Creates an iterator which yields values borrowed from the command line arguments.
     /// Returns an error if the file specified in --files0-from cannot be opened.
@@ -372,13 +404,13 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let settings = Settings::new(&matches);
-    let inputs = Inputs::new(&matches)?;
+    let (inputs, metadata) = Inputs::new(&matches)?;
 
-    wc(&inputs, &settings)
+    wc(&inputs, &settings, &metadata)
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("wc-about"))
@@ -443,7 +475,9 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_parser(ValueParser::os_string())
                 .value_hint(clap::ValueHint::FilePath)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 fn word_count_from_reader<T: WordCountable>(
@@ -798,9 +832,10 @@ fn escape_name_wrapper(name: &OsStr) -> String {
         .expect("All escaped names with the escaping option return valid strings.")
 }
 
-fn wc(inputs: &Inputs, settings: &Settings) -> UResult<()> {
+fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult<()> {
     let mut total_word_count = WordCount::default();
     let mut num_inputs: usize = 0;
+    let mut results = Vec::new();
 
     let (number_width, are_stats_visible) = match settings.total_when {
         TotalWhen::Only => (1, false),
@@ -830,7 +865,12 @@ fn wc(inputs: &Inputs, settings: &Settings) -> UResult<()> {
             }
         };
         total_word_count += word_count;
-        if are_stats_visible {
+        
+        if settings.object_output.object_output {
+            // Collect results for JSON output
+            let title = input.to_title().map(|t| t.to_string_lossy().to_string());
+            results.push((title, word_count));
+        } else if are_stats_visible {
             let maybe_title = input.to_title();
             let maybe_title_str = maybe_title.as_deref();
             if let Err(err) = print_stats(settings, &word_count, maybe_title_str, number_width) {
@@ -840,7 +880,36 @@ fn wc(inputs: &Inputs, settings: &Settings) -> UResult<()> {
         }
     }
 
-    if settings.total_when.is_total_row_visible(num_inputs) {
+    if settings.object_output.object_output {
+        // JSON output mode
+        let files: Vec<_> = results.iter().map(|(title, wc)| {
+            json!({
+                "file": title,
+                "lines": wc.lines,
+                "words": wc.words,
+                "chars": wc.chars,
+                "bytes": wc.bytes,
+                "max_line_length": wc.max_line_length,
+            })
+        }).collect();
+
+        let output = json!({
+            "files": files,
+            "total": {
+                "lines": total_word_count.lines,
+                "words": total_word_count.words,
+                "chars": total_word_count.chars,
+                "bytes": total_word_count.bytes,
+                "max_line_length": total_word_count.max_line_length,
+            },
+            "files_counted": num_inputs,
+            "metadata": {
+                "json_input": metadata.json_input_detected,
+            },
+        });
+
+        object_output::output(settings.object_output, output, || Ok(()))?;
+    } else if settings.total_when.is_total_row_visible(num_inputs) {
         let wc_total_msg = translate!("wc-total");
         let title = are_stats_visible.then_some(OsStr::new(&wc_total_msg));
         if let Err(err) = print_stats(settings, &total_word_count, title, number_width) {
