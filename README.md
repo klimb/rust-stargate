@@ -12,7 +12,7 @@ make
 ./target/debug/list-directory -o --pretty 
 
 # try stargate shell (auto object conversion during piping)
-./target/debug/stargate_shell 
+./target/debug/stargate-shell 
 stargate> list-directory | collect-count
 exit
 ```
