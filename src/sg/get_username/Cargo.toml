@@ -1,7 +1,7 @@
 [package]
-name = "sg_logname"
-description = "logname ~ (uutils) display the login name of the current user"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/logname"
+name = "sg_get_username"
+description = "get-username ~ (get the current user's login name)"
+repository = "https://github.com/uutils/coreutils/tree/main/src/sg/get_username"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,14 +15,15 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/logname.rs"
+path = "src/get_username.rs"
 
 [dependencies]
 libc = { workspace = true }
 clap = { workspace = true }
 sgcore = { workspace = true }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
-name = "logname"
+name = "get-username"
 path = "src/main.rs"

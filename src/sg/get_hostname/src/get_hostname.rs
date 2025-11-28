@@ -13,16 +13,14 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use sgcore::translate;
 
 use sgcore::{
-    error::{CommandResult, FromIo, UResult, USimpleError},
+    error::{FromIo, UResult},
     format_usage,
+    object_output::{self, JsonOutputOptions},
 };
-use sgcore::error::CommandResult::{Success, Error};
-use serde_json::json;
 
 static SHORT_FLAG: &str = "short";
 static DOMAIN_FLAG: &str = "domain";
 static FQDN_FLAG: &str = "fqdn";
-static OBJ_FLAG: &str = "obj";
 
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
@@ -33,37 +31,25 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // in FreeBSD the hostname is the unique name for a specific server, while the domain name
     // provides a broader organizational context. Together, they form a
     // Fully Qualified Domain Name (FQDN),
-    if matches.get_flag(OBJ_FLAG) {
-        produce_json(&matches)
+    
+    let object_output = JsonOutputOptions::from_matches(&matches);
+    
+    if object_output.object_output {
+        produce_json(&matches, object_output)
     } else {
         produce(&matches)
     }
 }
 
-// `CommandResult` is now available in `sgcore::error` for shared use across all commands.
-#[sgcore::to_obj]
-pub fn to_obj(args: impl sgcore::Args) -> CommandResult<()> {
-    let matches = match sgcore::clap_localization::handle_clap_result(uu_app(), args) {
-        Ok(m) => m,
-        Err(e) => return CommandResult::Error(e),
-    };
-    produce_object(&matches)
-}
+
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("get_hostname-about"))
         .override_usage(format_usage(&translate!("get_hostname-usage")))
         .infer_long_args(true)
-        .arg(
-            Arg::new(OBJ_FLAG)
-                .short('o')
-                .long("obj")
-                .help("Output result as JSON object")
-                .action(ArgAction::SetTrue)
-        )
         .arg(
             Arg::new(DOMAIN_FLAG)
                 .short('d')
@@ -74,7 +60,6 @@ pub fn uu_app() -> Command {
         )
         .arg(
             Arg::new(FQDN_FLAG)
-                .short('f')
                 .long("fqdn")
                 .overrides_with_all([DOMAIN_FLAG, FQDN_FLAG, SHORT_FLAG])
                 .help(translate!("get_hostname-help-fqdn"))
@@ -87,7 +72,9 @@ pub fn uu_app() -> Command {
                 .overrides_with_all([DOMAIN_FLAG, FQDN_FLAG, SHORT_FLAG])
                 .help(translate!("get_hostname-help-short"))
                 .action(ArgAction::SetTrue)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 fn produce(matches: &ArgMatches) -> UResult<()> {
@@ -119,7 +106,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn produce_json(matches: &ArgMatches) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get hostname".to_owned())?
         .to_string_lossy()
@@ -146,48 +133,18 @@ fn produce_json(matches: &ArgMatches) -> UResult<()> {
         fqdn.clone()
     };
 
-    let obj = json!({
-        "status": "success",
-        "value": value,
+    let output = serde_json::json!({
+        "hostname": value,
         "flags": {
             "short": has_short_flag,
             "domain": has_domain_flag,
-            "fqdn": has_fqdn_flag,
-            "obj": true
+            "fully_qualified": has_fqdn_flag
         }
     });
 
-    println!("{}", obj.to_string());
-
+    object_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
 
-fn produce_object(matches: &ArgMatches) -> CommandResult<()> {
-    let fqdn = match hostname::get() {
-        Ok(s) => s.to_string_lossy().into_owned(),
-        Err(e) => return CommandResult::Error(USimpleError::new(1, format!("failed to get hostname: {}", e))),
-    };
 
-    let has_short_flag = matches.get_flag(SHORT_FLAG);
-    let has_domain_flag = matches.get_flag(DOMAIN_FLAG);
-    if has_short_flag || has_domain_flag {
-        let mut it = fqdn.char_indices().filter(|&ci| ci.1 == '.');
-        if let Some(dot) = it.next() {
-            if has_short_flag {
-                let short_name = &fqdn[0..dot.0];
-                println!("{}", short_name);
-            } else {
-                let domain_name = &fqdn[dot.0 + 1..];
-                println!("{}", domain_name);
-            }
-        } else if has_short_flag {
-            println!("{}", fqdn);
-        }
-        return CommandResult::Success(());
-    }
-
-    println!("{}", fqdn);
-
-    CommandResult::Success(())
-}
 

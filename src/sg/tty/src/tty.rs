@@ -9,6 +9,7 @@ use clap::{Arg, ArgAction, Command};
 use std::io::{IsTerminal, Write};
 use sgcore::error::{UResult, set_exit_code};
 use sgcore::format_usage;
+use sgcore::object_output::{self, JsonOutputOptions};
 
 use sgcore::translate;
 
@@ -19,6 +20,7 @@ mod options {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+    let object_output = JsonOutputOptions::from_matches(&matches);
 
     let silent = matches.get_flag(options::SILENT);
 
@@ -31,22 +33,39 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         };
     }
 
-    let mut stdout = std::io::stdout();
-
     let name = nix::unistd::ttyname(std::io::stdin());
 
-    let write_result = match name {
-        Ok(name) => writeln!(stdout, "{}", name.display()),
-        Err(_) => {
-            set_exit_code(1);
-            writeln!(stdout, "{}", translate!("tty-not-a-tty"))
-        }
-    };
+    if object_output.object_output {
+        let output = match &name {
+            Ok(n) => serde_json::json!({
+                "tty": n.display().to_string(),
+                "is_tty": true
+            }),
+            Err(_) => {
+                set_exit_code(1);
+                serde_json::json!({
+                    "tty": null,
+                    "is_tty": false,
+                    "message": translate!("tty-not-a-tty")
+                })
+            }
+        };
+        object_output::output(object_output, output, || Ok(()))?;
+    } else {
+        let mut stdout = std::io::stdout();
+        let write_result = match name {
+            Ok(name) => writeln!(stdout, "{}", name.display()),
+            Err(_) => {
+                set_exit_code(1);
+                writeln!(stdout, "{}", translate!("tty-not-a-tty"))
+            }
+        };
 
-    if write_result.is_err() || stdout.flush().is_err() {
-        // Don't return to prevent a panic later when another flush is attempted
-        // because the `sgcore_procs::main` macro inserts a flush after execution for every utility.
-        std::process::exit(3);
+        if write_result.is_err() || stdout.flush().is_err() {
+            // Don't return to prevent a panic later when another flush is attempted
+            // because the `sgcore_procs::main` macro inserts a flush after execution for every utility.
+            std::process::exit(3);
+        }
     }
 
     Ok(())
@@ -58,12 +77,14 @@ pub fn uu_app() -> Command {
         .about(translate!("tty-about"))
         .override_usage(format_usage(&translate!("tty-usage")))
         .infer_long_args(true);
-    sgcore::clap_localization::configure_localized_command(cmd).arg(
+    let cmd = sgcore::clap_localization::configure_localized_command(cmd).arg(
         Arg::new(options::SILENT)
             .long(options::SILENT)
             .visible_alias("quiet")
             .short('s')
             .help(translate!("tty-help-silent"))
             .action(ArgAction::SetTrue)
-    )
+    );
+    
+    object_output::add_json_args(cmd)
 }

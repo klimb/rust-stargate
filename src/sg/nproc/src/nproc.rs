@@ -5,12 +5,13 @@
 
 // spell-checker:ignore (ToDO) NPROCESSORS nprocs numstr sysconf
 
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::{env, thread};
 use sgcore::display::Quotable;
 use sgcore::error::{UResult, USimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
 
 #[cfg(any(target_os = "linux"))]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = 83;
@@ -27,6 +28,27 @@ static OPT_IGNORE: &str = "ignore";
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let object_output = JsonOutputOptions::from_matches(&matches);
+
+    let cores = compute_cores(&matches)?;
+    
+    if object_output.object_output {
+        let output = serde_json::json!({
+            "nproc": cores,
+            "flags": {
+                "all": matches.get_flag(OPT_ALL),
+                "ignore": matches.get_one::<String>(OPT_IGNORE).map(|s| s.as_str())
+            }
+        });
+        object_output::output(object_output, output, || Ok(()))?;
+    } else {
+        println!("{cores}");
+    }
+    
+    Ok(())
+}
+
+fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
 
     let ignore = match matches.get_one::<String>(OPT_IGNORE) {
         Some(numstr) => match numstr.trim().parse::<usize>() {
@@ -85,12 +107,12 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     } else {
         cores -= ignore;
     }
-    println!("{cores}");
-    Ok(())
+    
+    Ok(cores)
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("nproc-about"))
@@ -107,7 +129,9 @@ pub fn uu_app() -> Command {
                 .long(OPT_IGNORE)
                 .value_name("N")
                 .help(translate!("nproc-help-ignore"))
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 #[cfg(any(

@@ -5,7 +5,7 @@
 
 // spell-checker:ignore (ToDO) errno
 
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
 use std::fs;
 use std::io::{Write, stdout};
@@ -16,6 +16,7 @@ use sgcore::libc::EINVAL;
 use sgcore::line_ending::LineEnding;
 use sgcore::translate;
 use sgcore::{format_usage, show_error};
+use sgcore::object_output::{self, JsonOutputOptions};
 
 const OPT_CANONICALIZE: &str = "canonicalize";
 const OPT_CANONICALIZE_MISSING: &str = "canonicalize-missing";
@@ -31,6 +32,16 @@ const ARG_FILES: &str = "files";
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let object_output = JsonOutputOptions::from_matches(&matches);
+
+    if object_output.object_output {
+        readlink_json(&matches, object_output)
+    } else {
+        readlink_text(&matches)
+    }
+}
+
+fn readlink_text(matches: &ArgMatches) -> UResult<()> {
 
     let mut no_trailing_delimiter = matches.get_flag(OPT_NO_NEWLINE);
     let use_zero = matches.get_flag(OPT_ZERO);
@@ -107,8 +118,79 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
+fn readlink_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
+    let res_mode = if matches.get_flag(OPT_CANONICALIZE)
+        || matches.get_flag(OPT_CANONICALIZE_EXISTING)
+        || matches.get_flag(OPT_CANONICALIZE_MISSING)
+    {
+        ResolveMode::Logical
+    } else {
+        ResolveMode::None
+    };
+
+    let can_mode = if matches.get_flag(OPT_CANONICALIZE_EXISTING) {
+        MissingHandling::Existing
+    } else if matches.get_flag(OPT_CANONICALIZE_MISSING) {
+        MissingHandling::Missing
+    } else {
+        MissingHandling::Normal
+    };
+
+    let files: Vec<PathBuf> = matches
+        .get_many::<OsString>(ARG_FILES)
+        .map(|v| v.map(PathBuf::from).collect())
+        .unwrap_or_default();
+
+    if files.is_empty() {
+        return Err(UUsageError::new(
+            1,
+            translate!("readlink-error-missing-operand")
+        ));
+    }
+
+    let mut results = Vec::new();
+    for p in &files {
+        let path_result = if res_mode == ResolveMode::None {
+            fs::read_link(p)
+        } else {
+            canonicalize(p, can_mode, res_mode)
+        };
+
+        match path_result {
+            Ok(path) => {
+                results.push(serde_json::json!({
+                    "input": p.display().to_string(),
+                    "output": path.display().to_string(),
+                    "success": true
+                }));
+            }
+            Err(err) => {
+                let path = p.to_string_lossy().into_owned();
+                let message = if err.raw_os_error() == Some(EINVAL) {
+                    translate!("readlink-error-invalid-argument", "path" => path.clone())
+                } else {
+                    err.map_err_context(|| path.clone()).to_string()
+                };
+                results.push(serde_json::json!({
+                    "input": path,
+                    "output": null,
+                    "success": false,
+                    "error": message
+                }));
+            }
+        }
+    }
+
+    let output = serde_json::json!({
+        "paths": results
+    });
+
+    object_output::output(object_output, output, || Ok(()))?;
+    Ok(())
+}
+
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("readlink-about"))
@@ -175,7 +257,9 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_parser(clap::value_parser!(OsString))
                 .value_hint(clap::ValueHint::AnyPath)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 fn show(path: &Path, line_ending: Option<LineEnding>) -> std::io::Result<()> {
