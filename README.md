@@ -1,25 +1,172 @@
-Stargate (Rust implementation of Dreamland):
---------------------------------------------
+# Stargate 🌠
+### A Modern UNIX Userland with Object Pipes & Interactive Scripting
+
+**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting shell. No more text parsing, embrace object-oriented pipelines that are signifi faster and infinitely more expressive.
+
+## ✨ Why Stargate?
+
+```bash
+# Traditional UNIX: Parse, grep, awk, sed, repeat...
+ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
+
+# Stargate: Clean, fast, type-safe object pipelines
+list-directory | slice-object entries | collect-count
 ```
+
+### 🎯 Key Features
+
+#### **Object Commands**
+Every command outputs structured JSON when you need it:
+```bash
+# Get structured data with --obj flag (or auto-enabled in shell)
+get-hostname --obj
+# {"hostname":"myserver","domain":"local","fqdn":"myserver.local"}
+
+# Pipe objects through commands - no parsing needed!
+list-directory | slice-object entries | dice-object name permissions
+```
+
+#### **Stargate Shell - Interactive & Scriptable**
+A modern scripting shell with tab and property (. dot) completion:
+
+```bash
+stargate> let total = (list-directory).total_count;
+stargate> print "Found {total} items";
+Found 41 items
+
+stargate> let permissions = (list-directory).entries[-1].permissions;
+stargate> print permissions
+664
+```
+
+**Property access with python-style indexing. Index [-1] means last item in a list:**
+```bash
+stargate> (list-directory).entries[-1].name
+".codecov.yml"
+```
+
+**Tab completion for everything:**
+- Commands: `list-dir<TAB>` → `list-directory`
+- Properties: `(list-directory).en<TAB>` → `entries`
+- Nested properties: `(list-directory).entries[0].per<TAB>` → `permissions`
+- Variables: `print <TAB>` → shows all declared variables
+
+#### **String Interpolation**
+```bash
+stargate> let user = (get-username).username;
+stargate> let host = (get-hostname).hostname;
+stargate> print "I am {user}@{host}";
+I am alice@myserver
+```
+
+#### **Complex Pipelines Made Simple**
+```bash
+# Slice array property, dice to specific fields
+list-directory | slice-object entries | dice-object name size type
+
+# Chain property access in shell
+stargate> let first_entry = (list-directory).entries[0];
+stargate> print "{first_entry.name} is {first_entry.type}";
+.rustfmt.toml is file
+```
+
+### 🚀 Language Features
+
+**Variables & Functions:**
+```rust
+let count = 42;
+let username = (get-username).username;
+
+fn is_even(n) {
+    return n % 2 == 0;
+}
+```
+
+**Conditionals:**
+```rust
+if count > 10 {
+    print "Large count!";
+} else {
+    print "Small count";
+}
+```
+
+**Sequence & Object Access:**
+```rust
+let entries = (list-directory).entries;
+let first = entries[0];
+let last = entries[-1];  // Python-style negative indexing
+```
+
+### 🎨 Design Philosophy
+
+- **Verb-Noun Naming**: `list-directory`, `get-hostname`, `set-permissions` - reads like English
+- **Consistent Parameters**: `-r` always means recursive, `-v` always means verbose, `-h` always shows help
+- **Object Output Pattern**: Optional `--obj` flag for structured JSON output (auto-enabled in shell)
+- **Do One Thing Well**: Each command has a single, clear purpose
+- **Tab Completion Everything**: Property names, command names, variables - all completable
+
+### 📦 Quick Start
+
+```bash
 git clone https://github.com/klimb/rust-stargate
 cd rust-stargate
 make
 
-# normal way
+# Traditional mode, like ls
 ./target/debug/list-directory --color
 
-# object way
-./target/debug/list-directory -o --pretty 
+# Object mode with pretty printing
+./target/debug/list-directory --obj --pretty 
 
-# try stargate shell (auto object conversion during piping)
+# Interactive shell with autocomplete & scripting
 ./target/debug/stargate-shell 
 stargate> list-directory | collect-count
-exit
+stargate> let dirs = (list-directory).entries;
+stargate> print "Total: {(list-directory).total_count}";
 ```
 
+### 🔥 Completion Examples
+
+**Interactive exploration with completion:**
+```bash
+stargate> (list-directory).<TAB>
+entries      recursive    total_count
+
+stargate> (list-directory).entries[0].<TAB>
+gid      inode    modified    name    nlink    path
+permissions    size    type    uid
+
+stargate> (list-directory).entries[0].permissions
+664
+```
+
+**Scripting with persistent variables:**
+```bash
+stargate> let perms = (list-directory).entries[0].permissions;
+stargate> let name = (list-directory).entries[0].name;
+stargate> print "{name}: {perms}";
+.rustfmt.toml: 664
+```
+
+**Object pipeline transformations:**
+```bash
+list-directory --obj | slice-object entries | dice-object name size type
+```
+
+### Platform Support
+
+- FreeBSD
+- OpenBSD  
+- GNU/Linux
+- macOS
+
+---
+
+# Stargate Manifesto
 
 - [UNIX userland was always as mess, you're just used to it](https://www.linkedin.com/pulse/unix-userland-always-mess-youre-just-used-dmitry-kalashnikov-2k6sc)
-- ever wondered why its rm -rf, yet its chown -Rf dvk:dvk? ls ("list" what? I think you mean directory files .. etc). Why does "rm" also handle recursive removal of sub-directories, when its supposed to just "remove directory entries"? Why do we need "rmdir -p a/b/c" to duplicate this ("recursively" removes empty directories only)? why is it -p (instead of r)? Better name and parameter: remove-directory -r 
+- ever wondered why its rm -rf, yet its chown -Rf user:group? ls ("list" what? I think you mean directory files .. etc). Why does "rm" also handle recursive removal of sub-directories, when its supposed to just "remove directory entries"? Why do we need "rmdir -p a/b/c" to duplicate this ("recursively" removes empty directories only)? why is it -p (instead of r)? Better name and parameter: remove-directory -r 
 - standardizing UNIX "userland" (commands you type) naming with verb-noun and their parameters (-h always means help, -v verbose and so on). Its obvious that some parameters are common, some unique per command. Needs a thin parameter parsing
  layer. And structured (command) output for selection instead of searching through text streams (super slow, big-O). This is also a common parameter.
 - some commands are focused on doing one thing and doing it well, and can be expressed as a verb-noun: ls is list-directory. Other commands (already) handle multiple verbs: hostname (hostname: "set or print name of current host system"). They can be split into set-hostname and get-hostname commands (disk space is not a concern in 2025). Or they need to be noun verb instead of verb noun: freebsd-update fetch (already does that .. that what we want). Another good example: "pkg update". There is going to be a noun and a verb (or vise-versa).
