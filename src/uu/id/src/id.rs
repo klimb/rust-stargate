@@ -43,6 +43,8 @@ use uucore::translate;
 
 use uucore::process::{getegid, geteuid, getgid, getuid};
 use uucore::{format_usage, show_error};
+use uucore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 macro_rules! cstr2cow {
     ($v:expr) => {
@@ -98,6 +100,8 @@ struct State {
 #[allow(clippy::cognitive_complexity)]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
     let users: Vec<String> = matches
         .get_many::<String>(options::ARG_USERS)
@@ -256,6 +260,39 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         }
 
         if default_format {
+            if opts.object_output {
+                // Object output for default format
+                let user_name = entries::uid2usr(uid).ok();
+                let group_name = entries::gid2grp(gid).ok();
+                let groups_array: Vec<serde_json::Value> = groups
+                    .iter()
+                    .map(|&gid2| {
+                        let name = entries::gid2grp(gid2).unwrap_or_else(|_| gid2.to_string());
+                        json!({
+                            "gid": gid2,
+                            "name": name
+                        })
+                    })
+                    .collect();
+
+                let output = json!({
+                    "uid": uid,
+                    "user": user_name,
+                    "gid": gid,
+                    "group": group_name,
+                    "euid": state.ids.as_ref().unwrap().euid,
+                    "egid": state.ids.as_ref().unwrap().egid,
+                    "groups": groups_array
+                });
+                let filtered = object_output::filter_fields(output, field_filter);
+                object_output::output(opts, filtered, || {
+                    id_print(&state, &groups);
+                    Ok(())
+                })?;
+            } else {
+                id_print(&state, &groups);
+            }
+        } else {
             id_print(&state, &groups);
         }
         print!("{line_ending}");
@@ -269,7 +306,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .help_template(uucore::localized_help_template(uucore::util_name()))
         .about(translate!("id-about"))
@@ -376,7 +413,9 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_name(options::ARG_USERS)
                 .value_hint(clap::ValueHint::Username)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 fn pretty(possible_pw: Option<Passwd>) {

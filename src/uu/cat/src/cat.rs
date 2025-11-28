@@ -28,7 +28,7 @@ use uucore::error::UResult;
 use uucore::libc;
 use uucore::translate;
 use uucore::{fast_inc::fast_inc_one, format_usage};
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 use std::collections::HashSet;
 use std::io::BufRead; // for read_line on BufReader
@@ -234,12 +234,12 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
 
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
-    // Custom construction because we cannot reuse json_output::add_json_args (short -v already used by cat)
-    let opts = JsonOutputOptions { json_output: matches.get_flag("object_output"), verbose: false };
+    // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)
+    let opts = JsonOutputOptions { object_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(object_output::ARG_PRETTY) };
 
     // Line filtering for object output (-f line:1,3,5)
     let mut requested_lines: HashSet<usize> = HashSet::new();
-    if let Some(filter_spec) = matches.get_one::<String>("object_field") {
+    if let Some(filter_spec) = matches.get_one::<String>(object_output::ARG_FIELD) {
         // Parse "line:1,3,5" or "lines:1,3,5" format
         if let Some(line_spec) = filter_spec.strip_prefix("line:").or_else(|| filter_spec.strip_prefix("lines:")) {
             for part in line_spec.split(',') {
@@ -297,9 +297,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         squeeze_blank,
     };
 
-    if opts.json_output {
+    if opts.object_output {
         let output = build_object_output(&files, &options, &requested_lines)?;
-        json_output::output(opts, output, || Ok(()))?;
+        object_output::output(opts, output, || Ok(()))?;
         return Ok(());
     }
     cat_files(&files, &options)
@@ -400,7 +400,13 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            Arg::new("object_field")
+            Arg::new(object_output::ARG_PRETTY)
+                .long("pretty")
+                .help("Pretty-print object (JSON) output (use with -o)")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new(object_output::ARG_FIELD)
                 .short('f')
                 .long("field")
                 .value_name("FIELD")

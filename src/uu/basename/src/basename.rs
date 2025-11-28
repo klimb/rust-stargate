@@ -16,7 +16,7 @@ use uucore::format_usage;
 use uucore::line_ending::LineEnding;
 
 use uucore::translate;
-use uucore::json_output::{self, JsonOutputOptions};
+use uucore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 pub mod options {
@@ -35,7 +35,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
     let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
+    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
     let mut name_args = matches
         .get_many::<OsString>(options::NAME)
@@ -74,15 +74,15 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // Main Program Processing
     //
 
-    if opts.json_output {
+    if opts.object_output {
         let mut results = Vec::new();
         for path in name_args {
             let basename_bytes = basename(path, &suffix)?;
             let basename_str = String::from_utf8_lossy(&basename_bytes).to_string();
             results.push(basename_str);
         }
-        let output = json_output::filter_fields(json!({"name": results}), field_filter);
-        json_output::output(opts, output, || Ok(()))?;
+        let output = object_output::filter_fields(json!({"name": results}), field_filter);
+        object_output::output(opts, output, || Ok(()))?;
     } else {
         for path in name_args {
             stdout().write_all(&basename(path, &suffix)?)?;
@@ -134,7 +134,7 @@ pub fn uu_app() -> Command {
                 .overrides_with(options::ZERO)
         );
 
-    json_output::add_json_args(cmd)
+    object_output::add_json_args(cmd)
 }
 
 // We return a Vec<u8>. Returning a seemingly more proper `OsString` would

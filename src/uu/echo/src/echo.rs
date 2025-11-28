@@ -20,7 +20,8 @@ mod options {
     pub const NO_NEWLINE: &str = "no_newline";
     pub const ENABLE_BACKSLASH_ESCAPE: &str = "enable_backslash_escape";
     pub const DISABLE_BACKSLASH_ESCAPE: &str = "disable_backslash_escape";
-    pub const JSON_OUTPUT: &str = "json_output";
+    pub const OBJECT_OUTPUT: &str = "object_output";
+    pub const PRETTY: &str = "pretty";
 }
 
 /// Options for the echo command.
@@ -38,8 +39,10 @@ struct Options {
     /// `POSIXLY_CORRECT` (cannot be disabled with `-E`).
     pub escape: bool,
 
-    /// Whether to output JSON format.
-    pub json_output: bool,
+    /// Whether to output object (JSON) format.
+    pub object_output: bool,
+    /// Whether to pretty-print JSON output.
+    pub json_pretty: bool,
 }
 
 impl Default for Options {
@@ -47,7 +50,8 @@ impl Default for Options {
         Self {
             trailing_newline: true,
             escape: false,
-            json_output: false,
+            object_output: false,
+            json_pretty: false,
         }
     }
 }
@@ -57,7 +61,8 @@ impl Options {
         Self {
             trailing_newline: true,
             escape: true,
-            json_output: false,
+            object_output: false,
+            json_pretty: false,
         }
     }
 }
@@ -181,14 +186,18 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         filter_flags(args.into_iter())
     };
 
-    // Check if object (JSON) output is requested (filter -o/--obj from args)
+    // Check if object (JSON) output is requested (filter -o/--obj and --pretty from args)
     let (args, options) = {
         let mut json_flag = false;
+        let mut json_pretty = false;
         let filtered: Vec<OsString> = args
             .into_iter()
             .filter(|arg| {
                 if arg == "-o" || arg == "--obj" {
                     json_flag = true;
+                    false
+                } else if arg == "--pretty" {
+                    json_pretty = true;
                     false
                 } else {
                     true
@@ -203,7 +212,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             (filtered, options)
         };
         
-        opts.json_output = json_flag;
+        opts.object_output = json_flag;
+        opts.json_pretty = json_pretty;
         (final_args, opts)
     };
 
@@ -248,10 +258,16 @@ pub fn uu_app() -> Command {
                 .overrides_with(options::ENABLE_BACKSLASH_ESCAPE)
         )
         .arg(
-            Arg::new(options::JSON_OUTPUT)
+            Arg::new(options::OBJECT_OUTPUT)
                 .short('o')
                 .long("obj")
                 .help("Output as JSON object")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new(options::PRETTY)
+                .long("pretty")
+                .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue)
         )
         .arg(
@@ -262,7 +278,7 @@ pub fn uu_app() -> Command {
 }
 
 fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UResult<()> {
-    if options.json_output {
+    if options.object_output {
         // Build the output string as usual
         let mut output = String::new();
         for (i, arg) in args.iter().enumerate() {
@@ -290,7 +306,14 @@ fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UR
             "trailing_newline": options.trailing_newline
         });
         
-        writeln!(stdout, "{}", json_output)?;
+        if options.json_pretty {
+            match serde_json::to_string_pretty(&json_output) {
+                Ok(s) => writeln!(stdout, "{}", s)?,
+                Err(_) => writeln!(stdout, "{}", json_output)?,
+            }
+        } else {
+            writeln!(stdout, "{}", json_output)?;
+        }
     } else {
         // Original non-object output logic
         for (i, arg) in args.into_iter().enumerate() {
