@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use clap::Command;
-use uu_base32::base_common;
+use sg_base32::base_common;
 use uucore::translate;
 use uucore::{encoding::Format, error::UResult};
 
