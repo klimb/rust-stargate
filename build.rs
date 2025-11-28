@@ -13,7 +13,7 @@ use std::path::Path;
 pub fn main() {
     const ENV_FEATURE_PREFIX: &str = "CARGO_FEATURE_";
     const FEATURE_PREFIX: &str = "feat_";
-    const OVERRIDE_PREFIX: &str = "uu_";
+    const OVERRIDE_PREFIX: &str = "sg_";
 
     // Do not rebuild build script unless the script itself or the enabled features are modified
     // See <https://doc.rust-lang.org/cargo/reference/build-scripts.html#change-detection>
