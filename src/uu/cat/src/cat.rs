@@ -28,6 +28,10 @@ use uucore::error::UResult;
 use uucore::libc;
 use uucore::translate;
 use uucore::{fast_inc::fast_inc_one, format_usage};
+use uucore::json_output::{self, JsonOutputOptions};
+use serde_json::json;
+use std::collections::HashSet;
+use std::io::BufRead; // for read_line on BufReader
 
 /// Linux splice support
 #[cfg(any(target_os = "linux"))]
@@ -230,6 +234,21 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     }
 
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    // Custom construction because we cannot reuse json_output::add_json_args (short -v already used by cat)
+    let opts = JsonOutputOptions { json_output: matches.get_flag("object_output"), verbose: false };
+
+    // Line filtering for object output (-f line:1,3,5)
+    let mut requested_lines: HashSet<usize> = HashSet::new();
+    if let Some(filter_spec) = matches.get_one::<String>("object_field") {
+        // Parse "line:1,3,5" or "lines:1,3,5" format
+        if let Some(line_spec) = filter_spec.strip_prefix("line:").or_else(|| filter_spec.strip_prefix("lines:")) {
+            for part in line_spec.split(',') {
+                if let Ok(num) = part.trim().parse::<usize>() {
+                    requested_lines.insert(num);
+                }
+            }
+        }
+    }
 
     let number_mode = if matches.get_flag(options::NUMBER_NONBLANK) {
         NumberingMode::NonEmpty
@@ -277,11 +296,17 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         show_tabs,
         squeeze_blank,
     };
+
+    if opts.json_output {
+        let output = build_object_output(&files, &options, &requested_lines)?;
+        json_output::output(opts, output, || Ok(()))?;
+        return Ok(());
+    }
     cat_files(&files, &options)
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    let cmd = Command::new(uucore::util_name())
         .version(uucore::crate_version!())
         .override_usage(format_usage(&translate!("cat-usage")))
         .about(translate!("cat-about"))
@@ -364,8 +389,124 @@ pub fn uu_app() -> Command {
                 .help(translate!("cat-help-ignored-u"))
                 .action(ArgAction::SetTrue)
         )
+        ;
+    // Add only object output flag; verbose (-v) already used for show-nonprinting
+    cmd
+        .arg(
+            Arg::new("object_output")
+                .short('o')
+                .long("obj")
+                .help("Output structured object (JSON) instead of file contents")
+                .action(ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new("object_field")
+                .short('f')
+                .long("field")
+                .value_name("FIELD")
+                .help("Filter object output field (e.g., -f line:1,3,5) (requires -o)")
+                .action(ArgAction::Set)
+        )
 }
 
+
+/// Build the structured object output for cat including optional line filtering
+fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &HashSet<usize>) -> UResult<serde_json::Value> {
+    let number_mode_str = match options.number {
+        NumberingMode::None => "none",
+        NumberingMode::NonEmpty => "non-empty",
+        NumberingMode::All => "all",
+    };
+    let mut lines_output: Vec<serde_json::Value> = Vec::new();
+    let mut global_line_index: usize = 0; // 1-based counting of physical lines across all inputs
+    let mut printed_number: usize = 0; // numbering per flag logic
+
+    for file in files {
+        // Open source (stdin or file)
+        let reader: Box<dyn Read> = if file == "-" { Box::new(io::stdin()) } else { Box::new(File::open(file).map_err(|e| uucore::error::USimpleError::new(1, e.to_string()))?) };
+        let mut buf_reader = io::BufReader::new(reader);
+        let mut raw = String::new();
+        loop {
+            raw.clear();
+            let n = buf_reader.read_line(&mut raw)?;
+            if n == 0 { break; }
+            // Remove trailing newline for processing; keep to test blank
+            let is_blank_line = raw.trim_end_matches(['\r','\n']).is_empty();
+            // Squeeze blank: skip if blank and previous blank kept already
+            // We'll need state for previous blank; use closure variables
+            // Simpler: implement local static; but we need per file state.
+            // We'll track via at_line_start logic: use an option variable outside loop.
+            // For simplicity recreate variable outside loop.
+            global_line_index += 1;
+            // Apply squeeze_blank after we know blank status
+            // We need to know previous blank status: We'll store in lines_output last element's original blank flag for evaluation.
+            if options.squeeze_blank {
+                if is_blank_line {
+                    if let Some(prev) = lines_output.last() {
+                        if prev.get("blank").and_then(|b| b.as_bool()).unwrap_or(false) {
+                            // Skip additional blank
+                            continue;
+                        }
+                    }
+                }
+            }
+            let mut text = raw.trim_end_matches(['\r','\n']).to_string();
+            if options.show_tabs { text = text.replace('\t', "^I"); }
+            if options.show_nonprint {
+                // Basic caret notation for control chars excluding newline and tab (already handled)
+                let mut transformed = String::new();
+                for ch in text.chars() {
+                    let code = ch as u32;
+                    if code < 0x20 && ch != '\n' && ch != '\t' { // control char
+                        transformed.push('^');
+                        transformed.push((code as u8 + 64) as char); // ^@ starts at 0x00
+                    } else if code == 0x7f { // DEL
+                        transformed.push_str("^?");
+                    } else {
+                        transformed.push(ch);
+                    }
+                }
+                text = transformed;
+            }
+            if options.show_ends { text.push('$'); }
+            let number_field = match options.number {
+                NumberingMode::None => None,
+                NumberingMode::All => { printed_number += 1; Some(printed_number) },
+                NumberingMode::NonEmpty => {
+                    if !is_blank_line { printed_number += 1; Some(printed_number) } else { None }
+                }
+            };
+            let physical_line_number = global_line_index;
+            // Apply filtering if requested not empty
+            if !requested.is_empty() && !requested.contains(&physical_line_number) {
+                continue;
+            }
+            lines_output.push(json!({
+                "file": file.to_string_lossy(),
+                "line": physical_line_number,
+                "number": number_field,
+                "blank": is_blank_line,
+                "text": text
+            }));
+        }
+    }
+    let file_list: Vec<String> = files.iter().map(|f| f.to_string_lossy().to_string()).collect();
+    let output = json!({
+        "files": file_list,
+        "file_count": files.len(),
+        "flags": {
+            "show_ends": options.show_ends,
+            "show_nonprint": options.show_nonprint,
+            "show_tabs": options.show_tabs,
+            "squeeze_blank": options.squeeze_blank,
+            "number_mode": number_mode_str,
+        },
+        "line_filters": if requested.is_empty() { serde_json::Value::Null } else { json!(requested) },
+        "lines": lines_output,
+        "line_count": global_line_index
+    });
+    Ok(output)
+}
 fn cat_handle<R: FdReadable>(
     handle: &mut InputHandle<R>,
     options: &OutputOptions,
