@@ -6,6 +6,8 @@ use rustyline::validate::Validator;
 use rustyline::{Context, Helper};
 use std::borrow::Cow;
 use std::process::Command;
+use std::sync::{Arc, Mutex};
+use std::collections::HashSet;
 
 use super::commands::{get_stargate_commands, get_command_parameters, SHELL_COMMANDS};
 
@@ -13,15 +15,16 @@ const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
 
 pub struct StargateCompletion {
     commands: Vec<String>,
+    variables: Arc<Mutex<HashSet<String>>>,
 }
 
 impl StargateCompletion {
-    pub fn new() -> Self {
+    pub fn new(variables: Arc<Mutex<HashSet<String>>>) -> Self {
         let mut commands = get_stargate_commands();
         commands.extend(SHELL_COMMANDS.iter().map(|s| s.to_string()));
         commands.sort();
         commands.dedup();
-        Self { commands }
+        Self { commands, variables }
     }
 }
 
@@ -43,13 +46,43 @@ impl Completer for StargateCompletion {
             let before_dot = &line[..dot_pos];
             let after_dot = &line[dot_pos + 1..];
             
+            // Extract just the expression part if we're in an assignment or declaration
+            // e.g., "let foo = (list-directory)" -> "(list-directory)"
+            let expr_before_dot = if let Some(eq_pos) = before_dot.rfind('=') {
+                before_dot[eq_pos + 1..].trim()
+            } else if before_dot.starts_with("print ") {
+                before_dot[6..].trim()
+            } else {
+                before_dot
+            };
+            
             // Check if this looks like a complex expression (contains [], ., or parentheses)
-            let is_complex = before_dot.contains('[') || before_dot.matches('.').count() > 0 
-                || (before_dot.contains('(') && before_dot.contains(')'));
+            let is_complex = expr_before_dot.contains('[') || expr_before_dot.matches('.').count() > 0 
+                || (expr_before_dot.contains('(') && expr_before_dot.contains(')'));
             
             if is_complex {
                 // Use expression evaluation for complex property access
-                if let Some(properties) = get_expression_properties(before_dot) {
+                if let Some(properties) = get_expression_properties(expr_before_dot) {
+                    // When nothing is typed after the dot, print all properties ourselves
+                    if after_dot.is_empty() && !properties.is_empty() {
+                        // Print properties in columns like bash completion
+                        println!();
+                        let term_width = 80; // Default terminal width
+                        let max_len = properties.iter().map(|s| s.len()).max().unwrap_or(0);
+                        let col_width = max_len + 2;
+                        let num_cols = (term_width / col_width).max(1);
+                        
+                        for (i, prop) in properties.iter().enumerate() {
+                            print!("{:<width$}", prop, width = col_width);
+                            if (i + 1) % num_cols == 0 {
+                                println!();
+                            }
+                        }
+                        if properties.len() % num_cols != 0 {
+                            println!();
+                        }
+                    }
+                    
                     let matches: Vec<Pair> = properties
                         .into_iter()
                         .filter(|prop| prop.starts_with(after_dot))
@@ -58,7 +91,12 @@ impl Completer for StargateCompletion {
                             replacement: prop,
                         })
                         .collect();
-                    return Ok((dot_pos + 1, matches));
+                    
+                    // If we have matches and nothing typed after dot, force immediate display
+                    // by ensuring we return from the position after the dot
+                    if !matches.is_empty() {
+                        return Ok((dot_pos + 1, matches));
+                    }
                 }
             } else {
                 // Simple pattern: command.property or (command).property
@@ -132,6 +170,26 @@ impl Completer for StargateCompletion {
         
         if prefix.is_empty() {
             return Ok((start, vec![]));
+        }
+
+        // Check if we're after 'print ' or '= ' - suggest variables
+        let before_word = &line[..start].trim_end();
+        if before_word.ends_with("print") || before_word.ends_with("=") {
+            // Get variable names from shared state
+            if let Ok(vars) = self.variables.lock() {
+                let matches: Vec<Pair> = vars
+                    .iter()
+                    .filter(|var| var.starts_with(prefix))
+                    .map(|var| Pair {
+                        display: var.clone(),
+                        replacement: var.clone(),
+                    })
+                    .collect();
+                
+                if !matches.is_empty() {
+                    return Ok((start, matches));
+                }
+            }
         }
 
         // Check if we're completing a parameter (starts with -)

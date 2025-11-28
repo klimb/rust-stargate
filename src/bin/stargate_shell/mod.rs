@@ -16,5 +16,5 @@ pub mod ui;
 
 pub use completion::StargateCompletion;
 pub use execution::execute_pipeline;
-pub use interpreter::execute_script;
+pub use interpreter::{execute_script, execute_script_with_interpreter, Interpreter};
 pub use ui::{describe_command, print_banner, print_help};
