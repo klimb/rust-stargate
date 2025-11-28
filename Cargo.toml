@@ -187,7 +187,7 @@ feat_require_unix_core = [
   "id",
   "install",
   "kill",
-  "logname",
+  "get_username",
   "mkfifo",
   "mknod",
   "nice",
@@ -400,7 +400,7 @@ kill = { optional = true, version = "0.4.0", package = "sg_kill", path = "src/sg
 link = { optional = true, version = "0.4.0", package = "sg_link", path = "src/sg/link" }
 ln = { optional = true, version = "0.4.0", package = "sg_ln", path = "src/sg/ln" }
 list_directory = { optional = true, version = "0.4.0", package = "sg_list_directory", path = "src/sg/list_directory" }
-logname = { optional = true, version = "0.4.0", package = "sg_logname", path = "src/sg/logname" }
+get_username = { optional = true, version = "0.4.0", package = "sg_get_username", path = "src/sg/get_username" }
 new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "src/sg/new_directory" }
 mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "src/sg/mkfifo" }
 mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "src/sg/mknod" }

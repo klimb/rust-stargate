@@ -155,7 +155,7 @@ UNIX_PROGS := \
 	id \
 	install \
 	kill \
-	logname \
+	get_username \
 	mkfifo \
 	mknod \
 	nice \

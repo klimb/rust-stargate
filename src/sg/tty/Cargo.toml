@@ -22,6 +22,7 @@ clap = { workspace = true }
 nix = { workspace = true, features = ["term"] }
 sgcore = { workspace = true, features = ["fs"] }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "tty"
