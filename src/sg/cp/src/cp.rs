@@ -16,8 +16,8 @@ use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf, StripPrefixError};
 use std::{fmt, io};
 #[cfg(unix)]
-use uucore::fsxattr::copy_xattrs;
-use uucore::translate;
+use sgcore::fsxattr::copy_xattrs;
+use sgcore::translate;
 
 use clap::{Arg, ArgAction, ArgMatches, Command, builder::ValueParser, value_parser};
 use filetime::FileTime;
@@ -25,20 +25,20 @@ use indicatif::{ProgressBar, ProgressStyle};
 use thiserror::Error;
 
 use platform::copy_on_write;
-use uucore::display::Quotable;
-use uucore::error::{UError, UResult, UUsageError, set_exit_code};
+use sgcore::display::Quotable;
+use sgcore::error::{UError, UResult, UUsageError, set_exit_code};
 #[cfg(unix)]
-use uucore::fs::make_fifo;
-use uucore::fs::{
+use sgcore::fs::make_fifo;
+use sgcore::fs::{
     FileInformation, MissingHandling, ResolveMode, are_hardlinks_to_same_file, canonicalize,
     get_filename, is_symlink_loop, normalize_path, path_ends_with_terminator,
     paths_refer_to_same_file,
 };
-use uucore::{backup_control, update_control};
+use sgcore::{backup_control, update_control};
 // These are exposed for projects (e.g. nushell) that want to create an `Options` value, which
 // requires these enum.
-pub use uucore::{backup_control::BackupMode, update_control::UpdateMode};
-use uucore::{
+pub use sgcore::{backup_control::BackupMode, update_control::UpdateMode};
+use sgcore::{
     format_usage, parser::shortcut_value_parser::ShortcutValueParser, prompt_yes, show_error,
     show_warning,
 };
@@ -121,7 +121,7 @@ impl Display for BackupError {
         write!(
             f,
             "{}",
-            translate!("cp-error-backup-format", "error" => self.0.clone(), "exec" => uucore::execution_phrase())
+            translate!("cp-error-backup-format", "error" => self.0.clone(), "exec" => sgcore::execution_phrase())
         )
     }
 }
@@ -515,10 +515,10 @@ pub fn uu_app() -> Command {
         options::ATTRIBUTES_ONLY,
         options::COPY_CONTENTS,
     ];
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("cp-about"))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("cp-usage")))
         .after_help(format!(
             "{}\n\n{}",
@@ -769,9 +769,9 @@ pub fn uu_app() -> Command {
         )
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let options = Options::from_matches(&matches)?;
 
@@ -1313,7 +1313,7 @@ pub fn copy(sources: &[PathBuf], target: &Path, options: &Options) -> CopyResult
                 )
                 .unwrap()
             )
-            .with_message(uucore::util_name());
+            .with_message(sgcore::util_name());
         pb.tick();
         Some(pb)
     } else {
@@ -1505,7 +1505,7 @@ fn file_mode_for_interactive_overwrite(
 
                     // It looks like this extra information is added to the prompt iff the file's user write bit is 0
                     //  write permission, owner
-                    if uucore::has!(mode, S_IWUSR) {
+                    if sgcore::has!(mode, S_IWUSR) {
                         None
                     } else {
                         // Discard leading digits
@@ -1513,7 +1513,7 @@ fn file_mode_for_interactive_overwrite(
 
                         Some((
                             format!("{mode_without_leading_digits:04o}"),
-                            uucore::fs::display_permissions_unix(mode, false)
+                            sgcore::fs::display_permissions_unix(mode, false)
                         ))
                     }
                 }
@@ -1629,9 +1629,9 @@ pub(crate) fn copy_attributes(
     #[cfg(unix)]
     handle_preserve(&attributes.ownership, || -> CopyResult<()> {
         use std::os::unix::prelude::MetadataExt;
-        use uucore::perms::Verbosity;
-        use uucore::perms::VerbosityLevel;
-        use uucore::perms::wrap_chown;
+        use sgcore::perms::Verbosity;
+        use sgcore::perms::VerbosityLevel;
+        use sgcore::perms::wrap_chown;
 
         let dest_uid = source_metadata.uid();
         let dest_gid = source_metadata.gid();
@@ -2180,7 +2180,7 @@ fn calculate_dest_permissions(
             let mode = handle_no_preserve_mode(options, permissions.mode());
 
             // Apply umask
-            use uucore::mode::get_umask;
+            use sgcore::mode::get_umask;
             let mode = mode & !get_umask();
             permissions.set_mode(mode);
             Ok(permissions)

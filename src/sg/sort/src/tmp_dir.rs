@@ -10,7 +10,7 @@ use std::{
 };
 
 use tempfile::TempDir;
-use uucore::{
+use sgcore::{
     error::{UResult, USimpleError},
     show_error, translate,
 };

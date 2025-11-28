@@ -6,10 +6,10 @@
 //! Errors returned by chroot.
 use std::io::Error;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::UError;
-use uucore::libc;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::UError;
+use sgcore::libc;
+use sgcore::translate;
 
 /// Errors that can happen while executing chroot.
 #[derive(Debug, Error)]
@@ -36,7 +36,7 @@ pub enum ChrootError {
     InvalidGroupList(String),
 
     /// The new root directory was not given.
-    #[error("{}", translate!("chroot-error-missing-newroot", "util_name" => uucore::execution_phrase()))]
+    #[error("{}", translate!("chroot-error-missing-newroot", "util_name" => sgcore::execution_phrase()))]
     MissingNewRoot,
 
     #[error("{}", translate!("chroot-error-no-group-specified", "uid" => _0))]

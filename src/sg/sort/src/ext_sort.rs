@@ -20,7 +20,7 @@ use std::{
 };
 
 use itertools::Itertools;
-use uucore::error::{UResult, strip_errno};
+use sgcore::error::{UResult, strip_errno};
 
 use crate::Output;
 use crate::chunks::RecycledChunk;

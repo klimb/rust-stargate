@@ -12,8 +12,8 @@ use std::io::{Seek, SeekFrom};
 #[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::{Path, PathBuf};
-use uucore::error::UResult;
-use uucore::translate;
+use sgcore::error::UResult;
+use sgcore::translate;
 
 #[derive(Debug, Clone)]
 pub enum InputKind {

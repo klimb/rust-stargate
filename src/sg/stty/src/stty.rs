@@ -29,9 +29,9 @@ use std::num::IntErrorKind;
 use std::os::fd::{AsFd, BorrowedFd};
 use std::os::unix::fs::OpenOptionsExt;
 use std::os::unix::io::{AsRawFd, RawFd};
-use uucore::error::{UError, UResult, USimpleError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::error::{UError, UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 #[cfg(not(any(
     target_os = "freebsd",
@@ -240,9 +240,9 @@ ioctl_write_ptr_bad!(
     TermSize
 );
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let opts = Options::from(&matches)?;
 
@@ -1003,9 +1003,9 @@ fn get_sane_control_char(cc_index: S) -> u8 {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("stty-usage")))
         .about(translate!("stty-about"))
         .infer_long_args(true)

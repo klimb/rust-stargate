@@ -58,7 +58,7 @@ fn file_size_hint(files: &[OsString]) -> Option<usize> {
 
 fn available_memory_hint() -> Option<usize> {
     #[cfg(target_os = "linux")]
-    if let Some(bytes) = uucore::parser::parse_size::available_memory_bytes() {
+    if let Some(bytes) = sgcore::parser::parse_size::available_memory_bytes() {
         return Some(clamp_hint(bytes / 4));
     }
 

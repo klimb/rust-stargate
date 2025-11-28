@@ -10,11 +10,11 @@ mod unit_tests;
 use super::{ConversionMode, IConvFlags, IFlags, Num, OConvFlags, OFlags, Settings, StatusLevel};
 use crate::conversion_tables::ConversionTable;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::UError;
-use uucore::parser::parse_size::{ParseSizeError, Parser as SizeParser};
-use uucore::show_warning;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::UError;
+use sgcore::parser::parse_size::{ParseSizeError, Parser as SizeParser};
+use sgcore::show_warning;
+use sgcore::translate;
 
 /// Parser Errors describe errors with parser input
 #[derive(Debug, PartialEq, Eq, Error)]
@@ -29,7 +29,7 @@ pub enum ParseError {
     MultipleBlockUnblock,
     #[error("{}", translate!("dd-error-multiple-excl"))]
     MultipleExclNoCreate,
-    #[error("{}", translate!("dd-error-invalid-flag", "flag" => .0.clone(), "cmd" => uucore::execution_phrase()))]
+    #[error("{}", translate!("dd-error-invalid-flag", "flag" => .0.clone(), "cmd" => sgcore::execution_phrase()))]
     FlagNoMatch(String),
     #[error("{}", translate!("dd-error-conv-flag-no-match", "flag" => .0.clone()))]
     ConvFlagNoMatch(String),
@@ -486,7 +486,7 @@ fn parse_bytes_no_x(full: &str, s: &str) -> Result<u64, ParseError> {
 }
 
 /// Parse byte and multiplier like 512, 5KiB, or 1G.
-/// Uses [`uucore::parser::parse_size`], and adds the 'w' and 'c' suffixes which are mentioned
+/// Uses [`sgcore::parser::parse_size`], and adds the 'w' and 'c' suffixes which are mentioned
 /// in dd's info page.
 pub fn parse_bytes_with_opt_multiplier(s: &str) -> Result<u64, ParseError> {
     // TODO On my Linux system, there seems to be a maximum block size of 4096 bytes:

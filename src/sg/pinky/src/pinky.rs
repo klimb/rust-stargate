@@ -6,8 +6,8 @@
 // spell-checker:ignore (ToDO) BUFSIZE gecos fullname, mesg iobuf
 
 use clap::{Arg, ArgAction, Command};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::format_usage;
+use sgcore::translate;
 
 mod platform;
 
@@ -26,7 +26,7 @@ mod options {
     pub const HELP: &str = "help";
 }
 
-#[uucore::main]
+#[sgcore::main]
 use platform::uumain;
 
 pub fn uu_app() -> Command {
@@ -35,12 +35,12 @@ pub fn uu_app() -> Command {
     #[cfg(target_env = "musl")]
     let about = translate!("pinky-about") + &translate!("pinky-about-musl-warning");
 
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(about)
         .override_usage(format_usage(&translate!("pinky-usage")))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         .disable_help_flag(true)
         .arg(
             Arg::new(options::LONG_FORMAT)

@@ -11,7 +11,7 @@ use std::fs;
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::process::Command;
-use uucore::process::{getegid, geteuid};
+use sgcore::process::{getegid, geteuid};
 
 use uutests::at_and_ucmd;
 use uutests::new_ucmd;

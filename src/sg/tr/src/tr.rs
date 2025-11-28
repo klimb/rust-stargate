@@ -15,12 +15,12 @@ use operation::{
 use simd::process_input;
 use std::ffi::OsString;
 use std::io::{stdin, stdout};
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError, UUsageError};
-use uucore::fs::is_stdin_directory;
-use uucore::libc;
-use uucore::translate;
-use uucore::{format_usage, os_str_as_bytes, show};
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::fs::is_stdin_directory;
+use sgcore::libc;
+use sgcore::translate;
+use sgcore::{format_usage, os_str_as_bytes, show};
 
 mod options {
     pub const COMPLEMENT: &str = "complement";
@@ -30,8 +30,8 @@ mod options {
     pub const SETS: &str = "sets";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // When we receive a SIGPIPE signal, we want to terminate the process so
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
@@ -40,7 +40,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let delete_flag = matches.get_flag(options::DELETE);
     let complement_flag = matches.get_flag(options::COMPLEMENT);
@@ -157,9 +157,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("tr-about"))
         .override_usage(format_usage(&translate!("tr-usage")))
         .after_help(translate!("tr-after-help"))

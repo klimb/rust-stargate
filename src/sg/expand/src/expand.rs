@@ -14,10 +14,10 @@ use std::path::Path;
 use std::str::from_utf8;
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult, set_exit_code};
-use uucore::translate;
-use uucore::{format_usage, show_error};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult, set_exit_code};
+use sgcore::translate;
+use sgcore::{format_usage, show_error};
 
 pub mod options {
     pub static TABS: &str = "tabs";
@@ -241,18 +241,18 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
     processed_args
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result(uu_app(), expand_shortcuts(args.collect()))?;
+        sgcore::clap_localization::handle_clap_result(uu_app(), expand_shortcuts(args.collect()))?;
 
     expand(&Options::new(&matches)?)
 }
 
 pub fn uu_app() -> Command {
-    uucore::clap_localization::configure_localized_command(
-        Command::new(uucore::util_name())
-            .version(uucore::crate_version!())
+    sgcore::clap_localization::configure_localized_command(
+        Command::new(sgcore::util_name())
+            .version(sgcore::crate_version!())
             .about(translate!("expand-about"))
             .after_help(LONG_HELP)
             .override_usage(format_usage(&translate!("expand-usage")))

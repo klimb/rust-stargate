@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
 use sg_rm::uumain;
-use uucore::benchmark::{fs_tree, run_util_function};
+use sgcore::benchmark::{fs_tree, run_util_function};
 
 /// Benchmark removing a single file (repeated to reach 100ms)
 #[divan::bench]

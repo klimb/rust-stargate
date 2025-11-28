@@ -6,8 +6,8 @@
 use clap::{Arg, ArgAction, Command};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Result as IoResult};
-use uucore::error::{UResult, USimpleError};
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::error::{UResult, USimpleError};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 mod options {
@@ -76,9 +76,9 @@ pub fn search_file(
     })
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
 
     // Get pattern (required)
@@ -163,9 +163,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about("Search for text patterns in files")
         .arg(
             Arg::new(options::PATTERN)

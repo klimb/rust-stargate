@@ -12,9 +12,9 @@ use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::{FileTypeExt, OpenOptionsExt};
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
-use uucore::buf_copy;
-use uucore::mode::get_umask;
-use uucore::translate;
+use sgcore::buf_copy;
+use sgcore::mode::get_umask;
+use sgcore::translate;
 
 use crate::{
     CopyDebug, CopyResult, CpError, OffloadReflinkDebug, ReflinkMode, SparseDebug, SparseMode,

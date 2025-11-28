@@ -17,7 +17,7 @@ mod features; // feature-gated code modules
 mod macros; // crate macros (macro_rules-type; exported to `crate::...`)
 mod mods; // core cross-platform modules
 
-pub use uucore_procs::*;
+pub use sgcore_procs::*;
 
 // * cross-platform modules
 pub use crate::mods::clap_localization;
@@ -176,13 +176,13 @@ macro_rules! bin {
     ($util:ident) => {
         pub fn main() {
             use std::io::Write;
-            use uucore::locale;
+            use sgcore::locale;
             // suppress extraneous error output for SIGPIPE failures/panics
-            uucore::panic::mute_sigpipe_panic();
-            locale::setup_localization(uucore::get_canonical_util_name(stringify!($util)))
+            sgcore::panic::mute_sigpipe_panic();
+            locale::setup_localization(sgcore::get_canonical_util_name(stringify!($util)))
                 .unwrap_or_else(|err| {
                     match err {
-                        uucore::locale::LocalizationError::ParseResource {
+                        sgcore::locale::LocalizationError::ParseResource {
                             error: err_msg,
                             snippet,
                         } => eprintln!("Localization parse error at {snippet}: {err_msg:?}"),
@@ -192,7 +192,7 @@ macro_rules! bin {
                 });
 
             // execute utility code
-            let code = $util::uumain(uucore::args_os());
+            let code = $util::uumain(sgcore::args_os());
             // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");
@@ -212,13 +212,13 @@ macro_rules! obj {
     ($util:ident) => {
         pub fn main() {
             use std::io::Write;
-            use uucore::locale;
+            use sgcore::locale;
             // suppress extraneous error output for SIGPIPE failures/panics
-            uucore::panic::mute_sigpipe_panic();
-            locale::setup_localization(uucore::get_canonical_util_name(stringify!($util)))
+            sgcore::panic::mute_sigpipe_panic();
+            locale::setup_localization(sgcore::get_canonical_util_name(stringify!($util)))
                 .unwrap_or_else(|err| {
                     match err {
-                        uucore::locale::LocalizationError::ParseResource {
+                        sgcore::locale::LocalizationError::ParseResource {
                             error: err_msg,
                             snippet,
                         } => eprintln!("Localization parse error at {snippet}: {err_msg:?}"),
@@ -228,7 +228,7 @@ macro_rules! obj {
                 });
 
             // execute utility code
-            let code = $util::uumain(uucore::args_os());
+            let code = $util::uumain(sgcore::args_os());
             // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");
@@ -278,7 +278,7 @@ pub fn format_usage(s: &str) -> String {
 /// # Example
 /// ```no_run
 /// use clap::Command;
-/// use uucore::localized_help_template;
+/// use sgcore::localized_help_template;
 ///
 /// let app = Command::new("myutil")
 ///     .help_template(localized_help_template("myutil"));
@@ -581,7 +581,7 @@ pub fn read_os_string_lines<R: std::io::Read>(
 ///
 /// # Examples
 /// ```
-/// use uucore::prompt_yes;
+/// use sgcore::prompt_yes;
 /// let file = "foo.rs";
 /// prompt_yes!("Do you want to delete '{file}'?");
 /// ```
@@ -594,14 +594,14 @@ pub fn read_os_string_lines<R: std::io::Read>(
 macro_rules! prompt_yes(
     ($($args:tt)+) => ({
         use std::io::Write;
-        eprint!("{}: ", uucore::util_name());
+        eprint!("{}: ", sgcore::util_name());
         eprint!($($args)+);
         eprint!(" ");
         let res = std::io::stderr().flush().map_err(|err| {
             $crate::error::USimpleError::new(1, err.to_string())
         });
-        uucore::show_if_err!(res);
-        uucore::read_yes()
+        sgcore::show_if_err!(res);
+        sgcore::read_yes()
     })
 );
 

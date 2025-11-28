@@ -14,15 +14,15 @@ use std::io;
 use std::path::{Path, PathBuf, StripPrefixError};
 
 use indicatif::ProgressBar;
-use uucore::display::Quotable;
-use uucore::error::UIoError;
-use uucore::fs::{
+use sgcore::display::Quotable;
+use sgcore::error::UIoError;
+use sgcore::fs::{
     FileInformation, MissingHandling, ResolveMode, canonicalize, path_ends_with_terminator,
 };
-use uucore::show;
-use uucore::show_error;
-use uucore::translate;
-use uucore::uio_error;
+use sgcore::show;
+use sgcore::show_error;
+use sgcore::translate;
+use sgcore::uio_error;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::{
@@ -507,7 +507,7 @@ pub(crate) fn copy_directory(
 /// Decide whether the second path is a prefix of the first.
 ///
 /// This function canonicalizes the paths via
-/// [`uucore::fs::canonicalize`] before comparing.
+/// [`sgcore::fs::canonicalize`] before comparing.
 ///
 /// # Errors
 ///
@@ -573,7 +573,7 @@ fn build_dir(
         {
             !fs::symlink_metadata(from)?.permissions().mode()
         } else {
-            uucore::mode::get_umask()
+            sgcore::mode::get_umask()
         };
 
         excluded_perms |= umask;

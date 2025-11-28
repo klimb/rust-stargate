@@ -1,1 +1,1 @@
-uucore::bin!(sg_fold);
+sgcore::bin!(sg_fold);

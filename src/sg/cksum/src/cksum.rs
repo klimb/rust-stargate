@@ -12,16 +12,16 @@ use std::fs::File;
 use std::io::{BufReader, Read, Write, stdin, stdout};
 use std::iter;
 use std::path::Path;
-use uucore::checksum::{
+use sgcore::checksum::{
     ALGORITHM_OPTIONS_BLAKE2B, ALGORITHM_OPTIONS_BSD, ALGORITHM_OPTIONS_CRC,
     ALGORITHM_OPTIONS_CRC32B, ALGORITHM_OPTIONS_SHA2, ALGORITHM_OPTIONS_SHA3,
     ALGORITHM_OPTIONS_SYSV, ChecksumError, ChecksumOptions, ChecksumVerbose, HashAlgorithm,
     LEGACY_ALGORITHMS, SUPPORTED_ALGORITHMS, calculate_blake2b_length_str, detect_algo,
     digest_reader, perform_checksum_validation, sanitize_sha2_sha3_length_str,
 };
-use uucore::translate;
+use sgcore::translate;
 
-use uucore::{
+use sgcore::{
     encoding,
     error::{FromIo, UResult, USimpleError},
     format_usage,
@@ -390,9 +390,9 @@ fn maybe_sanitize_length(
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let check = matches.get_flag(options::CHECK);
 
@@ -478,9 +478,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("cksum-about"))
         .override_usage(format_usage(&translate!("cksum-usage")))
         .infer_long_args(true)

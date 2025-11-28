@@ -1,1 +1,1 @@
-uucore::bin!(sg_printenv);
+sgcore::bin!(sg_printenv);

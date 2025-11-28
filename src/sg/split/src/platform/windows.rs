@@ -6,8 +6,8 @@ use std::ffi::OsStr;
 use std::io::Write;
 use std::io::{BufWriter, Error, Result};
 use std::path::Path;
-use uucore::fs;
-use uucore::translate;
+use sgcore::fs;
+use sgcore::translate;
 
 /// Get a file writer
 ///

@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_cut::uumain;
-use uucore::benchmark::{run_util_function, setup_test_file, text_data};
+use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark cutting specific byte ranges
 #[divan::bench]

@@ -8,7 +8,7 @@
 use nix::fcntl::{FcntlArg, OFlag, fcntl};
 use nix::unistd::{Whence, lseek};
 use std::os::fd::AsFd;
-use uucore::fs::FileInformation;
+use sgcore::fs::FileInformation;
 
 /// An unsafe overwrite occurs when the same nonempty file is used as both stdin and stdout,
 /// and the file offset of stdin is positioned earlier than that of stdout.

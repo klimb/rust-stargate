@@ -20,7 +20,7 @@ path = "src/nohup.rs"
 [dependencies]
 clap = { workspace = true }
 libc = { workspace = true }
-uucore = { workspace = true, features = ["fs"] }
+sgcore = { workspace = true, features = ["fs"] }
 thiserror = { workspace = true }
 fluent = { workspace = true }
 

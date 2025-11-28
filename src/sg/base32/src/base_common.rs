@@ -10,15 +10,15 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{self, ErrorKind, Read, Seek, Write};
 use std::path::{Path, PathBuf};
-use uucore::display::Quotable;
-use uucore::encoding::{
+use sgcore::display::Quotable;
+use sgcore::encoding::{
     BASE2LSBF, BASE2MSBF, Base32Wrapper, Base58Wrapper, Base64SimdWrapper, EncodingWrapper, Format,
     SupportsFastDecodeAndEncode, Z85Wrapper,
     for_base_common::{BASE32, BASE32HEX, BASE64URL, HEXUPPER_PERMISSIVE},
 };
-use uucore::error::{FromIo, UResult, USimpleError, UUsageError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 pub const BASE_CMD_PARSE_ERROR: i32 = 1;
 
@@ -96,22 +96,22 @@ impl Config {
 }
 
 pub fn parse_base_cmd_args(
-    args: impl uucore::Args,
+    args: impl sgcore::Args,
     about: &'static str,
     usage: &str
 ) -> UResult<Config> {
     let command = base_app(about, usage);
-    let matches = uucore::clap_localization::handle_clap_result(command, args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(command, args)?;
     Config::from(&matches)
 }
 
 pub fn base_app(about: &'static str, usage: &str) -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(about)
         .override_usage(format_usage(usage))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         // Format arguments.
         .arg(
             Arg::new(options::DECODE)
@@ -303,7 +303,7 @@ pub mod fast_encode {
         io::{self, Write},
         num::NonZeroUsize,
     };
-    use uucore::{encoding::SupportsFastDecodeAndEncode, error::UResult};
+    use sgcore::{encoding::SupportsFastDecodeAndEncode, error::UResult};
 
     struct LineWrapping {
         line_length: NonZeroUsize,
@@ -510,7 +510,7 @@ pub mod fast_encode {
 
 pub mod fast_decode {
     use std::io::{self, Write};
-    use uucore::{
+    use sgcore::{
         encoding::SupportsFastDecodeAndEncode,
         error::{UResult, USimpleError},
     };

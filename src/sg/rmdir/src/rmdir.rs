@@ -11,11 +11,11 @@ use std::ffi::OsString;
 use std::fs::{read_dir, remove_dir};
 use std::io;
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{UResult, set_exit_code, strip_errno};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, set_exit_code, strip_errno};
+use sgcore::translate;
 
-use uucore::{format_usage, show_error, util_name};
+use sgcore::{format_usage, show_error, util_name};
 
 static OPT_IGNORE_FAIL_NON_EMPTY: &str = "ignore-fail-on-non-empty";
 static OPT_PARENTS: &str = "parents";
@@ -23,9 +23,9 @@ static OPT_VERBOSE: &str = "verbose";
 
 static ARG_DIRS: &str = "dirs";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let opts = Opts {
         ignore: matches.get_flag(OPT_IGNORE_FAIL_NON_EMPTY),
@@ -154,8 +154,8 @@ struct Opts {
 
 pub fn uu_app() -> Command {
     Command::new(util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(util_name()))
         .about(translate!("rmdir-about"))
         .override_usage(format_usage(&translate!("rmdir-usage")))
         .infer_long_args(true)

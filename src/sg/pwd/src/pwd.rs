@@ -8,14 +8,14 @@ use clap::{Arg, Command};
 use std::env;
 use std::io;
 use std::path::PathBuf;
-use uucore::format_usage;
+use sgcore::format_usage;
 
-use uucore::display::println_verbatim;
-use uucore::error::{FromIo, UResult};
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::display::println_verbatim;
+use sgcore::error::{FromIo, UResult};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
-use uucore::translate;
+use sgcore::translate;
 const OPT_LOGICAL: &str = "logical";
 const OPT_PHYSICAL: &str = "physical";
 
@@ -90,9 +90,9 @@ fn logical_path() -> io::Result<PathBuf> {
 
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
     
@@ -127,9 +127,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("pwd-about"))
         .override_usage(format_usage(&translate!("pwd-usage")))
         .infer_long_args(true)

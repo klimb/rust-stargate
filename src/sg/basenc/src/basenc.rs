@@ -7,8 +7,8 @@
 
 use clap::{Arg, ArgAction, Command};
 use sg_base32::base_common::{self, BASE_CMD_PARSE_ERROR, Config};
-use uucore::translate;
-use uucore::{
+use sgcore::translate;
+use sgcore::{
     encoding::Format,
     error::{UResult, UUsageError},
 };
@@ -63,8 +63,8 @@ pub fn uu_app() -> Command {
     command
 }
 
-fn parse_cmd_args(args: impl uucore::Args) -> UResult<(Config, Format)> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let encodings = get_encodings();
     let format = encodings
@@ -81,8 +81,8 @@ fn parse_cmd_args(args: impl uucore::Args) -> UResult<(Config, Format)> {
     Ok((config, format))
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let (config, format) = parse_cmd_args(args)?;
 
     let mut input = base_common::get_input(&config)?;

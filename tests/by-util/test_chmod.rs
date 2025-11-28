@@ -243,7 +243,7 @@ fn test_chmod_umask_expected() {
     };
 
     // Now verify that get_umask() returns the same value
-    let current_umask = uucore::mode::get_umask();
+    let current_umask = sgcore::mode::get_umask();
     assert_eq!(
         current_umask, system_umask as u32,
         "get_umask() returned {current_umask:03o}, but system umask is {system_umask:03o}",

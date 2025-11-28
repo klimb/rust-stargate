@@ -19,7 +19,7 @@ path = "src/unlink.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 
 [[bin]]

@@ -8,12 +8,12 @@
 use crate::options;
 use crate::uu_app;
 
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult};
-use uucore::libc::{S_IWGRP, STDIN_FILENO, ttyname};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult};
+use sgcore::libc::{S_IWGRP, STDIN_FILENO, ttyname};
+use sgcore::translate;
 
-use uucore::utmpx::{self, UtmpxRecord, time};
+use sgcore::utmpx::{self, UtmpxRecord, time};
 
 use std::borrow::Cow;
 use std::ffi::CStr;
@@ -25,9 +25,9 @@ fn get_long_usage() -> String {
     translate!("who-long-usage", "default_file" => utmpx::DEFAULT_FILE)
 }
 
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result(uu_app().after_help(get_long_usage()), args)?;
+        sgcore::clap_localization::handle_clap_result(uu_app().after_help(get_long_usage()), args)?;
 
     let files: Vec<String> = matches
         .get_many::<String>(options::FILE)

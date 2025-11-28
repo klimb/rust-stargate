@@ -24,9 +24,9 @@ use clap::{Arg, ArgAction, ArgMatches, Command, builder::ValueParser};
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 use utf8::{BufReadDecoder, BufReadDecoderError};
-use uucore::translate;
+use sgcore::translate;
 
-use uucore::{
+use sgcore::{
     error::{FromIo, UError, UResult},
     format_usage,
     parser::shortcut_value_parser::ShortcutValueParser,
@@ -367,9 +367,9 @@ impl UError for WcError {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let settings = Settings::new(&matches);
     let inputs = Inputs::new(&matches)?;
@@ -378,9 +378,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("wc-about"))
         .override_usage(format_usage(&translate!("wc-usage")))
         .infer_long_args(true)
@@ -877,7 +877,7 @@ fn print_stats(
 
     if let Some(title) = title {
         write!(stdout, "{space}")?;
-        stdout.write_all(&uucore::os_str_as_bytes_lossy(title))?;
+        stdout.write_all(&sgcore::os_str_as_bytes_lossy(title))?;
     }
     writeln!(stdout)
 }

@@ -9,10 +9,10 @@ use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::fs;
 use std::io::{ErrorKind, Write};
-use uucore::display::Quotable;
-use uucore::error::{UResult, UUsageError, set_exit_code};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, UUsageError, set_exit_code};
+use sgcore::format_usage;
+use sgcore::translate;
 
 // operating mode
 enum Mode {
@@ -33,9 +33,9 @@ mod options {
 const POSIX_PATH_MAX: usize = 256;
 const POSIX_NAME_MAX: usize = 14;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     // set working mode
     let is_posix = matches.get_flag(options::POSIX);
@@ -81,9 +81,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("pathchk-about"))
         .override_usage(format_usage(&translate!("pathchk-usage")))
         .infer_long_args(true)

@@ -10,15 +10,15 @@ use std::net::ToSocketAddrs;
 
 use clap::{Command};
 
-use uucore::translate;
+use sgcore::translate;
 
-use uucore::{
+use sgcore::{
     error::{FromIo, UResult},
     format_usage,
 };
 
-#[uucore::main]
-pub fn uumain(_args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(_args: impl sgcore::Args) -> UResult<()> {
     // hostname https://datatracker.ietf.org/doc/html/rfc952
     //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
     //    sign (-), and period (.)
@@ -29,9 +29,9 @@ pub fn uumain(_args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("get_domainname-about"))
         .override_usage(format_usage(&translate!("get_domainname-usage")))
 }

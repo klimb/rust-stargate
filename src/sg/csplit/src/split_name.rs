@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 // spell-checker:ignore (regex) diuox
 
-use uucore::format::{Format, FormatError, num_format::UnsignedInt};
+use sgcore::format::{Format, FormatError, num_format::UnsignedInt};
 
 use crate::csplit_error::CsplitError;
 

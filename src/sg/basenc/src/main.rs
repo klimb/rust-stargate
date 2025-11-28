@@ -1,1 +1,1 @@
-uucore::bin!(sg_basenc);
+sgcore::bin!(sg_basenc);

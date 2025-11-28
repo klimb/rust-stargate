@@ -11,18 +11,18 @@ use std::fs;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::Path;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{ExitCode, UError, UResult, USimpleError, UUsageError, set_exit_code};
-use uucore::fs::display_permissions_unix;
-use uucore::libc::mode_t;
-use uucore::mode;
-use uucore::perms::{TraverseSymlinks, configure_symlink_and_recursion};
+use sgcore::display::Quotable;
+use sgcore::error::{ExitCode, UError, UResult, USimpleError, UUsageError, set_exit_code};
+use sgcore::fs::display_permissions_unix;
+use sgcore::libc::mode_t;
+use sgcore::mode;
+use sgcore::perms::{TraverseSymlinks, configure_symlink_and_recursion};
 
 #[cfg(target_os = "linux")]
-use uucore::safe_traversal::DirFd;
-use uucore::{format_usage, show, show_error};
+use sgcore::safe_traversal::DirFd;
+use sgcore::{format_usage, show, show_error};
 
-use uucore::translate;
+use sgcore::translate;
 
 #[derive(Debug, Error)]
 enum ChmodError {
@@ -65,7 +65,7 @@ mod options {
 /// These can currently not be handled by clap.
 /// Therefore it might be possible that a pseudo MODE is inserted to pass clap parsing.
 /// The pseudo MODE is later replaced by the extracted (and joined) negative modes.
-fn extract_negative_modes(mut args: impl uucore::Args) -> (Option<String>, Vec<OsString>) {
+fn extract_negative_modes(mut args: impl sgcore::Args) -> (Option<String>, Vec<OsString>) {
     // we look up the args until "--" is found
     // "-mode" will be extracted into parsed_cmode_vec
     let (parsed_cmode_vec, pre_double_hyphen_args): (Vec<OsString>, Vec<OsString>) =
@@ -110,10 +110,10 @@ fn extract_negative_modes(mut args: impl uucore::Args) -> (Option<String>, Vec<O
     (parsed_cmode, clean_args)
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let (parsed_cmode, args) = extract_negative_modes(args.skip(1)); // skip binary name
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let changes = matches.get_flag(options::CHANGES);
     let quiet = matches.get_flag(options::QUIET);
@@ -175,11 +175,11 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("chmod-about"))
         .override_usage(format_usage(&translate!("chmod-usage")))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .args_override_self(true)
         .infer_long_args(true)
         .no_binary_name(true)
@@ -253,7 +253,7 @@ pub fn uu_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
         )
         // Add common arguments with chgrp, change_owner & chmod
-        .args(uucore::perms::common_args())
+        .args(sgcore::perms::common_args())
 }
 
 struct Chmoder {
@@ -606,7 +606,7 @@ impl Chmoder {
     }
 
     fn chmod_file_internal(&self, file: &Path, dereference: bool) -> UResult<()> {
-        use uucore::perms::get_metadata;
+        use sgcore::perms::get_metadata;
 
         let metadata = get_metadata(file, dereference);
 

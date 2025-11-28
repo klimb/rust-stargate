@@ -1,1 +1,1 @@
-uucore::bin!(sg_new_directory);
+sgcore::bin!(sg_new_directory);

@@ -1,1 +1,1 @@
-uucore::bin!(sg_truncate);
+sgcore::bin!(sg_truncate);

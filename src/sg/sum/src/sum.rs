@@ -10,11 +10,11 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{ErrorKind, Read, Write, stdin, stdout};
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::translate;
 
-use uucore::{format_usage, show};
+use sgcore::{format_usage, show};
 
 fn bsd_sum(mut reader: impl Read) -> std::io::Result<(usize, u16)> {
     let mut buf = [0; 4096];
@@ -96,9 +96,9 @@ mod options {
     pub static SYSTEM_V_COMPATIBLE: &str = "sysv";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let files: Vec<OsString> = match matches.get_many::<OsString>(options::FILE) {
         Some(v) => v.cloned().collect(),
@@ -139,9 +139,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("sum-usage")))
         .about(translate!("sum-about"))
         .infer_long_args(true)

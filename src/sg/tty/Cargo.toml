@@ -20,7 +20,7 @@ path = "src/tty.rs"
 [dependencies]
 clap = { workspace = true }
 nix = { workspace = true, features = ["term"] }
-uucore = { workspace = true, features = ["fs"] }
+sgcore = { workspace = true, features = ["fs"] }
 fluent = { workspace = true }
 
 [[bin]]

@@ -72,12 +72,12 @@ cargo codspeed run -p uu_expand
 
 ### Writing Benchmarks
 
-Use common functions from `src/uucore/src/lib/features/benchmark.rs`:
+Use common functions from `src/sgcore/src/lib/features/benchmark.rs`:
 
 ```rust
 use divan::{Bencher, black_box};
 use sg_expand::uumain;
-use uucore::benchmark::{create_test_file, run_util_function, text_data};
+use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 #[divan::bench(args = [10_000, 100_000])]
 fn bench_expand(bencher: Bencher, num_lines: usize) {

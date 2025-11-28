@@ -1,1 +1,1 @@
-uucore::bin!(sg_change_owner);
+sgcore::bin!(sg_change_owner);

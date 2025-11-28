@@ -19,7 +19,7 @@ path = "src/stat.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = [
+sgcore = { workspace = true, features = [
   "entries",
   "libc",
   "fs",

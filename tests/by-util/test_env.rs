@@ -303,7 +303,7 @@ fn test_combined_file_set_unset() {
 
 #[test]
 fn test_unset_invalid_variables() {
-    use uucore::display::Quotable;
+    use sgcore::display::Quotable;
 
     // Cannot test input with \0 in it, since output will also contain \0. rlimit::prlimit fails
     // with this error: Error { kind: InvalidInput, message: "nul byte found in provided data" }

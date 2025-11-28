@@ -32,14 +32,14 @@ use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, ErrorKind, Read, Seek, SeekFrom, Write, stdin, stdout};
 use std::path::{Path, PathBuf};
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, get_exit_code, set_exit_code};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, get_exit_code, set_exit_code};
+use sgcore::translate;
 
-use uucore::{show, show_error};
+use sgcore::{show, show_error};
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // When we receive a SIGPIPE signal, we want to terminate the process so
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
@@ -156,7 +156,7 @@ fn tail_file(
         match File::open(path) {
             Ok(mut file) => {
                 let st = file.metadata()?;
-                let blksize_limit = uucore::fs::sane_blksize::sane_blksize_from_metadata(&st);
+                let blksize_limit = sgcore::fs::sane_blksize::sane_blksize_from_metadata(&st);
                 header_printer.print_input(input);
                 let mut reader;
                 if !settings.presume_input_pipe

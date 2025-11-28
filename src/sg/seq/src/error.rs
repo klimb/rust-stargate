@@ -6,9 +6,9 @@
 //! Errors returned by seq.
 use crate::numberparse::ParseNumberError;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::UError;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::UError;
+use sgcore::translate;
 
 #[derive(Debug, Error)]
 pub enum SeqError {

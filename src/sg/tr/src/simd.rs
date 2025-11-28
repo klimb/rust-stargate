@@ -7,8 +7,8 @@
 
 use crate::operation::ChunkProcessor;
 use std::io::{BufRead, Write};
-use uucore::error::{FromIo, UResult};
-use uucore::translate;
+use sgcore::error::{FromIo, UResult};
+use sgcore::translate;
 
 /// Helper to detect single-character operations for optimization
 pub fn find_single_change<T, F>(table: &[T; 256], check: F) -> Option<(u8, T)>

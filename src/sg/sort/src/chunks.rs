@@ -15,7 +15,7 @@ use std::{
 
 use memchr::memchr_iter;
 use self_cell::self_cell;
-use uucore::error::{UResult, USimpleError};
+use sgcore::error::{UResult, USimpleError};
 
 use crate::{GeneralBigDecimalParseResult, GlobalSettings, Line, numeric_str_cmp::NumInfo};
 

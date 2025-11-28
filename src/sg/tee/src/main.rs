@@ -1,1 +1,1 @@
-uucore::bin!(sg_tee);
+sgcore::bin!(sg_tee);

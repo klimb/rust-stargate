@@ -9,11 +9,11 @@ use crate::Capitalize;
 use crate::options;
 use crate::uu_app;
 
-use uucore::entries::{Locate, Passwd};
-use uucore::error::{FromIo, UResult};
-use uucore::libc::S_IWGRP;
-use uucore::translate;
-use uucore::utmpx::{self, Utmpx, UtmpxRecord, time};
+use sgcore::entries::{Locate, Passwd};
+use sgcore::error::{FromIo, UResult};
+use sgcore::libc::S_IWGRP;
+use sgcore::translate;
+use sgcore::utmpx::{self, Utmpx, UtmpxRecord, time};
 
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -31,9 +31,9 @@ fn get_long_usage() -> String {
     )
 }
 
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result(uu_app().after_help(get_long_usage()), args)?;
+        sgcore::clap_localization::handle_clap_result(uu_app().after_help(get_long_usage()), args)?;
 
     let users: Vec<String> = matches
         .get_many::<String>(options::USER)

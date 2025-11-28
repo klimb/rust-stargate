@@ -9,10 +9,10 @@
 //! [`PreciseNumber`] struct.
 use std::str::FromStr;
 
-use uucore::parser::num_parser::{ExtendedParser, ExtendedParserError};
+use sgcore::parser::num_parser::{ExtendedParser, ExtendedParserError};
 
 use crate::number::PreciseNumber;
-use uucore::extendedbigdecimal::ExtendedBigDecimal;
+use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 
 /// An error returned when parsing a number fails.
 #[derive(Debug, PartialEq, Eq)]
@@ -127,7 +127,7 @@ impl FromStr for PreciseNumber {
 #[cfg(test)]
 mod tests {
     use bigdecimal::BigDecimal;
-    use uucore::extendedbigdecimal::ExtendedBigDecimal;
+    use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 
     use crate::number::PreciseNumber;
     use crate::numberparse::ParseNumberError;

@@ -10,16 +10,16 @@ use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Read, Result, Write, stdin, stdout};
 use std::path::PathBuf;
-use uucore::display::Quotable;
-use uucore::error::UResult;
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::translate;
-use uucore::{format_usage, show_error};
+use sgcore::display::Quotable;
+use sgcore::error::UResult;
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::translate;
+use sgcore::{format_usage, show_error};
 
 // spell-checker:ignore nopipe
 
 #[cfg(unix)]
-use uucore::signals::{enable_pipe_errors, ignore_interrupts};
+use sgcore::signals::{enable_pipe_errors, ignore_interrupts};
 
 mod options {
     pub const APPEND: &str = "append";
@@ -50,9 +50,9 @@ enum OutputErrorMode {
     ExitNoPipe,
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let append = matches.get_flag(options::APPEND);
     let ignore_interrupts = matches.get_flag(options::IGNORE_INTERRUPTS);
@@ -93,9 +93,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("tee-about"))
         .override_usage(format_usage(&translate!("tee-usage")))
         .after_help(translate!("tee-after-help"))

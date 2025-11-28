@@ -14,12 +14,12 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 use clap::{Arg, ArgAction, Command};
-use uucore::colors::{FILE_ATTRIBUTE_CODES, FILE_COLORS, FILE_TYPES, TERMS};
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError, UUsageError};
-use uucore::translate;
+use sgcore::colors::{FILE_ATTRIBUTE_CODES, FILE_COLORS, FILE_TYPES, TERMS};
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::translate;
 
-use uucore::{format_usage, parser::parse_glob};
+use sgcore::{format_usage, parser::parse_glob};
 
 mod options {
     pub const BOURNE_SHELL: &str = "bourne-shell";
@@ -119,9 +119,9 @@ fn generate_ls_colors(fmt: &OutputFmt, sep: &str) -> String {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let files = matches
         .get_many::<OsString>(options::FILE)
@@ -241,9 +241,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("dircolors-about"))
         .after_help(translate!("dircolors-after-help"))
         .override_usage(format_usage(&translate!("dircolors-usage")))

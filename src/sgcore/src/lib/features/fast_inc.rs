@@ -13,7 +13,7 @@
 /// We also assume that there is enough space in val to expand if start needs
 /// to be updated.
 /// ```
-/// use uucore::fast_inc::fast_inc;
+/// use sgcore::fast_inc::fast_inc;
 ///
 /// // Start with a buffer containing "0", with one byte of head space
 /// let mut val = Vec::from(".0".as_bytes());
@@ -75,7 +75,7 @@ pub fn fast_inc(val: &mut [u8], start: &mut usize, end: usize, inc: &[u8]) {
 /// We also assume that there is enough space in val to expand if start needs
 /// to be updated.
 /// ```
-/// use uucore::fast_inc::fast_inc_one;
+/// use sgcore::fast_inc::fast_inc_one;
 ///
 /// // Start with a buffer containing "8", with one byte of head space
 /// let mut val = Vec::from(".8".as_bytes());

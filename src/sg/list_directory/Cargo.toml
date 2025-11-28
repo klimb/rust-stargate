@@ -28,7 +28,7 @@ lscolors = { workspace = true }
 
 terminal_size = { workspace = true }
 thiserror = { workspace = true }
-uucore = { workspace = true, features = [
+sgcore = { workspace = true, features = [
   "colors",
   "entries",
   "format",
@@ -52,7 +52,7 @@ path = "src/main.rs"
 [dev-dependencies]
 divan = { workspace = true }
 tempfile = { workspace = true }
-uucore = { workspace = true, features = ["benchmark"] }
+sgcore = { workspace = true, features = ["benchmark"] }
 
 [[bench]]
 name = "list_directory_bench"

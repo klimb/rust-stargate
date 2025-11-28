@@ -7,7 +7,7 @@ use std::time::Duration;
 // spell-checker:ignore dont
 use rstest::rstest;
 
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 use uutests::new_ucmd;
 
 #[test]

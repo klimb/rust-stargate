@@ -7,10 +7,10 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::{env, thread};
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 #[cfg(any(target_os = "linux"))]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = 83;
@@ -24,9 +24,9 @@ pub const _SC_NPROCESSORS_CONF: libc::c_int = 1001;
 static OPT_ALL: &str = "all";
 static OPT_IGNORE: &str = "ignore";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let ignore = match matches.get_one::<String>(OPT_IGNORE) {
         Some(numstr) => match numstr.trim().parse::<usize>() {
@@ -90,9 +90,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("nproc-about"))
         .override_usage(format_usage(&translate!("nproc-usage")))
         .infer_long_args(true)

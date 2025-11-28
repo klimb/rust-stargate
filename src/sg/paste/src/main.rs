@@ -1,1 +1,1 @@
-uucore::bin!(sg_paste);
+sgcore::bin!(sg_paste);

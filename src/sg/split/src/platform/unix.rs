@@ -8,11 +8,11 @@ use std::io::Write;
 use std::io::{BufWriter, Error, Result};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
-use uucore::error::USimpleError;
-use uucore::fs;
-use uucore::fs::FileInformation;
-use uucore::show;
-use uucore::translate;
+use sgcore::error::USimpleError;
+use sgcore::fs;
+use sgcore::fs::FileInformation;
+use sgcore::show;
+use sgcore::translate;
 
 /// A writer that writes to a `shell_process`' stdin
 ///

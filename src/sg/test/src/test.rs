@@ -15,12 +15,12 @@ use std::ffi::{OsStr, OsString};
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError};
-use uucore::format_usage;
-use uucore::process::{getegid, geteuid};
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::process::{getegid, geteuid};
 
-use uucore::translate;
+use sgcore::translate;
 
 // The help_usage method replaces util name (the first word) with {}.
 // And, The format_usage method replaces {} with execution_phrase ( e.g. test or [ ).
@@ -32,24 +32,24 @@ use uucore::translate;
 pub fn uu_app() -> Command {
     // Disable printing of -h and -v as valid alternatives for --help and --version,
     // since we don't recognize -h and -v as help/version flags.
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("test-about"))
         .override_usage(format_usage(&translate!("test-usage")))
         .after_help(translate!("test-after-help"))
 }
 
-#[uucore::main]
-pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(mut args: impl sgcore::Args) -> UResult<()> {
     let program = args.next().unwrap_or_else(|| OsString::from("test"));
-    let binary_name = uucore::util_name();
+    let binary_name = sgcore::util_name();
     let mut args: Vec<_> = args.collect();
 
     if binary_name.ends_with('[') {
         // If invoked as [ we should recognize --help and --version (but not -h or -v)
         if args.len() == 1 && (args[0] == "--help" || args[0] == "--version") {
-            uucore::clap_localization::handle_clap_result(
+            sgcore::clap_localization::handle_clap_result(
                 uu_app(),
                 std::iter::once(program).chain(args.into_iter())
             )?;

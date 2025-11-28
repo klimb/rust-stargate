@@ -13,16 +13,16 @@ use std::os::unix::process::ExitStatusExt;
 use std::process::{self, Child, Stdio};
 use std::sync::atomic::{self, AtomicBool};
 use std::time::Duration;
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError, UUsageError};
-use uucore::parser::parse_time;
-use uucore::process::ChildExt;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::parser::parse_time;
+use sgcore::process::ChildExt;
+use sgcore::translate;
 
 #[cfg(unix)]
-use uucore::signals::enable_pipe_errors;
+use sgcore::signals::enable_pipe_errors;
 
-use uucore::{
+use sgcore::{
     format_usage, show_error,
     signals::{signal_by_name_or_value, signal_name_by_value},
 };
@@ -102,10 +102,10 @@ impl Config {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
 
     let config = Config::from(&matches)?;
     timeout(
@@ -121,8 +121,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
 pub fn uu_app() -> Command {
     Command::new("timeout")
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("timeout-about"))
         .override_usage(format_usage(&translate!("timeout-usage")))
         .arg(

@@ -17,7 +17,7 @@ use std::time::Duration;
 
 #[cfg(target_os = "linux")]
 use signal_hook::iterator::Handle;
-use uucore::{
+use sgcore::{
     error::UResult,
     format::num_format::{FloatVariant, Formatter},
     locale::setup_localization,
@@ -157,7 +157,7 @@ impl ProgUpdate {
 
         // The duration should be formatted as in `printf %g`.
         let mut duration_str = Vec::new();
-        uucore::format::num_format::Float {
+        sgcore::format::num_format::Float {
             variant: FloatVariant::Shortest,
             ..Default::default()
         }
@@ -537,7 +537,7 @@ mod tests {
     use std::env;
     use std::io::Cursor;
     use std::time::Duration;
-    use uucore::locale::setup_localization;
+    use sgcore::locale::setup_localization;
 
     use super::{ProgUpdate, ReadStat, WriteStat};
     fn init() {

@@ -5,13 +5,13 @@
 
 // spell-checker:ignore (ToDO) COMFOLLOW Passwd RFILE RFILE's derefer dgid duid groupname
 
-use uucore::display::Quotable;
-pub use uucore::entries::{self, Group, Locate, Passwd};
-use uucore::format_usage;
-use uucore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
-use uucore::translate;
+use sgcore::display::Quotable;
+pub use sgcore::entries::{self, Group, Locate, Passwd};
+use sgcore::format_usage;
+use sgcore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
+use sgcore::translate;
 
-use uucore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, UResult, USimpleError};
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
@@ -63,8 +63,8 @@ fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> 
     })
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     chown_base(
         uu_app(),
         args,
@@ -75,9 +75,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("change_owner-about"))
         .override_usage(format_usage(&translate!("change_owner-usage")))
         .infer_long_args(true)
@@ -147,7 +147,7 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         // Add common arguments with chgrp, change_owner & chmod
-        .args(uucore::perms::common_args())
+        .args(sgcore::perms::common_args())
 }
 
 /// Parses the user string to extract the UID.
@@ -234,7 +234,7 @@ fn parse_spec(spec: &str, sep: char) -> UResult<(Option<u32>, Option<u32>)> {
 mod test {
     use super::*;
     use std::env;
-    use uucore::locale;
+    use sgcore::locale;
 
     #[test]
     fn test_parse_spec() {

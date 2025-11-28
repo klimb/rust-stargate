@@ -18,10 +18,10 @@ use std::path::Path;
 use clap::{Arg, ArgAction, Command};
 use regex::Regex;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult, UUsageError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult, UUsageError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 #[derive(Debug, PartialEq)]
 enum OutFormat {
@@ -780,9 +780,9 @@ mod options {
     pub static WIDTH: &str = "width";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let mut config = get_config(&matches)?;
 
     let input_files;
@@ -821,10 +821,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    Command::new(sgcore::util_name())
         .about(translate!("ptx-about"))
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("ptx-usage")))
         .infer_long_args(true)
         .arg(

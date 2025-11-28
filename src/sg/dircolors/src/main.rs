@@ -1,1 +1,1 @@
-uucore::bin!(sg_dircolors);
+sgcore::bin!(sg_dircolors);

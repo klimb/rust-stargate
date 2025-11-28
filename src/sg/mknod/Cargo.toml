@@ -21,7 +21,7 @@ path = "src/mknod.rs"
 [dependencies]
 clap = { workspace = true }
 libc = { workspace = true }
-uucore = { workspace = true, features = ["mode"] }
+sgcore = { workspace = true, features = ["mode"] }
 fluent = { workspace = true }
 
 [[bin]]

@@ -6,11 +6,11 @@
 // spell-checker:ignore (ToDO) srcpath targetpath EEXIST
 
 use clap::{Arg, ArgAction, Command};
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult};
-use uucore::fs::{make_path_relative_to, paths_refer_to_same_file};
-use uucore::translate;
-use uucore::{format_usage, prompt_yes, show_error};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult};
+use sgcore::fs::{make_path_relative_to, paths_refer_to_same_file};
+use sgcore::translate;
+use sgcore::{format_usage, prompt_yes, show_error};
 
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -22,8 +22,8 @@ use thiserror::Error;
 use std::os::unix::fs::symlink;
 
 use std::path::{Path, PathBuf};
-use uucore::backup_control::{self, BackupMode};
-use uucore::fs::{MissingHandling, ResolveMode, canonicalize};
+use sgcore::backup_control::{self, BackupMode};
+use sgcore::fs::{MissingHandling, ResolveMode, canonicalize};
 
 pub struct Settings {
     overwrite: OverwriteMode,
@@ -85,9 +85,9 @@ mod options {
 
 static ARG_FILES: &str = "files";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     /* the list of files */
 
@@ -138,9 +138,9 @@ pub fn uu_app() -> Command {
         backup_control::BACKUP_CONTROL_LONG_HELP
     );
 
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("ln-about"))
         .override_usage(format_usage(&translate!("ln-usage")))
         .infer_long_args(true)
@@ -268,7 +268,7 @@ fn exec(files: &[PathBuf], settings: &Settings) -> UResult<()> {
     if files.len() > 2 {
         return Err(LnError::ExtraOperand(
             files[2].clone().into(),
-            uucore::execution_phrase().to_string()
+            sgcore::execution_phrase().to_string()
         )
         .into());
     }

@@ -19,7 +19,7 @@ path = "src/rmdir.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["fs"] }
+sgcore = { workspace = true, features = ["fs"] }
 libc = { workspace = true }
 fluent = { workspace = true }
 

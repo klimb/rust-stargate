@@ -17,22 +17,22 @@ pub fn to_obj(_args: TokenStream, stream: TokenStream) -> TokenStream {
     let stream = proc_macro2::TokenStream::from(stream);
 
     let new = quote!(
-        pub fn to_obj(args: impl uucore::CommonArgs) -> i32 {
+        pub fn to_obj(args: impl sgcore::CommonArgs) -> i32 {
             #stream
 
             // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)
             #[cfg(unix)]
-            uucore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
+            sgcore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
             let result = to_obj(args);
             match result {
-                Success(()) => uucore::error::get_exit_code(),
+                Success(()) => sgcore::error::get_exit_code(),
                 Error(e) => {
                     let s = format!("{e}");
                     if s != "" {
-                        uucore::show_error!("{s}");
+                        sgcore::show_error!("{s}");
                     }
                     if e.usage() {
-                        eprintln!("Try '{} --help' for more information.", uucore::execution_phrase());
+                        eprintln!("Try '{} --help' for more information.", sgcore::execution_phrase());
                     }
                     e.code()
                 }
@@ -52,22 +52,22 @@ pub fn main(_args: TokenStream, stream: TokenStream) -> TokenStream {
     let stream = proc_macro2::TokenStream::from(stream);
 
     let new = quote!(
-        pub fn uumain(args: impl uucore::Args) -> i32 {
+        pub fn uumain(args: impl sgcore::Args) -> i32 {
             #stream
 
             // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)
             #[cfg(unix)]
-            uucore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
+            sgcore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
             let result = uumain(args);
             match result {
-                Ok(()) => uucore::error::get_exit_code(),
+                Ok(()) => sgcore::error::get_exit_code(),
                 Err(e) => {
                     let s = format!("{e}");
                     if s != "" {
-                        uucore::show_error!("{s}");
+                        sgcore::show_error!("{s}");
                     }
                     if e.usage() {
-                        eprintln!("Try '{} --help' for more information.", uucore::execution_phrase());
+                        eprintln!("Try '{} --help' for more information.", sgcore::execution_phrase());
                     }
                     e.code()
                 }

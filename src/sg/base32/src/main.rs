@@ -1,1 +1,1 @@
-uucore::bin!(sg_base32);
+sgcore::bin!(sg_base32);

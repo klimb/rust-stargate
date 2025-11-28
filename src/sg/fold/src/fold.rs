@@ -10,10 +10,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write, stdin, stdout};
 use std::path::Path;
 use unicode_width::UnicodeWidthChar;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::format_usage;
+use sgcore::translate;
 
 const TAB_WIDTH: usize = 8;
 const NL: u8 = b'\n';
@@ -44,12 +44,12 @@ struct FoldContext<'a, W: Write> {
     last_space: &'a mut Option<usize>,
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_lossy();
 
     let (args, obs_width) = handle_obsolete(&args[..]);
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let bytes = matches.get_flag(options::BYTES);
     let characters = matches.get_flag(options::CHARACTERS);
@@ -78,9 +78,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("fold-usage")))
         .about(translate!("fold-about"))
         .infer_long_args(true)

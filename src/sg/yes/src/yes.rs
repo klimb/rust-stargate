@@ -9,19 +9,19 @@ use clap::{Arg, ArgAction, Command, builder::ValueParser};
 use std::error::Error;
 use std::ffi::OsString;
 use std::io::{self, Write};
-use uucore::error::{UResult, USimpleError};
-use uucore::format_usage;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::format_usage;
 #[cfg(unix)]
-use uucore::signals::enable_pipe_errors;
-use uucore::translate;
+use sgcore::signals::enable_pipe_errors;
+use sgcore::translate;
 
 // it's possible that using a smaller or larger buffer might provide better performance on some
 // systems, but honestly this is good enough
 const BUF_SIZE: usize = 16 * 1024;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let mut buffer = Vec::with_capacity(BUF_SIZE);
     args_into_buffer(&mut buffer, matches.get_many::<OsString>("STRING")).unwrap();
@@ -38,9 +38,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("yes-about"))
         .override_usage(format_usage(&translate!("yes-usage")))
         .arg(

@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use std::ffi::OsString;
 use uu_base64::uumain;
-use uucore::benchmark::{create_test_file, run_util_function, text_data};
+use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 fn create_tmp_file(size_mb: usize) -> String {
     let temp_dir = tempfile::tempdir().unwrap();

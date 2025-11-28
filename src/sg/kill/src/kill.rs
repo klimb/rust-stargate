@@ -9,12 +9,12 @@ use clap::{Arg, ArgAction, Command};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 use std::io::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::translate;
 
-use uucore::signals::{ALL_SIGNALS, signal_by_name_or_value, signal_name_by_value};
-use uucore::{format_usage, show};
+use sgcore::signals::{ALL_SIGNALS, signal_by_name_or_value, signal_name_by_value};
+use sgcore::{format_usage, show};
 
 // When the -l option is selected, the program displays the type of signal related to a certain
 // value or string. In case of a value, the program should control the lower 8 bits, but there is
@@ -35,12 +35,12 @@ pub enum Mode {
     List,
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let mut args = args.collect_ignore();
     let obs_signal = handle_obsolete(&mut args);
 
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let mode = if matches.get_flag(options::TABLE) {
         Mode::Table
@@ -97,9 +97,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("kill-about"))
         .override_usage(format_usage(&translate!("kill-usage")))
         .infer_long_args(true)
@@ -205,7 +205,7 @@ fn list(signals: &Vec<String>) {
     } else {
         for signal in signals {
             if let Err(e) = print_signal(signal) {
-                uucore::show!(e);
+                sgcore::show!(e);
             }
         }
     }

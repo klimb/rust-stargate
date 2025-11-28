@@ -15,20 +15,20 @@ use std::io::{BufReader, Read, stdin};
 use std::iter;
 use std::num::ParseIntError;
 use std::path::Path;
-use uucore::checksum::ChecksumError;
-use uucore::checksum::ChecksumOptions;
-use uucore::checksum::ChecksumVerbose;
-use uucore::checksum::HashAlgorithm;
-use uucore::checksum::calculate_blake2b_length;
-use uucore::checksum::create_sha3;
-use uucore::checksum::detect_algo;
-use uucore::checksum::digest_reader;
-use uucore::checksum::escape_filename;
-use uucore::checksum::perform_checksum_validation;
-use uucore::error::{UResult, strip_errno};
-use uucore::format_usage;
-use uucore::sum::{Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Shake128, Shake256};
-use uucore::translate;
+use sgcore::checksum::ChecksumError;
+use sgcore::checksum::ChecksumOptions;
+use sgcore::checksum::ChecksumVerbose;
+use sgcore::checksum::HashAlgorithm;
+use sgcore::checksum::calculate_blake2b_length;
+use sgcore::checksum::create_sha3;
+use sgcore::checksum::detect_algo;
+use sgcore::checksum::digest_reader;
+use sgcore::checksum::escape_filename;
+use sgcore::checksum::perform_checksum_validation;
+use sgcore::error::{UResult, strip_errno};
+use sgcore::format_usage;
+use sgcore::sum::{Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Shake128, Shake256};
+use sgcore::translate;
 
 const NAME: &str = "hashsum";
 // Using the same read buffer size as GNU
@@ -165,8 +165,8 @@ fn parse_bit_num(arg: &str) -> Result<usize, ParseIntError> {
     arg.parse()
 }
 
-#[uucore::main]
-pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(mut args: impl sgcore::Args) -> UResult<()> {
     // if there is no program name for some reason, default to "hashsum"
     let program = args.next().unwrap_or_else(|| OsString::from(NAME));
     let binary_name = Path::new(&program)
@@ -185,7 +185,7 @@ pub fn uumain(mut args: impl uucore::Args) -> UResult<()> {
     //        causes "error: " to be printed twice (once from crash!() and once from clap).  With
     //        the current setup, the name of the utility is not printed, but I think this is at
     //        least somewhat better from a user's perspective.
-    let matches = uucore::clap_localization::handle_clap_result(command, args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(command, args)?;
 
     let input_length: Option<&usize> = if binary_name == "b2sum" {
         matches.get_one::<usize>(options::LENGTH)
@@ -312,9 +312,9 @@ mod options {
 }
 
 pub fn uu_app_common() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("hashsum-about"))
         .override_usage(format_usage(&translate!("hashsum-usage")))
         .infer_long_args(true)
@@ -502,7 +502,7 @@ fn uu_app(binary_name: &str) -> (Command, bool) {
     } else {
         let usage = translate!("hashsum-usage-specific", "utility_name" => binary_name);
         command
-            .help_template(uucore::localized_help_template(binary_name))
+            .help_template(sgcore::localized_help_template(binary_name))
             .override_usage(format_usage(&usage))
     };
 

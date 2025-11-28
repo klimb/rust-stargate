@@ -32,18 +32,18 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::ffi::CStr;
-use uucore::display::Quotable;
-use uucore::entries::{self, Group, Locate, Passwd};
-use uucore::error::UResult;
-use uucore::error::{USimpleError, set_exit_code};
-pub use uucore::libc;
-use uucore::libc::{getlogin, uid_t};
-use uucore::line_ending::LineEnding;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::entries::{self, Group, Locate, Passwd};
+use sgcore::error::UResult;
+use sgcore::error::{USimpleError, set_exit_code};
+pub use sgcore::libc;
+use sgcore::libc::{getlogin, uid_t};
+use sgcore::line_ending::LineEnding;
+use sgcore::translate;
 
-use uucore::process::{getegid, geteuid, getgid, getuid};
-use uucore::{format_usage, show_error};
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::process::{getegid, geteuid, getgid, getuid};
+use sgcore::{format_usage, show_error};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
 macro_rules! cstr2cow {
@@ -96,10 +96,10 @@ struct State {
     user_specified: bool,
 }
 
-#[uucore::main]
+#[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
@@ -306,9 +306,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("id-about"))
         .override_usage(format_usage(&translate!("id-usage")))
         .infer_long_args(true)

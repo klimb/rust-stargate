@@ -10,12 +10,12 @@ use std::ffi::OsString;
 use std::fs;
 use std::io::{Write, stdout};
 use std::path::{Path, PathBuf};
-use uucore::error::{FromIo, UResult, UUsageError};
-use uucore::fs::{MissingHandling, ResolveMode, canonicalize};
-use uucore::libc::EINVAL;
-use uucore::line_ending::LineEnding;
-use uucore::translate;
-use uucore::{format_usage, show_error};
+use sgcore::error::{FromIo, UResult, UUsageError};
+use sgcore::fs::{MissingHandling, ResolveMode, canonicalize};
+use sgcore::libc::EINVAL;
+use sgcore::line_ending::LineEnding;
+use sgcore::translate;
+use sgcore::{format_usage, show_error};
 
 const OPT_CANONICALIZE: &str = "canonicalize";
 const OPT_CANONICALIZE_MISSING: &str = "canonicalize-missing";
@@ -28,9 +28,9 @@ const OPT_ZERO: &str = "zero";
 
 const ARG_FILES: &str = "files";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let mut no_trailing_delimiter = matches.get_flag(OPT_NO_NEWLINE);
     let use_zero = matches.get_flag(OPT_ZERO);
@@ -108,9 +108,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("readlink-about"))
         .override_usage(format_usage(&translate!("readlink-usage")))
         .infer_long_args(true)
@@ -179,7 +179,7 @@ pub fn uu_app() -> Command {
 }
 
 fn show(path: &Path, line_ending: Option<LineEnding>) -> std::io::Result<()> {
-    uucore::display::print_verbatim(path)?;
+    sgcore::display::print_verbatim(path)?;
     if let Some(line_ending) = line_ending {
         print!("{line_ending}");
     }

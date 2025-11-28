@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use std::ffi::OsString;
-use uucore::parser::parse_size::{ParseSizeError, parse_size_u64_max};
+use sgcore::parser::parse_size::{ParseSizeError, parse_size_u64_max};
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct ParseError;

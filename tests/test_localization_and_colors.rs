@@ -67,7 +67,7 @@ fn get_utilities_to_skip() -> HashSet<&'static str> {
 /// Uses the multicall binary (`TESTS_BINARY`) and passes the utility name as an argument.
 fn create_utility_command(utility_name: &str) -> Command {
     let uu_name = format!("uu_{utility_name}");
-    let canonical_name = uucore::get_canonical_util_name(&uu_name);
+    let canonical_name = sgcore::get_canonical_util_name(&uu_name);
     let mut cmd = Command::new(TESTS_BINARY);
     cmd.arg(canonical_name);
     cmd
@@ -129,7 +129,7 @@ fn test_error_messages_have_colors() {
 
         let mut cmd = create_utility_command(utility);
         let uu_name = format!("uu_{utility}");
-        let binary_name = uucore::get_canonical_util_name(&uu_name);
+        let binary_name = sgcore::get_canonical_util_name(&uu_name);
 
         // For hashsum aliases, we need to pass the hash algorithm as a subcommand
         if binary_name == "hashsum" && utility != "hashsum" {
@@ -229,7 +229,7 @@ fn test_error_messages_french_translation() {
 
         let mut cmd = create_utility_command(utility);
         let uu_name = format!("uu_{utility}");
-        let binary_name = uucore::get_canonical_util_name(&uu_name);
+        let binary_name = sgcore::get_canonical_util_name(&uu_name);
 
         // For hashsum aliases, we need to pass the hash algorithm as a subcommand
         if binary_name == "hashsum" && utility != "hashsum" {
@@ -282,7 +282,7 @@ fn test_french_colored_error_messages() {
 
         let mut cmd = create_utility_command(utility);
         let uu_name = format!("uu_{utility}");
-        let binary_name = uucore::get_canonical_util_name(&uu_name);
+        let binary_name = sgcore::get_canonical_util_name(&uu_name);
 
         // For hashsum aliases, we need to pass the hash algorithm as a subcommand
         if binary_name == "hashsum" && utility != "hashsum" {

@@ -1,1 +1,1 @@
-uucore::bin!(sg_sync);
+sgcore::bin!(sg_sync);

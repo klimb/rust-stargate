@@ -680,7 +680,7 @@ fn test_file_owned_by_egid() {
     use std::ffi::CString;
     use std::os::unix::ffi::OsStrExt;
     use std::os::unix::fs::MetadataExt;
-    use uucore::process::getegid;
+    use sgcore::process::getegid;
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
 

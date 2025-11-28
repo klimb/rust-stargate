@@ -7,8 +7,8 @@
 
 use clap::{Arg, ArgAction, Command};
 use platform_info::*;
-use uucore::translate;
-use uucore::{
+use sgcore::translate;
+use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
 };
@@ -118,9 +118,9 @@ pub struct Options {
     pub os: bool,
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let options = Options {
         all: matches.get_flag(options::ALL),
@@ -139,9 +139,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("uname-about"))
         .override_usage(format_usage(&translate!("uname-usage")))
         .infer_long_args(true)

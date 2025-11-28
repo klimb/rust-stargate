@@ -15,12 +15,12 @@ use std::io::{self, Read, Seek, Write};
 #[cfg(unix)]
 use std::os::unix::prelude::PermissionsExt;
 use std::path::{Path, PathBuf};
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, UUsageError};
-use uucore::parser::parse_size::parse_size_u64;
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::translate;
-use uucore::{format_usage, show_error, show_if_err};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::parser::parse_size::parse_size_u64;
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::translate;
+use sgcore::{format_usage, show_error, show_if_err};
 
 pub mod options {
     pub const FORCE: &str = "force";
@@ -237,9 +237,9 @@ impl<'a> BytesWriter<'a> {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     if !matches.contains_id(options::FILE) {
         return Err(UUsageError::new(
@@ -314,9 +314,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("shred-about"))
         .after_help(translate!("shred-after-help"))
         .override_usage(format_usage(&translate!("shred-usage")))

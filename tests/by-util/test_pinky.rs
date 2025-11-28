@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 #[cfg(not(target_os = "openbsd"))]
-use uucore::entries::{Locate, Passwd};
+use sgcore::entries::{Locate, Passwd};
 use uutests::new_ucmd;
 #[cfg(not(target_os = "openbsd"))]
 use uutests::util::{TestScenario, expected_result};

@@ -735,7 +735,7 @@ pub fn get_filename(file: &Path) -> Option<&str> {
 /// # Examples
 ///
 /// ```ignore
-/// use uucore::fs::make_fifo;
+/// use sgcore::fs::make_fifo;
 ///
 /// make_fifo("my-pipe").expect("failed to create the named pipe");
 ///

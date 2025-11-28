@@ -7,11 +7,11 @@
 
 use crate::uu_app;
 
-use uucore::error::UResult;
-use uucore::translate;
+use sgcore::error::UResult;
+use sgcore::translate;
 
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let _matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let _matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     println!("{}", translate!("who-unsupported-openbsd"));
     Ok(())
 }

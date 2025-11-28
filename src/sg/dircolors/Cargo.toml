@@ -19,7 +19,7 @@ path = "src/dircolors.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["colors", "parser"] }
+sgcore = { workspace = true, features = ["colors", "parser"] }
 fluent = { workspace = true }
 
 [[bin]]

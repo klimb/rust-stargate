@@ -6,7 +6,7 @@
 use clap::{Arg, ArgAction, Command};
 use serde_json::Value;
 use std::io::{self, Read};
-use uucore::error::{UResult, USimpleError};
+use sgcore::error::{UResult, USimpleError};
 
 pub mod options {
     pub static FIELD: &str = "field";
@@ -15,8 +15,8 @@ pub mod options {
     pub static PRETTY: &str = "pretty";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = uu_app().try_get_matches_from(args)?;
 
     // Read JSON from stdin
@@ -153,8 +153,8 @@ fn output_json(value: &Value, pretty: bool) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about("Extract fields from JSON objects")
         .override_usage("slice-object [OPTIONS]")
         .arg(

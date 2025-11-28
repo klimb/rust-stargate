@@ -13,8 +13,8 @@ use crate::blocks::{SuffixType, to_magnitude_and_suffix};
 use crate::columns::{Alignment, Column};
 use crate::filesystem::Filesystem;
 use crate::{BlockSize, Options};
-use uucore::fsext::{FsUsage, MountInfo};
-use uucore::translate;
+use sgcore::fsext::{FsUsage, MountInfo};
+use sgcore::translate;
 
 use std::ffi::OsString;
 use std::iter;
@@ -223,7 +223,7 @@ impl Cell {
     /// Create a cell from an `OsString`
     fn from_os_string(os: &OsString) -> Self {
         Self {
-            bytes: uucore::os_str_as_bytes(os).unwrap().to_vec(),
+            bytes: sgcore::os_str_as_bytes(os).unwrap().to_vec(),
             width: UnicodeWidthStr::width(os.to_string_lossy().as_ref()),
         }
     }
@@ -523,7 +523,7 @@ impl Table {
 mod tests {
 
     use std::vec;
-    use uucore::locale::setup_localization;
+    use sgcore::locale::setup_localization;
 
     use crate::blocks::HumanReadable;
     use crate::columns::Column;
@@ -1038,7 +1038,7 @@ mod tests {
     #[test]
     fn test_table_column_width_non_unicode() {
         init();
-        let bad_unicode_os_str = uucore::os_str_from_bytes(b"/usr/lib/w\xf3l/drivers")
+        let bad_unicode_os_str = sgcore::os_str_from_bytes(b"/usr/lib/w\xf3l/drivers")
             .expect("Only unix platforms can test non-unicode names")
             .to_os_string();
         let d1 = crate::Filesystem {

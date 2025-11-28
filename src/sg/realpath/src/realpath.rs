@@ -14,9 +14,9 @@ use std::{
     io::{Write, stdout},
     path::{Path, PathBuf},
 };
-use uucore::fs::make_path_relative_to;
-use uucore::translate;
-use uucore::{
+use sgcore::fs::make_path_relative_to;
+use sgcore::translate;
+use sgcore::{
     display::{Quotable, print_verbatim},
     error::{FromIo, UResult},
     format_usage,
@@ -71,9 +71,9 @@ impl ValueParserFactory for NonEmptyOsStringParser {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     /*  the list of files */
 
@@ -126,9 +126,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("realpath-about"))
         .override_usage(format_usage(&translate!("realpath-usage")))
         .infer_long_args(true)

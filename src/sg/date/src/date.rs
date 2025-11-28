@@ -18,11 +18,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use uucore::error::FromIo;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
-use uucore::{format_usage, show};
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::error::FromIo;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
+use sgcore::{format_usage, show};
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 
 // Options
 const DATE: &str = "date";
@@ -165,10 +165,10 @@ fn parse_military_timezone_with_offset(s: &str) -> Option<i32> {
     Some(total_hours)
 }
 
-#[uucore::main]
+#[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let format = if let Some(form) = matches.get_one::<String>(OPT_FORMAT) {
         if !form.starts_with('+') {
@@ -407,9 +407,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("date-about"))
         .override_usage(format_usage(&translate!("date-usage")))
         .infer_long_args(true)

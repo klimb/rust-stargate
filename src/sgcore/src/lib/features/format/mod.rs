@@ -286,7 +286,7 @@ pub fn parse_escape_only(
 /// # Examples
 ///
 /// ```rust
-/// use uucore::format::{printf, FormatArgument};
+/// use sgcore::format::{printf, FormatArgument};
 ///
 /// printf("hello %s", &[FormatArgument::String("world".into())]).unwrap();
 /// // prints "hello world"
@@ -323,7 +323,7 @@ fn printf_writer<'a>(
 /// # Examples
 ///
 /// ```rust
-/// use uucore::format::{sprintf, FormatArgument};
+/// use sgcore::format::{sprintf, FormatArgument};
 ///
 /// let s = sprintf("hello %s", &[FormatArgument::String("world".into())]).unwrap();
 /// let s = std::str::from_utf8(&s).unwrap();

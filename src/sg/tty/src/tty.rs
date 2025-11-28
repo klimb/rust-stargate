@@ -7,18 +7,18 @@
 
 use clap::{Arg, ArgAction, Command};
 use std::io::{IsTerminal, Write};
-use uucore::error::{UResult, set_exit_code};
-use uucore::format_usage;
+use sgcore::error::{UResult, set_exit_code};
+use sgcore::format_usage;
 
-use uucore::translate;
+use sgcore::translate;
 
 mod options {
     pub const SILENT: &str = "silent";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
 
     let silent = matches.get_flag(options::SILENT);
 
@@ -45,7 +45,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
     if write_result.is_err() || stdout.flush().is_err() {
         // Don't return to prevent a panic later when another flush is attempted
-        // because the `uucore_procs::main` macro inserts a flush after execution for every utility.
+        // because the `sgcore_procs::main` macro inserts a flush after execution for every utility.
         std::process::exit(3);
     }
 
@@ -53,12 +53,12 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("tty-about"))
         .override_usage(format_usage(&translate!("tty-usage")))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd).arg(
+    sgcore::clap_localization::configure_localized_command(cmd).arg(
         Arg::new(options::SILENT)
             .long(options::SILENT)
             .visible_alias("quiet")

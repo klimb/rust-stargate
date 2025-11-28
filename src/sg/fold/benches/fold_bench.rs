@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_fold::uumain;
-use uucore::benchmark::{create_test_file, run_util_function};
+use sgcore::benchmark::{create_test_file, run_util_function};
 
 /// Benchmark folding many short lines
 #[divan::bench(args = [100_000])]

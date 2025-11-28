@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use thiserror::Error;
-use uucore::translate;
+use sgcore::translate;
 
 /// Represents an error encountered while parsing a test expression
 #[derive(Error, Debug)]
@@ -29,7 +29,7 @@ pub enum ParseError {
 pub type ParseResult<T> = Result<T, ParseError>;
 
 /// Implement `UError` trait for `ParseError` to make it easier to return useful error codes from `main()`.
-impl uucore::error::UError for ParseError {
+impl sgcore::error::UError for ParseError {
     fn code(&self) -> i32 {
         2
     }

@@ -15,10 +15,10 @@ use std::io::{Error, IsTerminal};
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{UError, UResult, set_exit_code};
-use uucore::translate;
-use uucore::{format_usage, show_error};
+use sgcore::display::Quotable;
+use sgcore::error::{UError, UResult, set_exit_code};
+use sgcore::translate;
+use sgcore::{format_usage, show_error};
 
 static NOHUP_OUT: &str = "nohup.out";
 // exit codes that match the GNU implementation
@@ -55,10 +55,10 @@ impl UError for NohupError {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
 
     replace_fds()?;
 
@@ -85,9 +85,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("nohup-about"))
         .after_help(translate!("nohup-after-help"))
         .override_usage(format_usage(&translate!("nohup-usage")))

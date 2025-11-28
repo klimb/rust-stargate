@@ -8,11 +8,11 @@ use libc::mkfifo;
 use std::ffi::CString;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use uucore::display::Quotable;
-use uucore::error::{UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{UResult, USimpleError};
+use sgcore::translate;
 
-use uucore::{format_usage, show};
+use sgcore::{format_usage, show};
 
 mod options {
     pub static MODE: &str = "mode";
@@ -20,9 +20,9 @@ mod options {
     pub static FIFO: &str = "fifo";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let mode = calculate_mode(matches.get_one::<String>(options::MODE))
         .map_err(|e| USimpleError::new(1, translate!("mkfifo-error-invalid-mode", "error" => e)))?;
@@ -63,9 +63,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("mkfifo-usage")))
         .about(translate!("mkfifo-about"))
         .infer_long_args(true)
@@ -94,15 +94,15 @@ pub fn uu_app() -> Command {
 }
 
 fn calculate_mode(mode_option: Option<&String>) -> Result<u32, String> {
-    let umask = uucore::mode::get_umask();
+    let umask = sgcore::mode::get_umask();
     let mut mode = 0o666; // Default mode for FIFOs
 
     if let Some(m) = mode_option {
         if m.chars().any(|c| c.is_ascii_digit()) {
-            mode = uucore::mode::parse_numeric(mode, m, false)?;
+            mode = sgcore::mode::parse_numeric(mode, m, false)?;
         } else {
             for item in m.split(',') {
-                mode = uucore::mode::parse_symbolic(mode, item, umask, false)?;
+                mode = sgcore::mode::parse_symbolic(mode, item, umask, false)?;
             }
         }
     } else {

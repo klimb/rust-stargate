@@ -1,1 +1,1 @@
-uucore::bin!(sg_wc);
+sgcore::bin!(sg_wc);

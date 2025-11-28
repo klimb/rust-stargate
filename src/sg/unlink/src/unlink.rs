@@ -9,16 +9,16 @@ use std::path::Path;
 use clap::builder::ValueParser;
 use clap::{Arg, Command};
 
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult};
+use sgcore::format_usage;
+use sgcore::translate;
 
 static OPT_PATH: &str = "FILE";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let path: &Path = matches.get_one::<OsString>(OPT_PATH).unwrap().as_ref();
 
@@ -27,9 +27,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("unlink-about"))
         .override_usage(format_usage(&translate!("unlink-usage")))
         .infer_long_args(true)

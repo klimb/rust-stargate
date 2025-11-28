@@ -138,7 +138,7 @@ where
         let status = uumain_function(args.to_owned().into_iter());
         // Reset the exit code global variable in case we run another test after this one
         // See https://github.com/uutils/coreutils/issues/5777
-        uucore::error::set_exit_code(0);
+        sgcore::error::set_exit_code(0);
         io::stdout().flush().unwrap();
         io::stderr().flush().unwrap();
         unsafe {

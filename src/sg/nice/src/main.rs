@@ -1,1 +1,1 @@
-uucore::bin!(sg_nice);
+sgcore::bin!(sg_nice);

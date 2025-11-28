@@ -19,11 +19,11 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::MAIN_SEPARATOR;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult};
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::translate;
-use uucore::{format_usage, os_str_as_bytes, prompt_yes, show_error};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult};
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::translate;
+use sgcore::{format_usage, os_str_as_bytes, prompt_yes, show_error};
 
 mod platform;
 #[cfg(target_os = "linux")]
@@ -31,7 +31,7 @@ use platform::{safe_remove_dir_recursive, safe_remove_empty_dir, safe_remove_fil
 
 #[derive(Debug, Error)]
 enum RmError {
-    #[error("{}", translate!("rm-error-missing-operand", "util_name" => uucore::execution_phrase()))]
+    #[error("{}", translate!("rm-error-missing-operand", "util_name" => sgcore::execution_phrase()))]
     MissingOperand,
     #[error("{}", translate!("rm-error-cannot-remove-no-such-file", "file" => _0.quote()))]
     CannotRemoveNoSuchFile(OsString),
@@ -198,9 +198,9 @@ static PRESUME_INPUT_TTY: &str = "-presume-input-tty";
 
 static ARG_FILES: &str = "files";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let files: Vec<_> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -281,10 +281,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("rm-about"))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("rm-usage")))
         .after_help(translate!("rm-after-help"))
         .infer_long_args(true)
@@ -930,7 +930,7 @@ fn normalize(path: &Path) -> PathBuf {
     // both projects are MIT https://github.com/rust-lang/cargo/blob/master/LICENSE-MIT
     // for std impl progress see rfc https://github.com/rust-lang/rfcs/issues/2208
     // TODO: replace this once that lands
-    uucore::fs::normalize_path(path)
+    sgcore::fs::normalize_path(path)
 }
 
 fn is_symlink_dir(_metadata: &Metadata) -> bool {

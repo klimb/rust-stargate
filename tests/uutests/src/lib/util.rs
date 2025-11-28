@@ -323,7 +323,7 @@ impl CmdResult {
     ///
     /// Strings like `SIGINT`, `INT` or a number like `15` are all valid names.  See also
     /// [`std::os::unix::process::ExitStatusExt::signal`] and
-    /// [`uucore::signals::signal_by_name_or_value`]
+    /// [`sgcore::signals::signal_by_name_or_value`]
     ///
     /// # Platform specific behavior
     ///
@@ -331,7 +331,7 @@ impl CmdResult {
     #[cfg(unix)]
     #[track_caller]
     pub fn signal_name_is(&self, name: &str) -> &Self {
-        use uucore::signals::signal_by_name_or_value;
+        use sgcore::signals::signal_by_name_or_value;
         let expected: i32 = signal_by_name_or_value(name)
             .unwrap_or_else(|| panic!("Invalid signal name or value: '{name}'"))
             .try_into()
@@ -2237,7 +2237,7 @@ impl<'a> UChildAssertion<'a> {
         match self.uchild.raw.try_wait() {
             Ok(Some(status)) => panic!(
                 "Assertion failed. Expected '{}' to be running but exited with status={status}.\nstdout: {}\nstderr: {}",
-                uucore::util_name(),
+                sgcore::util_name(),
                 self.uchild.stdout_all(),
                 self.uchild.stderr_all()
             ),
@@ -2254,7 +2254,7 @@ impl<'a> UChildAssertion<'a> {
         match self.uchild.raw.try_wait() {
             Ok(None) => panic!(
                 "Assertion failed. Expected '{}' to be not running but was alive.\nstdout: {}\nstderr: {}",
-                uucore::util_name(),
+                sgcore::util_name(),
                 self.uchild.stdout_all(),
                 self.uchild.stderr_all()
             ),
@@ -3555,7 +3555,7 @@ mod tests {
     #[cfg(not(target_os = "openbsd"))]
     #[test]
     fn test_altering_umask() {
-        use uucore::mode::get_umask;
+        use sgcore::mode::get_umask;
         let p_umask = get_umask();
         // make sure we are not testing against the same umask
         let c_umask = if p_umask == 0o002 { 0o007 } else { 0o002 };

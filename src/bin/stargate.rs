@@ -41,10 +41,10 @@ fn usage<T>(utils: &UtilityMap<T>, name: &str) {
 
 #[allow(clippy::cognitive_complexity)]
 fn main() {
-    uucore::panic::mute_sigpipe_panic();
+    sgcore::panic::mute_sigpipe_panic();
 
     let utils = util_map();
-    let mut args = uucore::args_os();
+    let mut args = sgcore::args_os();
 
     let binary = validation::binary_path(&mut args);
     let binary_as_util = validation::name(&binary).unwrap_or_else(|| {
@@ -67,7 +67,7 @@ fn main() {
             Some(OsString::from(util))
         } else {
             // unmatched binary name => regard as multi-binary container and advance argument list
-            uucore::set_utility_is_second_arg();
+            sgcore::set_utility_is_second_arg();
             args.next()
         };
 

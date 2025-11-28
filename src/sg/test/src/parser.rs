@@ -10,7 +10,7 @@ use std::iter::Peekable;
 
 use super::error::{ParseError, ParseResult};
 
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 
 /// Represents one of the binary comparison operators for strings, integers, or files
 #[derive(Debug, PartialEq, Eq)]

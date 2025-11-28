@@ -14,11 +14,11 @@ use std::num::TryFromIntError;
 #[cfg(unix)]
 use std::os::fd::{AsRawFd, FromRawFd};
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UError, UResult};
-use uucore::line_ending::LineEnding;
-use uucore::translate;
-use uucore::{format_usage, show};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UError, UResult};
+use sgcore::line_ending::LineEnding;
+use sgcore::translate;
+use sgcore::{format_usage, show};
 
 const BUF_SIZE: usize = 65536;
 
@@ -66,9 +66,9 @@ impl UError for HeadError {
 type HeadResult<T> = Result<T, HeadError>;
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("head-about"))
         .override_usage(format_usage(&translate!("head-usage")))
         .infer_long_args(true)
@@ -169,7 +169,7 @@ impl Mode {
 }
 
 fn arg_iterate<'a>(
-    mut args: impl uucore::Args + 'a
+    mut args: impl sgcore::Args + 'a
 ) -> HeadResult<Box<dyn Iterator<Item = OsString> + 'a>> {
     // argv[0] is always present
     let first = args.next().unwrap();
@@ -417,7 +417,7 @@ fn is_seekable(input: &mut File) -> bool {
 fn head_backwards_file(input: &mut File, options: &HeadOptions) -> io::Result<u64> {
     let st = input.metadata()?;
     let seekable = is_seekable(input);
-    let blksize_limit = uucore::fs::sane_blksize::sane_blksize_from_metadata(&st);
+    let blksize_limit = sgcore::fs::sane_blksize::sane_blksize_from_metadata(&st);
     if !seekable || st.len() <= blksize_limit || options.presume_input_pipe {
         head_backwards_without_seek_file(input, options)
     } else {
@@ -547,10 +547,10 @@ fn uu_head(options: &HeadOptions) -> UResult<()> {
     Ok(())
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = arg_iterate(args)?.collect();
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let options = HeadOptions::get_from(&matches).map_err(HeadError::MatchOption)?;
     uu_head(&options)
 }

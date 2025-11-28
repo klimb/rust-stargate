@@ -6,8 +6,8 @@
 // spell-checker:ignore (ToDO) runlevel mesg
 
 use clap::{Arg, ArgAction, Command};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::format_usage;
+use sgcore::translate;
 
 mod platform;
 
@@ -36,7 +36,7 @@ fn get_runlevel_help() -> String {
     return translate!("who-help-runlevel-non-linux");
 }
 
-#[uucore::main]
+#[sgcore::main]
 use platform::uumain;
 
 pub fn uu_app() -> Command {
@@ -45,12 +45,12 @@ pub fn uu_app() -> Command {
     #[cfg(target_env = "musl")]
     let about = translate!("who-about") + &translate!("who-about-musl-warning");
 
-    let cmd = Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    let cmd = Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(about)
         .override_usage(format_usage(&translate!("who-usage")))
         .infer_long_args(true);
-    uucore::clap_localization::configure_localized_command(cmd)
+    sgcore::clap_localization::configure_localized_command(cmd)
         .arg(
             Arg::new(options::ALL)
                 .long(options::ALL)

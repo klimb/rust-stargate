@@ -19,7 +19,7 @@ path = "src/sync.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["wide"] }
+sgcore = { workspace = true, features = ["wide"] }
 fluent = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
@@ -30,4 +30,4 @@ name = "sync"
 path = "src/main.rs"
 
 [package.metadata.cargo-udeps.ignore]
-normal = ["uucore_procs"]
+normal = ["sgcore_procs"]

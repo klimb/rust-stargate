@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_uniq::uumain;
-use uucore::benchmark::{run_util_function, setup_test_file};
+use sgcore::benchmark::{run_util_function, setup_test_file};
 
 /// Generate data with many consecutive duplicate lines
 /// This directly tests the core optimization of PR #8703 - avoiding allocations when comparing lines

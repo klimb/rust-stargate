@@ -9,7 +9,7 @@ use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
 use sg_cp::uumain;
-use uucore::benchmark::{fs_tree, run_util_function};
+use sgcore::benchmark::{fs_tree, run_util_function};
 
 fn remove_path(path: &Path) {
     if !path.exists() {

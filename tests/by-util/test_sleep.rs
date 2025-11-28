@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 use rstest::rstest;
 
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 // spell-checker:ignore dont SIGBUS SIGSEGV sigsegv sigbus infd
 use uutests::new_ucmd;
 

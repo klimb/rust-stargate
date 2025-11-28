@@ -1,1 +1,1 @@
-uucore::bin!(sg_mv);
+sgcore::bin!(sg_mv);

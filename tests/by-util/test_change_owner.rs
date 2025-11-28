@@ -5,7 +5,7 @@
 // spell-checker:ignore (words) agroupthatdoesntexist auserthatdoesntexist cuuser groupname notexisting passgrp
 
 #[cfg(any(target_os = "linux"))]
-use uucore::process::geteuid;
+use sgcore::process::geteuid;
 use uutests::util::{CmdResult, TestScenario, is_ci, run_ucmd_as_root};
 use uutests::util_name;
 use uutests::{at_and_ucmd, new_ucmd};
@@ -21,7 +21,7 @@ use uutests::{at_and_ucmd, new_ucmd};
 // stderr: "id: cannot find name for group ID 116"
 // stderr: "thread 'main' panicked at 'called `Result::unwrap()` on an `Err`
 //     value: Custom { kind: NotFound, error: "No such id: 1001" }',
-//     /project/src/uucore/src/lib/features/perms.rs:176:44"
+//     /project/src/sgcore/src/lib/features/perms.rs:176:44"
 //
 fn skipping_test_is_okay(result: &CmdResult, needle: &str) -> bool {
     if !result.succeeded() {

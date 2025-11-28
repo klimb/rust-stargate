@@ -1,8 +1,8 @@
 [package]
-name = "uucore_procs"
-description = "uutils ~ 'uucore' proc-macros"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uucore_procs"
-keywords = ["cross-platform", "proc-macros", "uucore", "uutils"]
+name = "sgcore_procs"
+description = "stargate ~ 'sgcore' proc-macros"
+repository = "https://github.com/uutils/coreutils/tree/main/src/sgcore_procs"
+keywords = ["cross-platform", "proc-macros", "sgcore", "stargate"]
 # categories = ["os"]
 authors.workspace = true
 edition.workspace = true

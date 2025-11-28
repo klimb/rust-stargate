@@ -6,8 +6,8 @@
 use clap::{Arg, ArgAction, Command};
 use std::thread;
 use std::time::Duration;
-use uucore::translate;
-use uucore::{
+use sgcore::translate;
+use sgcore::{
     error::{UResult, USimpleError, UUsageError},
     format_usage,
     parser::parse_time,
@@ -18,16 +18,16 @@ mod options {
     pub const NUMBER: &str = "NUMBER";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let numbers = matches
         .get_many::<String>(options::NUMBER)
         .ok_or_else(|| {
             USimpleError::new(
                 1,
-                translate!("sleep-error-missing-operand", "program" => uucore::execution_phrase())
+                translate!("sleep-error-missing-operand", "program" => sgcore::execution_phrase())
             )
         })?
         .map(|s| s.as_str())
@@ -37,9 +37,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("sleep-about"))
         .after_help(translate!("sleep-after-help"))
         .override_usage(format_usage(&translate!("sleep-usage")))

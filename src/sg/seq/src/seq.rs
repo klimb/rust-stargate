@@ -11,11 +11,11 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use num_traits::Zero;
 
-use uucore::error::{FromIo, UResult};
-use uucore::extendedbigdecimal::ExtendedBigDecimal;
-use uucore::format::num_format::FloatVariant;
-use uucore::format::{Format, num_format};
-use uucore::{fast_inc::fast_inc, format_usage};
+use sgcore::error::{FromIo, UResult};
+use sgcore::extendedbigdecimal::ExtendedBigDecimal;
+use sgcore::format::num_format::FloatVariant;
+use sgcore::format::{Format, num_format};
+use sgcore::{fast_inc::fast_inc, format_usage};
 
 mod error;
 
@@ -28,7 +28,7 @@ mod numberparse;
 use crate::error::SeqError;
 use crate::number::PreciseNumber;
 
-use uucore::translate;
+use sgcore::translate;
 
 const OPT_SEPARATOR: &str = "separator";
 const OPT_TERMINATOR: &str = "terminator";
@@ -52,7 +52,7 @@ type RangeFloat = (ExtendedBigDecimal, ExtendedBigDecimal, ExtendedBigDecimal);
 
 /// Turn short args with attached value, for example "-s,", into two args "-s" and "," to make
 /// them work with clap.
-fn split_short_args_with_value(args: impl uucore::Args) -> impl uucore::Args {
+fn split_short_args_with_value(args: impl sgcore::Args) -> impl sgcore::Args {
     let mut v: Vec<OsString> = Vec::new();
 
     for arg in args {
@@ -90,10 +90,10 @@ fn select_precision(
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result(uu_app(), split_short_args_with_value(args))?;
+        sgcore::clap_localization::handle_clap_result(uu_app(), split_short_args_with_value(args))?;
 
     let numbers_option = matches.get_many::<String>(ARG_NUMBERS);
 
@@ -217,11 +217,11 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
+    Command::new(sgcore::util_name())
         .trailing_var_arg(true)
         .infer_long_args(true)
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("seq-about"))
         .override_usage(format_usage(&translate!("seq-usage")))
         .arg(

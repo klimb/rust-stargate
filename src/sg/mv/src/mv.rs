@@ -30,25 +30,25 @@ use crate::hardlink::{
     HardlinkGroupScanner, HardlinkOptions, HardlinkTracker, create_hardlink_context,
     with_optional_hardlink_context,
 };
-use uucore::backup_control::{self, source_is_target_backup};
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError, UUsageError, set_exit_code};
+use sgcore::backup_control::{self, source_is_target_backup};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError, UUsageError, set_exit_code};
 #[cfg(unix)]
-use uucore::fs::make_fifo;
-use uucore::fs::{
+use sgcore::fs::make_fifo;
+use sgcore::fs::{
     MissingHandling, ResolveMode, are_hardlinks_or_one_way_symlink_to_same_file,
     are_hardlinks_to_same_file, canonicalize, path_ends_with_terminator,
 };
 #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
-use uucore::fsxattr;
+use sgcore::fsxattr;
 
-use uucore::translate;
-use uucore::update_control;
+use sgcore::translate;
+use sgcore::update_control;
 
 // These are exposed for projects (e.g. nushell) that want to create an `Options` value, which
 // requires these enums
-pub use uucore::{backup_control::BackupMode, update_control::UpdateMode};
-use uucore::{format_usage, prompt_yes, show};
+pub use sgcore::{backup_control::BackupMode, update_control::UpdateMode};
+use sgcore::{format_usage, prompt_yes, show};
 
 use fs_extra::dir::get_size as dir_get_size;
 
@@ -139,9 +139,9 @@ static OPT_PROGRESS: &str = "progress";
 static ARG_FILES: &str = "files";
 static OPT_DEBUG: &str = "debug";
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let files: Vec<OsString> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -154,7 +154,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
             ErrorKind::TooFewValues,
             translate!("mv-error-insufficient-arguments", "arg_files" => ARG_FILES)
         );
-        uucore::clap_localization::handle_clap_error_with_exit_code(err, 1);
+        sgcore::clap_localization::handle_clap_error_with_exit_code(err, 1);
     }
 
     let overwrite_mode = determine_overwrite_mode(&matches);
@@ -201,10 +201,10 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
         .about(translate!("mv-about"))
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("mv-usage")))
         .after_help(format!(
             "{}\n\n{}",

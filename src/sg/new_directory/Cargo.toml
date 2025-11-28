@@ -19,7 +19,7 @@ path = "src/new_directory.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["fs", "mode", "fsxattr"] }
+sgcore = { workspace = true, features = ["fs", "mode", "fsxattr"] }
 fluent = { workspace = true }
 
 [[bin]]

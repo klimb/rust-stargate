@@ -4,12 +4,12 @@
 // file that was distributed with this source code.
 use clap::{Arg, ArgAction, Command};
 use std::{ffi::OsString, io::Write};
-use uucore::error::{UResult, set_exit_code};
+use sgcore::error::{UResult, set_exit_code};
 
-use uucore::translate;
+use sgcore::translate;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let mut command = uu_app();
 
     let args: Vec<OsString> = args.collect();
@@ -28,7 +28,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
         if let Err(print_fail) = error {
             // Try to display this error.
-            let _ = writeln!(std::io::stderr(), "{}: {print_fail}", uucore::util_name());
+            let _ = writeln!(std::io::stderr(), "{}: {print_fail}", sgcore::util_name());
             // Mirror GNU options. When failing to print warnings or version flags, then we exit
             // with FAIL. This avoids allocation some error information which may result in yet
             // other types of failure.
@@ -40,9 +40,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("true-about"))
         // We provide our own help and version options, to ensure maximum compatibility with GNU.
         .disable_help_flag(true)

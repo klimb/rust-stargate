@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
 use sg_du::uumain;
-use uucore::benchmark::{fs_tree, run_util_function};
+use sgcore::benchmark::{fs_tree, run_util_function};
 
 /// Helper to run du with given arguments on a directory
 fn bench_du_with_args(bencher: Bencher, temp_dir: &TempDir, args: &[&str]) {

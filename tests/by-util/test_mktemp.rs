@@ -9,7 +9,7 @@ use uutests::new_ucmd;
 use uutests::util::TestScenario;
 use uutests::util_name;
 
-use uucore::display::Quotable;
+use sgcore::display::Quotable;
 
 #[cfg(not(windows))]
 use std::path::MAIN_SEPARATOR;

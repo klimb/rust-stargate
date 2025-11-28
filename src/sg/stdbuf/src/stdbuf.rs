@@ -13,10 +13,10 @@ use std::process;
 use tempfile::TempDir;
 use tempfile::tempdir;
 use thiserror::Error;
-use uucore::error::{FromIo, UResult, USimpleError, UUsageError};
-use uucore::format_usage;
-use uucore::parser::parse_size::parse_size_u64;
-use uucore::translate;
+use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::format_usage;
+use sgcore::parser::parse_size::parse_size_u64;
+use sgcore::translate;
 
 mod options {
     pub const INPUT: &str = "input";
@@ -180,10 +180,10 @@ fn get_preload_env(_tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
     ))
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        uucore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
 
     let options =
         ProgramOptions::try_from(&matches).map_err(|e| UUsageError::new(125, e.to_string()))?;
@@ -237,9 +237,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("stdbuf-about"))
         .after_help(translate!("stdbuf-after-help"))
         .override_usage(format_usage(&translate!("stdbuf-usage")))

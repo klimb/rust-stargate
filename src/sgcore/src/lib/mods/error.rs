@@ -19,7 +19,7 @@
 //! # Usage
 //! The signature of a typical util should be:
 //! ```ignore
-//! fn uumain(args: impl uucore::Args) -> UResult<()> {
+//! fn uumain(args: impl sgcore::Args) -> UResult<()> {
 //!     ...
 //! }
 //! ```
@@ -45,8 +45,8 @@
 //! [`set_exit_code`]. See the documentation on that function for more information.
 //!
 //! # Guidelines
-//! * Use error types from `uucore` where possible.
-//! * Add error types to `uucore` if an error appears in multiple utils.
+//! * Use error types from `sgcore` where possible.
+//! * Add error types to `sgcore` if an error appears in multiple utils.
 //! * Prefer proper custom error types over [`ExitCode`] and [`USimpleError`].
 //! * [`USimpleError`] may be used in small utils with simple error handling.
 //! * Using [`ExitCode`] is not recommended but can be useful for converting utils to use
@@ -73,9 +73,9 @@ pub fn get_exit_code() -> i32 {
 /// This function is most useful for non-fatal errors, for example when applying an operation to
 /// multiple files:
 /// ```ignore
-/// use uucore::error::{UResult, set_exit_code};
+/// use sgcore::error::{UResult, set_exit_code};
 ///
-/// fn uumain(args: impl uucore::Args) -> UResult<()> {
+/// fn uumain(args: impl sgcore::Args) -> UResult<()> {
 ///     ...
 ///     for file in files {
 ///         let res = some_operation_that_might_fail(file);
@@ -94,7 +94,7 @@ pub fn set_exit_code(code: i32) {
 /// Result type that should be returned by all utils.
 pub type UResult<T> = Result<T, Box<dyn UError>>;
 
-/// Custom errors defined by the utils and `uucore`.
+/// Custom errors defined by the utils and `sgcore`.
 ///
 /// All errors should implement [`std::error::Error`], [`std::fmt::Display`] and
 /// [`std::fmt::Debug`] and have an additional `code` method that specifies the
@@ -103,7 +103,7 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 /// An example of a custom error from `ls`:
 ///
 /// ```
-/// use uucore::{
+/// use sgcore::{
 ///     display::Quotable,
 ///     error::{UError, UResult}
 /// };
@@ -143,8 +143,8 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 /// The main routine would look like this:
 ///
 /// ```ignore
-/// #[uucore::main]
-/// pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+/// #[sgcore::main]
+/// pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 ///     // Perform computations here ...
 ///     return Err(LsError::InvalidLineWidth(String::from("test")).into())
 /// }
@@ -165,7 +165,7 @@ pub trait UError: Error + Send {
     /// # Example
     ///
     /// ```
-    /// use uucore::{
+    /// use sgcore::{
     ///     display::Quotable,
     ///     error::UError
     /// };
@@ -219,7 +219,7 @@ pub trait UError: Error + Send {
     /// # Example
     ///
     /// ```
-    /// use uucore::{
+    /// use sgcore::{
     ///     display::Quotable,
     ///     error::UError
     /// };
@@ -277,7 +277,7 @@ where
 /// A simple error type with an exit code and a message that implements [`UError`].
 ///
 /// ```
-/// use uucore::error::{UResult, USimpleError};
+/// use sgcore::error::{UResult, USimpleError};
 /// let err = USimpleError { code: 1, message: "error!".into()};
 /// let res: UResult<()> = Err(err.into());
 /// // or using the `new` method:
@@ -364,7 +364,7 @@ impl UError for UUsageError {
 /// There are two ways to construct this type: with [`UIoError::new`] or by calling the
 /// [`FromIo::map_err_context`] method on a [`std::io::Result`] or [`std::io::Error`].
 /// ```
-/// use uucore::{
+/// use sgcore::{
 ///     display::Quotable,
 ///     error::{FromIo, UResult, UIoError, UError}
 /// };
@@ -516,7 +516,7 @@ impl From<std::io::Error> for Box<dyn UError> {
 /// # Examples
 ///
 /// ```
-/// use uucore::error::FromIo;
+/// use sgcore::error::FromIo;
 /// use nix::errno::Errno;
 ///
 /// let nix_err = Err::<(), nix::Error>(Errno::EACCES);
@@ -580,8 +580,8 @@ impl From<nix::Error> for Box<dyn UError> {
 /// # Examples
 ///
 /// ```
-/// use uucore::error::UIoError;
-/// use uucore::uio_error;
+/// use sgcore::error::UIoError;
+/// use sgcore::uio_error;
 ///
 /// let io_err = std::io::Error::new(
 ///     std::io::ErrorKind::PermissionDenied, "fix me please!"
@@ -609,8 +609,8 @@ impl From<nix::Error> for Box<dyn UError> {
 /// that's contained in [`UIoError`], pass the second argument as empty string:
 ///
 /// ```
-/// use uucore::error::UIoError;
-/// use uucore::uio_error;
+/// use sgcore::error::UIoError;
+/// use sgcore::uio_error;
 ///
 /// let io_err = std::io::Error::new(
 ///     std::io::ErrorKind::PermissionDenied, "fix me please!"
@@ -637,7 +637,7 @@ macro_rules! uio_error(
 ///
 /// There are two ways to construct an [`ExitCode`]:
 /// ```
-/// use uucore::error::{ExitCode, UResult};
+/// use sgcore::error::{ExitCode, UResult};
 /// // Explicit
 /// let res: UResult<()> = Err(ExitCode(1).into());
 ///
@@ -689,7 +689,7 @@ impl From<i32> for Box<dyn UError> {
 /// a [`ClapErrorWrapper`] with an exit code of `1`.
 ///
 /// ```rust
-/// use uucore::error::{ClapErrorWrapper, UError, UClapError};
+/// use sgcore::error::{ClapErrorWrapper, UError, UClapError};
 /// let command = clap::Command::new("test");
 /// let result: Result<_, ClapErrorWrapper> = command.try_get_matches().with_exit_code(125);
 ///
@@ -780,18 +780,18 @@ mod tests {
     }
 }
 
-/// Result type used by commands implementing object output via the `#[uucore::to_obj]` proc-macro.
+/// Result type used by commands implementing object output via the `#[sgcore::to_obj]` proc-macro.
 ///
 /// `CommandResult` can hold either a success value `S` or an error `E`.
 /// The default error type is `Box<dyn UError>`, which allows flexible error handling.
-/// This type is commonly used with the `#[uucore::to_obj]` proc-macro attribute, which
+/// This type is commonly used with the `#[sgcore::to_obj]` proc-macro attribute, which
 /// expects unqualified `Success` and `Error` variants in scope.
 ///
 /// # Example
 ///
 /// ```ignore
-/// use uucore::error::CommandResult;
-/// use uucore::error::CommandResult::{Success, Error};
+/// use sgcore::error::CommandResult;
+/// use sgcore::error::CommandResult::{Success, Error};
 ///
 /// fn process() -> CommandResult<()> {
 ///     Success(())

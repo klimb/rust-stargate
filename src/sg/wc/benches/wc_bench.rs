@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use sg_wc::uumain;
-use uucore::benchmark::{create_test_file, run_util_function, text_data};
+use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark different file sizes for byte counting
 #[divan::bench(args = [500])]

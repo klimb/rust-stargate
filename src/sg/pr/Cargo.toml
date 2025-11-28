@@ -19,7 +19,7 @@ path = "src/pr.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true, features = ["entries", "time"] }
+sgcore = { workspace = true, features = ["entries", "time"] }
 itertools = { workspace = true }
 regex = { workspace = true }
 thiserror = { workspace = true }

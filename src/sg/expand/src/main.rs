@@ -1,1 +1,1 @@
-uucore::bin!(sg_expand);
+sgcore::bin!(sg_expand);

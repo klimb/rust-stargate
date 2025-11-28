@@ -20,7 +20,7 @@ path = "src/false.rs"
 
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 
 [[bin]]

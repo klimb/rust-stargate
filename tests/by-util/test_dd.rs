@@ -12,7 +12,7 @@ use uutests::util::{UCommand, get_tests_binary};
 use uutests::util_name;
 
 use regex::Regex;
-use uucore::io::OwnedFileDescriptorOrHandle;
+use sgcore::io::OwnedFileDescriptorOrHandle;
 
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Write};

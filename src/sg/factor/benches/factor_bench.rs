@@ -7,7 +7,7 @@
 
 use divan::{Bencher, black_box};
 use sg_factor::uumain;
-use uucore::benchmark::run_util_function;
+use sgcore::benchmark::run_util_function;
 
 /// Benchmark multiple u64 digits
 #[divan::bench(args = [(2)])]

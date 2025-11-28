@@ -36,12 +36,12 @@
 //!
 //! ```
 //! #[macro_use]
-//! extern crate uucore;
+//! extern crate sgcore;
 //!
 //! use clap::{Command, Arg, ArgMatches};
 //! use std::path::{Path, PathBuf};
-//! use uucore::backup_control::{self, BackupMode};
-//! use uucore::error::{UError, UResult};
+//! use sgcore::backup_control::{self, BackupMode};
+//! use sgcore::error::{UError, UResult};
 //!
 //! fn main() {
 //!     let usage = String::from("command [OPTION]... ARG");
@@ -290,8 +290,8 @@ pub fn determine_backup_suffix(matches: &ArgMatches) -> String {
 ///
 /// ```
 /// #[macro_use]
-/// extern crate uucore;
-/// use uucore::backup_control::{self, BackupMode};
+/// extern crate sgcore;
+/// use sgcore::backup_control::{self, BackupMode};
 /// use clap::{Command, Arg, ArgMatches};
 ///
 /// fn main() {
@@ -313,8 +313,8 @@ pub fn determine_backup_suffix(matches: &ArgMatches) -> String {
 ///
 /// ```
 /// #[macro_use]
-/// extern crate uucore;
-/// use uucore::backup_control::{self, BackupMode, BackupError};
+/// extern crate sgcore;
+/// use sgcore::backup_control::{self, BackupMode, BackupError};
 /// use clap::{Command, Arg, ArgMatches};
 ///
 /// fn main() {
@@ -330,7 +330,7 @@ pub fn determine_backup_suffix(matches: &ArgMatches) -> String {
 ///     assert!(backup_mode.is_err());
 ///     let err = backup_mode.unwrap_err();
 ///     // assert_eq!(err, BackupError::AmbiguousArgument);
-///     // Use uucore functionality to show the error to the user
+///     // Use sgcore functionality to show the error to the user
 ///     show!(err);
 /// }
 /// ```
@@ -461,7 +461,7 @@ fn existing_backup_path(path: &Path, suffix: &str) -> PathBuf {
 ///
 /// ```
 /// use std::path::Path;
-/// use uucore::backup_control::source_is_target_backup;
+/// use sgcore::backup_control::source_is_target_backup;
 /// let source = Path::new("data.txt~");
 /// let target = Path::new("data.txt");
 /// let suffix = String::from("~");

@@ -13,7 +13,7 @@ All commands should support `-o/--obj` flag for object output (JSON) that works 
 ```toml
 [dependencies]
 clap = { workspace = true }
-uucore = { workspace = true }
+sgcore = { workspace = true }
 fluent = { workspace = true }
 serde_json = { workspace = true }  # Add this
 ```
@@ -21,7 +21,7 @@ serde_json = { workspace = true }  # Add this
 ### 2. Add Imports to Source File
 
 ```rust
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 ```
 
@@ -31,7 +31,7 @@ Add object output args to command:
 
 ```rust
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         // ... existing configuration ...
         ;
     
@@ -44,9 +44,9 @@ pub fn uu_app() -> Command {
 Parse options and add object output logic:
 
 ```rust
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);  // Add this
     
     // ... existing logic to get data ...
@@ -69,9 +69,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
 ### Before
 ```rust
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let cwd = physical_path()?;
     println_verbatim(cwd)?;
     Ok(())
@@ -80,12 +80,12 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
 ### After
 ```rust
-use uucore::object_output::{self, JsonOutputOptions};
+use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let cwd = physical_path()?;
     
@@ -103,7 +103,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    let cmd = Command::new(uucore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         // ... configuration ...
         ;
     object_output::add_json_args(cmd)

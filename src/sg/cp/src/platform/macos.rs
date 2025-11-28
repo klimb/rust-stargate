@@ -9,10 +9,10 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
 
-use uucore::buf_copy;
-use uucore::translate;
+use sgcore::buf_copy;
+use sgcore::translate;
 
-use uucore::mode::get_umask;
+use sgcore::mode::get_umask;
 
 use crate::{
     CopyDebug, CopyResult, CpError, OffloadReflinkDebug, ReflinkMode, SparseDebug, SparseMode,

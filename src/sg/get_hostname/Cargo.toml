@@ -20,7 +20,7 @@ path = "src/get_hostname.rs"
 [dependencies]
 clap = { workspace = true }
 hostname = { workspace = true, features = ["set"] }
-uucore = { workspace = true, features = ["wide"] }
+sgcore = { workspace = true, features = ["wide"] }
 fluent = { workspace = true }
 serde_json = { workspace = true }
 
@@ -32,4 +32,4 @@ name = "get-hostname"
 path = "src/main.rs"
 
 [package.metadata.cargo-udeps.ignore]
-normal = ["uucore_procs"]
+normal = ["sgcore_procs"]

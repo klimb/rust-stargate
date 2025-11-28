@@ -22,7 +22,7 @@ path = "src/stdbuf.rs"
 clap = { workspace = true }
 libstdbuf = { package = "sg_stdbuf_libstdbuf", version = "0.4.0", path = "src/libstdbuf" }
 tempfile = { workspace = true }
-uucore = { workspace = true, features = ["parser"] }
+sgcore = { workspace = true, features = ["parser"] }
 thiserror = { workspace = true }
 fluent = { workspace = true }
 

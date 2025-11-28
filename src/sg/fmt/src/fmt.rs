@@ -10,11 +10,11 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Stdout, Write, stdin, stdout};
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::translate;
 
-use uucore::format_usage;
+use sgcore::format_usage;
 
 use linebreak::break_lines;
 use parasplit::ParagraphStream;
@@ -43,7 +43,7 @@ enum FmtError {
     InvalidWidthMalformed(String),
 }
 
-impl From<FmtError> for Box<dyn uucore::error::UError> {
+impl From<FmtError> for Box<dyn sgcore::error::UError> {
     fn from(err: FmtError) -> Self {
         USimpleError::new(1, err.to_string())
     }
@@ -321,8 +321,8 @@ fn extract_width(matches: &ArgMatches) -> UResult<Option<usize>> {
     }
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = args.collect();
 
     // Warn the user if it looks like we're trying to pass a number in the first
@@ -340,7 +340,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
         }
     }
 
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), &args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), &args)?;
 
     let files = extract_files(&matches)?;
 
@@ -356,9 +356,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("fmt-about"))
         .override_usage(format_usage(&translate!("fmt-usage")))
         .infer_long_args(true)

@@ -1,1 +1,1 @@
-uucore::bin!(sg_install);
+sgcore::bin!(sg_install);

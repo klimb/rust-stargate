@@ -76,7 +76,7 @@ fn test_mkdir_mkdir() {
 fn test_mkdir_non_unicode() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    let target = uucore::os_str_from_bytes(b"some-\xc0-dir-\xf3")
+    let target = sgcore::os_str_from_bytes(b"some-\xc0-dir-\xf3")
         .expect("Only unix platforms can test non-unicode names");
     ucmd.arg(&target).succeeds();
 
@@ -348,7 +348,7 @@ fn test_mkdir_acl() {
 
     map.insert(OsString::from("system.posix_acl_default"), xattr_val);
 
-    uucore::fsxattr::apply_xattrs(at.plus("a"), map).unwrap();
+    sgcore::fsxattr::apply_xattrs(at.plus("a"), map).unwrap();
 
     ucmd.arg("-p").arg("a/b").umask(0x077).succeeds();
 

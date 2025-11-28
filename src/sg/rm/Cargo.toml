@@ -20,7 +20,7 @@ path = "src/rm.rs"
 [dependencies]
 thiserror = { workspace = true }
 clap = { workspace = true }
-uucore = { workspace = true, features = ["fs", "parser", "safe-traversal"] }
+sgcore = { workspace = true, features = ["fs", "parser", "safe-traversal"] }
 fluent = { workspace = true }
 indicatif = { workspace = true }
 
@@ -34,7 +34,7 @@ path = "src/main.rs"
 [dev-dependencies]
 divan = { workspace = true }
 tempfile = { workspace = true }
-uucore = { workspace = true, features = ["benchmark"] }
+sgcore = { workspace = true, features = ["benchmark"] }
 
 [[bench]]
 name = "rm_bench"

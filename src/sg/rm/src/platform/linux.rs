@@ -11,11 +11,11 @@ use indicatif::ProgressBar;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::FromIo;
-use uucore::safe_traversal::DirFd;
-use uucore::show_error;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::FromIo;
+use sgcore::safe_traversal::DirFd;
+use sgcore::show_error;
+use sgcore::translate;
 
 use super::super::{
     InteractiveMode, Options, is_dir_empty, is_readable_metadata, prompt_descend, prompt_dir,

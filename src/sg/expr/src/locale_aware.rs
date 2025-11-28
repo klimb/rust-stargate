@@ -5,7 +5,7 @@
 
 use std::cmp::Ordering;
 
-use uucore::{
+use sgcore::{
     CharByte, IntoCharByteIterator,
     i18n::{
         UEncoding,

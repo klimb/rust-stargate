@@ -34,14 +34,14 @@ self_cell = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 unicode-width = { workspace = true }
-uucore = { workspace = true, features = ["fs", "parser", "version-cmp"] }
+sgcore = { workspace = true, features = ["fs", "parser", "version-cmp"] }
 fluent = { workspace = true }
 nix = { workspace = true }
 
 [dev-dependencies]
 divan = { workspace = true }
 tempfile = { workspace = true }
-uucore = { workspace = true, features = [
+sgcore = { workspace = true, features = [
   "benchmark",
   "fs",
   "parser",

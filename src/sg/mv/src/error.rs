@@ -3,8 +3,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 use thiserror::Error;
-use uucore::error::UError;
-use uucore::translate;
+use sgcore::error::UError;
+use sgcore::translate;
 
 #[derive(Debug, Error)]
 pub enum MvError {

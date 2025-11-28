@@ -8,18 +8,18 @@ use clap::{Arg, Command};
 use std::ffi::OsString;
 use std::fs::hard_link;
 use std::path::Path;
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult};
-use uucore::format_usage;
-use uucore::translate;
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult};
+use sgcore::format_usage;
+use sgcore::translate;
 
 pub mod options {
     pub static FILES: &str = "FILES";
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let files: Vec<_> = matches
         .get_many::<OsString>(options::FILES)
         .unwrap_or_default()
@@ -34,9 +34,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("link-about"))
         .override_usage(format_usage(&translate!("link-usage")))
         .infer_long_args(true)

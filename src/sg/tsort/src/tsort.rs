@@ -9,11 +9,11 @@ use std::collections::{HashMap, VecDeque};
 use std::ffi::OsString;
 use std::path::Path;
 use thiserror::Error;
-use uucore::display::Quotable;
-use uucore::error::{UError, UResult};
-use uucore::{format_usage, show};
+use sgcore::display::Quotable;
+use sgcore::error::{UError, UResult};
+use sgcore::{format_usage, show};
 
-use uucore::translate;
+use sgcore::translate;
 
 mod options {
     pub const FILE: &str = "file";
@@ -45,9 +45,9 @@ struct LoopNode<'a>(&'a str);
 impl UError for TsortError {}
 impl UError for LoopNode<'_> {}
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let input = matches
         .get_one::<OsString>(options::FILE)
@@ -90,9 +90,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("tsort-usage")))
         .about(translate!("tsort-about"))
         .infer_long_args(true)

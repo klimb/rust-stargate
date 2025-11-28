@@ -1,1 +1,1 @@
-uucore::bin!(sg_whoami);
+sgcore::bin!(sg_whoami);

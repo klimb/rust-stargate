@@ -21,11 +21,11 @@ use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
-use uucore::display::Quotable;
-use uucore::error::{FromIo, UResult, USimpleError};
-use uucore::parser::shortcut_value_parser::ShortcutValueParser;
-use uucore::translate;
-use uucore::{format_usage, show};
+use sgcore::display::Quotable;
+use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
+use sgcore::translate;
+use sgcore::{format_usage, show};
 
 use crate::error::TouchError;
 
@@ -185,16 +185,16 @@ fn shr2(s: &str) -> String {
     result
 }
 
-#[uucore::main]
-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let mut filenames: Vec<&OsString> = matches
         .get_many::<OsString>(ARG_FILES)
         .ok_or_else(|| {
             USimpleError::new(
                 1,
-                translate!("touch-error-missing-file-operand", "help_command" => uucore::execution_phrase().to_string(),)
+                translate!("touch-error-missing-file-operand", "help_command" => sgcore::execution_phrase().to_string(),)
             )
         })?
         .collect();
@@ -254,9 +254,9 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(uucore::util_name())
-        .version(uucore::crate_version!())
-        .help_template(uucore::localized_help_template(uucore::util_name()))
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("touch-about"))
         .override_usage(format_usage(&translate!("touch-usage")))
         .infer_long_args(true)
