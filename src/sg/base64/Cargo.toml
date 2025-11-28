@@ -20,7 +20,7 @@ path = "src/base64.rs"
 [dependencies]
 clap = { workspace = true }
 uucore = { workspace = true, features = ["encoding"] }
-uu_base32 = { workspace = true, package = "sg_base32" }
+sg_base32 = { workspace = true }
 fluent = { workspace = true }
 
 [dev-dependencies]
