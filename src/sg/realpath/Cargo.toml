@@ -21,6 +21,8 @@ path = "src/realpath.rs"
 clap = { workspace = true }
 sgcore = { workspace = true, features = ["fs"] }
 fluent = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "realpath"

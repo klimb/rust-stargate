@@ -5,16 +5,19 @@
 
 // spell-checker:ignore (ToDO) passwd
 
-use thiserror::Error;
+use clap::{Arg, ArgAction, Command};
+use serde::Serialize;
+use serde_json::json;
+use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::translate;
 use sgcore::{
     display::Quotable,
     entries::{Locate, Passwd, get_groups_gnu, gid2grp},
     error::{UError, UResult},
     format_usage, show,
 };
-
-use clap::{Arg, ArgAction, Command};
-use sgcore::translate;
+use std::collections::HashMap;
+use thiserror::Error;
 
 mod options {
     pub const USERS: &str = "USERNAME";
@@ -49,6 +52,8 @@ fn infallible_gid2grp(gid: &u32) -> String {
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
+
     let users: Vec<String> = matches
         .get_many::<String>(options::USERS)
         .map(|v| v.map(ToString::to_string).collect())
@@ -59,19 +64,44 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
             return Err(GroupsError::GetGroupsFailed.into());
         };
         let groups: Vec<String> = gids.iter().map(infallible_gid2grp).collect();
-        println!("{}", groups.join(" "));
+        
+        if json_output_options.object_output {
+            let output = json!({ "groups": groups });
+            object_output::output(json_output_options, output, || Ok(()))?;
+        } else {
+            println!("{}", groups.join(" "));
+        }
         return Ok(());
     }
 
-    for user in users {
-        match Passwd::locate(user.as_str()) {
-            Ok(p) => {
-                let groups: Vec<String> = p.belongs_to().iter().map(infallible_gid2grp).collect();
-                println!("{user} : {}", groups.join(" "));
+    if json_output_options.object_output {
+        let mut user_groups: HashMap<String, Vec<String>> = HashMap::new();
+        for user in users {
+            match Passwd::locate(user.as_str()) {
+                Ok(p) => {
+                    let groups: Vec<String> = p.belongs_to().iter().map(infallible_gid2grp).collect();
+                    user_groups.insert(user, groups);
+                }
+                Err(_) => {
+                    show!(GroupsError::UserNotFound(user.clone()));
+                    user_groups.insert(user, vec![]);
+                }
             }
-            Err(_) => {
-                // The `show!()` macro sets the global exit code for the program.
-                show!(GroupsError::UserNotFound(user));
+        }
+        let json_value = serde_json::to_value(&user_groups)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        object_output::output(json_output_options, json_value, || Ok(()))?;
+    } else {
+        for user in users {
+            match Passwd::locate(user.as_str()) {
+                Ok(p) => {
+                    let groups: Vec<String> = p.belongs_to().iter().map(infallible_gid2grp).collect();
+                    println!("{user} : {}", groups.join(" "));
+                }
+                Err(_) => {
+                    // The `show!()` macro sets the global exit code for the program.
+                    show!(GroupsError::UserNotFound(user));
+                }
             }
         }
     }
@@ -79,7 +109,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("groups-about"))
@@ -90,5 +120,6 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_name(options::USERS)
                 .value_hint(clap::ValueHint::Username)
-        )
+        );
+    object_output::add_json_args(cmd)
 }

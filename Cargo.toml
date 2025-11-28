@@ -94,7 +94,7 @@ feat_common_core = [
   "realpath",
   "rm",
   "rmdir",
-  "seq",
+  "get_range",
   "shred",
   "shuf",
   "dice_object",
@@ -425,7 +425,7 @@ realpath = { optional = true, version = "0.4.0", package = "sg_realpath", path =
 rm = { optional = true, version = "0.4.0", package = "sg_rm", path = "src/sg/rm" }
 rmdir = { optional = true, version = "0.4.0", package = "sg_rmdir", path = "src/sg/rmdir" }
 
-seq = { optional = true, version = "0.4.0", package = "sg_seq", path = "src/sg/seq" }
+get_range = { optional = true, version = "0.4.0", package = "sg_get_range", path = "src/sg/get_range" }
 shred = { optional = true, version = "0.4.0", package = "sg_shred", path = "src/sg/shred" }
 shuf = { optional = true, version = "0.4.0", package = "sg_shuf", path = "src/sg/shuf" }
 dice_object = { optional = true, version = "0.4.0", package = "sg_dice_object", path = "src/sg/dice_object" }

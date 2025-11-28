@@ -9,12 +9,9 @@ use clap::{
     Arg, ArgAction, ArgMatches, Command,
     builder::{TypedValueParser, ValueParserFactory},
 };
-use std::{
-    ffi::{OsStr, OsString},
-    io::{Write, stdout},
-    path::{Path, PathBuf},
-};
+use serde::Serialize;
 use sgcore::fs::make_path_relative_to;
+use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{
     display::{Quotable, print_verbatim},
@@ -24,6 +21,25 @@ use sgcore::{
     line_ending::LineEnding,
     show_if_err,
 };
+use std::{
+    ffi::{OsStr, OsString},
+    io::{Write, stdout},
+    path::{Path, PathBuf},
+};
+
+#[derive(Serialize)]
+struct PathResult {
+    input: String,
+    output: Option<String>,
+    success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
+}
+
+#[derive(Serialize)]
+struct RealpathOutput {
+    paths: Vec<PathResult>,
+}
 
 const OPT_QUIET: &str = "quiet";
 const OPT_STRIP: &str = "strip";
@@ -75,6 +91,8 @@ impl ValueParserFactory for NonEmptyOsStringParser {
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
+    let json_output_options = JsonOutputOptions::from_matches(&matches);
+
     /*  the list of files */
 
     let paths: Vec<PathBuf> = matches
@@ -106,6 +124,18 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         ResolveMode::Physical
     };
     let (relative_to, relative_base) = prepare_relative_options(&matches, can_mode, resolve_mode)?;
+    
+    if json_output_options.object_output {
+        return realpath_json(
+            &paths,
+            resolve_mode,
+            can_mode,
+            relative_to.as_deref(),
+            relative_base.as_deref(),
+            &json_output_options
+        );
+    }
+    
     for path in &paths {
         let result = resolve_path(
             path,
@@ -126,7 +156,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("realpath-about"))
@@ -213,7 +243,8 @@ pub fn uu_app() -> Command {
                 .required(true)
                 .value_parser(NonEmptyOsStringParser)
                 .value_hint(clap::ValueHint::AnyPath)
-        )
+        );
+    object_output::add_json_args(cmd)
 }
 
 /// Prepare `--relative-to` and `--relative-base` options.
@@ -239,6 +270,44 @@ fn prepare_relative_options(
         }
     }
     Ok((relative_to, relative_base))
+}
+
+fn realpath_json(
+    paths: &[PathBuf],
+    resolve_mode: ResolveMode,
+    can_mode: MissingHandling,
+    relative_to: Option<&Path>,
+    relative_base: Option<&Path>,
+    json_output_options: &JsonOutputOptions
+) -> UResult<()> {
+    let mut results = Vec::new();
+    
+    for path in paths {
+        let result = match canonicalize(path, can_mode, resolve_mode) {
+            Ok(abs) => {
+                let final_path = process_relative(abs, relative_base, relative_to);
+                PathResult {
+                    input: path.display().to_string(),
+                    output: Some(final_path.display().to_string()),
+                    success: true,
+                    error: None,
+                }
+            }
+            Err(e) => PathResult {
+                input: path.display().to_string(),
+                output: None,
+                success: false,
+                error: Some(e.to_string()),
+            },
+        };
+        results.push(result);
+    }
+    
+    let output = RealpathOutput { paths: results };
+    let json_value = serde_json::to_value(&output)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    object_output::output(*json_output_options, json_value, || Ok(()))?;
+    Ok(())
 }
 
 /// Prepare single `relative-*` option.
