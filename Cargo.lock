@@ -2536,18 +2536,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_date"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "jiff",
- "libc",
- "parse_datetime",
- "sgcore",
-]
-
-[[package]]
 name = "sg_dd"
 version = "0.4.0"
 dependencies = [
@@ -2743,6 +2731,20 @@ dependencies = [
  "sgcore",
  "tempfile",
  "thiserror 2.0.17",
+]
+
+[[package]]
+name = "sg_get_date"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "jiff",
+ "libc",
+ "parse_datetime",
+ "serde",
+ "serde_json",
+ "sgcore",
 ]
 
 [[package]]
@@ -3778,7 +3780,6 @@ dependencies = [
  "sg_cp",
  "sg_csplit",
  "sg_cut",
- "sg_date",
  "sg_dd",
  "sg_df",
  "sg_dice_object",
@@ -3796,6 +3797,7 @@ dependencies = [
  "sg_fold",
  "sg_get_architecture",
  "sg_get_contents",
+ "sg_get_date",
  "sg_get_domainname",
  "sg_get_fqdn",
  "sg_get_hostname",

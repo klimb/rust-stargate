@@ -1,7 +1,7 @@
 # spell-checker:ignore datetime tzdb zoneinfo
 [package]
-name = "sg_date"
-description = "date ~ (uutils) display or set the current time"
+name = "sg_get_date"
+description = "get-date ~ (uutils) display or set the current time"
 repository = "https://github.com/uutils/coreutils/tree/main/src/date"
 version.workspace = true
 authors.workspace = true
@@ -16,7 +16,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/date.rs"
+path = "src/get_date.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -27,11 +27,13 @@ jiff = { workspace = true, features = [
   "tzdb-concatenated",
 ] }
 parse_datetime = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 sgcore = { workspace = true, features = ["parser"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }
 
 [[bin]]
-name = "date"
+name = "get-date"
 path = "src/main.rs"
