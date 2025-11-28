@@ -46,6 +46,62 @@ fn get_stargate_commands() -> Vec<String> {
     Vec::new()
 }
 
+// Get available parameters/flags for a command
+fn get_command_parameters(cmd_name: &str) -> Vec<String> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+
+    let output = Command::new(&stargate_bin)
+        .arg(cmd_name)
+        .arg("--help")
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let text = String::from_utf8_lossy(&output.stdout);
+            return extract_flags_from_help(&text);
+        }
+    }
+
+    Vec::new()
+}
+
+// Extract flag names from help text
+fn extract_flags_from_help(help_text: &str) -> Vec<String> {
+    let mut flags = Vec::new();
+    
+    for line in help_text.lines() {
+        let trimmed = line.trim();
+        
+        // Look for lines that start with - or contain flags
+        if trimmed.starts_with('-') {
+            // Parse flags like "-n" or "--name" or "-n, --name"
+            for word in trimmed.split_whitespace() {
+                if word.starts_with("--") {
+                    // Long flag: extract up to '=' or end
+                    if let Some(flag) = word.split(&['=', ',', '[', '<'][..]).next() {
+                        if flag.len() > 2 {
+                            flags.push(flag.to_string());
+                        }
+                    }
+                } else if word.starts_with('-') && word.len() > 1 {
+                    // Short flag: extract just the flag part
+                    let flag = word.trim_end_matches(',');
+                    if flag.len() == 2 && flag.chars().nth(1).map(|c| c.is_alphanumeric()).unwrap_or(false) {
+                        flags.push(flag.to_string());
+                    }
+                }
+            }
+        }
+    }
+    
+    flags.sort();
+    flags.dedup();
+    flags
+}
+
 struct StargateCompletion {
     commands: Vec<String>,
 }
@@ -99,6 +155,33 @@ impl Completer for StargateCompletion {
             return Ok((start, vec![]));
         }
 
+        // Check if we're completing a parameter (starts with -)
+        if prefix.starts_with('-') {
+            // Extract the command name (first word after | or at start)
+            let cmd_start = line[..start].rfind('|')
+                .map(|i| i + 1)
+                .unwrap_or(0);
+            
+            let cmd_part = line[cmd_start..start].trim();
+            let cmd_name = cmd_part.split_whitespace().next().unwrap_or("");
+            
+            // Get parameter completions for this command
+            if !cmd_name.is_empty() && !SHELL_COMMANDS.contains(&cmd_name) {
+                let params = get_command_parameters(cmd_name);
+                let matches: Vec<Pair> = params
+                    .into_iter()
+                    .filter(|param| param.starts_with(prefix))
+                    .map(|param| Pair {
+                        display: param.clone(),
+                        replacement: param,
+                    })
+                    .collect();
+                
+                return Ok((start, matches));
+            }
+        }
+
+        // Regular command completion
         let matches: Vec<Pair> = self.commands
             .iter()
             .filter(|cmd| cmd.starts_with(prefix))
@@ -168,12 +251,14 @@ fn print_help() {
     println!();
     println!("Features:");
     println!("  Tab completion            - Press Tab to see/cycle through completions");
+    println!("                              Works for commands, parameters (--flags), and options");
     println!("  Command hints             - Grayed suggestions appear as you type");
     println!("  Command history           - Use Up/Down arrows or Ctrl-P/Ctrl-N");
     println!("  Line editing              - Emacs-style keybindings (Ctrl-A, Ctrl-E, etc.)");
     println!();
     println!("Examples:");
     println!("  describe-command list-directory");
+    println!("  list-directory --long");
     println!("  list-directory | collect-count");
     println!();
     println!("When using pipes (|), commands automatically use -o for JSON output");
