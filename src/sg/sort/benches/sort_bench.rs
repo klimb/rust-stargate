@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use tempfile::NamedTempFile;
-use uu_sort::uumain;
+use sg_sort::uumain;
 use uucore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark sorting ASCII-only data

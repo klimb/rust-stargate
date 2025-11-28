@@ -5,7 +5,7 @@
 
 [package]
 name = "stargate"
-description = "stargate ~ GNU coreutils (updated); implemented as universal (cross-platform) utils, written in Rust"
+description = "Stargate: UNIX userland written in Rust"
 default-run = "stargate"
 repository = "https://github.com/uutils/coreutils"
 rust-version = "1.85.0"

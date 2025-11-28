@@ -12,7 +12,7 @@ use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::Write;
 use std::process::Command;
-use uu_cksum::uumain;
+use sg_cksum::uumain;
 use uufuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_file,
     generate_random_string,

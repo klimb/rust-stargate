@@ -97,7 +97,7 @@ enum Padding {
 ///
 /// # Example
 /// ```ignore
-/// uu_stat::pad_and_print("1", false, 5, Padding::Zero) == "00001";
+/// sg_stat::pad_and_print("1", false, 5, Padding::Zero) == "00001";
 /// ```
 /// currently only supports '0' & ' ' as the padding character
 /// because the format specification of print! does not support general

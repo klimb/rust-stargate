@@ -58,7 +58,7 @@ Look for consistent patterns rather than focusing on individual runs, and be awa
 
 ## Integrated Benchmarking
 
-Utilities include integrated benchmarks in `src/uu/*/benches/*` using [CodSpeed](https://codspeed.io/) and [Divan](https://github.com/nvzqz/divan).
+Utilities include integrated benchmarks in `src/sg/*/benches/*` using [CodSpeed](https://codspeed.io/) and [Divan](https://github.com/nvzqz/divan).
 
 **Important**: Before starting performance optimization work, you should add a benchmark for the utility. This provides a baseline for measuring improvements and ensures changes have measurable impact.
 
@@ -76,7 +76,7 @@ Use common functions from `src/uucore/src/lib/features/benchmark.rs`:
 
 ```rust
 use divan::{Bencher, black_box};
-use uu_expand::uumain;
+use sg_expand::uumain;
 use uucore::benchmark::{create_test_file, run_util_function, text_data};
 
 #[divan::bench(args = [10_000, 100_000])]

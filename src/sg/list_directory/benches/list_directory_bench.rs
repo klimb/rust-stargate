@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use std::fs;
 use tempfile::TempDir;
-use uu_list_directory::uumain;
+use sg_list_directory::uumain;
 use uucore::benchmark::{fs_tree, run_util_function};
 
 /// Helper to run ls with given arguments on a directory

@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_nl::uumain;
+use sg_nl::uumain;
 use uucore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark numbering many lines (default mode - most common use case)

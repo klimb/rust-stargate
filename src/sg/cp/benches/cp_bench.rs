@@ -8,7 +8,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
-use uu_cp::uumain;
+use sg_cp::uumain;
 use uucore::benchmark::{fs_tree, run_util_function};
 
 fn remove_path(path: &Path) {

@@ -6,7 +6,7 @@
 // spell-checker:ignore funcs
 
 use divan::{Bencher, black_box};
-use uu_factor::uumain;
+use sg_factor::uumain;
 use uucore::benchmark::run_util_function;
 
 /// Benchmark multiple u64 digits

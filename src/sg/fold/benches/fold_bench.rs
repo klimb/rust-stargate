@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_fold::uumain;
+use sg_fold::uumain;
 use uucore::benchmark::{create_test_file, run_util_function};
 
 /// Benchmark folding many short lines
