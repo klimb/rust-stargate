@@ -1,1 +1,1 @@
-uucore::bin!(uu_expr);
+uucore::bin!(sg_expr);

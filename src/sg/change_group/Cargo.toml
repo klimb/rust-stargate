@@ -1,5 +1,5 @@
 [package]
-name = "uu_change_group"
+name = "sg_change_group"
 description = "change-group ~ (uutils) change the group ownership of FILE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/change_group"
 version.workspace = true

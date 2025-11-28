@@ -1,5 +1,5 @@
 [package]
-name = "uu_stdbuf_libstdbuf"
+name = "sg_stdbuf_libstdbuf"
 description = "stdbuf/libstdbuf ~ (uutils); dynamic library required for stdbuf"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/stdbuf"
 version.workspace = true

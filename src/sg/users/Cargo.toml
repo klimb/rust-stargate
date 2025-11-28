@@ -1,7 +1,7 @@
 # spell-checker:ignore logind
 
 [package]
-name = "uu_users"
+name = "sg_users"
 description = "users ~ (uutils) display names of currently logged-in users"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/users"
 version.workspace = true

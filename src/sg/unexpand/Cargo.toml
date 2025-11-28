@@ -1,5 +1,5 @@
 [package]
-name = "uu_unexpand"
+name = "sg_unexpand"
 description = "unexpand ~ (uutils) convert input spaces to tabs"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/unexpand"
 version.workspace = true

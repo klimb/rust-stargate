@@ -1,5 +1,5 @@
 [package]
-name = "uu_od"
+name = "sg_od"
 description = "od ~ (uutils) display formatted representation of input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/od"
 version.workspace = true

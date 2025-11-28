@@ -1,5 +1,5 @@
 [package]
-name = "uu_sleep"
+name = "sg_sleep"
 description = "sleep ~ (uutils) pause for DURATION"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/sleep"
 version.workspace = true

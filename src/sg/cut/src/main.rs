@@ -1,1 +1,1 @@
-uucore::bin!(uu_cut);
+uucore::bin!(sg_cut);

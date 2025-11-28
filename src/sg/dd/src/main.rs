@@ -1,1 +1,1 @@
-uucore::bin!(uu_dd); // spell-checker:ignore procs uucore
+uucore::bin!(sg_dd); // spell-checker:ignore procs uucore

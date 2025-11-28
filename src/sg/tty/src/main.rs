@@ -1,1 +1,1 @@
-uucore::bin!(uu_tty);
+uucore::bin!(sg_tty);

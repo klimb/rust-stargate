@@ -1,5 +1,5 @@
 [package]
-name = "uu_cat"
+name = "sg_cat"
 description = "cat ~ (uutils) concatenate and display input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/cat"
 version.workspace = true

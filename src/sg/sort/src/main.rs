@@ -1,1 +1,1 @@
-uucore::bin!(uu_sort);
+uucore::bin!(sg_sort);

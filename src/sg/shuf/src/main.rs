@@ -1,1 +1,1 @@
-uucore::bin!(uu_shuf);
+uucore::bin!(sg_shuf);

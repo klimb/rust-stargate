@@ -1,5 +1,5 @@
 [package]
-name = "uu_dirname"
+name = "sg_dirname"
 description = "dirname ~ (uutils) display parent directory of PATHNAME"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/dirname"
 version.workspace = true

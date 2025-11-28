@@ -1,5 +1,5 @@
 [package]
-name = "uu_uniq"
+name = "sg_uniq"
 description = "uniq ~ (uutils) filter identical adjacent lines from input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/uniq"
 version.workspace = true

@@ -1,1 +1,1 @@
-uucore::bin!(uu_users);
+uucore::bin!(sg_users);

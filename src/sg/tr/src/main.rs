@@ -1,1 +1,1 @@
-uucore::bin!(uu_tr);
+uucore::bin!(sg_tr);

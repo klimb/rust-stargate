@@ -1,5 +1,5 @@
 [package]
-name = "uu_mknod"
+name = "sg_mknod"
 description = "mknod ~ (uutils) create special file NAME of TYPE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/mknod"
 version.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-name = "uu_mknod"
+name = "sg_mknod"
 path = "src/mknod.rs"
 
 [dependencies]

@@ -1,5 +1,5 @@
 [package]
-name = "uu_yes"
+name = "sg_yes"
 description = "yes ~ (uutils) repeatedly display a line with STRING (or 'y')"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/yes"
 version.workspace = true

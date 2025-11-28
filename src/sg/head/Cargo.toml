@@ -1,5 +1,5 @@
 [package]
-name = "uu_head"
+name = "sg_head"
 description = "head ~ (uutils) display the first lines of input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/head"
 version.workspace = true

@@ -1,1 +1,1 @@
-uucore::bin!(uu_touch);
+uucore::bin!(sg_touch);

@@ -1,1 +1,1 @@
-uucore::bin!(uu_who);
+uucore::bin!(sg_who);

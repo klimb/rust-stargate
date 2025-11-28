@@ -1,5 +1,5 @@
 [package]
-name = "uu_tr"
+name = "sg_tr"
 description = "tr ~ (uutils) translate characters within input and display"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tr"
 version.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "uu_get_hostname"
+name = "sg_get_hostname"
 description = "get-hostname"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true

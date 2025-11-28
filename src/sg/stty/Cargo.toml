@@ -1,5 +1,5 @@
 [package]
-name = "uu_stty"
+name = "sg_stty"
 description = "stty ~ (uutils) print or change terminal characteristics"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/stty"
 version.workspace = true

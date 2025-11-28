@@ -1,5 +1,5 @@
 [package]
-name = "uu_nl"
+name = "sg_nl"
 description = "nl ~ (uutils) display input with added line numbers"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/nl"
 version.workspace = true

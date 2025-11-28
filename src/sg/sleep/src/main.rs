@@ -1,1 +1,1 @@
-uucore::bin!(uu_sleep);
+uucore::bin!(sg_sleep);

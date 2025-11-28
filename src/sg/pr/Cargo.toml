@@ -1,5 +1,5 @@
 [package]
-name = "uu_pr"
+name = "sg_pr"
 description = "pr ~ (uutils) convert text files for printing"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/pr"
 version.workspace = true

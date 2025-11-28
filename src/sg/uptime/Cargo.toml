@@ -1,7 +1,7 @@
 # spell-checker:ignore logind
 
 [package]
-name = "uu_uptime"
+name = "sg_uptime"
 description = "uptime ~ (uutils) display dynamic system information"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/uptime"
 version.workspace = true

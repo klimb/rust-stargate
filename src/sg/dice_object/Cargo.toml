@@ -1,5 +1,5 @@
 [package]
-name = "uu_dice_object"
+name = "sg_dice_object"
 description = "dice-object ~ filter JSON object columns/fields"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/dice_object"
 version.workspace = true

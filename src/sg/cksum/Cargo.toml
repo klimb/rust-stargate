@@ -1,5 +1,5 @@
 [package]
-name = "uu_cksum"
+name = "sg_cksum"
 description = "cksum ~ (uutils) display CRC and size of input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/cksum"
 version.workspace = true

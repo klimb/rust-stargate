@@ -1,5 +1,5 @@
 [package]
-name = "uu_truncate"
+name = "sg_truncate"
 description = "truncate ~ (uutils) truncate (or extend) FILE to SIZE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/truncate"
 version.workspace = true

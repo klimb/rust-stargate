@@ -1,5 +1,5 @@
 [package]
-name = "uu_printenv"
+name = "sg_printenv"
 description = "printenv ~ (uutils) display value of environment VAR"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/printenv"
 version.workspace = true

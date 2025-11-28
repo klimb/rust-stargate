@@ -1,5 +1,5 @@
 [package]
-name = "uu_chmod"
+name = "sg_chmod"
 description = "chmod ~ (uutils) change mode of FILE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/chmod"
 version.workspace = true

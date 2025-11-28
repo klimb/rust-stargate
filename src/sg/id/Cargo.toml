@@ -1,5 +1,5 @@
 [package]
-name = "uu_id"
+name = "sg_id"
 description = "id ~ (uutils) display user and group information for USER"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/id"
 version.workspace = true

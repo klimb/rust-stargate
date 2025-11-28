@@ -1,5 +1,5 @@
 [package]
-name = "uu_wc"
+name = "sg_wc"
 description = "wc ~ (uutils) display newline, word, and byte counts for input"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/wc"
 version.workspace = true

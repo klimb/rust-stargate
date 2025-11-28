@@ -1,1 +1,1 @@
-uucore::bin!(uu_fmt);
+uucore::bin!(sg_fmt);

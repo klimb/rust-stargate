@@ -1,1 +1,1 @@
-uucore::bin!(uu_arch);
+uucore::bin!(sg_arch);

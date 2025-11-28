@@ -335,8 +335,9 @@ fluent-syntax = "0.12.0"
 
 uucore = { version = "0.4.0", package = "uucore", path = "src/uucore" }
 uucore_procs = { version = "0.4.0", package = "uucore_procs", path = "src/uucore_procs" }
-uu_list_directory = { version = "0.4.0", path = "src/sg/list_directory" }
-uu_base32 = { version = "0.4.0", path = "src/sg/base32" }
+sg_list_directory = { version = "0.4.0", path = "src/sg/list_directory" }
+sg_base32 = { version = "0.4.0", path = "src/sg/base32" }
+uu_base32 = { version = "0.4.0", package = "sg_base32", path = "src/sg/base32" }
 uutests = { version = "0.4.0", package = "uutests", path = "tests/uutests" }
 
 [dependencies]
@@ -352,113 +353,113 @@ zip = { workspace = true, optional = true }
 
 
 # * uutils
-uu_test = { optional = true, version = "0.4.0", package = "uu_test", path = "src/sg/test" }
+uu_test = { optional = true, version = "0.4.0", package = "sg_test", path = "src/sg/test" }
 #
-arch = { optional = true, version = "0.4.0", package = "uu_arch", path = "src/sg/arch" }
-base32 = { optional = true, version = "0.4.0", package = "uu_base32", path = "src/sg/base32" }
-base64 = { optional = true, version = "0.4.0", package = "uu_base64", path = "src/sg/base64" }
-basename = { optional = true, version = "0.4.0", package = "uu_basename", path = "src/sg/basename" }
-basenc = { optional = true, version = "0.4.0", package = "uu_basenc", path = "src/sg/basenc" }
-cat = { optional = true, version = "0.4.0", package = "uu_cat", path = "src/sg/cat" }
-change_group = { optional = true, version = "0.4.0", package = "uu_change_group", path = "src/sg/change_group" }
-chmod = { optional = true, version = "0.4.0", package = "uu_chmod", path = "src/sg/chmod" }
-change_owner = { optional = true, version = "0.4.0", package = "uu_change_owner", path = "src/sg/change_owner" }
-chroot = { optional = true, version = "0.4.0", package = "uu_chroot", path = "src/sg/chroot" }
-cksum = { optional = true, version = "0.4.0", package = "uu_cksum", path = "src/sg/cksum" }
-comm = { optional = true, version = "0.4.0", package = "uu_comm", path = "src/sg/comm" }
-cp = { optional = true, version = "0.4.0", package = "uu_cp", path = "src/sg/cp" }
-csplit = { optional = true, version = "0.4.0", package = "uu_csplit", path = "src/sg/csplit" }
-cut = { optional = true, version = "0.4.0", package = "uu_cut", path = "src/sg/cut" }
-date = { optional = true, version = "0.4.0", package = "uu_date", path = "src/sg/date" }
-dd = { optional = true, version = "0.4.0", package = "uu_dd", path = "src/sg/dd" }
-df = { optional = true, version = "0.4.0", package = "uu_df", path = "src/sg/df" }
-dircolors = { optional = true, version = "0.4.0", package = "uu_dircolors", path = "src/sg/dircolors" }
-dirname = { optional = true, version = "0.4.0", package = "uu_dirname", path = "src/sg/dirname" }
-du = { optional = true, version = "0.4.0", package = "uu_du", path = "src/sg/du" }
-echo = { optional = true, version = "0.4.0", package = "uu_echo", path = "src/sg/echo" }
-env = { optional = true, version = "0.4.0", package = "uu_env", path = "src/sg/env" }
-expand = { optional = true, version = "0.4.0", package = "uu_expand", path = "src/sg/expand" }
-expr = { optional = true, version = "0.4.0", package = "uu_expr", path = "src/sg/expr" }
-factor = { optional = true, version = "0.4.0", package = "uu_factor", path = "src/sg/factor" }
-false = { optional = true, version = "0.4.0", package = "uu_false", path = "src/sg/false" }
-find_text = { optional = true, version = "0.4.0", package = "uu_find_text", path = "src/sg/find-text" }
-fmt = { optional = true, version = "0.4.0", package = "uu_fmt", path = "src/sg/fmt" }
-fold = { optional = true, version = "0.4.0", package = "uu_fold", path = "src/sg/fold" }
-groups = { optional = true, version = "0.4.0", package = "uu_groups", path = "src/sg/groups" }
-hashsum = { optional = true, version = "0.4.0", package = "uu_hashsum", path = "src/sg/hashsum" }
-head = { optional = true, version = "0.4.0", package = "uu_head", path = "src/sg/head" }
-hostname = { optional = true, version = "0.4.0", package = "uu_hostname", path = "src/sg/hostname" }
-get_hostname = { optional = true, version = "0.4.0", package = "uu_get_hostname", path = "src/sg/get_hostname" }
-get_domainname = { optional = true, version = "0.4.0", package = "uu_get_domainname", path = "src/sg/get_domainname" }
-get_fqdn = { optional = true, version = "0.4.0", package = "uu_get_fqdn", path = "src/sg/get_fqdn" }
-id = { optional = true, version = "0.4.0", package = "uu_id", path = "src/sg/id" }
-install = { optional = true, version = "0.4.0", package = "uu_install", path = "src/sg/install" }
-join = { optional = true, version = "0.4.0", package = "uu_join", path = "src/sg/join" }
-kill = { optional = true, version = "0.4.0", package = "uu_kill", path = "src/sg/kill" }
-link = { optional = true, version = "0.4.0", package = "uu_link", path = "src/sg/link" }
-ln = { optional = true, version = "0.4.0", package = "uu_ln", path = "src/sg/ln" }
-list_directory = { optional = true, version = "0.4.0", package = "uu_list_directory", path = "src/sg/list_directory" }
-logname = { optional = true, version = "0.4.0", package = "uu_logname", path = "src/sg/logname" }
-new_directory = { optional = true, version = "0.4.0", package = "uu_new_directory", path = "src/sg/new_directory" }
-mkfifo = { optional = true, version = "0.4.0", package = "uu_mkfifo", path = "src/sg/mkfifo" }
-mknod = { optional = true, version = "0.4.0", package = "uu_mknod", path = "src/sg/mknod" }
-mktemp = { optional = true, version = "0.4.0", package = "uu_mktemp", path = "src/sg/mktemp" }
-more = { optional = true, version = "0.4.0", package = "uu_more", path = "src/sg/more" }
-mv = { optional = true, version = "0.4.0", package = "uu_mv", path = "src/sg/mv" }
-nice = { optional = true, version = "0.4.0", package = "uu_nice", path = "src/sg/nice" }
-nl = { optional = true, version = "0.4.0", package = "uu_nl", path = "src/sg/nl" }
-nohup = { optional = true, version = "0.4.0", package = "uu_nohup", path = "src/sg/nohup" }
-nproc = { optional = true, version = "0.4.0", package = "uu_nproc", path = "src/sg/nproc" }
-od = { optional = true, version = "0.4.0", package = "uu_od", path = "src/sg/od" }
-paste = { optional = true, version = "0.4.0", package = "uu_paste", path = "src/sg/paste" }
-pathchk = { optional = true, version = "0.4.0", package = "uu_pathchk", path = "src/sg/pathchk" }
-pinky = { optional = true, version = "0.4.0", package = "uu_pinky", path = "src/sg/pinky" }
-pr = { optional = true, version = "0.4.0", package = "uu_pr", path = "src/sg/pr" }
-printenv = { optional = true, version = "0.4.0", package = "uu_printenv", path = "src/sg/printenv" }
-printf = { optional = true, version = "0.4.0", package = "uu_printf", path = "src/sg/printf" }
-ptx = { optional = true, version = "0.4.0", package = "uu_ptx", path = "src/sg/ptx" }
-pwd = { optional = true, version = "0.4.0", package = "uu_pwd", path = "src/sg/pwd" }
-readlink = { optional = true, version = "0.4.0", package = "uu_readlink", path = "src/sg/readlink" }
-realpath = { optional = true, version = "0.4.0", package = "uu_realpath", path = "src/sg/realpath" }
-rm = { optional = true, version = "0.4.0", package = "uu_rm", path = "src/sg/rm" }
-rmdir = { optional = true, version = "0.4.0", package = "uu_rmdir", path = "src/sg/rmdir" }
+arch = { optional = true, version = "0.4.0", package = "sg_arch", path = "src/sg/arch" }
+base32 = { optional = true, version = "0.4.0", package = "sg_base32", path = "src/sg/base32" }
+base64 = { optional = true, version = "0.4.0", package = "sg_base64", path = "src/sg/base64" }
+basename = { optional = true, version = "0.4.0", package = "sg_basename", path = "src/sg/basename" }
+basenc = { optional = true, version = "0.4.0", package = "sg_basenc", path = "src/sg/basenc" }
+cat = { optional = true, version = "0.4.0", package = "sg_cat", path = "src/sg/cat" }
+change_group = { optional = true, version = "0.4.0", package = "sg_change_group", path = "src/sg/change_group" }
+chmod = { optional = true, version = "0.4.0", package = "sg_chmod", path = "src/sg/chmod" }
+change_owner = { optional = true, version = "0.4.0", package = "sg_change_owner", path = "src/sg/change_owner" }
+chroot = { optional = true, version = "0.4.0", package = "sg_chroot", path = "src/sg/chroot" }
+cksum = { optional = true, version = "0.4.0", package = "sg_cksum", path = "src/sg/cksum" }
+comm = { optional = true, version = "0.4.0", package = "sg_comm", path = "src/sg/comm" }
+cp = { optional = true, version = "0.4.0", package = "sg_cp", path = "src/sg/cp" }
+csplit = { optional = true, version = "0.4.0", package = "sg_csplit", path = "src/sg/csplit" }
+cut = { optional = true, version = "0.4.0", package = "sg_cut", path = "src/sg/cut" }
+date = { optional = true, version = "0.4.0", package = "sg_date", path = "src/sg/date" }
+dd = { optional = true, version = "0.4.0", package = "sg_dd", path = "src/sg/dd" }
+df = { optional = true, version = "0.4.0", package = "sg_df", path = "src/sg/df" }
+dircolors = { optional = true, version = "0.4.0", package = "sg_dircolors", path = "src/sg/dircolors" }
+dirname = { optional = true, version = "0.4.0", package = "sg_dirname", path = "src/sg/dirname" }
+du = { optional = true, version = "0.4.0", package = "sg_du", path = "src/sg/du" }
+echo = { optional = true, version = "0.4.0", package = "sg_echo", path = "src/sg/echo" }
+env = { optional = true, version = "0.4.0", package = "sg_env", path = "src/sg/env" }
+expand = { optional = true, version = "0.4.0", package = "sg_expand", path = "src/sg/expand" }
+expr = { optional = true, version = "0.4.0", package = "sg_expr", path = "src/sg/expr" }
+factor = { optional = true, version = "0.4.0", package = "sg_factor", path = "src/sg/factor" }
+false = { optional = true, version = "0.4.0", package = "sg_false", path = "src/sg/false" }
+find_text = { optional = true, version = "0.4.0", package = "sg_find_text", path = "src/sg/find-text" }
+fmt = { optional = true, version = "0.4.0", package = "sg_fmt", path = "src/sg/fmt" }
+fold = { optional = true, version = "0.4.0", package = "sg_fold", path = "src/sg/fold" }
+groups = { optional = true, version = "0.4.0", package = "sg_groups", path = "src/sg/groups" }
+hashsum = { optional = true, version = "0.4.0", package = "sg_hashsum", path = "src/sg/hashsum" }
+head = { optional = true, version = "0.4.0", package = "sg_head", path = "src/sg/head" }
+hostname = { optional = true, version = "0.4.0", package = "sg_hostname", path = "src/sg/hostname" }
+get_hostname = { optional = true, version = "0.4.0", package = "sg_get_hostname", path = "src/sg/get_hostname" }
+get_domainname = { optional = true, version = "0.4.0", package = "sg_get_domainname", path = "src/sg/get_domainname" }
+get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "src/sg/get_fqdn" }
+id = { optional = true, version = "0.4.0", package = "sg_id", path = "src/sg/id" }
+install = { optional = true, version = "0.4.0", package = "sg_install", path = "src/sg/install" }
+join = { optional = true, version = "0.4.0", package = "sg_join", path = "src/sg/join" }
+kill = { optional = true, version = "0.4.0", package = "sg_kill", path = "src/sg/kill" }
+link = { optional = true, version = "0.4.0", package = "sg_link", path = "src/sg/link" }
+ln = { optional = true, version = "0.4.0", package = "sg_ln", path = "src/sg/ln" }
+list_directory = { optional = true, version = "0.4.0", package = "sg_list_directory", path = "src/sg/list_directory" }
+logname = { optional = true, version = "0.4.0", package = "sg_logname", path = "src/sg/logname" }
+new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "src/sg/new_directory" }
+mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "src/sg/mkfifo" }
+mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "src/sg/mknod" }
+mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "src/sg/mktemp" }
+more = { optional = true, version = "0.4.0", package = "sg_more", path = "src/sg/more" }
+mv = { optional = true, version = "0.4.0", package = "sg_mv", path = "src/sg/mv" }
+nice = { optional = true, version = "0.4.0", package = "sg_nice", path = "src/sg/nice" }
+nl = { optional = true, version = "0.4.0", package = "sg_nl", path = "src/sg/nl" }
+nohup = { optional = true, version = "0.4.0", package = "sg_nohup", path = "src/sg/nohup" }
+nproc = { optional = true, version = "0.4.0", package = "sg_nproc", path = "src/sg/nproc" }
+od = { optional = true, version = "0.4.0", package = "sg_od", path = "src/sg/od" }
+paste = { optional = true, version = "0.4.0", package = "sg_paste", path = "src/sg/paste" }
+pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "src/sg/pathchk" }
+pinky = { optional = true, version = "0.4.0", package = "sg_pinky", path = "src/sg/pinky" }
+pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "src/sg/pr" }
+printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "src/sg/printenv" }
+printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "src/sg/printf" }
+ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "src/sg/ptx" }
+pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "src/sg/pwd" }
+readlink = { optional = true, version = "0.4.0", package = "sg_readlink", path = "src/sg/readlink" }
+realpath = { optional = true, version = "0.4.0", package = "sg_realpath", path = "src/sg/realpath" }
+rm = { optional = true, version = "0.4.0", package = "sg_rm", path = "src/sg/rm" }
+rmdir = { optional = true, version = "0.4.0", package = "sg_rmdir", path = "src/sg/rmdir" }
 
-seq = { optional = true, version = "0.4.0", package = "uu_seq", path = "src/sg/seq" }
-shred = { optional = true, version = "0.4.0", package = "uu_shred", path = "src/sg/shred" }
-shuf = { optional = true, version = "0.4.0", package = "uu_shuf", path = "src/sg/shuf" }
-dice_object = { optional = true, version = "0.4.0", package = "uu_dice_object", path = "src/sg/dice_object" }
-slice_object = { optional = true, version = "0.4.0", package = "uu_slice_object", path = "src/sg/slice_object" }
-sleep = { optional = true, version = "0.4.0", package = "uu_sleep", path = "src/sg/sleep" }
-sort = { optional = true, version = "0.4.0", package = "uu_sort", path = "src/sg/sort" }
-split = { optional = true, version = "0.4.0", package = "uu_split", path = "src/sg/split" }
-stat = { optional = true, version = "0.4.0", package = "uu_stat", path = "src/sg/stat" }
-stdbuf = { optional = true, version = "0.4.0", package = "uu_stdbuf", path = "src/sg/stdbuf" }
-stty = { optional = true, version = "0.4.0", package = "uu_stty", path = "src/sg/stty" }
-sum = { optional = true, version = "0.4.0", package = "uu_sum", path = "src/sg/sum" }
-sync = { optional = true, version = "0.4.0", package = "uu_sync", path = "src/sg/sync" }
-tac = { optional = true, version = "0.4.0", package = "uu_tac", path = "src/sg/tac" }
-tail = { optional = true, version = "0.4.0", package = "uu_tail", path = "src/sg/tail" }
-tee = { optional = true, version = "0.4.0", package = "uu_tee", path = "src/sg/tee" }
-timeout = { optional = true, version = "0.4.0", package = "uu_timeout", path = "src/sg/timeout" }
-touch = { optional = true, version = "0.4.0", package = "uu_touch", path = "src/sg/touch" }
-tr = { optional = true, version = "0.4.0", package = "uu_tr", path = "src/sg/tr" }
-true = { optional = true, version = "0.4.0", package = "uu_true", path = "src/sg/true" }
-truncate = { optional = true, version = "0.4.0", package = "uu_truncate", path = "src/sg/truncate" }
-tsort = { optional = true, version = "0.4.0", package = "uu_tsort", path = "src/sg/tsort" }
-tty = { optional = true, version = "0.4.0", package = "uu_tty", path = "src/sg/tty" }
-uname = { optional = true, version = "0.4.0", package = "uu_uname", path = "src/sg/uname" }
-unexpand = { optional = true, version = "0.4.0", package = "uu_unexpand", path = "src/sg/unexpand" }
-uniq = { optional = true, version = "0.4.0", package = "uu_uniq", path = "src/sg/uniq" }
-unlink = { optional = true, version = "0.4.0", package = "uu_unlink", path = "src/sg/unlink" }
-uptime = { optional = true, version = "0.4.0", package = "uu_uptime", path = "src/sg/uptime" }
-users = { optional = true, version = "0.4.0", package = "uu_users", path = "src/sg/users" }
-wc = { optional = true, version = "0.4.0", package = "uu_wc", path = "src/sg/wc" }
-who = { optional = true, version = "0.4.0", package = "uu_who", path = "src/sg/who" }
-whoami = { optional = true, version = "0.4.0", package = "uu_whoami", path = "src/sg/whoami" }
-yes = { optional = true, version = "0.4.0", package = "uu_yes", path = "src/sg/yes" }
+seq = { optional = true, version = "0.4.0", package = "sg_seq", path = "src/sg/seq" }
+shred = { optional = true, version = "0.4.0", package = "sg_shred", path = "src/sg/shred" }
+shuf = { optional = true, version = "0.4.0", package = "sg_shuf", path = "src/sg/shuf" }
+dice_object = { optional = true, version = "0.4.0", package = "sg_dice_object", path = "src/sg/dice_object" }
+slice_object = { optional = true, version = "0.4.0", package = "sg_slice_object", path = "src/sg/slice_object" }
+sleep = { optional = true, version = "0.4.0", package = "sg_sleep", path = "src/sg/sleep" }
+sort = { optional = true, version = "0.4.0", package = "sg_sort", path = "src/sg/sort" }
+split = { optional = true, version = "0.4.0", package = "sg_split", path = "src/sg/split" }
+stat = { optional = true, version = "0.4.0", package = "sg_stat", path = "src/sg/stat" }
+stdbuf = { optional = true, version = "0.4.0", package = "sg_stdbuf", path = "src/sg/stdbuf" }
+stty = { optional = true, version = "0.4.0", package = "sg_stty", path = "src/sg/stty" }
+sum = { optional = true, version = "0.4.0", package = "sg_sum", path = "src/sg/sum" }
+sync = { optional = true, version = "0.4.0", package = "sg_sync", path = "src/sg/sync" }
+tac = { optional = true, version = "0.4.0", package = "sg_tac", path = "src/sg/tac" }
+tail = { optional = true, version = "0.4.0", package = "sg_tail", path = "src/sg/tail" }
+tee = { optional = true, version = "0.4.0", package = "sg_tee", path = "src/sg/tee" }
+timeout = { optional = true, version = "0.4.0", package = "sg_timeout", path = "src/sg/timeout" }
+touch = { optional = true, version = "0.4.0", package = "sg_touch", path = "src/sg/touch" }
+tr = { optional = true, version = "0.4.0", package = "sg_tr", path = "src/sg/tr" }
+true = { optional = true, version = "0.4.0", package = "sg_true", path = "src/sg/true" }
+truncate = { optional = true, version = "0.4.0", package = "sg_truncate", path = "src/sg/truncate" }
+tsort = { optional = true, version = "0.4.0", package = "sg_tsort", path = "src/sg/tsort" }
+tty = { optional = true, version = "0.4.0", package = "sg_tty", path = "src/sg/tty" }
+uname = { optional = true, version = "0.4.0", package = "sg_uname", path = "src/sg/uname" }
+unexpand = { optional = true, version = "0.4.0", package = "sg_unexpand", path = "src/sg/unexpand" }
+uniq = { optional = true, version = "0.4.0", package = "sg_uniq", path = "src/sg/uniq" }
+unlink = { optional = true, version = "0.4.0", package = "sg_unlink", path = "src/sg/unlink" }
+uptime = { optional = true, version = "0.4.0", package = "sg_uptime", path = "src/sg/uptime" }
+users = { optional = true, version = "0.4.0", package = "sg_users", path = "src/sg/users" }
+wc = { optional = true, version = "0.4.0", package = "sg_wc", path = "src/sg/wc" }
+who = { optional = true, version = "0.4.0", package = "sg_who", path = "src/sg/who" }
+whoami = { optional = true, version = "0.4.0", package = "sg_whoami", path = "src/sg/whoami" }
+yes = { optional = true, version = "0.4.0", package = "sg_yes", path = "src/sg/yes" }
 
 # this breaks clippy linting with: "tests/by-util/test_factor_benches.rs: No such file or directory (os error 2)"
-# factor_benches = { optional = true, version = "0.0.0", package = "uu_factor_benches", path = "tests/benches/factor" }
+# factor_benches = { optional = true, version = "0.0.0", package = "sg_factor_benches", path = "tests/benches/factor" }
 
 #
 # * pinned transitive dependencies

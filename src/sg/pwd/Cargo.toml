@@ -1,5 +1,5 @@
 [package]
-name = "uu_pwd"
+name = "sg_pwd"
 description = "pwd ~ (uutils) display current working directory"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/pwd"
 version.workspace = true

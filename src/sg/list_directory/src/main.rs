@@ -1,1 +1,1 @@
-uucore::bin!(uu_list_directory);
+uucore::bin!(sg_list_directory);

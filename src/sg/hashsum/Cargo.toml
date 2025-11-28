@@ -1,5 +1,5 @@
 [package]
-name = "uu_hashsum"
+name = "sg_hashsum"
 description = "hashsum ~ (uutils) display or check input digests"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hashsum"
 version.workspace = true

@@ -1,5 +1,5 @@
 [package]
-name = "uu_base64"
+name = "sg_base64"
 description = "base64 ~ (uutils) decode/encode input (base64-encoding)"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/base64"
 version.workspace = true
@@ -20,7 +20,7 @@ path = "src/base64.rs"
 [dependencies]
 clap = { workspace = true }
 uucore = { workspace = true, features = ["encoding"] }
-uu_base32 = { workspace = true }
+uu_base32 = { workspace = true, package = "sg_base32" }
 fluent = { workspace = true }
 
 [dev-dependencies]

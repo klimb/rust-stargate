@@ -1,7 +1,7 @@
 # spell-checker:ignore memmap
 
 [package]
-name = "uu_tac"
+name = "sg_tac"
 description = "tac ~ (uutils) concatenate and display input lines in reverse order"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tac"
 version.workspace = true

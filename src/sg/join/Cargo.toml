@@ -1,5 +1,5 @@
 [package]
-name = "uu_join"
+name = "sg_join"
 description = "join ~ (uutils) merge lines from inputs with matching join fields"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/join"
 version.workspace = true

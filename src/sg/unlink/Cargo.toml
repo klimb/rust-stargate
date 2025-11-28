@@ -1,5 +1,5 @@
 [package]
-name = "uu_unlink"
+name = "sg_unlink"
 description = "unlink ~ (uutils) remove a (file system) link to FILE"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/unlink"
 version.workspace = true

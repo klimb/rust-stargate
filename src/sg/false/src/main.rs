@@ -1,1 +1,1 @@
-uucore::bin!(uu_false);
+uucore::bin!(sg_false);

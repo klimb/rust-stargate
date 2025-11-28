@@ -1,1 +1,1 @@
-uucore::bin!(uu_pinky);
+uucore::bin!(sg_pinky);

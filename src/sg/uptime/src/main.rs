@@ -1,1 +1,1 @@
-uucore::bin!(uu_uptime);
+uucore::bin!(sg_uptime);

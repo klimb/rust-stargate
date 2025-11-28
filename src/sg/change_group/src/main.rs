@@ -1,1 +1,1 @@
-uucore::bin!(uu_change_group);
+uucore::bin!(sg_change_group);

@@ -1,1 +1,1 @@
-uucore::bin!(uu_printf);
+uucore::bin!(sg_printf);

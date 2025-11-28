@@ -1,5 +1,5 @@
 [package]
-name = "uu_arch"
+name = "sg_arch"
 description = "arch ~ (uutils) display machine architecture"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/arch"
 version.workspace = true

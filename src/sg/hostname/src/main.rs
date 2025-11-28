@@ -1,1 +1,1 @@
-uucore::bin!(uu_hostname);
+uucore::bin!(sg_hostname);
