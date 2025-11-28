@@ -73,6 +73,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
     let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
 
     let dirnames: Vec<OsString> = matches
         .get_many::<OsString>(options::DIR)
@@ -110,7 +111,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                 results.push(dirname_str);
             }
         }
-        json_output::output(opts, json!({"dirnames": results}), || Ok(()))?;
+        let output = json_output::filter_fields(json!({"path": results}), field_filter);
+        json_output::output(opts, output, || Ok(()))?;
     } else {
         for path in &dirnames {
             let path_bytes = uucore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);

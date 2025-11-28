@@ -94,6 +94,7 @@ fn logical_path() -> io::Result<PathBuf> {
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     let matches = uucore::clap_localization::handle_clap_result(uu_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(json_output::ARG_FIELD).map(|s| s.as_str());
     
     // if POSIXLY_CORRECT is set, we want to a logical resolution.
     // This produces a different output when doing mkdir -p a/b && ln -s a/b c && cd c && pwd
@@ -116,7 +117,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                     else if matches.get_flag(OPT_LOGICAL) { "logical" } 
                     else { "physical" }
         });
-        json_output::output(opts, output, || Ok(()))?;
+        let filtered = json_output::filter_fields(output, field_filter);
+        json_output::output(opts, filtered, || Ok(()))?;
     } else {
         println_verbatim(cwd)
             .map_err_context(|| translate!("pwd-error-failed-to-print-current-directory"))?;
