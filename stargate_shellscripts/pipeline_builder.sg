@@ -20,10 +20,10 @@ fn show_summary(count) {
     if count > 15 {
         # Large dataset - multi-stage filtering
         print "Stage 1: Show toml files";
-        list-directory | grep toml | head -3;
+        list-directory | find-text toml | head -3;
         
         print "Stage 2: Show rust files";
-        list-directory | grep rs | head -3;
+        list-directory | find-text rs | head -3;
         
         return 2;
     } else {

@@ -6,7 +6,7 @@ print "";
 
 # Get file statistics
 let total = list-directory | collect-count;
-let with_toml = list-directory | grep toml | collect-count;
+let with_toml = list-directory | find-text toml | collect-count;
 
 print "Total items:";
 print total;
@@ -26,7 +26,7 @@ if total > 0 {
         } else {
             if ratio >= 0 {
                 print "Some items contain 'toml'";
-                list-directory | grep toml | head -5;
+                list-directory | find-text toml | head -5;
             } else {
                 print "No toml files";
                 list-directory | head -5;

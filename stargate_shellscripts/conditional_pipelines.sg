@@ -20,8 +20,8 @@ if total_files > 20 {
         print "Medium directory - showing all files";
         list-directory;
     } else {
-        print "Small directory - showing with grep filter";
-        list-directory | grep toml;
+        print "Small directory - showing with find-text filter";
+        list-directory | find-text toml;
     }
 }
 print "";
