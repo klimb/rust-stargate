@@ -1,22 +1,24 @@
-# Stargate Shell Scripting Tests
+# Stargate Shell Scripting 
 
 This directory contains example scripts demonstrating the stargate-shell scripting language features.
 
 ## Running the tests
 
-Make sure stargate-shell is built first:
-```bash
-cargo build --bin stargate-shell
+add stargate-shell to your path, so /usr/bin/env recognizes it (zsh example that asssumes /src/rust-stargate is where you have stargate):
+
+``` 
+% echo 'export PATH="$HOME/src/rust-stargate/target/debug:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
 ```
 
-Then run any script:
-```bash
-./target/debug/stargate-shell examples/scripting_tests/variables.sg
+make them executable and run them as any other shell script (such as .sh):
 ```
-
-Or make them executable and run directly:
-```bash
 chmod +x examples/scripting_tests/*.sg
+```
+
+and run a stargate script:
+```
 ./examples/scripting_tests/variables.sg
 ```
 
