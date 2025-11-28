@@ -1,6 +1,6 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use uu_echo::uumain;
+use sg_echo::uumain;
 
 use rand::Rng;
 use rand::prelude::IndexedRandom;

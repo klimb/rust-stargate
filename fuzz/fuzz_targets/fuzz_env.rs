@@ -6,7 +6,7 @@
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use uu_env::uumain;
+use sg_env::uumain;
 
 use std::ffi::OsString;
 

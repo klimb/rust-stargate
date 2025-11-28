@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_wc::uumain;
+use sg_wc::uumain;
 use uucore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark different file sizes for byte counting

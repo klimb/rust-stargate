@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_seq::uumain;
+use sg_seq::uumain;
 use uucore::benchmark::run_util_function;
 
 /// Benchmark simple integer sequence

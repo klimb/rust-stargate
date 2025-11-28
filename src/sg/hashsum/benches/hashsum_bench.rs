@@ -6,7 +6,7 @@
 use divan::{Bencher, black_box};
 use std::io::Write;
 use tempfile::NamedTempFile;
-use uu_hashsum::uumain;
+use sg_hashsum::uumain;
 use uucore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark MD5 hashing

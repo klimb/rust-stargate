@@ -397,9 +397,9 @@ locales:
 	fi; \
 	# Copy utility-specific locales
 	@for prog in $(INSTALLEES); do \
-		if [ -d "$(BASEDIR)/src/uu/$$prog/locales" ]; then \
+		if [ -d "$(BASEDIR)/src/sg/$$prog/locales" ]; then \
 			mkdir -p "$(BUILDDIR)/locales/$$prog"; \
-			for locale_file in "$(BASEDIR)"/src/uu/$$prog/locales/*.ftl; do \
+			for locale_file in "$(BASEDIR)"/src/sg/$$prog/locales/*.ftl; do \
 				if [ "$$(basename "$$locale_file")" != "en-US.ftl" ]; then \
 					$(INSTALL) -m 644 "$$locale_file" "$(BUILDDIR)/locales/$$prog/"; \
 				fi; \
@@ -410,9 +410,9 @@ locales:
 
 install-locales:
 	@for prog in $(INSTALLEES); do \
-		if [ -d "$(BASEDIR)/src/uu/$$prog/locales" ]; then \
+		if [ -d "$(BASEDIR)/src/sg/$$prog/locales" ]; then \
 			mkdir -p "$(DESTDIR)$(DATAROOTDIR)/locales/$$prog"; \
-			for locale_file in "$(BASEDIR)"/src/uu/$$prog/locales/*.ftl; do \
+			for locale_file in "$(BASEDIR)"/src/sg/$$prog/locales/*.ftl; do \
 				if [ "$$(basename "$$locale_file")" != "en-US.ftl" ]; then \
 					$(INSTALL) -m 644 "$$locale_file" "$(DESTDIR)$(DATAROOTDIR)/locales/$$prog/"; \
 				fi; \

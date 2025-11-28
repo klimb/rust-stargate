@@ -6,7 +6,7 @@
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use uu_cut::uumain;
+use sg_cut::uumain;
 
 use rand::Rng;
 use std::ffi::OsString;

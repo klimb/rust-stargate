@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_cksum::uumain;
+use sg_cksum::uumain;
 use uucore::benchmark::{run_util_function, setup_test_file, text_data};
 
 // Macro to generate benchmarks for each algorithm

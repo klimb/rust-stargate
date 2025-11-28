@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
-use uu_mv::uumain;
+use sg_mv::uumain;
 use uucore::benchmark::{fs_tree, run_util_function};
 
 /// Benchmark moving a single file (repeated to reach 100ms)

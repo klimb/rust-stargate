@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: fluent_linter
         files: \.ftl$
-        args: [--config, .github/fluent_linter_config.yml, src/uu/]
+        args: [--config, .github/fluent_linter_config.yml, src/sg/]
 
   - repo: local
     hooks:

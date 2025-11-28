@@ -6,7 +6,7 @@
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use uu_printf::uumain;
+use sg_printf::uumain;
 
 use rand::Rng;
 use rand::seq::IndexedRandom;

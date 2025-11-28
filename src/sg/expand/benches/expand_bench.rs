@@ -5,7 +5,7 @@
 
 use divan::{Bencher, black_box};
 use std::fmt::Write;
-use uu_expand::uumain;
+use sg_expand::uumain;
 use uucore::benchmark::{create_test_file, run_util_function};
 
 /// Helper function to run expand benchmark with generated data

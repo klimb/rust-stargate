@@ -4,7 +4,7 @@
 // file that was distributed with this source code.
 
 use divan::{Bencher, black_box};
-use uu_uniq::uumain;
+use sg_uniq::uumain;
 use uucore::benchmark::{run_util_function, setup_test_file};
 
 /// Generate data with many consecutive duplicate lines

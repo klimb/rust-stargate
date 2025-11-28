@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 # spell-checker:ignore (libs) tqdm imap ; (shell/mac) xcrun ; (vars) nargs retcode csvfile
 
-BINS_PATH = Path("../src/uu")
+BINS_PATH = Path("../src/sg")
 CACHE_PATH = Path("compiles_table.csv")
 TARGETS = [
     # Linux - GNU
