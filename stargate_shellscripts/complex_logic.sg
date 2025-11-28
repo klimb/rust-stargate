@@ -1,0 +1,25 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test more complex logic with functions and conditionals
+
+print "=== Complex Logic ===";
+print "";
+
+fn is_even(n) {
+    let half = n / 2;
+    let doubled = half * 2;
+    if doubled == n {
+        return 1;
+    }
+    return 0;
+}
+
+let test_num = 42;
+print "Testing number:";
+print test_num;
+
+let result = is_even(test_num);
+if result == 1 {
+    print "Number is even";
+} else {
+    print "Number is odd";
+}

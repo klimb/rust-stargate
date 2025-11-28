@@ -10,8 +10,11 @@ pub mod commands;
 pub mod completion;
 pub mod execution;
 pub mod parsing;
+pub mod scripting;
+pub mod interpreter;
 pub mod ui;
 
 pub use completion::StargateCompletion;
 pub use execution::execute_pipeline;
+pub use interpreter::execute_script;
 pub use ui::{describe_command, print_banner, print_help};

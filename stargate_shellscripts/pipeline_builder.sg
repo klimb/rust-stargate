@@ -1,0 +1,48 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Demonstrate variable reuse and complex pipeline construction
+
+print "=== Variable Reuse and Pipeline Building ===";
+print "";
+
+# Store base command output
+print "Getting directory data...";
+let item_count = $(list-directory | wc -l);
+
+print "Items found:";
+print item_count;
+print "";
+
+# Build different pipeline stages based on data
+fn show_summary(count) {
+    print "Building pipeline for count:";
+    print count;
+    
+    if count > 15 {
+        # Large dataset - multi-stage filtering
+        print "Stage 1: Show toml files";
+        list-directory | grep toml | head -3;
+        
+        print "Stage 2: Show rust files";
+        list-directory | grep rs | head -3;
+        
+        return 2;
+    } else {
+        # Small dataset - show everything
+        print "Single stage: All items";
+        list-directory | head -10;
+        
+        return 1;
+    }
+}
+
+let stages = show_summary(item_count);
+print "";
+print "Pipeline stages executed:";
+print stages;
+
+# Additional conditional based on result
+if stages > 1 {
+    print "Multi-stage processing completed";
+} else {
+    print "Simple processing completed";
+}

@@ -1,0 +1,16 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test variables and arithmetic
+
+print "=== Variables and Arithmetic ===";
+print "";
+
+let count = 5;
+let doubled = count * 2;
+let sum = count + doubled;
+
+print "count:";
+print count;
+print "doubled:";
+print doubled;
+print "sum:";
+print sum;

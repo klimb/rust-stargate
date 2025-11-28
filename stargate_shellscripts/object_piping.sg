@@ -1,0 +1,17 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test object piping with stargate commands
+
+print "=== Object Piping Pipeline ===";
+print "";
+
+# Execute a pipeline and capture output
+print "Running: list-directory | head -5";
+list-directory | head -5;
+print "";
+
+# Another example with filtering
+print "Running: list-directory | grep toml";
+list-directory | grep toml;
+print "";
+
+print "Done!";

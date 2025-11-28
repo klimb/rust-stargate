@@ -1,0 +1,38 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Advanced object manipulation with functions and conditionals
+
+print "=== Advanced Object Processing ===";
+print "";
+
+# Function to process directory based on file count
+fn process_directory(threshold) {
+    print "Threshold:";
+    print threshold;
+    
+    let count = $(list-directory | wc -l);
+    print "Actual count:";
+    print count;
+    
+    if count > threshold {
+        print "Above threshold - showing first 3";
+        list-directory | head -3;
+        return 1;
+    } else {
+        print "Below threshold - showing first 5";
+        list-directory | head -5;
+        return 0;
+    }
+}
+
+# Call function with different thresholds
+print "Test 1: Low threshold (5)";
+let result1 = process_directory(5);
+print "";
+
+print "Test 2: High threshold (100)";
+let result2 = process_directory(100);
+print "";
+
+print "Results:";
+print result1;
+print result2;

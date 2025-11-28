@@ -1,0 +1,19 @@
+#!/home/dvk/src/rust-stargate/target/debug/stargate-shell
+# Test conditional logic
+
+print "=== Conditional Logic ===";
+print "";
+
+let count = 5;
+let doubled = count * 2;
+let sum = count + doubled;
+let threshold = 10;
+
+if sum > threshold {
+    print "Sum exceeds threshold";
+    let diff = sum - threshold;
+    print "Difference:";
+    print diff;
+} else {
+    print "Sum is below threshold";
+}
