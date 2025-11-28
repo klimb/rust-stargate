@@ -24,6 +24,7 @@ sgcore = { workspace = true }
 num-bigint = { workspace = true }
 num-prime = { workspace = true }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "factor"

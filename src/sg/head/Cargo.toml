@@ -28,6 +28,7 @@ sgcore = { workspace = true, features = [
   "fs",
 ] }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "head"
