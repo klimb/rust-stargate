@@ -6,12 +6,10 @@ print "";
 
 # Function to process directory based on file count
 fn process_directory(threshold) {
-    print "Threshold:";
-    print threshold;
+    print "Threshold: {threshold}";
     
     let count = list-directory | collect-count;
-    print "Actual count:";
-    print count;
+    print "Actual count: {count}";
     
     if count > threshold {
         print "Above threshold - showing first 3";

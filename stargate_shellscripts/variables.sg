@@ -8,9 +8,6 @@ let count = 5;
 let doubled = count * 2;
 let sum = count + doubled;
 
-print "count:";
-print count;
-print "doubled:";
-print doubled;
-print "sum:";
-print sum;
+print "count: {count}";
+print "doubled: {doubled}";
+print "sum: {sum}";

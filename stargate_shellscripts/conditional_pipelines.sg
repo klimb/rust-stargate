@@ -7,8 +7,7 @@ print "";
 # Check directory size
 print "Analyzing directory contents...";
 let total_files = list-directory | collect-count;
-print "Total items:";
-print total_files;
+print "Total items: {total_files}";
 print "";
 
 # Execute different pipelines based on size

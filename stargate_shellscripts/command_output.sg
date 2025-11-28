@@ -7,8 +7,7 @@ print "";
 # Capture directory listing count
 print "Counting files in current directory...";
 let file_count = list-directory | collect-count;
-print "File count:";
-print file_count;
+print "File count: {file_count}";
 print "";
 
 # Use the count in a conditional
