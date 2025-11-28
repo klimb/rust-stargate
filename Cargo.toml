@@ -51,7 +51,7 @@ feat_common_core = [
   "base64",
   "basename",
   "basenc",
-  "cat",
+  "get_contents",
   "cksum",
   "comm",
   "cp",
@@ -360,7 +360,7 @@ base32 = { optional = true, version = "0.4.0", package = "sg_base32", path = "sr
 base64 = { optional = true, version = "0.4.0", package = "sg_base64", path = "src/sg/base64" }
 basename = { optional = true, version = "0.4.0", package = "sg_basename", path = "src/sg/basename" }
 basenc = { optional = true, version = "0.4.0", package = "sg_basenc", path = "src/sg/basenc" }
-cat = { optional = true, version = "0.4.0", package = "sg_cat", path = "src/sg/cat" }
+get_contents = { optional = true, version = "0.4.0", package = "sg_get_contents", path = "src/sg/get_contents" }
 change_group = { optional = true, version = "0.4.0", package = "sg_change_group", path = "src/sg/change_group" }
 chmod = { optional = true, version = "0.4.0", package = "sg_chmod", path = "src/sg/chmod" }
 change_owner = { optional = true, version = "0.4.0", package = "sg_change_owner", path = "src/sg/change_owner" }

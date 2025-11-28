@@ -2396,20 +2396,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_cat"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "memchr",
- "nix",
- "serde_json",
- "sgcore",
- "tempfile",
- "thiserror 2.0.17",
-]
-
-[[package]]
 name = "sg_change_group"
 version = "0.4.0"
 dependencies = [
@@ -2704,6 +2690,20 @@ dependencies = [
  "platform-info",
  "serde_json",
  "sgcore",
+]
+
+[[package]]
+name = "sg_get_contents"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "memchr",
+ "nix",
+ "serde_json",
+ "sgcore",
+ "tempfile",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -3730,7 +3730,6 @@ dependencies = [
  "sg_base64",
  "sg_basename",
  "sg_basenc",
- "sg_cat",
  "sg_change_group",
  "sg_change_owner",
  "sg_chmod",
@@ -3757,6 +3756,7 @@ dependencies = [
  "sg_fmt",
  "sg_fold",
  "sg_get_architecture",
+ "sg_get_contents",
  "sg_get_domainname",
  "sg_get_fqdn",
  "sg_get_hostname",

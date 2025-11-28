@@ -74,7 +74,7 @@ PROGS       := \
 	base64 \
 	basenc \
 	basename \
-	cat \
+	get_contents \
 	cksum \
 	comm \
 	cp \
@@ -199,7 +199,7 @@ TEST_PROGS  := \
 	base32 \
 	base64 \
 	basename \
-	cat \
+	get_contents \
 	chcon \
 	chgrp \
 	chmod \
