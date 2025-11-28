@@ -276,6 +276,7 @@ lscolors = { version = "0.21.0", default-features = false, features = [
   "gnu_legacy",
 ] }
 memchr = "2.7.2"
+rustyline = "14.0"
 serde = { version = "1.0.202", features = ["derive"] }
 serde_json = "1.0"
 memmap2 = "0.9.4"
@@ -347,6 +348,7 @@ clap_complete = { workspace = true, optional = true }
 clap_mangen = { workspace = true, optional = true }
 fluent-syntax = { workspace = true, optional = true }
 phf.workspace = true
+rustyline.workspace = true
 
 textwrap.workspace = true
 sgcore.workspace = true

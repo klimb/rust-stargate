@@ -3,8 +3,10 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-use std::io::{self, Write, BufRead, BufReader};
+use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
+use rustyline::error::ReadlineError;
+use rustyline::DefaultEditor;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -250,22 +252,19 @@ fn execute_pipeline(input: &str) -> Result<(), String> {
 fn main() {
     print_banner();
 
-    let stdin = io::stdin();
-    let mut stdout = io::stdout();
+    let mut rl = DefaultEditor::new().expect("Failed to create readline editor");
 
     loop {
-        print!("stargate> ");
-        stdout.flush().unwrap();
-
-        let mut input = String::new();
-        match stdin.read_line(&mut input) {
-            Ok(0) => break, // EOF
-            Ok(_) => {
+        match rl.readline("stargate> ") {
+            Ok(input) => {
                 let input = input.trim();
                 
                 if input.is_empty() {
                     continue;
                 }
+
+                // Add to history
+                let _ = rl.add_history_entry(input);
 
                 match input {
                     "exit" | "quit" => break,
@@ -276,6 +275,14 @@ fn main() {
                         }
                     }
                 }
+            }
+            Err(ReadlineError::Interrupted) => {
+                // Ctrl-C
+                continue;
+            }
+            Err(ReadlineError::Eof) => {
+                // Ctrl-D or EOF
+                break;
             }
             Err(e) => {
                 eprintln!("Error reading input: {}", e);
