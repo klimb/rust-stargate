@@ -520,7 +520,7 @@ name = "stargate"
 path = "src/bin/stargate.rs"
 
 [[bin]]
-name = "stargate_shell"
+name = "stargate-shell"
 path = "src/bin/stargate_shell.rs"
 
 [[bin]]
