@@ -1,11 +1,14 @@
 // Scripting language parser for stargate-shell
 
+use serde_json;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     String(String),
     Number(f64),
     Bool(bool),
     Null,
+    Object(serde_json::Value), // JSON object/array
 }
 
 impl Value {
@@ -15,6 +18,7 @@ impl Value {
             Value::Number(n) => n.to_string(),
             Value::Bool(b) => b.to_string(),
             Value::Null => "null".to_string(),
+            Value::Object(obj) => obj.to_string(),
         }
     }
 
@@ -24,6 +28,7 @@ impl Value {
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
             Value::Null => false,
+            Value::Object(_) => true,
         }
     }
 
@@ -33,6 +38,7 @@ impl Value {
             Value::Bool(b) => if *b { 1.0 } else { 0.0 },
             Value::String(s) => s.parse().unwrap_or(0.0),
             Value::Null => 0.0,
+            Value::Object(_) => 0.0,
         }
     }
 }
@@ -75,6 +81,14 @@ pub enum Expression {
     },
     CommandOutput(String),
     InterpolatedString(String), // String with {var} placeholders
+    PropertyAccess {
+        object: Box<Expression>,
+        property: String,
+    },
+    IndexAccess {
+        object: Box<Expression>,
+        index: Box<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -150,7 +164,7 @@ impl Parser {
                             current.clear();
                         }
                     }
-                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' => {
+                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' | '[' | ']' | '.' => {
                         if !current.is_empty() {
                             tokens.push(current.clone());
                             current.clear();
@@ -280,8 +294,8 @@ impl Parser {
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
         
-        // Check if the right-hand side is a pipeline
-        let expr = if self.contains_pipe_before_semicolon() {
+        // Check if the right-hand side is a pipeline or command
+        let expr = if self.contains_pipe_before_semicolon() || self.looks_like_command() {
             self.parse_pipeline_expr()?
         } else {
             self.parse_expression()?
@@ -295,8 +309,8 @@ impl Parser {
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
         
-        // Check if the right-hand side is a pipeline
-        let expr = if self.contains_pipe_before_semicolon() {
+        // Check if the right-hand side is a pipeline or command
+        let expr = if self.contains_pipe_before_semicolon() || self.looks_like_command() {
             self.parse_pipeline_expr()?
         } else {
             self.parse_expression()?
@@ -421,6 +435,20 @@ impl Parser {
         false
     }
 
+    fn looks_like_command(&self) -> bool {
+        // Check if the next token looks like a stargate command (contains hyphens)
+        if let Some(token) = self.tokens.get(self.pos) {
+            // Exclude string literals (they have quotes)
+            if token.starts_with('"') && token.ends_with('"') {
+                return false;
+            }
+            // Commands typically have hyphens like "list-directory", "get-hostname"
+            // But exclude negative numbers
+            return token.contains('-') && !token.starts_with('-') && token.len() > 1;
+        }
+        false
+    }
+
     fn parse_pipeline_expr(&mut self) -> Result<Expression, String> {
         let mut pipeline_tokens = Vec::new();
         while self.peek().is_some() && self.peek().map(|s| s.as_str()) != Some(";") {
@@ -509,7 +537,7 @@ impl Parser {
     }
 
     fn parse_multiplicative(&mut self) -> Result<Expression, String> {
-        let mut left = self.parse_primary()?;
+        let mut left = self.parse_postfix()?;
 
         while let Some(token) = self.peek() {
             let op = match token.as_str() {
@@ -518,7 +546,7 @@ impl Parser {
                 _ => break,
             };
             self.advance();
-            let right = self.parse_primary()?;
+            let right = self.parse_postfix()?;
             left = Expression::BinaryOp {
                 left: Box::new(left),
                 op,
@@ -529,13 +557,75 @@ impl Parser {
         Ok(left)
     }
 
+    fn parse_postfix(&mut self) -> Result<Expression, String> {
+        let mut expr = self.parse_primary()?;
+
+        loop {
+            match self.peek().map(|s| s.as_str()) {
+                Some(".") => {
+                    self.advance(); // consume '.'
+                    let property = self.advance().ok_or("Expected property name after '.'")?;
+                    expr = Expression::PropertyAccess {
+                        object: Box::new(expr),
+                        property,
+                    };
+                }
+                Some("[") => {
+                    self.advance(); // consume '['
+                    let index = self.parse_expression()?;
+                    self.expect("]")?;
+                    expr = Expression::IndexAccess {
+                        object: Box::new(expr),
+                        index: Box::new(index),
+                    };
+                }
+                _ => break,
+            }
+        }
+
+        Ok(expr)
+    }
+
     fn parse_primary(&mut self) -> Result<Expression, String> {
         let token = self.advance().ok_or("Unexpected end of expression")?;
 
         if token == "(" {
-            let expr = self.parse_expression()?;
-            self.expect(")")?;
-            return Ok(expr);
+            // Look ahead to see if this is a command (contains hyphens or pipes)
+            let mut lookahead = self.pos;
+            let mut looks_like_command = false;
+            let mut paren_depth = 1;
+            
+            while lookahead < self.tokens.len() && paren_depth > 0 {
+                let t = &self.tokens[lookahead];
+                if t == "(" {
+                    paren_depth += 1;
+                } else if t == ")" {
+                    paren_depth -= 1;
+                } else if t == "|" || (t.contains('-') && !t.starts_with('-') && t.len() > 1) {
+                    // Contains pipe or has hyphens (but not negative numbers)
+                    looks_like_command = true;
+                }
+                lookahead += 1;
+            }
+            
+            if looks_like_command {
+                // Parse as command output
+                let mut cmd = String::new();
+                while self.peek().map(|s| s.as_str()) != Some(")") {
+                    let tok = self.advance().ok_or("Expected command")?;
+                    if !cmd.is_empty() {
+                        cmd.push(' ');
+                    }
+                    cmd.push_str(&tok);
+                }
+                self.expect(")")?;
+                return Ok(Expression::CommandOutput(cmd));
+            } else {
+                // Parse as expression
+                let expr = self.parse_expression()?;
+                self.expect(")")?;
+                return Ok(expr);
+            }
         }
 
         if token == "$" {
