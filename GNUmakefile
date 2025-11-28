@@ -92,6 +92,7 @@ PROGS       := \
 	expr \
 	factor \
 	false \
+	find_text \
 	fmt \
 	fold \
 	hashsum \
