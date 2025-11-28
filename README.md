@@ -5,11 +5,16 @@ git clone https://github.com/klimb/rust-stargate
 cd rust-stargate
 make
 
+# normal way
 ./target/debug/list-directory --color
+
+# object way
 ./target/debug/list-directory -o --pretty 
 
+# try stargate shell (auto object conversion during piping)
 ./target/debug/stargate_shell 
-list-directory | collect-count
+stargate> list-directory | collect-count
+exit
 ```
 
 
