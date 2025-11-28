@@ -32,9 +32,18 @@ pub fn print_help() {
     println!("Features:");
     println!("  Tab completion            - Press Tab to see/cycle through completions");
     println!("                              Works for commands, parameters (--flags), and options");
+    println!("  Property completion       - Type command. and press Tab to see object properties");
+    println!("                              Example: get-hostname.<TAB> shows 'flags' and 'hostname'");
+    println!("                              Example: (list-directory).<TAB> shows 'entries', 'total_count'");
     println!("  Command hints             - Grayed suggestions appear as you type");
     println!("  Command history           - Use Up/Down arrows or Ctrl-P/Ctrl-N");
     println!("  Line editing              - Emacs-style keybindings (Ctrl-A, Ctrl-E, etc.)");
+    println!();
+    println!("Property Access in Scripts:");
+    println!("  Object properties:        let host = (get-hostname).hostname;");
+    println!("  Array indexing:           let first = (list-directory).entries[0];");
+    println!("  Negative indexing:        let last = (list-directory).entries[-1];");
+    println!("  Nested access:            let name = (list-directory).entries[0].name;");
     println!();
     println!("Examples:");
     println!("  describe-command list-directory");

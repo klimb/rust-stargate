@@ -5,6 +5,7 @@ use rustyline::hint::Hinter;
 use rustyline::validate::Validator;
 use rustyline::{Context, Helper};
 use std::borrow::Cow;
+use std::process::Command;
 
 use super::commands::{get_stargate_commands, get_command_parameters, SHELL_COMMANDS};
 
@@ -36,6 +37,76 @@ impl Completer for StargateCompletion {
         _ctx: &Context<'_>,
     ) -> rustyline::Result<(usize, Vec<Pair>)> {
         let line = &line[..pos];
+        
+        // Check for property access pattern: command.property or (command).property or complex expressions
+        if let Some(dot_pos) = line.rfind('.') {
+            let before_dot = &line[..dot_pos];
+            let after_dot = &line[dot_pos + 1..];
+            
+            // Check if this looks like a complex expression (contains [], ., or parentheses)
+            let is_complex = before_dot.contains('[') || before_dot.matches('.').count() > 0 
+                || (before_dot.contains('(') && before_dot.contains(')'));
+            
+            if is_complex {
+                // Use expression evaluation for complex property access
+                if let Some(properties) = get_expression_properties(before_dot) {
+                    let matches: Vec<Pair> = properties
+                        .into_iter()
+                        .filter(|prop| prop.starts_with(after_dot))
+                        .map(|prop| Pair {
+                            display: prop.clone(),
+                            replacement: prop,
+                        })
+                        .collect();
+                    return Ok((dot_pos + 1, matches));
+                }
+            } else {
+                // Simple pattern: command.property or (command).property
+                let (cmd_str, needs_parens) = if let Some(close_paren) = before_dot.rfind(')') {
+                    // Pattern: (command).property
+                    if let Some(open_paren) = before_dot[..close_paren].rfind('(') {
+                        (before_dot[open_paren + 1..close_paren].trim(), false)
+                    } else {
+                        (before_dot, false)
+                    }
+                } else {
+                    // Pattern: command.property (needs auto-parens)
+                    let cmd_start = before_dot.rfind(|c: char| c.is_whitespace() || c == '|' || c == '=')
+                        .map(|i| i + 1)
+                        .unwrap_or(0);
+                    (before_dot[cmd_start..].trim(), true)
+                };
+                
+                // Check if it's a stargate command
+                if self.commands.contains(&cmd_str.to_string()) && !SHELL_COMMANDS.contains(&cmd_str) {
+                    // Execute command to get JSON schema
+                    if let Some(properties) = get_command_properties(cmd_str) {
+                        let matches: Vec<Pair> = properties
+                            .into_iter()
+                            .filter(|prop| prop.starts_with(after_dot))
+                            .map(|prop| {
+                                let replacement = if needs_parens {
+                                    format!("({}).{}", cmd_str, prop)
+                                } else {
+                                    prop.clone()
+                                };
+                                Pair {
+                                    display: prop,
+                                    replacement,
+                                }
+                            })
+                            .collect();
+                        
+                        if needs_parens && !matches.is_empty() {
+                            let cmd_start = line.rfind(cmd_str).unwrap();
+                            return Ok((cmd_start, matches));
+                        } else {
+                            return Ok((dot_pos + 1, matches));
+                        }
+                    }
+                }
+            }
+        }
         
         // Special handling for "describe-command "
         if let Some(rest) = line.strip_prefix(DESCRIBE_COMMAND_PREFIX) {
@@ -101,6 +172,79 @@ impl Completer for StargateCompletion {
 
         Ok((start, matches))
     }
+}
+
+// Helper function to get property names from a command's JSON output
+fn get_command_properties(cmd: &str) -> Option<Vec<String>> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+    
+    // Execute command with --obj flag
+    let output = Command::new(&stargate_bin)
+        .arg(cmd)
+        .arg("--obj")
+        .output()
+        .ok()?;
+    
+    if !output.status.success() {
+        return None;
+    }
+    
+    let json_str = String::from_utf8_lossy(&output.stdout);
+    let json_value: serde_json::Value = serde_json::from_str(&json_str).ok()?;
+    
+    // Extract top-level keys from JSON object
+    if let serde_json::Value::Object(map) = &json_value {
+        let mut properties: Vec<String> = map.keys().cloned().collect();
+        properties.sort();
+        Some(properties)
+    } else {
+        None
+    }
+}
+
+// Helper function to evaluate an expression and get properties from the result
+fn get_expression_properties(expr: &str) -> Option<Vec<String>> {
+    use super::interpreter::Interpreter;
+    use super::scripting::{Parser, Value, Statement};
+    
+    // Wrap expression in a script that prints it as JSON
+    let script_code = format!("print {};", expr);
+    
+    // Parse and execute the script
+    let mut parser = Parser::new(&script_code);
+    let statements = parser.parse().ok()?;
+    let mut interpreter = Interpreter::new();
+    
+    // Execute statements and capture print output
+    for stmt in statements {
+        if let Statement::Print(expr) = stmt {
+            if let Ok(value) = interpreter.eval_expression(expr) {
+                // Convert value to JSON and extract properties
+                let json_value = match value {
+                    Value::Object(obj) => obj,
+                    Value::String(s) => {
+                        // Try to parse as JSON
+                        serde_json::from_str(&s).ok()?
+                    }
+                    _ => return None,
+                };
+                
+                // Extract keys from JSON object
+                if let serde_json::Value::Object(map) = &json_value {
+                    let mut properties: Vec<String> = map.keys().cloned().collect();
+                    properties.sort();
+                    return Some(properties);
+                } else {
+                    return None;
+                }
+            }
+        }
+    }
+    
+    None
 }
 
 impl Hinter for StargateCompletion {
