@@ -150,8 +150,8 @@ stargate> print "{name}: {perms}";
 ```
 
 **Object pipeline transformations:**
-```bash
-list-directory --obj | slice-object entries | dice-object name size type
+```stargate-shell
+list-directory | slice-object entries | dice-object name size type
 ```
 
 ### Platform Support
