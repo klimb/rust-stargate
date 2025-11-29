@@ -1,0 +1,233 @@
+use ut;
+
+# Test list creation with various types
+[test]
+fn test_list_creation() {
+    let empty = [];
+    ut.assert_equals(empty.length(), 0, "Empty list should have length 0");
+    
+    let nums = [1, 2, 3, 4, 5];
+    ut.assert_equals(nums.length(), 5, "List should have length 5");
+}
+
+# Test mixed types - strings, numbers, booleans together
+[test]
+fn test_mixed_types() {
+    let mixed = [1, "hello", true, 3.14];
+    ut.assert_equals(mixed.length(), 4, "Mixed list should have length 4");
+    ut.assert_equals(mixed[0], 1, "First element should be 1");
+    ut.assert_equals(mixed[1], "hello", "Second element should be 'hello'");
+    ut.assert_equals(mixed[2], true, "Third element should be true");
+    ut.assert_equals(mixed[3], 3.14, "Fourth element should be 3.14");
+}
+
+# Test lists containing object references
+[test]
+fn test_list_with_objects() {
+    let obj = (list-directory);
+    let items = [obj, "metadata", 123];
+    
+    ut.assert_equals(items.length(), 3, "List with objects should have length 3");
+    ut.assert_equals(items[1], "metadata", "String element preserved");
+    ut.assert_equals(items[2], 123, "Number element preserved");
+}
+
+# Test lists with class instances
+[test]
+fn test_list_with_instances() {
+    class Person {
+        let name = "Unknown";
+        let age = 0;
+    }
+    
+    let person1 = new Person;
+    let person2 = new Person;
+    
+    let some_list = [person1, person2, "extra"];
+    ut.assert_equals(some_list.length(), 3, "List with instances should work");
+}
+
+# Test nested lists
+[test]
+fn test_nested_lists() {
+    let nested = [[1, 2], [3, 4], [5, 6]];
+    ut.assert_equals(nested.length(), 3, "Outer list should have 3 elements");
+    ut.assert_equals(nested[0].length(), 2, "First inner list has 2 elements");
+    ut.assert_equals(nested[1][0], 3, "Access nested element");
+}
+
+# Test positive indexing
+[test]
+fn test_positive_indexing() {
+    let nums = [10, 20, 30, 40, 50];
+    ut.assert_equals(nums[0], 10, "First element should be 10");
+    ut.assert_equals(nums[1], 20, "Second element should be 20");
+    ut.assert_equals(nums[4], 50, "Last element should be 50");
+}
+
+# Test negative indexing (Python-style)
+[test]
+fn test_negative_indexing() {
+    let nums = [10, 20, 30, 40, 50];
+    ut.assert_equals(nums[-1], 50, "Last element via -1 should be 50");
+    ut.assert_equals(nums[-2], 40, "Second to last via -2 should be 40");
+    ut.assert_equals(nums[-5], 10, "First element via -5 should be 10");
+}
+
+# Test append method with different types
+[test]
+fn test_append_mixed() {
+    let items = [1, 2];
+    items = items.append("three");
+    items = items.append(4.5);
+    items = items.append(true);
+    
+    ut.assert_equals(items.length(), 5, "Length should be 5 after appends");
+    ut.assert_equals(items[2], "three", "String appended");
+    ut.assert_equals(items[3], 4.5, "Float appended");
+    ut.assert_equals(items[4], true, "Boolean appended");
+}
+
+# Test insert method at front
+[test]
+fn test_insert_front() {
+    let nums = [2, 3, 4];
+    nums = nums.insert(0, 1);
+    ut.assert_equals(nums.length(), 4, "Length should be 4 after insert");
+    ut.assert_equals(nums[0], 1, "First element should be 1");
+    ut.assert_equals(nums[1], 2, "Second element should be 2");
+}
+
+# Test insert method in middle
+[test]
+fn test_insert_middle() {
+    let items = ["a", "c", "d"];
+    items = items.insert(1, "b");
+    ut.assert_equals(items.length(), 4, "Length should be 4 after insert");
+    ut.assert_equals(items[1], "b", "Element at index 1 should be 'b'");
+    ut.assert_equals(items[2], "c", "Element at index 2 should be 'c'");
+}
+
+# Test index assignment with various types
+[test]
+fn test_index_assignment() {
+    let items = [1, 2, 3];
+    items[0] = "one";
+    items[1] = true;
+    items[2] = 3.14;
+    
+    ut.assert_equals(items[0], "one", "First element should be 'one'");
+    ut.assert_equals(items[1], true, "Second element should be true");
+    ut.assert_equals(items[2], 3.14, "Third element should be 3.14");
+}
+
+# Test negative index assignment
+[test]
+fn test_negative_index_assignment() {
+    let nums = [1, 2, 3, 4, 5];
+    nums[-1] = 99;
+    ut.assert_equals(nums[4], 99, "Last element should be 99");
+    nums[-2] = 88;
+    ut.assert_equals(nums[3], 88, "Second to last should be 88");
+}
+
+# Test remove method
+[test]
+fn test_remove() {
+    let nums = [1, 2, 3, 4, 5];
+    nums = nums.remove(2);
+    ut.assert_equals(nums.length(), 4, "Length should be 4 after remove");
+    ut.assert_equals(nums[2], 4, "Element at index 2 should now be 4");
+}
+
+# Test remove with negative index
+[test]
+fn test_remove_negative() {
+    let items = ["a", "b", "c", "d"];
+    items = items.remove(-1);
+    ut.assert_equals(items.length(), 3, "Length should be 3 after removing last");
+    items = items.remove(-2);
+    ut.assert_equals(items.length(), 2, "Length should be 2");
+}
+
+# Test clear method
+[test]
+fn test_clear() {
+    let nums = [1, 2, 3, 4, 5];
+    nums = nums.clear();
+    ut.assert_equals(nums.length(), 0, "List should be empty after clear");
+}
+
+# Test building a list dynamically
+[test]
+fn test_dynamic_list_building() {
+    let result = [];
+    result = result.append(1);
+    result = result.append(2);
+    result = result.append(3);
+    
+    ut.assert_equals(result.length(), 3, "Dynamically built list has 3 elements");
+    ut.assert_equals(result[0], 1, "First element is 1");
+    ut.assert_equals(result[2], 3, "Last element is 3");
+}
+
+# Test list with variable references
+[test]
+fn test_list_with_variables() {
+    let name = "Alice";
+    let age = 30;
+    let active = true;
+    
+    let person_data = [name, age, active];
+    ut.assert_equals(person_data[0], "Alice", "Name preserved");
+    ut.assert_equals(person_data[1], 30, "Age preserved");
+    ut.assert_equals(person_data[2], true, "Active status preserved");
+}
+
+# Test list with computed values
+[test]
+fn test_list_with_expressions() {
+    let x = 5;
+    let y = 3;
+    
+    let results = [x + y, x * y, x - y];
+    ut.assert_equals(results[0], 8, "Addition result");
+    ut.assert_equals(results[1], 15, "Multiplication result");
+    ut.assert_equals(results[2], 2, "Subtraction result");
+}
+
+# Test modifying list in a loop
+[test]
+fn test_list_modification_in_loop() {
+    let squares = [];
+    let i = 1;
+    
+    # Build list of squares manually
+    squares = squares.append(i * i);
+    i = i + 1;
+    squares = squares.append(i * i);
+    i = i + 1;
+    squares = squares.append(i * i);
+    i = i + 1;
+    squares = squares.append(i * i);
+    i = i + 1;
+    squares = squares.append(i * i);
+    
+    ut.assert_equals(squares.length(), 5, "Should have 5 squares");
+    ut.assert_equals(squares[0], 1, "First square is 1");
+    ut.assert_equals(squares[4], 25, "Fifth square is 25");
+}
+
+# Test list length as boolean
+[test]
+fn test_list_truthiness() {
+    let empty = [];
+    let filled = [1, 2];
+    
+    # Empty lists are falsy in boolean context
+    ut.assert_equals(empty.length(), 0, "Empty list has length 0");
+    ut.assert_equals(filled.length(), 2, "Filled list has length 2");
+}
+
+print ut.stats;
+exit(ut.healthy);

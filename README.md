@@ -63,6 +63,61 @@ Passed: 2, Failed: 0, Total: 2
 - `ut.stats` - Get test statistics (Passed: X, Failed: Y, Total: Z)
 - `ut.healthy` - Returns `true` if all tests passed, `false` otherwise
 
+#### **Native Lists with Python-Style Operations**
+First-class list support with any type - strings, numbers, booleans, objects, class instances:
+```rust
+# Create lists with mixed types
+let nums = [1, 2, 3, 4, 5];
+let mixed = [1, "hello", true, 3.14];
+let objects = [(list-directory), "metadata", 123];
+let nested = [[1, 2], [3, 4], [5, 6]];
+let empty = [];
+
+# Python-style indexing
+let first = nums[0];      # 1
+let last = nums[-1];      # 5 (negative indexing!)
+let second_last = nums[-2]; # 4
+
+# Index assignment - any type
+nums[0] = 100;
+nums[-1] = 999;           # Update last element
+mixed[0] = "changed";     # Change type on the fly
+
+# List methods
+nums = nums.append(6);        # Add to end: [1, 2, 3, 4, 5, 6]
+nums = nums.insert(0, 0);     # Insert at front: [0, 1, 2, 3, 4, 5, 6]
+nums = nums.remove(2);        # Remove at index: [0, 1, 3, 4, 5, 6]
+nums = nums.remove(-1);       # Remove last: [0, 1, 3, 4, 5]
+let size = nums.length();     # Get length: 5
+nums = nums.clear();          # Empty the list
+
+# Build lists dynamically
+let results = [];
+for i in 1..6 {
+    results = results.append(i * i);
+}
+# results = [1, 4, 9, 16, 25]
+```
+
+**Test list operations:**
+```rust
+[test]
+fn test_list_operations() {
+    let obj = (list-directory);
+    let mixed = [obj, "text", 77, true];
+    
+    ut.assert_equals(mixed.length(), 4, "Mixed types work");
+    ut.assert_equals(mixed[1], "text", "String element");
+    ut.assert_equals(mixed[-1], true, "Last via negative index");
+    
+    mixed[2] = "replaced";
+    ut.assert_equals(mixed[2], "replaced", "Type change works");
+    
+    mixed = mixed.append(3.14);
+    ut.assert_equals(mixed.length(), 5, "Length after append");
+}
+```
+
 #### **Object-Oriented Programming with Classes**
 Full class support with inheritance and methods:
 ```rust
