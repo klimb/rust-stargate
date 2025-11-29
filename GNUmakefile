@@ -143,6 +143,8 @@ PROGS       := \
 	uniq \
 	unlink \
 	collect_count \
+	slice_object \
+	dice_object \
 	whoami \
 	yes
 
