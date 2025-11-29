@@ -87,7 +87,7 @@ PROGS       := \
 	dirname \
 	du \
 	echo \
-	env \
+	get_environment \
 	expand \
 	expr \
 	factor \
@@ -214,7 +214,7 @@ TEST_PROGS  := \
 	dircolors \
 	dirname \
 	echo \
-	env \
+	get_environment \
 	expr \
 	factor \
 	false \
