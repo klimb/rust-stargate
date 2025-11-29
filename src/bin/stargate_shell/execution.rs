@@ -14,6 +14,36 @@ fn is_object_native_command(cmd: &str) -> bool {
     OBJECT_NATIVE_COMMANDS.contains(&cmd)
 }
 
+fn handle_cd(args: &[String]) -> Result<String, String> {
+    let path = if args.is_empty() {
+        // No argument - go to home directory
+        std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
+    } else if args[0] == "-" {
+        // cd - goes to previous directory
+        std::env::var("OLDPWD").unwrap_or_else(|_| {
+            return ".".to_string();
+        })
+    } else {
+        args[0].clone()
+    };
+
+    // Save current directory as OLDPWD
+    if let Ok(current) = std::env::current_dir() {
+        unsafe { std::env::set_var("OLDPWD", current); }
+    }
+
+    // Change directory
+    std::env::set_current_dir(&path)
+        .map_err(|e| format!("cd: {}: {}", path, e))?;
+
+    // Update PWD
+    if let Ok(new_dir) = std::env::current_dir() {
+        unsafe { std::env::set_var("PWD", new_dir); }
+    }
+
+    Ok(String::new())
+}
+
 pub fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
     execute_single_command_impl(cmd_parts, false)
 }
@@ -25,6 +55,12 @@ pub fn execute_single_command_with_obj(cmd_parts: &[String]) -> Result<String, S
 fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<String, String> {
     if cmd_parts.is_empty() {
         return Err("Empty command".to_string());
+    }
+
+    // Handle built-in commands
+    let cmd_name = cmd_parts[0].as_str();
+    if cmd_name == "cd" || cmd_name == "change-directory" {
+        return handle_cd(&cmd_parts[1..]);
     }
 
     let stargate_bin = std::env::current_exe()

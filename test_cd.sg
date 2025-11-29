@@ -1,0 +1,5 @@
+#!/usr/bin/env stargate-shell
+
+cd /tmp;
+list-directory | head -n 5;
+

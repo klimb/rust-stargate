@@ -164,18 +164,9 @@ impl Interpreter {
                 self.call_function(&name, args)?;
             }
             Statement::Command(cmd) => {
-                // Check if it's a stargate pipeline (contains |)
-                if cmd.contains('|') {
-                    // Execute as stargate pipeline
-                    if let Err(e) = execute_pipeline(&cmd) {
-                        eprintln!("Pipeline error: {}", e);
-                    }
-                } else {
-                    // Execute as regular shell command
-                    let _ = ProcessCommand::new("sh")
-                        .arg("-c")
-                        .arg(&cmd)
-                        .status();
+                // Execute all commands through execute_pipeline (handles built-ins like cd)
+                if let Err(e) = execute_pipeline(&cmd) {
+                    eprintln!("Pipeline error: {}", e);
                 }
             }
             Statement::Return(expr) => {
