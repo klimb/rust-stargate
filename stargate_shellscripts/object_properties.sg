@@ -6,8 +6,8 @@ print "";
 
 # Example 1: Simple property access
 print "Example 1: Accessing object properties";
-let hostname = (get-hostname).hostname;
-print "Hostname: {hostname}";
+let total_count = (list-directory).total_count;
+print "Total files: {total_count}";
 print "";
 
 # Example 2: Accessing nested properties

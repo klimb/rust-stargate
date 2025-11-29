@@ -1,0 +1,105 @@
+#!/usr/bin/env stargate-shell
+# Demonstration of && (and) and || (or) operators in stargate scripts
+
+print "=== Logical Operators Demo ===";
+print "";
+
+# Example 1: && operator (AND)
+print "1. AND operator (&&) - both conditions must be true:";
+let x = 5;
+let y = 10;
+
+if x > 0 && y > 0 {
+    print "  ✓ Both x and y are positive";
+}
+
+if x > 0 && y < 5 {
+    print "  ✗ This should not print";
+} else {
+    print "  ✓ x is positive but y is not less than 5";
+}
+print "";
+
+# Example 2: || operator (OR)
+print "2. OR operator (||) - at least one condition must be true:";
+let a = 15;
+let b = 0;
+
+if a > 10 || b > 10 {
+    print "  ✓ At least one value is greater than 10";
+}
+
+if a < 0 || b < 0 {
+    print "  ✗ This should not print";
+} else {
+    print "  ✓ Neither a nor b is negative";
+}
+print "";
+
+# Example 3: Combining && and ||
+print "3. Combining && and ||:";
+let age = 25;
+let has_license = 1;
+
+if age >= 18 && has_license == 1 {
+    print "  ✓ Can drive - age is {age} and has license";
+}
+
+if age < 16 || has_license == 0 {
+    print "  ✗ This should not print";
+} else {
+    print "  ✓ Person meets driving requirements";
+}
+print "";
+
+# Example 4: Short-circuit evaluation
+print "4. Short-circuit evaluation:";
+let check = 1;
+
+# This demonstrates short-circuit: if first condition is false, second isn't evaluated
+if check == 0 && check > 100 {
+    print "  ✗ This should not print";
+}
+
+# If first condition is true, second isn't evaluated
+if check == 1 || check > 100 {
+    print "  ✓ First condition was true, so this executes";
+}
+print "";
+
+# Example 5: Practical file checking example
+print "5. Practical example - checking conditions:";
+let file_count = (list-directory).total_count;
+
+if file_count > 0 && file_count < 100 {
+    print "  ✓ Directory has {file_count} files (reasonable number)";
+}
+
+if file_count >= 100 {
+    print "  Directory has many files: {file_count}";
+}
+
+if file_count == 0 {
+    print "  Directory is empty";
+}
+print "";
+
+# Example 6: Nested parentheses for complex logic
+print "6. Nested parentheses - complex boolean expressions:";
+let a = 1;
+let b = 1;
+let c = 0;
+let d = 1;
+let z = 1;
+
+let result = (((a && b) || (c && d)) && z);
+print "  Expression: (((a && b) || (c && d)) && z)";
+print "  Values: a={a}, b={b}, c={c}, d={d}, z={z}";
+print "  Result: {result}";
+
+if (((a == 1 && b == 1) || (c == 1 && d == 1)) && z == 1) {
+    print "  ✓ Complex nested condition evaluated correctly";
+}
+print "";
+
+print "=== Demo Complete ===";

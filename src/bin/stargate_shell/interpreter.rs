@@ -127,9 +127,35 @@ impl Interpreter {
                     .ok_or(format!("Variable '{}' not found", name))
             }
             Expression::BinaryOp { left, op, right } => {
-                let left_val = self.eval_expression(*left)?;
-                let right_val = self.eval_expression(*right)?;
-                self.apply_operator(left_val, op, right_val)
+                // Short-circuit evaluation for && and ||
+                match op {
+                    Operator::And => {
+                        let left_val = self.eval_expression(*left)?;
+                        if !left_val.to_bool() {
+                            // Left is false, short-circuit
+                            return Ok(Value::Bool(false));
+                        }
+                        // Left is true, evaluate right
+                        let right_val = self.eval_expression(*right)?;
+                        Ok(Value::Bool(right_val.to_bool()))
+                    }
+                    Operator::Or => {
+                        let left_val = self.eval_expression(*left)?;
+                        if left_val.to_bool() {
+                            // Left is true, short-circuit
+                            return Ok(Value::Bool(true));
+                        }
+                        // Left is false, evaluate right
+                        let right_val = self.eval_expression(*right)?;
+                        Ok(Value::Bool(right_val.to_bool()))
+                    }
+                    _ => {
+                        // Normal evaluation for other operators
+                        let left_val = self.eval_expression(*left)?;
+                        let right_val = self.eval_expression(*right)?;
+                        self.apply_operator(left_val, op, right_val)
+                    }
+                }
             }
             Expression::FunctionCall { name, args } => {
                 self.call_function(&name, args)
