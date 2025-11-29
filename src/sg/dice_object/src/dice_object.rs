@@ -31,9 +31,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let pretty = matches.get_flag(options::PRETTY);
 
     // Collect fields to extract
-    let fields: Vec<String> = if let Some(field) = matches.get_one::<String>(options::FIELD) {
-        vec![field.clone()]
-    } else if let Some(fields_iter) = matches.get_many::<String>(options::FIELDS) {
+    let fields: Vec<String> = if let Some(fields_iter) = matches.get_many::<String>(options::FIELDS) {
         fields_iter.map(|s| s.to_string()).collect()
     } else {
         // No fields specified, output as-is
@@ -107,23 +105,12 @@ pub fn uu_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about("Filter JSON object columns/fields")
-        .override_usage("dice-object [OPTIONS]")
-        .arg(
-            Arg::new(options::FIELD)
-                .short('f')
-                .long("field")
-                .value_name("FIELD")
-                .help("Extract a single field (column)")
-                .conflicts_with(options::FIELDS)
-                .action(ArgAction::Set),
-        )
+        .override_usage("dice-object [FIELD]...")
         .arg(
             Arg::new(options::FIELDS)
-                .short('F')
-                .long("fields")
                 .value_name("FIELD")
                 .help("Extract multiple fields (columns)")
-                .conflicts_with(options::FIELD)
+                .num_args(1..)
                 .action(ArgAction::Append),
         )
         .arg(

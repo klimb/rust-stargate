@@ -1,0 +1,23 @@
+#!/usr/bin/env stargate-shell
+# Demonstration of slice-object and dice-object commands
+# These commands allow you to extract fields and filter JSON data in pipelines
+
+print "=== Slice and Dice Demo ===";
+print "";
+
+# Example 1: Get just the total_count field from list-directory
+print "1. Extract total_count field directly:";
+let my_count = list-directory | slice-object total_count;
+print "total count: {my_count}";
+print "";
+
+# Example 2: Extract entries array and filter to name and type fields only
+print "2. Extract entries and show only name and type fields:";
+list-directory | slice-object entries | dice-object name type;
+print "";
+
+# Example 3: Filter to name, size, and type (the full example from README)
+print "3. Extract entries and show name, size, and type:";
+list-directory | slice-object entries | dice-object name;
+
+print "=== Demo Complete ===";
