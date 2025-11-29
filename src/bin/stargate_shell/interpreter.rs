@@ -524,6 +524,20 @@ impl Interpreter {
                 }
                 return Ok(Value::Bool(arg_values[0].to_bool()));
             }
+            "range" => {
+                if arg_values.len() != 2 {
+                    return Err(format!("range() expects 2 arguments (from, to), got {}", arg_values.len()));
+                }
+                let from = arg_values[0].to_number() as i64;
+                let to = arg_values[1].to_number() as i64;
+                
+                let mut numbers = Vec::new();
+                for i in from..to {
+                    numbers.push(serde_json::Value::Number(serde_json::Number::from(i)));
+                }
+                
+                return Ok(Value::Object(serde_json::Value::Array(numbers)));
+            }
             _ => {}
         }
 

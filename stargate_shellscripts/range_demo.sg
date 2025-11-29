@@ -1,0 +1,43 @@
+#!/usr/bin/env stargate-shell
+
+print "=== Range Function Demo ===";
+print "";
+
+# Example 0: Simple for loop, python style range 
+# instead  for (int i=0; i<5; i++)
+for x in range(0, 5) {
+    print("simple for loop: {x}");
+}
+
+# Example 1: Simple range iteration
+print "1. Counting from 1 to 5:";
+for x in range(1, 6) {
+    print "  {x}";
+}
+print "";
+
+# Example 2: Using range values in expressions
+print "2. Squares of numbers 1-5:";
+for n in range(1, 6) {
+    let square = n * n;
+    print "  {n}² = {square}";
+}
+print "";
+
+# Example 3: Range with larger numbers
+print "3. Numbers from 10 to 15:";
+for num in range(10, 16) {
+    print "  Number: {num}";
+}
+print "";
+
+# Example 4: Countdown (using negative logic)
+print "4. Sum of numbers 1 to 10:";
+let sum = 0;
+for i in range(1, 11) {
+    let sum = sum + i;
+}
+print "  Sum = {sum}";
+print "";
+
+print "=== Range Demo Complete ===";
