@@ -20,12 +20,14 @@ Every command outputs structured JSON when you need it:
 ```bash
 # Get structured data with --obj flag when used inside bash, zsh, etc 
 # (or its  auto-enabled in stargate-shell)
-# bash example:
-get-hostname --obj
+bash# get-hostname --obj
 # {"hostname":"myserver","domain":"local","fqdn":"myserver.local"}
 
 # stargate-shell example: Pipe objects through commands - no parsing needed!
-list-directory | slice-object entries | dice-object name permissions
+stargate> list-directory | slice-object entries | dice-object name permissions
+
+stargate> (list-directory | slice-object entries | dice-object name permissions)[0]
+#{"name":".rustfmt.toml","permissions":"664"}
 ```
 
 #### **Stargate Shell - Interactive & Scriptable**
