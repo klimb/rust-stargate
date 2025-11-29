@@ -9,6 +9,7 @@ use rustyline::error::ReadlineError;
 use rustyline::{Editor, Config, CompletionType};
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
+use std::io::IsTerminal;
 
 use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_banner, print_help, Interpreter};
 
@@ -43,6 +44,27 @@ fn main() {
                 eprintln!("Error reading script file '{}': {}", script_file, e);
                 std::process::exit(1);
             }
+        }
+    }
+    
+    // Check if stdin is being piped (not a TTY)
+    if !std::io::stdin().is_terminal() {
+        // Reading from pipe/file - execute entire input as script
+        use std::io::Read;
+        let mut script_code = String::new();
+        if let Ok(_) = std::io::stdin().read_to_string(&mut script_code) {
+            // Skip shebang line if present
+            let script_code = if script_code.starts_with("#!") {
+                script_code.lines().skip(1).collect::<Vec<_>>().join("\n")
+            } else {
+                script_code
+            };
+            
+            if let Err(e) = execute_script(&script_code) {
+                eprintln!("Script error: {}", e);
+                std::process::exit(1);
+            }
+            return;
         }
     }
     

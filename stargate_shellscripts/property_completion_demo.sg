@@ -7,23 +7,19 @@ print "In the REPL, you can now use tab completion for properties!";
 print "";
 
 print "Examples that work in the REPL:";
-print "1. Type: get-hostname.<TAB>";
-print "   → Auto-completes to: (get-hostname).hostname or (get-hostname).flags";
-print "";
-
-print "2. Type: list-directory.<TAB>";
+print "1. Type: list-directory.<TAB>";
 print "   → Shows: entries, recursive, total_count";
 print "";
 
-print "3. Type: (get-hostname).h<TAB>";
-print "   → Completes to: (get-hostname).hostname";
+print "2. Type: (list-directory).e<TAB>";
+print "   → Completes to: (list-directory).entries";
+print "";
+
+print "3. Type: (list-directory).entries[0].<TAB>";
+print "   → Shows available properties of first entry";
 print "";
 
 print "Working examples in scripts:";
-print "";
-
-let host = (get-hostname).hostname;
-print "Hostname: {host}";
 print "";
 
 let count = (list-directory).total_count;

@@ -13,6 +13,13 @@ fn is_even(n) {
     return 0;
 }
 
+fn in_range(n, min, max) {
+    if n >= min && n <= max {
+        return 1;
+    }
+    return 0;
+}
+
 let test_num = 42;
 print "Testing number: {test_num}";
 
@@ -21,4 +28,22 @@ if result == 1 {
     print "Number is even";
 } else {
     print "Number is odd";
+}
+
+# Test range checking with && operator
+let is_in_range = in_range(test_num, 1, 100);
+if is_in_range == 1 {
+    print "Number is in range 1-100";
+}
+
+# Test with || operator
+let small_num = 5;
+if small_num < 10 || small_num > 100 {
+    print "Number {small_num} is either small (< 10) or very large (> 100)";
+}
+
+# Complex condition
+let x = 15;
+if x > 10 && x < 20 {
+    print "x = {x} is between 10 and 20";
 }

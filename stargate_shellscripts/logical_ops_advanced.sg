@@ -1,0 +1,165 @@
+#!/usr/bin/env stargate-shell
+# Advanced demonstration of && (AND) and || (OR) logical operators
+
+print "=== Advanced Logical Operators Demo ===";
+print "";
+
+# =============================================================================
+# Example 1: Basic && (AND) - Both conditions must be true
+# =============================================================================
+print "1. AND operator (&&) - requires ALL conditions to be true:";
+let file_count = (list-directory).total_count;
+print "   Files in directory: {file_count}";
+
+if file_count > 0 && file_count < 1000 {
+    print "   ✓ PASS: Directory has files AND is not too large";
+}
+print "";
+
+# =============================================================================
+# Example 2: Basic || (OR) - At least one condition must be true
+# =============================================================================
+print "2. OR operator (||) - requires AT LEAST ONE condition to be true:";
+let value = 75;
+let min = 0;
+let max = 100;
+
+print "   Testing value={value} against range [{min}, {max}]";
+if value >= min && value <= max {
+    print "   ✓ PASS: Value is within range (both conditions true)";
+}
+
+if value < min || value > max {
+    print "   FAIL: Value is out of range";
+} else {
+    print "   ✓ PASS: Value is in valid range";
+}
+print "";
+
+# =============================================================================
+# Example 3: Chaining multiple && operators
+# =============================================================================
+print "3. Chaining AND operators - ALL must be true:";
+let a = 10;
+let b = 20;
+let c = 30;
+
+print "   Values: a={a}, b={b}, c={c}";
+if a < b && b < c {
+    print "   ✓ PASS: a < b < c (ascending order)";
+}
+
+if a < b && b < c && a < c {
+    print "   ✓ PASS: All three comparison conditions true";
+}
+print "";
+
+# =============================================================================
+# Example 4: Chaining multiple || operators
+# =============================================================================
+print "4. Chaining OR operators - AT LEAST ONE must be true:";
+print "   Testing: a={a}, b={b}, c={c}";
+
+if a == b || b == c || a == c {
+    print "   FAIL: Some values are equal";
+} else {
+    print "   ✓ PASS: All values are distinct (no equalities found)";
+}
+print "";
+
+# =============================================================================
+# Example 5: Combining && and || with parentheses
+# =============================================================================
+print "5. Combining && and || (mixed operators):";
+let is_admin = 0;
+let is_authenticated = 1;
+let has_permission = 1;
+
+print "   Admin={is_admin}, Authenticated={is_authenticated}, Permission={has_permission}";
+
+# Admin OR (authenticated AND has permission)
+if is_admin == 1 || (is_authenticated == 1 && has_permission == 1) {
+    print "   ✓ PASS: Access granted via (admin OR (authenticated AND permitted))";
+}
+print "";
+
+# =============================================================================
+# Example 6: Multi-step validation with &&
+# =============================================================================
+print "6. Multi-step validation (progressive AND chaining):";
+let step1 = 1;
+let step2 = 1;
+let step3 = 0;
+
+print "   Step 1={step1}, Step 2={step2}, Step 3={step3}";
+
+if step1 == 1 {
+    print "   ✓ Step 1 passed";
+}
+
+if step1 == 1 && step2 == 1 {
+    print "   ✓ Steps 1 AND 2 passed";
+}
+
+if step1 == 1 && step2 == 1 && step3 == 1 {
+    print "   ✓ All steps passed";
+} else {
+    print "   ⚠ FAIL: Not all steps passed (step 3 failed)";
+}
+
+# Show success case
+print "   Testing when all steps pass:";
+if 1 == 1 && 1 == 1 && 1 == 1 {
+    print "   ✓ PASS: When all three conditions are true, result is true";
+}
+print "";
+
+# =============================================================================
+# Example 7: Deeply nested parentheses
+# =============================================================================
+print "7. Complex nested expressions:";
+let user_active = 1;
+let has_email = 1;
+let has_phone = 0;
+let verified = 1;
+
+print "   Active={user_active}, Email={has_email}, Phone={has_phone}, Verified={verified}";
+
+# (active AND (email OR phone)) AND verified
+let can_proceed = ((user_active == 1 && (has_email == 1 || has_phone == 1)) && verified == 1);
+print "   Expression: ((active && (email || phone)) && verified)";
+print "   Result: {can_proceed}";
+
+if can_proceed == 1 {
+    print "   ✓ PASS: User has contact method AND is verified";
+}
+print "";
+
+# =============================================================================
+# Example 8: The user's requested syntax - triple nesting
+# =============================================================================
+print "8. Triple-nested parentheses (maximum complexity):";
+let x = 1;
+let y = 1;
+let z = 0;
+let w = 1;
+let final = 1;
+
+print "   Values: x={x}, y={y}, z={z}, w={w}, final={final}";
+
+# (((x && y) || (z && w)) && final)
+let result = (((x && y) || (z && w)) && final);
+print "   Expression: (((x && y) || (z && w)) && final)";
+print "   Breakdown:";
+print "     - (x && y) = {x} && {y} = true";
+print "     - (z && w) = {z} && {w} = false";
+print "     - (true || false) = true";
+print "     - (true && {final}) = true";
+print "   Final result: {result}";
+
+if result == 1 {
+    print "   ✓ PASS: Complex nested evaluation worked correctly";
+}
+print "";
+
+print "=== All Examples Complete ===";
