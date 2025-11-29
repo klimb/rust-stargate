@@ -220,6 +220,10 @@ impl Parser {
                         } else if ch == '|' && chars.peek() == Some(&'|') {
                             let next = chars.next().unwrap();
                             tokens.push(format!("{}{}", ch, next));
+                        } else if ch == '.' && chars.peek() == Some(&'.') {
+                            // Handle .. as a single token (parent directory)
+                            let next = chars.next().unwrap();
+                            tokens.push("..".to_string());
                         } else {
                             tokens.push(ch.to_string());
                         }

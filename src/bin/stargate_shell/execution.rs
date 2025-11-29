@@ -77,14 +77,12 @@ fn handle_cd(args: &[String]) -> Result<String, String> {
         std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
     } else if args[0] == "-" {
         // cd - goes to previous directory
-        std::env::var("OLDPWD").unwrap_or_else(|_| {
-            return ".".to_string();
-        })
+        std::env::var("OLDPWD").unwrap_or_else(|_| ".".to_string())
     } else {
         args[0].clone()
     };
 
-    // Save current directory as OLDPWD
+    // Save current directory as OLDPWD before changing
     if let Ok(current) = std::env::current_dir() {
         unsafe { std::env::set_var("OLDPWD", current); }
     }
@@ -93,7 +91,7 @@ fn handle_cd(args: &[String]) -> Result<String, String> {
     std::env::set_current_dir(&path)
         .map_err(|e| format!("cd: {}: {}", path, e))?;
 
-    // Update PWD
+    // Update PWD to reflect the new current directory
     if let Ok(new_dir) = std::env::current_dir() {
         unsafe { std::env::set_var("PWD", new_dir); }
     }
@@ -120,6 +118,15 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
     // Handle built-in commands
     if cmd_name == "cd" || cmd_name == "change-directory" {
         return handle_cd(&cmd_parts[1..]);
+    }
+    
+    // Handle pwd as built-in to reflect actual shell's current directory
+    if cmd_name == "pwd" {
+        if let Ok(current) = std::env::current_dir() {
+            return Ok(format!("{}\n", current.to_string_lossy()));
+        } else {
+            return Err("Could not determine current directory".to_string());
+        }
     }
 
     let stargate_bin = std::env::current_exe()
