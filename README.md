@@ -36,14 +36,6 @@ let human = new Man;
 print human.mission;      # "Mine gold" (inherited from Anunnaki)
 print human.knows_truth;  # false (blissfully unaware)
 
-# Classes work with command output
-class ServerInfo {
-    let hostname = (get-hostname).hostname;
-    let user = (get-username).username;
-}
-
-let server = new ServerInfo;
-print "{server.user}@{server.hostname}";
 ```
 
 #### **Object Pipelines - No Text Parsing**
@@ -85,9 +77,9 @@ stargate> cd sr<TAB>
 stargate> cd src/
 
 # Variable completion
-stargate> let myvar = 42;
+stargate> let my_people = "go";
 stargate> print my<TAB>
-stargate> print myvar
+stargate> print my_people
 ```
 
 #### **Stargate Shell - Interactive & Scriptable**
@@ -118,7 +110,6 @@ stargate> cmd | slice-object entries | collect-count
 stargate> let user = (get-username).username;
 stargate> let host = (get-hostname).hostname;
 stargate> print "I am {user}@{host}";
-I am alice@myserver
 
 # Works with any expression
 stargate> print "Last file: {(list-directory).entries[-1].name}";
@@ -126,30 +117,7 @@ stargate> print "Last file: {(list-directory).entries[-1].name}";
 
 ### 🚀 Language Features
 
-**Classes with Inheritance:**
-```rust
-class Anunnaki {
-    let planet = "Nibiru";
-    let mission = "Mine gold";
-    let created_humans = true;
-}
-
-class Man extends Anunnaki {
-    let planet = "Earth";
-    let knows_truth = false;
-    let pays_taxes = true;
-}
-
-let human = new Man;
-# human has: mission="Mine gold" (inherited), planet="Earth" (overridden), pays_taxes=true (new)
-# The Anunnaki's greatest experiment: a worker who thinks he's free
 ```
-
-**Variables & Functions:**
-```rust
-let count = 42;
-let username = (get-username).username;
-
 fn is_even(n) {
     return n % 2 == 0;
 }
@@ -157,16 +125,6 @@ fn is_even(n) {
 
 **Conditionals with Strict Type Checking:**
 ```rust
-let age = 25;
-if age > 18 {
-    print "Adult";
-}
-
-let is_valid = true;
-if is_valid {
-    print "Access granted";
-}
-
 # Type safety: integers require bool() conversion
 let count = 5;
 if bool(count) {
@@ -253,6 +211,10 @@ link  list-directory  ln  ls  ld
 stargate> c<TAB>
 cat  cd  change-directory  cksum  chmod  chown  chroot  ...
 ```
+<<<<<<< HEAD
+=======
+
+>>>>>>> e600f866a (updating readme for clarity)
 ### Platform Support
 
 - FreeBSD
