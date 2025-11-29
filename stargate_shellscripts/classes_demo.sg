@@ -23,6 +23,10 @@ let person_city = person.city;
 print "   Name: {person_name}";
 print "   Age: {person_age}";
 print "   City: {person_city}";
+
+assert person_name == "John Doe", "Person name should be John Doe";
+assert person_age == 30, "Person age should be 30";
+assert person_city == "New York", "Person city should be New York";
 print "";
 
 # Another simple class
@@ -40,6 +44,10 @@ let book_pages = book.pages;
 print "   Title: {book_title}";
 print "   Author: {book_author}";
 print "   Pages: {book_pages}";
+
+assert book_title == "The Great Book", "Book title should match";
+assert book_author == "Jane Smith", "Book author should match";
+assert book_pages == 300, "Book should have 300 pages";
 print "";
 
 print "4. Multiple instances are independent:";
@@ -51,4 +59,5 @@ print "   (Each has its own copy of fields)";
 print "";
 
 print "=== Class Basics Working! ===";
+print "=== All assertions passed! ===";
 
