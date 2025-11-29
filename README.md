@@ -1,7 +1,7 @@
 # Stargate 🌠
-### A Modern UNIX Userland with Object Pipes & Interactive Scripting
+### A Modern UNIX Userland with Built-In Testing, Classes & Object Pipes
 
-**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful object-oriented scripting shell. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
+**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
 ## ✨ Why Stargate?
 
@@ -15,27 +15,89 @@ list-directory | slice-object entries | collect-count
 
 ### 🎯 Key Features
 
-#### **Object-Oriented Scripting with Classes**
-Full class support with inheritance:
+#### **Built-In Unit Testing Framework**
+First-class testing support built directly into the language:
 ```rust
-# Define base class
-class Anunnaki {
-    let planet = "Nibiru";
-    let mission = "Mine gold";
-    let created_humans = true;
+#!/usr/bin/env stargate-shell
+use ut;
+
+class Calculator {
+    fn add(a, b) { return a + b; }
+    fn multiply(a, b) { return a * b; }
 }
 
-# Inherit and extend
-class Man extends Anunnaki {
-    let planet = "Earth";        # Override parent field
-    let knows_truth = false;     # Add new field
-    let pays_taxes = true;       # Domesticated successfully
+[test]
+fn test_addition() {
+    let calc = new Calculator;
+    ut.assert_equals(calc.add(2, 3), 5, "Addition should work");
+    ut.assert_equals(calc.add(-1, 1), 0, "Should handle negatives");
 }
 
-let human = new Man;
-print human.mission;      # "Mine gold" (inherited from Anunnaki)
-print human.knows_truth;  # false (blissfully unaware)
+[test]
+fn test_multiplication() {
+    let calc = new Calculator;
+    ut.assert_equals(calc.multiply(3, 4), 12, "Multiplication should work");
+}
 
+print ut.stats;
+exit(ut.healthy);
+```
+
+**Running tests:**
+```bash
+$ ./target/debug/stargate-shell my_tests.sg
+
+=== Running 2 test(s) ===
+
+Running test: test_addition... ✓ PASSED
+Running test: test_multiplication... ✓ PASSED
+
+=== Test Results ===
+Passed: 2, Failed: 0, Total: 2
+```
+
+**Testing assertions:**
+- `ut.assert_equals(actual, expected, message)` - Compare values
+- `ut.assert_not_equals(actual, expected, message)` - Assert inequality
+- `ut.assert_true(condition, message)` - Assert boolean condition
+- `ut.stats` - Get test statistics (Passed: X, Failed: Y, Total: Z)
+- `ut.healthy` - Returns `true` if all tests passed, `false` otherwise
+
+#### **Object-Oriented Programming with Classes**
+Full class support with inheritance and methods:
+```rust
+class Animal {
+    let name = "Unknown";
+    let sound = "...";
+    
+    fn make_sound() {
+        print "{name} says {sound}";
+    }
+}
+
+class Dog extends Animal {
+    let sound = "Woof";
+    let breed = "Labrador";
+    
+    fn fetch() {
+        print "{name} the {breed} is fetching!";
+    }
+}
+
+let dog = new Dog;
+dog.make_sound();  # "Unknown says Woof"
+dog.fetch();       # "Unknown the Labrador is fetching!"
+```
+
+**Test your classes:**
+```rust
+[test]
+fn test_inheritance() {
+    let dog = new Dog;
+    ut.assert_equals(dog.sound, "Woof", "Dog should override sound");
+    ut.assert_equals(dog.name, "Unknown", "Dog should inherit name");
+    ut.assert_equals(dog.breed, "Labrador", "Dog should have breed");
+}
 ```
 
 #### **Object Pipelines - No Text Parsing**
@@ -51,9 +113,18 @@ stargate> list-directory | slice-object entries | dice-object name size type
 stargate> (list-directory).entries[0].name
 "Cargo.toml"
 
-# Combine pipelines with property access
-stargate> (list-directory | slice-object entries | dice-object name permissions)[0]
-{"name":"Cargo.toml","permissions":"644"}
+# Complex pipelines with filtering
+stargate> list-directory | find-text rust | slice-object entries | dice-object name permissions
+
+# Test pipeline behavior
+[test]
+fn test_directory_listing() {
+    let total = (list-directory).total_count;
+    ut.assert_true(total > 0, "Directory should have items");
+    
+    let first_name = (list-directory).entries[0].name;
+    ut.assert_not_equals(first_name, "", "First entry should have name");
+}
 ```
 
 #### **Intelligent Tab Completion**
@@ -117,9 +188,36 @@ stargate> print "Last file: {(list-directory).entries[-1].name}";
 
 ### 🚀 Language Features
 
+**Functions with Testing:**
+```rust
+fn factorial(n) {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+[test]
+fn test_factorial() {
+    ut.assert_equals(factorial(5), 120, "5! should be 120");
+    ut.assert_equals(factorial(0), 1, "0! should be 1");
+}
 ```
-fn is_even(n) {
-    return n % 2 == 0;
+
+**Loops and Ranges:**
+```rust
+fn sum_range(start, end) {
+    let total = 0;
+    for i in range(start, end + 1) {
+        let total = total + i;
+    }
+    return total;
+}
+
+[test]
+fn test_sum_range() {
+    ut.assert_equals(sum_range(1, 10), 55, "Sum 1..10 should be 55");
+    ut.assert_equals(sum_range(1, 5), 15, "Sum 1..5 should be 15");
 }
 ```
 
@@ -130,18 +228,46 @@ let count = 5;
 if bool(count) {
     print "Count is non-zero";
 }
+
+[test]
+fn test_bool_conversion() {
+    ut.assert_equals(bool(0), false, "0 should convert to false");
+    ut.assert_equals(bool(1), true, "1 should convert to true");
+    ut.assert_equals(bool(42), true, "Non-zero should be true");
+}
 ```
 
-**Logical Operators:**
+**Logical Operators with Complex Expressions:**
 ```rust
-# OpenBSD pledge(2) style security restrictions
-let network_allowed = false;
-let filesystem_ro = true;
-let can_exec = false;
+fn check_access(is_admin, has_permission, is_authenticated) {
+    # Complex boolean logic with De Morgan's laws
+    if is_admin || (has_permission && is_authenticated) {
+        return "granted";
+    }
+    return "denied";
+}
 
-if filesystem_ro && !can_exec && !network_allowed {
-    print "Sandbox: read-only filesystem, no exec, no network";
-    # Equivalent to: pledge("stdio rpath", NULL)
+[test]
+fn test_access_control() {
+    ut.assert_equals(check_access(true, false, false), "granted", "Admin bypasses checks");
+    ut.assert_equals(check_access(false, true, true), "granted", "User with perms OK");
+    ut.assert_equals(check_access(false, true, false), "denied", "Not authenticated");
+}
+```
+
+**Pipeline Testing:**
+```rust
+[test]
+fn test_complex_pipeline() {
+    # Test multi-stage pipelines
+    let toml_files = list-directory | find-text toml;
+    let count = toml_files.total_count;
+    ut.assert_true(count >= 0, "Should count TOML files");
+    
+    # Test property access on pipeline results
+    let entries = (list-directory).entries;
+    let first_type = entries[0].type;
+    ut.assert_not_equals(first_type, "", "First entry should have type");
 }
 ```
 
@@ -181,6 +307,60 @@ stargate> cd src                       # Built-in cd (no semicolon needed!)
 stargate> let files = (ls).entries;    # Capture command output
 stargate> print files[0].name;         # Access object properties
 stargate> files | slice-object | dice-object name size  # Pipeline objects
+```
+
+**Run the complete test suite:**
+```bash
+# All 31 demo scripts with 150+ tests
+make test-scripting
+
+# Example output:
+Running /path/to/class_methods_demo.sg...
+=== Running 9 test(s) ===
+Running test: test_driver_first_name... ✓ PASSED
+Running test: test_car_brand... ✓ PASSED
+Running test: test_get_full_name... ✓ PASSED
+...
+Passed: 9, Failed: 0, Total: 9
+
+All scripting tests passed!
+```
+
+**Write your own tested scripts:**
+```bash
+#!/usr/bin/env stargate-shell
+use ut;
+
+class MathUtils {
+    fn is_prime(n) {
+        if n <= 1 { return false; }
+        if n == 2 { return true; }
+        
+        for i in range(2, n) {
+            if n % i == 0 {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+[test]
+fn test_prime_numbers() {
+    let math = new MathUtils;
+    ut.assert_equals(math.is_prime(2), true, "2 is prime");
+    ut.assert_equals(math.is_prime(17), true, "17 is prime");
+    ut.assert_equals(math.is_prime(18), false, "18 is not prime");
+}
+
+print ut.stats;
+exit(ut.healthy);
+```
+
+Save as `my_test.sg`, make executable, and run:
+```bash
+chmod +x my_test.sg
+./target/debug/stargate-shell my_test.sg
 ```
 
 ### 🔥 Tab Completion Examples
