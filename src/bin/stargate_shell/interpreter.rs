@@ -498,6 +498,14 @@ impl Interpreter {
                     Ok(Value::Number(left.to_number() / divisor))
                 }
             }
+            Operator::Mod => {
+                let divisor = right.to_number();
+                if divisor == 0.0 {
+                    Err("Modulo by zero".to_string())
+                } else {
+                    Ok(Value::Number(left.to_number() % divisor))
+                }
+            }
             Operator::Eq => Ok(Value::Bool(match (left, right) {
                 (Value::Number(a), Value::Number(b)) => a == b,
                 (Value::String(a), Value::String(b)) => a == b,

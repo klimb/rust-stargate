@@ -132,6 +132,7 @@ pub enum Operator {
     Sub,
     Mul,
     Div,
+    Mod,
     Eq,
     Ne,
     Lt,
@@ -685,6 +686,7 @@ impl Parser {
             let op = match token.as_str() {
                 "*" => Operator::Mul,
                 "/" => Operator::Div,
+                "%" => Operator::Mod,
                 _ => break,
             };
             self.advance();
