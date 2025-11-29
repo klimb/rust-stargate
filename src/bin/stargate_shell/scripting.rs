@@ -1,8 +1,9 @@
 // Scripting language parser for stargate-shell
 
 use serde_json;
+use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Value {
     String(String),
     Number(f64),
@@ -14,6 +15,7 @@ pub enum Value {
         fields: std::collections::HashMap<String, Value>,
     },
     List(Vec<Value>),
+    Dict(std::collections::HashMap<Value, Value>),
 }
 
 impl Value {
@@ -29,6 +31,13 @@ impl Value {
                 let items_str: Vec<String> = items.iter().map(|v| v.to_string()).collect();
                 format!("[{}]", items_str.join(", "))
             }
+            Value::Dict(map) => {
+                let mut pairs: Vec<String> = map.iter()
+                    .map(|(k, v)| format!("{}: {}", k.to_string(), v.to_string()))
+                    .collect();
+                pairs.sort();
+                format!("{{{}}}", pairs.join(", "))
+            }
         }
     }
 
@@ -41,6 +50,7 @@ impl Value {
             Value::Object(_) => true,
             Value::Instance { .. } => true,
             Value::List(items) => !items.is_empty(),
+            Value::Dict(map) => !map.is_empty(),
         }
     }
 
@@ -53,6 +63,83 @@ impl Value {
             Value::Object(_) => 0.0,
             Value::Instance { .. } => 0.0,
             Value::List(items) => items.len() as f64,
+            Value::Dict(map) => map.len() as f64,
+        }
+    }
+}
+
+// Manual implementation of PartialEq for Value (handles f64 comparison)
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::String(a), Value::String(b)) => a == b,
+            (Value::Number(a), Value::Number(b)) => a == b,
+            (Value::Bool(a), Value::Bool(b)) => a == b,
+            (Value::Null, Value::Null) => true,
+            (Value::Object(a), Value::Object(b)) => a == b,
+            (Value::Instance { class_name: c1, fields: f1 }, Value::Instance { class_name: c2, fields: f2 }) => {
+                c1 == c2 && f1 == f2
+            }
+            (Value::List(a), Value::List(b)) => a == b,
+            (Value::Dict(a), Value::Dict(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Value {}
+
+// Manual implementation of Hash for Value (handles f64 hashing)
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Value::String(s) => {
+                0u8.hash(state);
+                s.hash(state);
+            }
+            Value::Number(n) => {
+                1u8.hash(state);
+                // Hash the bits of the f64 to handle it properly
+                n.to_bits().hash(state);
+            }
+            Value::Bool(b) => {
+                2u8.hash(state);
+                b.hash(state);
+            }
+            Value::Null => {
+                3u8.hash(state);
+            }
+            Value::Object(obj) => {
+                4u8.hash(state);
+                obj.to_string().hash(state);
+            }
+            Value::Instance { class_name, fields } => {
+                5u8.hash(state);
+                class_name.hash(state);
+                // Hash fields in a deterministic order
+                let mut pairs: Vec<_> = fields.iter().collect();
+                pairs.sort_by_key(|(k, _)| k.as_str());
+                for (k, v) in pairs {
+                    k.hash(state);
+                    v.hash(state);
+                }
+            }
+            Value::List(items) => {
+                6u8.hash(state);
+                for item in items {
+                    item.hash(state);
+                }
+            }
+            Value::Dict(map) => {
+                7u8.hash(state);
+                // Hash dict entries in a deterministic order
+                let mut pairs: Vec<_> = map.iter().collect();
+                pairs.sort_by_key(|(k, _)| k.to_string());
+                for (k, v) in pairs {
+                    k.hash(state);
+                    v.hash(state);
+                }
+            }
         }
     }
 }
@@ -144,6 +231,7 @@ pub enum Expression {
         command: String,
     },
     ListLiteral(Vec<Expression>),
+    DictLiteral(Vec<(Expression, Expression)>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -221,7 +309,7 @@ impl Parser {
                             current.clear();
                         }
                     }
-                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' | '[' | ']' | '.' | '|' | '&' => {
+                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' | '[' | ']' | '.' | '|' | '&' | ':' => {
                         // Special handling for '.' - check if it's part of a number
                         if ch == '.' && !current.is_empty() && current.chars().all(|c| c.is_numeric()) && chars.peek().map(|c| c.is_numeric()).unwrap_or(false) {
                             // This is a decimal point in a number like 3.14
@@ -962,6 +1050,40 @@ impl Parser {
             
             self.expect("]")?;
             return Ok(Expression::ListLiteral(elements));
+        }
+
+        if token == "{" {
+            // Parse dictionary literal: {key: value, key: value, ...}
+            let mut pairs = Vec::new();
+            
+            // Handle empty dict
+            if self.peek().map(|s| s.as_str()) == Some("}") {
+                self.advance(); // consume '}'
+                return Ok(Expression::DictLiteral(pairs));
+            }
+            
+            // Parse comma-separated key: value pairs
+            loop {
+                // Parse key expression
+                let key = self.parse_expression()?;
+                
+                // Expect colon
+                self.expect(":")?;
+                
+                // Parse value expression
+                let value = self.parse_expression()?;
+                
+                pairs.push((key, value));
+                
+                if self.peek().map(|s| s.as_str()) == Some(",") {
+                    self.advance(); // consume ','
+                } else {
+                    break;
+                }
+            }
+            
+            self.expect("}")?;
+            return Ok(Expression::DictLiteral(pairs));
         }
 
         if token == "$" {

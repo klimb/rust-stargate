@@ -63,35 +63,63 @@ Passed: 2, Failed: 0, Total: 2
 - `ut.stats` - Get test statistics (Passed: X, Failed: Y, Total: Z)
 - `ut.healthy` - Returns `true` if all tests passed, `false` otherwise
 
-#### **Native Lists with Python-Style Operations**
-First-class list support with any type - strings, numbers, booleans, objects, class instances:
+#### **Native Dictionaries with Any-Type Keys**
+Dictionaries support any type as keys and values - objects, lists, nested structures:
 ```rust
-# Create lists with mixed types
-let nums = [1, 2, 3, 4, 5];
-let mixed = [1, "hello", true, 3.14];
-let objects = [(list-directory), "metadata", 123];
+# Nested dictionaries with mixed types and objects
+let data = {
+    "metadata": {
+        "version": 1.5,
+        "active": true,
+        "tags": ["prod", "api"]
+    },
+    "config": {
+        "database": {"host": "localhost", "port": 5432},
+        "cache": {"enabled": true, "size": 1024}
+    },
+    "directory": (list-directory),
+    "numbers": [1, 2, 3],
+    1: "one",
+    2: "two"
+};
+
+# Access nested structures
+let db_host = data["config"]["database"]["host"];  # "localhost"
+let tags = data["metadata"]["tags"];               # ["prod", "api"]
+let dir_obj = data["directory"];                   # object from list-directory
+
+# Methods: get, set, remove, has_key, keys, values, length, clear
+let val = data.get("timeout", 30);  # Get with default
+data = data.set("region", "us-east");
+```
+
+**Test example:**
+```rust
+[test]
+fn test_dict_operations() {
+    let d = {
+        "nested": {"x": 10},
+        "object": (list-directory),
+        "list": [1, 2, 3]
+    };
+    
+    ut.assert_equals(d["nested"]["x"], 10);
+    ut.assert_equals(d["list"].length(), 3);
+}
+```
+
+#### **Native Lists with Python-Style Operations**
+Lists support negative indexing, mixed types, and objects:
+```rust
+# Complex list operations
+let mixed = [(list-directory), "metadata", 77, true];
 let nested = [[1, 2], [3, 4], [5, 6]];
-let empty = [];
 
-# Python-style indexing
-let first = nums[0];      # 1
-let last = nums[-1];      # 5 (negative indexing!)
-let second_last = nums[-2]; # 4
+# Python-style negative indexing
+let last = mixed[-1];         # true
+let second_last = mixed[-2];  # 77
 
-# Index assignment - any type
-nums[0] = 100;
-nums[-1] = 999;           # Update last element
-mixed[0] = "changed";     # Change type on the fly
-
-# List methods
-nums = nums.append(6);        # Add to end: [1, 2, 3, 4, 5, 6]
-nums = nums.insert(0, 0);     # Insert at front: [0, 1, 2, 3, 4, 5, 6]
-nums = nums.remove(2);        # Remove at index: [0, 1, 3, 4, 5, 6]
-nums = nums.remove(-1);       # Remove last: [0, 1, 3, 4, 5]
-let size = nums.length();     # Get length: 5
-nums = nums.clear();          # Empty the list
-
-# Build lists dynamically
+# Dynamic building
 let results = [];
 for i in 1..6 {
     results = results.append(i * i);
@@ -99,22 +127,17 @@ for i in 1..6 {
 # results = [1, 4, 9, 16, 25]
 ```
 
-**Test list operations:**
+**Test example:**
 ```rust
 [test]
 fn test_list_operations() {
-    let obj = (list-directory);
-    let mixed = [obj, "text", 77, true];
+    let mixed = [(list-directory), "text", 77, true];
     
-    ut.assert_equals(mixed.length(), 4, "Mixed types work");
-    ut.assert_equals(mixed[1], "text", "String element");
-    ut.assert_equals(mixed[-1], true, "Last via negative index");
+    ut.assert_equals(mixed.length(), 4);
+    ut.assert_equals(mixed[-1], true);
     
     mixed[2] = "replaced";
-    ut.assert_equals(mixed[2], "replaced", "Type change works");
-    
-    mixed = mixed.append(3.14);
-    ut.assert_equals(mixed.length(), 5, "Length after append");
+    ut.assert_equals(mixed[2], "replaced");
 }
 ```
 

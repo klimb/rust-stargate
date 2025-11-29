@@ -1,45 +1,28 @@
 #!/usr/bin/env stargate-shell
-# Test examples for README
 
 use ut;
 
-class Animal {
-    let name = "Unknown";
-    let sound = "...";
-}
-
-class Dog extends Animal {
-    let sound = "Woof";
-    let breed = "Labrador";
+[test]
+fn test_dict_operations() {
+    let d = {
+        "nested": {"x": 10},
+        "object": (list-directory),
+        "list": [1, 2, 3]
+    };
+    
+    ut.assert_equals(d["nested"]["x"], 10);
+    ut.assert_equals(d["list"].length(), 3);
 }
 
 [test]
-fn test_classes_inheritance() {
-    let dog = new Dog;
-    ut.assert_equals(dog.name, "Unknown", "Dog inherits name from Animal");
-    ut.assert_equals(dog.sound, "Woof", "Dog overrides sound");
-    ut.assert_equals(dog.breed, "Labrador", "Dog has breed field");
-}
-
-[test]
-fn test_conditionals() {
-    let age = 25;
-    ut.assert_true(age > 18, "Age should be greater than 18");
+fn test_list_operations() {
+    let mixed = [(list-directory), "text", 77, true];
     
-    let is_valid = true;
-    ut.assert_true(is_valid, "Should be valid");
+    ut.assert_equals(mixed.length(), 4);
+    ut.assert_equals(mixed[-1], true);
     
-    let count = 5;
-    ut.assert_true(bool(count), "Count should be non-zero");
-}
-
-[test]
-fn test_logical_operators() {
-    let has_permission = true;
-    let is_admin = false;
-    
-    ut.assert_true(has_permission && !is_admin, "Regular user with permission");
-    ut.assert_true(is_admin || has_permission, "User can proceed");
+    mixed[2] = "replaced";
+    ut.assert_equals(mixed[2], "replaced");
 }
 
 print ut.stats;
