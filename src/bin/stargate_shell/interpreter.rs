@@ -347,16 +347,42 @@ impl Interpreter {
                             return Ok(value.clone());
                         }
                         
-                        // Otherwise check if it's a method - return a callable representation
-                        // For now, we'll store the method name in a special way
-                        // This needs to be called later
+                        // Check if it's a method
                         if let Some((_, _, methods)) = self.classes.get(&class_name) {
                             for (method_name, _, _) in methods {
                                 if method_name == &property {
-                                    // Store instance in a temporary way for method calls
-                                    // For now, return a special marker
                                     return Err(format!("Method calls not yet fully implemented: {}", property));
                                 }
+                            }
+                        }
+                        
+                        // Try to interpret property name as a command (e.g., "env" -> "get-environment")
+                        let potential_commands = if property.contains('_') {
+                            vec![property.replace('_', "-")]
+                        } else {
+                            // Map common abbreviations to full commands
+                            let full_name = match property.as_str() {
+                                "env" => "environment",
+                                "dir" => "directory",
+                                "pwd" => "working-directory",
+                                "host" => "hostname",
+                                "user" => "username",
+                                _ => property.as_str(),
+                            };
+                            
+                            // Try common prefixes for plain names
+                            vec![
+                                format!("get-{}", full_name),
+                                format!("list-{}", full_name),
+                                property.clone(),
+                            ]
+                        };
+                        
+                        // Try to execute the first command that succeeds
+                        for cmd in potential_commands {
+                            let cmd_expr = Expression::CommandOutput(cmd.clone());
+                            if let Ok(result) = self.eval_expression(cmd_expr) {
+                                return Ok(result);
                             }
                         }
                         
@@ -474,6 +500,34 @@ impl Interpreter {
                         Err(format!("Method '{}' not found in class {}", method, class_name))
                     }
                     _ => Err(format!("Cannot call method on non-instance value"))
+                }
+            }
+            Expression::Pipeline { input, command } => {
+                // Evaluate the input expression to get JSON
+                let input_value = self.eval_expression(*input)?;
+                
+                // Convert the input value to JSON string
+                let json_input = match &input_value {
+                    Value::Object(json_obj) => serde_json::to_string(&json_obj)
+                        .map_err(|e| format!("Failed to serialize input to JSON: {}", e))?,
+                    Value::String(s) => s.clone(),
+                    Value::Number(n) => n.to_string(),
+                    Value::Bool(b) => b.to_string(),
+                    Value::Null => "null".to_string(),
+                    Value::Instance { .. } => return Err("Cannot pipe instance objects".to_string()),
+                };
+                
+                // Execute the pipeline with the JSON input
+                use super::execution::execute_with_object_pipe;
+                let cmd_parts: Vec<String> = command.split_whitespace().map(|s| s.to_string()).collect();
+                let output = execute_with_object_pipe(&cmd_parts, Some(&json_input), true)
+                    .map_err(|e| format!("Pipeline error: {}", e))?;
+                
+                // Try to parse output as JSON
+                if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&output) {
+                    Ok(Value::Object(json_value))
+                } else {
+                    Ok(Value::String(output.trim().to_string()))
                 }
             }
         }
