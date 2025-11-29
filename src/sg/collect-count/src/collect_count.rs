@@ -199,6 +199,12 @@ impl<'a> Inputs<'a> {
             Err(_) => return Ok(None),
         };
 
+        // Special handling for arrays - just count the elements
+        if let Some(arr) = json.as_array() {
+            println!("{}", arr.len());
+            std::process::exit(0);
+        }
+
         // Special handling for list-directory style JSON - just count entries
         if let Some(entries) = json.get("entries").and_then(|v| v.as_array()) {
             println!("{}", entries.len());
