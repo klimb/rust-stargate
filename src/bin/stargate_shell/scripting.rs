@@ -68,6 +68,7 @@ pub enum Statement {
         name: String,
         params: Vec<String>,
         body: Vec<Statement>,
+        annotations: Vec<String>, // e.g., ["test"]
     },
     ClassDef {
         name: String,
@@ -87,6 +88,8 @@ pub enum Statement {
         condition: Expression,
         message: Option<Expression>,
     },
+    Use(String), // use statement for imports (e.g., "use ut;")
+    ExprStmt(Expression), // Statement that just evaluates an expression (for method calls)
 }
 
 #[derive(Debug, Clone)]
@@ -283,13 +286,23 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
+        // Check for annotations like [test]
+        let mut annotations = Vec::new();
+        while self.peek().map(|s| s.as_str()) == Some("[") {
+            self.advance(); // consume '['
+            let annotation = self.advance().ok_or("Expected annotation name")?;
+            annotations.push(annotation);
+            self.expect("]")?;
+        }
+        
         let token = self.peek().ok_or("Unexpected end of input")?.clone();
 
         match token.as_str() {
+            "use" => self.parse_use(),
             "let" => self.parse_var_decl(),
             "if" => self.parse_if(),
             "for" => self.parse_for(),
-            "fn" => self.parse_function_def(),
+            "fn" => self.parse_function_def_with_annotations(annotations),
             "class" => self.parse_class_def(),
             "return" => self.parse_return(),
             "exit" => self.parse_exit(),
@@ -317,7 +330,7 @@ impl Parser {
                     return self.parse_pipeline();
                 }
                 
-                // Check if it's an assignment or function call
+                // Check if it's an assignment, function call, or method call
                 if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some("=") {
                     self.parse_assignment()
                 } else if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some("(") {
@@ -330,6 +343,11 @@ impl Parser {
                     };
                     self.expect(";")?;
                     Ok(stmt)
+                } else if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some(".") {
+                    // This is a method call like ut.assert_equals(...)
+                    let expr = self.parse_expression()?;
+                    self.expect(";")?;
+                    Ok(Statement::ExprStmt(expr))
                 } else {
                     // Treat as a command (could be a single stargate command)
                     self.parse_pipeline()
@@ -398,6 +416,10 @@ impl Parser {
     }
 
     fn parse_function_def(&mut self) -> Result<Statement, String> {
+        self.parse_function_def_with_annotations(Vec::new())
+    }
+
+    fn parse_function_def_with_annotations(&mut self, annotations: Vec<String>) -> Result<Statement, String> {
         self.expect("fn")?;
         let name = self.advance().ok_or("Expected function name")?;
         self.expect("(")?;
@@ -413,7 +435,14 @@ impl Parser {
         self.expect("{")?;
         let body = self.parse_block()?;
 
-        Ok(Statement::FunctionDef { name, params, body })
+        Ok(Statement::FunctionDef { name, params, body, annotations })
+    }
+
+    fn parse_use(&mut self) -> Result<Statement, String> {
+        self.expect("use")?;
+        let module = self.advance().ok_or("Expected module name")?;
+        self.expect(";")?;
+        Ok(Statement::Use(module))
     }
 
     fn parse_class_def(&mut self) -> Result<Statement, String> {

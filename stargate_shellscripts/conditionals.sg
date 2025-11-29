@@ -1,61 +1,69 @@
 #!/usr/bin/env stargate-shell
-# Test conditional logic including >= and <= operators
+# Conditional Logic Tests
 
-print "=== Conditional Logic ===";
-print "";
+use ut;
 
-let count = 5;
-let doubled = count * 2;
-let sum = count + doubled;
-let threshold = 10;
-
-if sum > threshold {
-    print "Sum exceeds threshold";
-    let diff = sum - threshold;
-    print "Difference: {diff}";
-    assert diff == 5, "Difference should be 5";
-} else {
-    print "Sum is below threshold";
+[test]
+fn test_greater_than() {
+    let sum = 15;
+    let threshold = 10;
+    ut.assert_true(sum > threshold, "15 should be > 10");
 }
 
-print "";
-print "=== Testing >= operator ===";
-let score = 85;
-let passing = 60;
-
-if score >= passing {
-    print "PASSED - Score meets or exceeds passing grade";
-} else {
-    print "FAILED";
+[test]
+fn test_greater_or_equal() {
+    let score = 85;
+    let passing = 60;
+    ut.assert_true(score >= passing, "85 should be >= 60");
 }
 
-print "";
-print "=== Testing <= operator ===";
-let temperature = 32;
-let freezing = 32;
-
-if temperature <= freezing {
-    print "Temperature is at or below freezing";
-} else {
-    print "Temperature is above freezing";
+[test]
+fn test_less_than() {
+    let value = 5;
+    let limit = 10;
+    ut.assert_true(value < limit, "5 should be < 10");
 }
 
-print "";
-print "=== Edge case: exact equality ===";
-let value = 100;
-let limit = 100;
-
-if value >= limit {
-    print "value >= limit: TRUE";
-} else {
-    print "value >= limit: FALSE";
+[test]
+fn test_less_or_equal() {
+    let count = 10;
+    let max = 10;
+    ut.assert_true(count <= max, "10 should be <= 10");
 }
 
-if value <= limit {
-    print "value <= limit: TRUE";
-} else {
-    print "value <= limit: FALSE";
+[test]
+fn test_equality() {
+    let a = 42;
+    let b = 42;
+    ut.assert_equals(a, b, "Equal values should match");
 }
 
-print "";
-print "=== All assertions passed! ===";
+[test]
+fn test_inequality() {
+    let x = 5;
+    let y = 10;
+    ut.assert_not_equals(x, y, "Different values should not match");
+}
+
+[test]
+fn test_if_true_branch() {
+    let result = 0;
+    if true {
+        let result = 1;
+    }
+    ut.assert_equals(result, 1, "If true branch should execute");
+}
+
+[test]
+fn test_if_false_else_branch() {
+    let result = 0;
+    if false {
+        let result = 1;
+    } else {
+        let result = 2;
+    }
+    ut.assert_equals(result, 2, "Else branch should execute when condition is false");
+}
+
+print (ut).stats;
+exit((ut).healthy);

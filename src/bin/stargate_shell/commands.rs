@@ -60,30 +60,40 @@ fn generate_alias(command: &str) -> Option<String> {
 
 // List of stargate commands (extracted from the binary)
 pub fn get_stargate_commands() -> Vec<String> {
-    let stargate_bin = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|d| d.join("stargate")))
-        .unwrap_or_else(|| "stargate".into());
+    use std::sync::OnceLock;
+    static COMMANDS: OnceLock<Vec<String>> = OnceLock::new();
+    
+    COMMANDS.get_or_init(|| {
+        let stargate_bin = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.join("stargate")))
+            .unwrap_or_else(|| "stargate".into());
 
-    let output = Command::new(&stargate_bin)
-        .arg("--list")
-        .output();
+        let output = Command::new(&stargate_bin)
+            .arg("--list")
+            .output();
 
-    if let Ok(output) = output {
-        if output.status.success() {
-            let text = String::from_utf8_lossy(&output.stdout);
-            // Parse line-by-line, skipping '[' and ']'
-            return text
-                .lines()
-                .map(|line| line.trim())
-                .filter(|line| !line.is_empty() && *line != "[" && *line != "]")
-                .map(|s| s.to_string())
-                .collect();
+        if let Ok(output) = output {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                // Parse line-by-line, skipping '[' and ']'
+                return text
+                    .lines()
+                    .map(|line| line.trim())
+                    .filter(|line| !line.is_empty() && *line != "[" && *line != "]")
+                    .map(|s| s.to_string())
+                    .collect();
+            }
         }
-    }
 
-    // Fallback: empty list - user can still type commands manually
-    Vec::new()
+        // Fallback: empty list - user can still type commands manually
+        Vec::new()
+    }).clone()
+}
+
+// Check if a command is a stargate command
+pub fn is_stargate_command(cmd: &str) -> bool {
+    get_stargate_commands().contains(&cmd.to_string())
 }
 
 // Get available parameters/flags for a command
