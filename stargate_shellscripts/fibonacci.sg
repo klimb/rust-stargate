@@ -1,0 +1,61 @@
+#!/usr/bin/env stargate-shell
+#
+# Writing Fib in my own language!!!
+#
+
+class FibonacciCalculator {
+    fn init() {
+        print "Fibonacci Calculator initialized";
+    }
+    
+    fn compute(n) {
+        if (n <= 1) {
+            return n;
+        }
+        
+        let prev = 0;
+        let curr = 1;
+        
+        for i in range(2, n + 1) {
+            let next = prev + curr;
+            let prev = curr;
+            let curr = next;
+        }
+        
+        return curr;
+    }
+}
+
+let calc = new FibonacciCalculator();
+print "";
+
+print "Computing Fibonacci numbers using class method:";
+print "-----------------------------------------------";
+
+let result = calc.compute(5);
+assert result == 5, "Fibonacci(5) should be 5";
+print "Fibonacci(5) = {result}";
+
+let result = calc.compute(10);
+assert result == 55, "Fibonacci(10) should be 55";
+print "Fibonacci(10) = {result}";
+
+let result = calc.compute(15);
+assert result == 610, "Fibonacci(15) should be 610";
+print "Fibonacci(15) = {result}";
+
+let result = calc.compute(20);
+assert result == 6765, "Fibonacci(20) should be 6765";
+print "Fibonacci(20) = {result}";
+
+let result = calc.compute(25);
+assert result == 75025, "Fibonacci(25) should be 75025";
+print "Fibonacci(25) = {result}";
+
+let result = calc.compute(30);
+assert result == 832040, "Fibonacci(30) should be 832040";
+print "Fibonacci(30) = {result}";
+
+print "";
+print "=== All assertions passed! ===";
+print "";

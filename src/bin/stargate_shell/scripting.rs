@@ -83,6 +83,10 @@ pub enum Statement {
     Return(Expression),
     Print(Expression),
     Exit(Option<Expression>), // exit with optional status code
+    Assert {
+        condition: Expression,
+        message: Option<Expression>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -281,6 +285,7 @@ impl Parser {
             "return" => self.parse_return(),
             "exit" => self.parse_exit(),
             "print" => self.parse_print(),
+            "assert" => self.parse_assert(),
             "exec" => self.parse_command(),
             _ => {
                 // Check if it's a pipeline (contains command names followed by |)
@@ -494,6 +499,21 @@ impl Parser {
         let expr = self.parse_expression()?;
         self.expect(";")?;
         Ok(Statement::Print(expr))
+    }
+
+    fn parse_assert(&mut self) -> Result<Statement, String> {
+        self.expect("assert")?;
+        let condition = self.parse_expression()?;
+        
+        let message = if self.peek() == Some(&",".to_string()) {
+            self.expect(",")?;
+            Some(self.parse_expression()?)
+        } else {
+            None
+        };
+        
+        self.expect(";")?;
+        Ok(Statement::Assert { condition, message })
     }
 
     fn parse_command(&mut self) -> Result<Statement, String> {
