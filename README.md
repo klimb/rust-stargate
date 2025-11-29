@@ -119,6 +119,22 @@ if is_admin || has_permission {
 }
 ```
 
+**Exit Codes for Error Handling:**
+```
+# Exit with specific error codes
+let operation_failed = false;
+if operation_failed {
+    exit 2;  # Exit code 2 for operation failure
+}
+
+# Exit with variable
+let error_code = 5;
+exit error_code;
+
+# Default exit (returns 0)
+exit;  # Or let script complete normally for implicit 0
+```
+
 **Classes with Inheritance:**
 ```rust
 # Define base class

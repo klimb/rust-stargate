@@ -1,0 +1,55 @@
+#!/usr/bin/env stargate-shell
+# Demo: Error handling with exit codes
+
+print "=== Error Handling Demo ===";
+print "";
+
+# Scenario 1: Validation with exit codes
+print "1. Input validation:";
+let age = 25;
+if age < 0 {
+    print "   Error: Age cannot be negative";
+    exit 1;
+}
+if age > 150 {
+    print "   Error: Age is unrealistic";
+    exit 1;
+}
+print "   ✓ Age validation passed";
+print "";
+
+# Scenario 2: Conditional success/failure
+print "2. Operation result:";
+let operation_success = true;
+if !operation_success {
+    print "   Operation failed!";
+    exit 2;
+}
+print "   ✓ Operation succeeded";
+print "";
+
+# Scenario 3: Multiple checks
+print "3. Multi-step validation:";
+let username = "admin";
+let has_permission = true;
+let resource_available = true;
+
+if username == "guest" {
+    print "   Error: Guest access denied";
+    exit 3;
+}
+if !has_permission {
+    print "   Error: Insufficient permissions";
+    exit 4;
+}
+if !resource_available {
+    print "   Error: Resource unavailable";
+    exit 5;
+}
+print "   ✓ All checks passed";
+print "";
+
+# Success - all validations passed
+print "=== All validations succeeded ===";
+print "Exiting with code 0 (success)";
+exit 0;
