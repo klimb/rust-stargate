@@ -18,11 +18,13 @@ list-directory | slice-object entries | collect-count
 #### **Object Commands**
 Every command outputs structured JSON when you need it:
 ```bash
-# Get structured data with --obj flag (or auto-enabled in shell)
+# Get structured data with --obj flag when used inside bash, zsh, etc 
+# (or its  auto-enabled in stargate-shell)
+# bash example:
 get-hostname --obj
 # {"hostname":"myserver","domain":"local","fqdn":"myserver.local"}
 
-# Pipe objects through commands - no parsing needed!
+# stargate-shell example: Pipe objects through commands - no parsing needed!
 list-directory | slice-object entries | dice-object name permissions
 ```
 
