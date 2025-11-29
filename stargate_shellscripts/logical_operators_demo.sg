@@ -39,13 +39,13 @@ print "";
 # Example 3: Combining && and ||
 print "3. Combining && and ||:";
 let age = 25;
-let has_license = 1;
+let has_license = true;
 
-if age >= 18 && has_license == 1 {
+if age >= 18 && has_license {
     print "  ✓ Can drive - age is {age} and has license";
 }
 
-if age < 16 || has_license == 0 {
+if age < 16 || !has_license {
     print "  ✗ This should not print";
 } else {
     print "  ✓ Person meets driving requirements";
@@ -54,15 +54,15 @@ print "";
 
 # Example 4: Short-circuit evaluation
 print "4. Short-circuit evaluation:";
-let check = 1;
+let check = true;
 
 # This demonstrates short-circuit: if first condition is false, second isn't evaluated
-if check == 0 && check > 100 {
+if !check && check {
     print "  ✗ This should not print";
 }
 
 # If first condition is true, second isn't evaluated
-if check == 1 || check > 100 {
+if check || false {
     print "  ✓ First condition was true, so this executes";
 }
 print "";
@@ -86,19 +86,75 @@ print "";
 
 # Example 6: Nested parentheses for complex logic
 print "6. Nested parentheses - complex boolean expressions:";
-let a = 1;
-let b = 1;
-let c = 0;
-let d = 1;
-let z = 1;
+let a = true;
+let b = true;
+let c = false;
+let d = true;
+let z = true;
 
 let result = (((a && b) || (c && d)) && z);
 print "  Expression: (((a && b) || (c && d)) && z)";
 print "  Values: a={a}, b={b}, c={c}, d={d}, z={z}";
 print "  Result: {result}";
 
-if (((a == 1 && b == 1) || (c == 1 && d == 1)) && z == 1) {
+if (((a && b) || (c && d)) && z) {
     print "  ✓ Complex nested condition evaluated correctly";
+}
+print "";
+
+# Example 7: NOT operator (!)
+print "7. NOT operator (!) - negates boolean values:";
+let enabled = true;
+let disabled = false;
+
+if !disabled {
+    print "  ✓ disabled is false, so !disabled is true";
+}
+
+if !enabled {
+    print "  ✗ This should not print";
+} else {
+    print "  ✓ enabled is true, so !enabled is false";
+}
+
+# Double negation
+let value = true;
+let double_negated = !!value;
+print "  !!{value} = {double_negated} (double negation returns to original)";
+
+# Converting integers to booleans
+let num = 0;
+let as_bool = bool(num);
+print "  bool(0) = {as_bool}";
+let num2 = 5;
+let as_bool2 = bool(num2);
+print "  bool(5) = {as_bool2}";
+print "";
+
+# Example 8: Combining NOT with AND/OR
+print "8. Combining NOT with AND and OR:";
+let is_admin = false;
+let is_logged_in = true;
+
+if !is_admin && is_logged_in {
+    print "  ✓ User is logged in but not an admin";
+}
+
+if !is_admin || !is_logged_in {
+    print "  ✓ At least one of: not admin OR not logged in";
+}
+
+# De Morgan's Laws demonstration
+let p = true;
+let q = false;
+print "  De Morgan's Law: !(p && q) == (!p || !q)";
+print "    p={p}, q={q}";
+let left_side = !(p && q);
+let right_side = !p || !q;
+print "    !(p && q) = {left_side}";
+print "    (!p || !q) = {right_side}";
+if left_side == right_side {
+    print "    ✓ De Morgan's Law verified!";
 }
 print "";
 

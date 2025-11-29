@@ -1,0 +1,93 @@
+#!/usr/bin/env stargate-shell
+# Simple demonstration of bool() type conversion
+
+print "=== Boolean Type Conversion Demo ===";
+print "";
+
+# Example 1: Converting zero and non-zero integers
+print "1. Converting integers to booleans:";
+let zero = 0;
+let one = 1;
+let five = 5;
+let negative = -3;
+
+print "   Original values:";
+print "     zero = {zero}";
+print "     one = {one}";
+print "     five = {five}";
+print "     negative = {negative}";
+print "";
+
+print "   After bool() conversion:";
+let zero_bool = bool(zero);
+let one_bool = bool(one);
+let five_bool = bool(five);
+let neg_bool = bool(negative);
+print "     bool(0) = {zero_bool}";
+print "     bool(1) = {one_bool}";
+print "     bool(5) = {five_bool}";
+print "     bool(-3) = {neg_bool}";
+print "";
+
+print "   Rule: 0 converts to false, any other number converts to true";
+print "";
+
+# Example 2: Using bool() in conditions
+print "2. Using bool() in if statements:";
+let count = 0;
+
+if bool(count) {
+    print "   count is non-zero";
+} else {
+    print "   ✓ count is zero (bool(0) is false)";
+}
+
+count = 42;
+if bool(count) {
+    print "   ✓ count is non-zero (bool(42) is true)";
+}
+print "";
+
+# Example 3: Practical file count check
+print "3. Practical example - checking file count:";
+let file_count = (list-directory).total_count;
+print "   Files in directory: {file_count}";
+
+if bool(file_count) {
+    print "   ✓ Directory has files (converted to true)";
+} else {
+    print "   Directory is empty (converted to false)";
+}
+print "";
+
+# Example 4: Converting and storing
+print "4. Converting and storing as boolean variable:";
+let num = 0;
+let is_nonzero = bool(num);
+print "   num = {num}";
+print "   is_nonzero = bool(num) = {is_nonzero}";
+
+num = 100;
+is_nonzero = bool(num);
+print "   num = {num}";
+print "   is_nonzero = bool(num) = {is_nonzero}";
+print "";
+
+# Example 5: Combining with logical operators
+print "5. Combining bool() with logical operators:";
+let a = 0;
+let b = 5;
+
+print "   a = {a}, b = {b}";
+if bool(a) || bool(b) {
+    print "   ✓ At least one is non-zero";
+}
+
+if bool(a) && bool(b) {
+    print "   Both are non-zero";
+} else {
+    print "   ✓ At least one is zero";
+}
+print "";
+
+print "=== Demo Complete ===";

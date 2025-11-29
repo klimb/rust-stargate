@@ -75,6 +75,10 @@ pub enum Expression {
         op: Operator,
         right: Box<Expression>,
     },
+    UnaryOp {
+        op: Operator,
+        operand: Box<Expression>,
+    },
     FunctionCall {
         name: String,
         args: Vec<Expression>,
@@ -105,6 +109,7 @@ pub enum Operator {
     Ge,
     And,
     Or,
+    Not,
 }
 
 pub struct Parser {
@@ -558,7 +563,7 @@ impl Parser {
     }
 
     fn parse_postfix(&mut self) -> Result<Expression, String> {
-        let mut expr = self.parse_primary()?;
+        let mut expr = self.parse_unary()?;
 
         loop {
             match self.peek().map(|s| s.as_str()) {
@@ -584,6 +589,20 @@ impl Parser {
         }
 
         Ok(expr)
+    }
+
+    fn parse_unary(&mut self) -> Result<Expression, String> {
+        // Handle unary operators like !
+        if self.peek().map(|s| s.as_str()) == Some("!") {
+            self.advance(); // consume '!'
+            let operand = self.parse_unary()?; // Allow chaining: !!x
+            return Ok(Expression::UnaryOp {
+                op: Operator::Not,
+                operand: Box::new(operand),
+            });
+        }
+        
+        self.parse_primary()
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {

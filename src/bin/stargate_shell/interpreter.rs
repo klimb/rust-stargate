@@ -68,6 +68,25 @@ impl Interpreter {
                 else_block,
             } => {
                 let cond_value = self.eval_expression(condition)?;
+                // Enforce strict type checking - only booleans allowed in conditions
+                match &cond_value {
+                    Value::Bool(_) => {
+                        // OK - boolean value
+                    }
+                    Value::Number(_) => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert numbers.".to_string());
+                    }
+                    Value::String(_) => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert strings.".to_string());
+                    }
+                    Value::Null => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert null.".to_string());
+                    }
+                    Value::Object(_) => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert objects.".to_string());
+                    }
+                }
+                
                 if cond_value.to_bool() {
                     for stmt in then_block {
                         self.execute_statement(stmt)?;
@@ -125,6 +144,15 @@ impl Interpreter {
                     .get(&name)
                     .cloned()
                     .ok_or(format!("Variable '{}' not found", name))
+            }
+            Expression::UnaryOp { op, operand } => {
+                match op {
+                    Operator::Not => {
+                        let operand_val = self.eval_expression(*operand)?;
+                        Ok(Value::Bool(!operand_val.to_bool()))
+                    }
+                    _ => Err(format!("Unsupported unary operator: {:?}", op))
+                }
             }
             Expression::BinaryOp { left, op, right } => {
                 // Short-circuit evaluation for && and ||
@@ -287,6 +315,7 @@ impl Interpreter {
             Operator::Ge => Ok(Value::Bool(left.to_number() >= right.to_number())),
             Operator::And => Ok(Value::Bool(left.to_bool() && right.to_bool())),
             Operator::Or => Ok(Value::Bool(left.to_bool() || right.to_bool())),
+            Operator::Not => Err("NOT is a unary operator and should not be used in apply_operator".to_string()),
         }
     }
 
@@ -298,7 +327,18 @@ impl Interpreter {
             .collect();
         let arg_values = arg_values?;
 
-        // Get function definition
+        // Handle built-in functions
+        match name {
+            "bool" => {
+                if arg_values.len() != 1 {
+                    return Err(format!("bool() expects 1 argument, got {}", arg_values.len()));
+                }
+                return Ok(Value::Bool(arg_values[0].to_bool()));
+            }
+            _ => {}
+        }
+
+        // Get user-defined function definition
         let (params, body) = self
             .functions
             .get(name)
