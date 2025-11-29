@@ -64,7 +64,7 @@ fn main() {
             
             // Check if it's a single-line command or multi-line script
             // Single-line commands without semicolons are executed as pipelines (interactive style)
-            // Multi-line or semicolon-containing input is executed as script
+            // Multi-line input can either be scripts (with semicolons) or line-by-line commands
             let trimmed = script_code.trim();
             if !trimmed.contains('\n') && !trimmed.contains(';') {
                 // Single-line command - execute as pipeline for human-readable output
@@ -75,8 +75,47 @@ fn main() {
                         std::process::exit(1);
                     }
                 }
+            } else if !trimmed.contains(';') && trimmed.contains('\n') {
+                // Multi-line input without semicolons - treat each line as a separate command
+                // This allows piping multiple commands like: echo -e "cmd1\ncmd2\nexit"
+                let mut exit_code = 0;
+                for line in trimmed.lines() {
+                    let line = line.trim();
+                    if line.is_empty() || line.starts_with('#') {
+                        continue; // Skip empty lines and comments
+                    }
+                    if line == "exit" || line == "quit" {
+                        break;
+                    }
+                    // Try executing as script statement first (for let, class, etc.)
+                    let is_statement = line.starts_with("let ") 
+                        || line.starts_with("class ")
+                        || line.starts_with("print ")
+                        || line.contains(" = ");
+                    
+                    if is_statement {
+                        let script = format!("{};", line);
+                        match execute_script(&script) {
+                            Ok(code) => exit_code = code,
+                            Err(e) => {
+                                eprintln!("Script error: {}", e);
+                                exit_code = 1;
+                            }
+                        }
+                    } else {
+                        // Execute as pipeline
+                        match execute_pipeline(line) {
+                            Ok(_) => {},
+                            Err(e) => {
+                                eprintln!("Error: {}", e);
+                                exit_code = 1;
+                            }
+                        }
+                    }
+                }
+                std::process::exit(exit_code);
             } else {
-                // Multi-line or script with semicolons - execute as script
+                // Script with semicolons - execute as script
                 match execute_script(&script_code) {
                     Ok(exit_code) => std::process::exit(exit_code),
                     Err(e) => {

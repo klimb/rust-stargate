@@ -1,7 +1,7 @@
 # Stargate 🌠
 ### A Modern UNIX Userland with Object Pipes & Interactive Scripting
 
-**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful object-oriented scripting shell. No more unstructured text parsing, embrace object-oriented pipelines that are significantly faster and infinitely more expressive.
+**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful object-oriented scripting shell. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
 ## ✨ Why Stargate?
 
@@ -15,45 +15,103 @@ list-directory | slice-object entries | collect-count
 
 ### 🎯 Key Features
 
-#### **Object Commands**
-Every command outputs structured JSON when you need it:
+#### **Object-Oriented Scripting with Classes**
+Full class support with inheritance:
+```rust
+# Define base class
+class Anunnaki {
+    let planet = "Nibiru";
+    let mission = "Mine gold";
+    let created_humans = true;
+}
+
+# Inherit and extend
+class Man extends Anunnaki {
+    let planet = "Earth";        # Override parent field
+    let knows_truth = false;     # Add new field
+    let pays_taxes = true;       # Domesticated successfully
+}
+
+let human = new Man;
+print human.mission;      # "Mine gold" (inherited from Anunnaki)
+print human.knows_truth;  # false (blissfully unaware)
+
+# Classes work with command output
+class ServerInfo {
+    let hostname = (get-hostname).hostname;
+    let user = (get-username).username;
+}
+
+let server = new ServerInfo;
+print "{server.user}@{server.hostname}";
+```
+
+#### **Object Pipelines - No Text Parsing**
+Commands output structured JSON, pipelines work on objects:
 ```bash
-# Get structured data with --obj flag when used inside bash, zsh, etc 
-# (or its  auto-enabled in stargate-shell)
-bash# get-hostname --obj
-# {"hostname":"myserver","domain":"local","fqdn":"myserver.local"}
+# Traditional shell - text parsing hell
+bash$ ls -la | grep "\.rs$" | awk '{print $9}' | while read f; do echo $f; done
 
-# stargate-shell example: Pipe objects through commands - no parsing needed!
-stargate> list-directory | slice-object entries | dice-object name permissions
+# Stargate - direct object manipulation
+stargate> list-directory | slice-object entries | dice-object name size type
 
+# Access properties directly
+stargate> (list-directory).entries[0].name
+"Cargo.toml"
+
+# Combine pipelines with property access
 stargate> (list-directory | slice-object entries | dice-object name permissions)[0]
-#{"name":".rustfmt.toml","permissions":"664"}
+{"name":"Cargo.toml","permissions":"644"}
+```
+
+#### **Intelligent Tab Completion**
+Tab completion for **everything** - commands, properties, directories, variables:
+
+```bash
+# Command completion with aliases
+stargate> l<TAB>
+link  list-directory  ln  ls  ld
+
+# Property exploration - discover available fields
+stargate> (list-directory).<TAB>
+entries      recursive    total_count
+
+# Nested property completion
+stargate> (list-directory).entries[0].<TAB>
+gid  inode  modified  name  nlink  path  permissions  size  type  uid
+
+# Directory completion for cd
+stargate> cd sr<TAB>
+stargate> cd src/
+
+# Variable completion
+stargate> let myvar = 42;
+stargate> print my<TAB>
+stargate> print myvar
 ```
 
 #### **Stargate Shell - Interactive & Scriptable**
-A modern scripting shell with tab and property (. dot) completion:
+A modern shell with Python-style indexing and optional semicolons:
 
 ```bash
+# Variables and expressions
 stargate> let total = (list-directory).total_count;
 stargate> print "Found {total} items";
 Found 41 items
 
-stargate> let permissions = (list-directory).entries[-1].permissions;
-stargate> print permissions
-664
-```
-
-**Property access with python-style indexing. Index [-1] means last item in a list:**
-```bash
+# Python-style negative indexing
 stargate> (list-directory).entries[-1].name
 ".codecov.yml"
-```
 
-**Tab completion for everything:**
-- Commands: `list-dir<TAB>` → `list-directory`
-- Properties: `(list-directory).en<TAB>` → `entries`
-- Nested properties: `(list-directory).entries[0].per<TAB>` → `permissions`
-- Variables: `print <TAB>` → shows all declared variables
+# No semicolons needed for simple commands
+stargate> cd src
+stargate> list-directory
+stargate> cd ..
+
+# Pipeline from variables
+stargate> let cmd = list-directory;
+stargate> cmd | slice-object entries | collect-count
+```
 
 #### **String Interpolation**
 ```bash
@@ -61,20 +119,31 @@ stargate> let user = (get-username).username;
 stargate> let host = (get-hostname).hostname;
 stargate> print "I am {user}@{host}";
 I am alice@myserver
-```
 
-#### **Complex Pipelines Made Simple**
-```bash
-# Slice array property, dice to specific fields
-list-directory | slice-object entries | dice-object name size type
-
-# Chain property access in shell
-stargate> let first_entry = (list-directory).entries[0];
-stargate> print "{first_entry.name} is {first_entry.type}";
-.rustfmt.toml is file
+# Works with any expression
+stargate> print "Last file: {(list-directory).entries[-1].name}";
 ```
 
 ### 🚀 Language Features
+
+**Classes with Inheritance:**
+```rust
+class Anunnaki {
+    let planet = "Nibiru";
+    let mission = "Mine gold";
+    let created_humans = true;
+}
+
+class Man extends Anunnaki {
+    let planet = "Earth";
+    let knows_truth = false;
+    let pays_taxes = true;
+}
+
+let human = new Man;
+# human has: mission="Mine gold" (inherited), planet="Earth" (overridden), pays_taxes=true (new)
+# The Anunnaki's greatest experiment: a worker who thinks he's free
+```
 
 **Variables & Functions:**
 ```rust
@@ -107,66 +176,34 @@ if bool(count) {
 
 **Logical Operators:**
 ```rust
-let has_permission = true;
-let is_admin = false;
+# OpenBSD pledge(2) style security restrictions
+let network_allowed = false;
+let filesystem_ro = true;
+let can_exec = false;
 
-if has_permission && !is_admin {
-    print "Regular user";
-}
-
-if is_admin || has_permission {
-    print "User can proceed";
+if filesystem_ro && !can_exec && !network_allowed {
+    print "Sandbox: read-only filesystem, no exec, no network";
+    # Equivalent to: pledge("stdio rpath", NULL)
 }
 ```
 
-**Exit Codes for Error Handling:**
-```
-# Exit with specific error codes
-let operation_failed = false;
-if operation_failed {
-    exit 2;  # Exit code 2 for operation failure
-}
-
-# Exit with variable
-let error_code = 5;
-exit error_code;
-
-# Default exit (returns 0)
-exit;  # Or let script complete normally for implicit 0
-```
-
-**Classes with Inheritance:**
-```rust
-# Define base class
-class Animal {
-    let name = "Unknown";
-    let sound = "...";
-}
-
-# Inherit and extend
-class Dog extends Animal {
-    let sound = "Woof";    # Override parent field
-    let breed = "Labrador"; # Add new field
-}
-
-let dog = new Dog;
-# dog has: name="Unknown", sound="Woof", breed="Labrador"
-```
-
-**Sequence & Object Access:**
+**Python-Style Indexing:**
 ```rust
 let entries = (list-directory).entries;
 let first = entries[0];
-let last = entries[-1];  // Python-style negative indexing
+let last = entries[-1];  # Negative indexing from end
+let slice = entries[0..3];  # Range slicing
 ```
 
 ### 🎨 Design Philosophy
 
 - **Verb-Noun Naming**: `list-directory`, `get-hostname`, `set-permissions` - reads like English
+- **Object Pipelines**: Structured data flows through commands, no text parsing needed
+- **Intelligent Completion**: Tab completes commands, properties, directories, variables
+- **Classes & OOP**: Full class support with inheritance for complex scripts
 - **Consistent Parameters**: `-r` always means recursive, `-v` always means verbose, `-h` always shows help
-- **Object Output Pattern**: Optional `--obj` flag for structured JSON output (auto-enabled in shell)
+- **Smart Aliases**: Auto-generated from multi-word commands (`list-directory` → `ld`)
 - **Do One Thing Well**: Each command has a single, clear purpose
-- **Tab Completion Everything**: Property names, command names, variables - all completable
 
 ### 📦 Quick Start
 
@@ -175,46 +212,46 @@ git clone https://github.com/klimb/rust-stargate
 cd rust-stargate
 make
 
-# Traditional mode, like ls
-./target/debug/list-directory --color
+# Beautiful colored output with file type indicators (no flags needed!)
+./target/debug/stargate list-directory
 
-# Object mode with pretty printing
-./target/debug/list-directory --obj --pretty 
-
-# Interactive shell with autocomplete & scripting
+# Interactive shell with tab completion & object scripting
 ./target/debug/stargate-shell 
-stargate> list-directory | collect-count
-stargate> let dirs = (list-directory).entries;
-stargate> print "Total: {(list-directory).total_count}";
+
+stargate> ls                           # Use alias (ls → list-directory)
+stargate> cd src                       # Built-in cd (no semicolon needed!)
+stargate> let files = (ls).entries;    # Capture command output
+stargate> print files[0].name;         # Access object properties
+stargate> files | slice-object | dice-object name size  # Pipeline objects
 ```
 
-### 🔥 Completion Examples
+### 🔥 Tab Completion Examples
 
-**Interactive exploration with completion:**
+**Discover available properties:**
 ```bash
 stargate> (list-directory).<TAB>
 entries      recursive    total_count
 
 stargate> (list-directory).entries[0].<TAB>
-gid      inode    modified    name    nlink    path
-permissions    size    type    uid
-
-stargate> (list-directory).entries[0].permissions
-664
+gid  inode  modified  name  nlink  path  permissions  size  type  uid
 ```
 
-**Scripting with persistent variables:**
+**Complete directories for cd:**
 ```bash
-stargate> let perms = (list-directory).entries[0].permissions;
-stargate> let name = (list-directory).entries[0].name;
-stargate> print "{name}: {perms}";
-.rustfmt.toml: 664
+stargate> cd <TAB>
+docs/  examples/  src/  target/  tests/
+
+stargate> cd sr<TAB>
+stargate> cd src/
 ```
 
-**Object pipeline transformations:**
-```stargate-shell
-list-directory | slice-object entries | dice-object name size type
-```
+**Command and alias completion:**
+```bash
+stargate> l<TAB>
+link  list-directory  ln  ls  ld
+
+stargate> c<TAB>
+cat  cd  change-directory  cksum  chmod  chown  chroot  ...
 
 ### Platform Support
 
