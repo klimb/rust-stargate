@@ -149,7 +149,7 @@ impl Interpreter {
                 }
             }
             Statement::IndexAssignment { object, index, value } => {
-                // Get the list/object to modify
+                // Get the list/dict to modify
                 let obj_value = self.variables.get(&object).cloned()
                     .ok_or(format!("Variable '{}' not found", object))?;
                 
@@ -176,7 +176,11 @@ impl Interpreter {
                         list[actual_idx] = new_value;
                         self.variables.insert(object.clone(), Value::List(list));
                     }
-                    _ => return Err(format!("Cannot use index assignment on non-list value"))
+                    Value::Dict(mut dict) => {
+                        dict.insert(index_value, new_value);
+                        self.variables.insert(object.clone(), Value::Dict(dict));
+                    }
+                    _ => return Err(format!("Cannot use index assignment on non-list/non-dict value"))
                 }
             }
             Statement::VarDecl(name, expr) => {
@@ -217,6 +221,9 @@ impl Interpreter {
                     }
                     Value::List(_) => {
                         return Err("Type error: if condition must be a boolean. Use bool() to convert lists.".to_string());
+                    }
+                    Value::Dict(_) => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert dicts.".to_string());
                     }
                 }
                 
@@ -555,6 +562,13 @@ impl Interpreter {
                             Err(format!("Index {} out of bounds (list length: {})", idx, list.len()))
                         }
                     }
+                    Value::Dict(map) => {
+                        if let Some(value) = map.get(&index_value) {
+                            Ok(value.clone())
+                        } else {
+                            Err(format!("Key '{}' not found in dictionary", index_value.to_string()))
+                        }
+                    }
                     Value::Object(json_obj) => {
                         match json_obj {
                             serde_json::Value::Array(arr) => {
@@ -659,6 +673,80 @@ impl Interpreter {
                             _ => Err(format!("Unknown list method: {}", method))
                         }
                     }
+                    Value::Dict(mut map) => {
+                        // Handle dict built-in methods
+                        match method.as_str() {
+                            "get" => {
+                                if args.len() != 1 && args.len() != 2 {
+                                    return Err(format!("get() expects 1 or 2 arguments, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                
+                                if let Some(value) = map.get(&key) {
+                                    Ok(value.clone())
+                                } else if args.len() == 2 {
+                                    // Return default value
+                                    self.eval_expression(args[1].clone())
+                                } else {
+                                    Ok(Value::Null)
+                                }
+                            }
+                            "set" => {
+                                if args.len() != 2 {
+                                    return Err(format!("set() expects 2 arguments, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                let value = self.eval_expression(args[1].clone())?;
+                                map.insert(key, value);
+                                Ok(Value::Dict(map))
+                            }
+                            "remove" => {
+                                if args.len() != 1 {
+                                    return Err(format!("remove() expects 1 argument, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                map.remove(&key);
+                                Ok(Value::Dict(map))
+                            }
+                            "keys" => {
+                                if !args.is_empty() {
+                                    return Err(format!("keys() expects 0 arguments, got {}", args.len()));
+                                }
+                                let mut keys: Vec<Value> = map.keys().cloned().collect();
+                                // Sort keys by their string representation
+                                keys.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
+                                Ok(Value::List(keys))
+                            }
+                            "values" => {
+                                if !args.is_empty() {
+                                    return Err(format!("values() expects 0 arguments, got {}", args.len()));
+                                }
+                                let values: Vec<Value> = map.values().cloned().collect();
+                                Ok(Value::List(values))
+                            }
+                            "has_key" => {
+                                if args.len() != 1 {
+                                    return Err(format!("has_key() expects 1 argument, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                Ok(Value::Bool(map.contains_key(&key)))
+                            }
+                            "length" => {
+                                if !args.is_empty() {
+                                    return Err(format!("length() expects 0 arguments, got {}", args.len()));
+                                }
+                                Ok(Value::Number(map.len() as f64))
+                            }
+                            "clear" => {
+                                if !args.is_empty() {
+                                    return Err(format!("clear() expects 0 arguments, got {}", args.len()));
+                                }
+                                map.clear();
+                                Ok(Value::Dict(map))
+                            }
+                            _ => Err(format!("Unknown dict method: {}", method))
+                        }
+                    }
                     Value::Instance { class_name, fields } => {
                         // Handle ut built-in object methods
                         if class_name == "UT" {
@@ -749,6 +837,7 @@ impl Interpreter {
                     Value::Null => "null".to_string(),
                     Value::Instance { .. } => return Err("Cannot pipe instance objects".to_string()),
                     Value::List(_) => return Err("Cannot pipe list objects yet".to_string()),
+                    Value::Dict(_) => return Err("Cannot pipe dict objects yet".to_string()),
                 };
                 
                 // Execute the pipeline with the JSON input
@@ -772,6 +861,16 @@ impl Interpreter {
                     list.push(elem_value);
                 }
                 Ok(Value::List(list))
+            }
+            Expression::DictLiteral(pairs) => {
+                // Evaluate each key-value pair and collect into a dict
+                let mut map = std::collections::HashMap::new();
+                for (key_expr, value_expr) in pairs {
+                    let key = self.eval_expression(key_expr)?;
+                    let value = self.eval_expression(value_expr)?;
+                    map.insert(key, value);
+                }
+                Ok(Value::Dict(map))
             }
         }
     }

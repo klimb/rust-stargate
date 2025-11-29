@@ -97,5 +97,24 @@ fn test_inheritance() {
     ut.assert_equals(dog.breed, "Labrador", "Dog should have breed");
 }
 
+# Test: Dictionary operations from README
+[test]
+fn test_dict_operations() {
+    let config = {"host": "localhost", "port": 5432};
+    
+    ut.assert_equals(config.length(), 2, "Initial size");
+    ut.assert_equals(config["host"], "localhost", "Key access");
+    ut.assert_true(config.has_key("port"), "Has key");
+    
+    config["timeout"] = 30;
+    ut.assert_equals(config.length(), 3, "After adding key");
+    
+    # Test number keys
+    let d = {};
+    d[1] = "one";
+    d[2] = "two";
+    ut.assert_equals(d[1], "one", "Number keys work");
+}
+
 print ut.stats;
 exit(ut.healthy);
