@@ -17,6 +17,11 @@ fn fibonacci(n) {
 
 let sq = square(7);
 print "Square of 7: {sq}";
+assert sq == 49, "Square of 7 should be 49";
 
 let fib8 = fibonacci(8);
 print "Fibonacci of 8: {fib8}";
+assert fib8 == 21, "Fibonacci of 8 should be 21";
+
+print "";
+print "=== All assertions passed! ===";

@@ -39,6 +39,17 @@ print "   Top Speed: {driver.car.top_speed}";
 let current_speed = driver.car.get_current_speed();
 print "   Current Speed: {current_speed}";
 
+# Verify values with assertions
+assert driver.first_name == "Dmitry", "Driver first name should be Dmitry";
+assert driver.last_name == "Kalashnikov", "Driver last name should be Kalashnikov";
+assert driver.car.brand == "Ferrari", "Car brand should be Ferrari";
+assert driver.car.model == "F8 Tributo", "Car model should be F8 Tributo";
+assert driver.car.top_speed == 340, "Ferrari top speed should be 340";
+assert current_speed == 320, "Current speed should be 320";
+
+print "";
+print "=== All assertions passed! ===";
+
 if (current_speed == 320) {
     exit;
 } else {

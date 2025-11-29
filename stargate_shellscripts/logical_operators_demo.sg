@@ -153,9 +153,11 @@ let left_side = !(p && q);
 let right_side = !p || !q;
 print "    !(p && q) = {left_side}";
 print "    (!p || !q) = {right_side}";
+assert left_side == right_side, "De Morgan's Law should hold";
 if left_side == right_side {
     print "    ✓ De Morgan's Law verified!";
 }
 print "";
 
 print "=== Demo Complete ===";
+print "=== All assertions passed! ===";

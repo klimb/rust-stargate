@@ -13,6 +13,7 @@ if sum > threshold {
     print "Sum exceeds threshold";
     let diff = sum - threshold;
     print "Difference: {diff}";
+    assert diff == 5, "Difference should be 5";
 } else {
     print "Sum is below threshold";
 }
@@ -55,3 +56,6 @@ if value <= limit {
 } else {
     print "value <= limit: FALSE";
 }
+
+print "";
+print "=== All assertions passed! ===";
