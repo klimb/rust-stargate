@@ -211,10 +211,7 @@ link  list-directory  ln  ls  ld
 stargate> c<TAB>
 cat  cd  change-directory  cksum  chmod  chown  chroot  ...
 ```
-<<<<<<< HEAD
-=======
 
->>>>>>> e600f866a (updating readme for clarity)
 ### Platform Support
 
 - FreeBSD
