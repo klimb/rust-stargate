@@ -186,6 +186,18 @@ impl Interpreter {
                 let value = self.eval_expression(expr)?;
                 println!("{}", value.to_string());
             }
+            Statement::Assert { condition, message } => {
+                let result = self.eval_expression(condition.clone())?;
+                if !result.to_bool() {
+                    let msg = if let Some(msg_expr) = message {
+                        let msg_val = self.eval_expression(msg_expr)?;
+                        msg_val.to_string()
+                    } else {
+                        format!("Assertion failed: {:?}", condition)
+                    };
+                    return Err(format!("Assertion failed: {}", msg));
+                }
+            }
             Statement::Exit(expr_opt) => {
                 let code = if let Some(expr) = expr_opt {
                     let value = self.eval_expression(expr)?;
