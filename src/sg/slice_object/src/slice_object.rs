@@ -35,13 +35,6 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     if let Some(field) = matches.get_one::<String>(options::FIELD) {
         let result = extract_field(&json, field)?;
         output_json(&result, pretty)?;
-    } else if let Some(fields) = matches.get_many::<String>(options::FIELDS) {
-        let field_list: Vec<&str> = fields.map(|s| s.as_str()).collect();
-        let result = extract_multiple_fields(&json, &field_list)?;
-        output_json(&result, pretty)?;
-    } else if let Some(index) = matches.get_one::<usize>(options::INDEX) {
-        let result = extract_by_index(&json, *index)?;
-        output_json(&result, pretty)?;
     } else {
         // No extraction specified, just output the JSON (possibly prettified)
         output_json(&json, pretty)?;
@@ -156,33 +149,12 @@ pub fn uu_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about("Extract fields from JSON objects")
-        .override_usage("slice-object [OPTIONS]")
+        .override_usage("slice-object [FIELD]")
         .arg(
             Arg::new(options::FIELD)
-                .short('f')
-                .long("field")
                 .value_name("FIELD")
                 .help("Extract a single field from JSON object(s)")
-                .conflicts_with_all([options::FIELDS, options::INDEX])
-                .action(ArgAction::Set),
-        )
-        .arg(
-            Arg::new(options::FIELDS)
-                .short('F')
-                .long("fields")
-                .value_name("FIELD")
-                .help("Extract multiple fields from JSON object(s)")
-                .conflicts_with_all([options::FIELD, options::INDEX])
-                .action(ArgAction::Append),
-        )
-        .arg(
-            Arg::new(options::INDEX)
-                .short('i')
-                .long("index")
-                .value_name("INDEX")
-                .help("Extract element at index from JSON array")
-                .conflicts_with_all([options::FIELD, options::FIELDS])
-                .value_parser(clap::value_parser!(usize))
+                .index(1)
                 .action(ArgAction::Set),
         )
         .arg(

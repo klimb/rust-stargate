@@ -6,7 +6,7 @@
 mod stargate_shell;
 
 use rustyline::error::ReadlineError;
-use rustyline::{Editor, Config, CompletionType, EditMode};
+use rustyline::{Editor, Config, CompletionType};
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
 
