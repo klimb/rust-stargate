@@ -1,8 +1,62 @@
 // Command discovery and parameter extraction
 use std::process::Command;
+use std::collections::HashMap;
+use std::sync::OnceLock;
 
 // List of built-in shell commands
 pub const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command", "cd", "change-directory"];
+
+// Get all command aliases
+pub fn get_command_aliases() -> Vec<String> {
+    get_aliases_map().keys().cloned().collect()
+}
+
+// Command aliases - maps short names to full command names
+fn get_aliases_map() -> &'static HashMap<String, String> {
+    static ALIASES: OnceLock<HashMap<String, String>> = OnceLock::new();
+    ALIASES.get_or_init(|| {
+        let mut map = HashMap::new();
+        
+        // User-defined aliases
+        map.insert("ls".to_string(), "list-directory".to_string());
+        
+        // Auto-generated aliases from command names (e.g., some-long-command -> slc)
+        let commands = get_stargate_commands();
+        for cmd in commands {
+            if let Some(alias) = generate_alias(&cmd) {
+                // Only add if not already defined
+                if !map.contains_key(&alias) {
+                    map.insert(alias, cmd);
+                }
+            }
+        }
+        
+        map
+    })
+}
+
+// Generate an alias from a command name using first letters of each word
+// e.g., "some-long-command" -> "slc"
+fn generate_alias(command: &str) -> Option<String> {
+    let parts: Vec<&str> = command.split('-').collect();
+    
+    // Only generate aliases for multi-word commands
+    if parts.len() < 2 {
+        return None;
+    }
+    
+    let alias: String = parts
+        .iter()
+        .filter_map(|part| part.chars().next())
+        .collect();
+    
+    // Only return if alias is at least 2 characters
+    if alias.len() >= 2 {
+        Some(alias)
+    } else {
+        None
+    }
+}
 
 // List of stargate commands (extracted from the binary)
 pub fn get_stargate_commands() -> Vec<String> {

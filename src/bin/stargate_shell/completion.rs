@@ -9,7 +9,7 @@ use std::process::Command;
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
 
-use super::commands::{get_stargate_commands, get_command_parameters, SHELL_COMMANDS};
+use super::commands::{get_stargate_commands, get_command_parameters, get_command_aliases, SHELL_COMMANDS};
 use super::interpreter::Interpreter;
 
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
@@ -24,6 +24,7 @@ impl StargateCompletion {
     pub fn new(variables: Arc<Mutex<HashSet<String>>>, interpreter: Arc<Mutex<Interpreter>>) -> Self {
         let mut commands = get_stargate_commands();
         commands.extend(SHELL_COMMANDS.iter().map(|s| s.to_string()));
+        commands.extend(get_command_aliases());
         commands.sort();
         commands.dedup();
         Self { commands, variables, interpreter }
