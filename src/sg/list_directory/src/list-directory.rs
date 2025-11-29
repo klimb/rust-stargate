@@ -573,10 +573,6 @@ fn is_color_compatible_term() -> bool {
 ///
 /// A boolean representing whether or not to use color.
 fn extract_color(options: &clap::ArgMatches) -> bool {
-    if !is_color_compatible_term() {
-        return false;
-    }
-
     let get_last_index = |flag: &str| -> usize {
         if options.value_source(flag) == Some(clap::parser::ValueSource::CommandLine) {
             options.index_of(flag).unwrap_or(0)
@@ -593,10 +589,21 @@ fn extract_color(options: &clap::ArgMatches) -> bool {
     let unsorted_all_index = get_last_index(options::files::UNSORTED_ALL);
 
     let color_enabled = match options.get_one::<String>(options::COLOR) {
-        None => options.contains_id(options::COLOR),
+        None => {
+            // If no explicit color flag, default to always show color
+            // unless the terminal is known to be incompatible
+            if options.contains_id(options::COLOR) {
+                true
+            } else {
+                // Default: show color always (like --color flag)
+                is_color_compatible_term()
+            }
+        }
         Some(val) => match val.as_str() {
             "" | "always" | "yes" | "force" => true,
-            "auto" | "tty" | "if-tty" => stdout().is_terminal(),
+            "auto" | "tty" | "if-tty" => {
+                is_color_compatible_term() && stdout().is_terminal()
+            }
             /* "never" | "no" | "none" | */ _ => false,
         },
     };
@@ -739,7 +746,8 @@ fn extract_indicator_style(options: &clap::ArgMatches) -> IndicatorStyle {
     } else if options.get_flag(options::indicator_style::FILE_TYPE) {
         IndicatorStyle::FileType
     } else {
-        IndicatorStyle::None
+        // Default to Classify (like -F flag)
+        IndicatorStyle::Classify
     }
 }
 

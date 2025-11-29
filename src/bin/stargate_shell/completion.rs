@@ -260,6 +260,19 @@ impl Completer for StargateCompletion {
             }
         }
 
+        // Check if we're completing arguments for cd/change-directory (directory completion)
+        let cmd_start = line[..start].rfind('|')
+            .map(|i| i + 1)
+            .unwrap_or(0);
+        let cmd_part = line[cmd_start..start].trim();
+        let cmd_name = cmd_part.split_whitespace().next().unwrap_or("");
+        
+        if cmd_name == "cd" || cmd_name == "change-directory" {
+            // Get directory completions
+            let matches = get_directory_completions(prefix);
+            return Ok((start, matches));
+        }
+
         // Regular command completion
         let matches: Vec<Pair> = self.commands
             .iter()
@@ -304,6 +317,70 @@ fn get_command_properties(cmd: &str) -> Option<Vec<String>> {
         None
     }
 }
+
+// Helper function to get directory completions for cd command
+fn get_directory_completions(prefix: &str) -> Vec<Pair> {
+    use std::fs;
+    use std::path::Path;
+    
+    // Expand ~ to home directory
+    let expanded_prefix = if prefix.starts_with("~/") {
+        if let Some(home) = std::env::var_os("HOME") {
+            Path::new(&home).join(&prefix[2..]).to_string_lossy().to_string()
+        } else {
+            prefix.to_string()
+        }
+    } else {
+        prefix.to_string()
+    };
+    
+    // Determine the directory to search and the partial filename
+    let (search_dir, partial_name) = if expanded_prefix.is_empty() {
+        (".", "")
+    } else if expanded_prefix.ends_with('/') {
+        (expanded_prefix.as_str(), "")
+    } else if let Some(last_slash) = expanded_prefix.rfind('/') {
+        (&expanded_prefix[..last_slash + 1], &expanded_prefix[last_slash + 1..])
+    } else {
+        (".", expanded_prefix.as_str())
+    };
+    
+    // Read directory entries
+    let mut matches = Vec::new();
+    if let Ok(entries) = fs::read_dir(search_dir) {
+        for entry in entries.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_dir() {
+                    if let Some(name) = entry.file_name().to_str() {
+                        // Skip hidden directories unless explicitly requested
+                        if name.starts_with('.') && !partial_name.starts_with('.') {
+                            continue;
+                        }
+                        
+                        if name.starts_with(partial_name) {
+                            let replacement = if search_dir == "." && !prefix.contains('/') {
+                                format!("{}/", name)
+                            } else if prefix.starts_with("~/") {
+                                format!("~/{}{}/", &prefix[2..prefix.len() - partial_name.len()], name)
+                            } else {
+                                format!("{}{}/", &expanded_prefix[..expanded_prefix.len() - partial_name.len()], name)
+                            };
+                            
+                            matches.push(Pair {
+                                display: format!("{}/", name),
+                                replacement,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    matches.sort_by(|a, b| a.display.cmp(&b.display));
+    matches
+}
+
 
 // Helper function to evaluate an expression and get properties from the result
 fn get_expression_properties(expr: &str) -> Option<Vec<String>> {

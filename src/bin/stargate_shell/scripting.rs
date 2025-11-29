@@ -537,7 +537,11 @@ impl Parser {
             pipeline.push(' ');
         }
         
-        self.expect(";")?;
+        // Consume semicolon if present
+        if self.peek() == Some(&";".to_string()) {
+            self.advance();
+        }
+        
         Ok(Statement::Command(pipeline.trim().to_string()))
     }
 
