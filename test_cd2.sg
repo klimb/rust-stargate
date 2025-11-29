@@ -1,0 +1,13 @@
+#!/usr/bin/env stargate-shell
+
+print "Before cd";
+pwd;
+
+print "Changing to /tmp";
+cd "/tmp";
+
+print "After cd";
+pwd;
+
+print "Listing /tmp";
+list-directory | head -n 3;
