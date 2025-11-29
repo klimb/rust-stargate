@@ -1,181 +1,91 @@
 #!/usr/bin/env stargate-shell
 # Demonstration of && (and) and || (or) operators in stargate scripts
 
-print "=== Logical Operators Demo ===";
-print "";
+use ut;
 
-# Example 1: && operator (AND)
-print "1. AND operator (&&) - both conditions must be true:";
-let x = 5;
-let y = 10;
-
-let both_positive = x > 0 && y > 0;
-assert both_positive == true, "Both x and y should be positive";
-
-if x > 0 && y > 0 {
-    print "  ✓ Both x and y are positive";
+[test]
+fn test_and_operator() {
+    let x = 5;
+    let y = 10;
+    let both_positive = x > 0 && y > 0;
+    ut.assert_equals(both_positive, true, "Both x and y should be positive");
+    
+    let x_pos_y_small = x > 0 && y < 5;
+    ut.assert_equals(x_pos_y_small, false, "y is not less than 5");
 }
 
-let x_pos_y_small = x > 0 && y < 5;
-assert x_pos_y_small == false, "y is not less than 5";
-
-if x > 0 && y < 5 {
-    print "  ✗ This should not print";
-} else {
-    print "  ✓ x is positive but y is not less than 5";
-}
-print "";
-
-# Example 2: || operator (OR)
-print "2. OR operator (||) - at least one condition must be true:";
-let a = 15;
-let b = 0;
-
-let at_least_one_big = a > 10 || b > 10;
-assert at_least_one_big == true, "a is greater than 10";
-
-if a > 10 || b > 10 {
-    print "  ✓ At least one value is greater than 10";
+[test]
+fn test_or_operator() {
+    let a = 15;
+    let b = 0;
+    let at_least_one_big = a > 10 || b > 10;
+    ut.assert_equals(at_least_one_big, true, "a is greater than 10");
+    
+    let either_negative = a < 0 || b < 0;
+    ut.assert_equals(either_negative, false, "Neither a nor b is negative");
 }
 
-let either_negative = a < 0 || b < 0;
-assert either_negative == false, "Neither a nor b is negative";
-
-if a < 0 || b < 0 {
-    print "  ✗ This should not print";
-} else {
-    print "  ✓ Neither a nor b is negative";
-}
-print "";
-
-# Example 3: Combining && and ||
-print "3. Combining && and ||:";
-let age = 25;
-let has_license = true;
-
-let can_drive = age >= 18 && has_license;
-assert can_drive == true, "Should be able to drive";
-
-if age >= 18 && has_license {
-    print "  ✓ Can drive - age is {age} and has license";
+[test]
+fn test_combined_operators() {
+    let age = 25;
+    let has_license = true;
+    let can_drive = age >= 18 && has_license;
+    ut.assert_equals(can_drive, true, "Should be able to drive");
+    
+    let cannot_drive = age < 16 || !has_license;
+    ut.assert_equals(cannot_drive, false, "Person meets driving requirements");
 }
 
-let cannot_drive = age < 16 || !has_license;
-assert cannot_drive == false, "Person meets driving requirements";
-
-if age < 16 || !has_license {
-    print "  ✗ This should not print";
-} else {
-    print "  ✓ Person meets driving requirements";
-}
-print "";
-
-# Example 4: Short-circuit evaluation
-print "4. Short-circuit evaluation:";
-let check = true;
-
-# This demonstrates short-circuit: if first condition is false, second isn't evaluated
-if !check && check {
-    print "  ✗ This should not print";
+[test]
+fn test_not_operator() {
+    let enabled = true;
+    let disabled = false;
+    ut.assert_equals(!disabled, true, "!false should be true");
+    ut.assert_equals(!enabled, false, "!true should be false");
+    
+    let value = true;
+    let double_negated = !!value;
+    ut.assert_equals(double_negated, true, "Double negation should return original");
 }
 
-# If first condition is true, second isn't evaluated
-if check || false {
-    print "  ✓ First condition was true, so this executes";
-}
-print "";
-
-# Example 5: Practical file checking example
-print "5. Practical example - checking conditions:";
-let file_count = (list-directory).total_count;
-
-if file_count > 0 && file_count < 100 {
-    print "  ✓ Directory has {file_count} files (reasonable number)";
+[test]
+fn test_bool_conversion() {
+    let num = 0;
+    let as_bool = bool(num);
+    ut.assert_equals(as_bool, false, "bool(0) should be false");
+    
+    let num2 = 5;
+    let as_bool2 = bool(num2);
+    ut.assert_equals(as_bool2, true, "bool(5) should be true");
 }
 
-if file_count >= 100 {
-    print "  Directory has many files: {file_count}";
+[test]
+fn test_not_with_and_or() {
+    let is_admin = false;
+    let is_logged_in = true;
+    ut.assert_equals(!is_admin && is_logged_in, true, "User is logged in but not admin");
+    ut.assert_equals(!is_admin || !is_logged_in, true, "At least one condition true");
 }
 
-if file_count == 0 {
-    print "  Directory is empty";
-}
-print "";
-
-# Example 6: Nested parentheses for complex logic
-print "6. Nested parentheses - complex boolean expressions:";
-let a = true;
-let b = true;
-let c = false;
-let d = true;
-let z = true;
-
-let result = (((a && b) || (c && d)) && z);
-print "  Expression: (((a && b) || (c && d)) && z)";
-print "  Values: a={a}, b={b}, c={c}, d={d}, z={z}";
-print "  Result: {result}";
-
-if (((a && b) || (c && d)) && z) {
-    print "  ✓ Complex nested condition evaluated correctly";
-}
-print "";
-
-# Example 7: NOT operator (!)
-print "7. NOT operator (!) - negates boolean values:";
-let enabled = true;
-let disabled = false;
-
-if !disabled {
-    print "  ✓ disabled is false, so !disabled is true";
+[test]
+fn test_de_morgan_law() {
+    let p = true;
+    let q = false;
+    let left_side = !(p && q);
+    let right_side = !p || !q;
+    ut.assert_equals(left_side, right_side, "De Morgan's Law should hold");
 }
 
-if !enabled {
-    print "  ✗ This should not print";
-} else {
-    print "  ✓ enabled is true, so !enabled is false";
+[test]
+fn test_complex_nested_logic() {
+    let a = true;
+    let b = true;
+    let c = false;
+    let d = true;
+    let z = true;
+    let result = (((a && b) || (c && d)) && z);
+    ut.assert_equals(result, true, "Complex nested condition should evaluate correctly");
 }
 
-# Double negation
-let value = true;
-let double_negated = !!value;
-print "  !!{value} = {double_negated} (double negation returns to original)";
-
-# Converting integers to booleans
-let num = 0;
-let as_bool = bool(num);
-print "  bool(0) = {as_bool}";
-let num2 = 5;
-let as_bool2 = bool(num2);
-print "  bool(5) = {as_bool2}";
-print "";
-
-# Example 8: Combining NOT with AND/OR
-print "8. Combining NOT with AND and OR:";
-let is_admin = false;
-let is_logged_in = true;
-
-if !is_admin && is_logged_in {
-    print "  ✓ User is logged in but not an admin";
-}
-
-if !is_admin || !is_logged_in {
-    print "  ✓ At least one of: not admin OR not logged in";
-}
-
-# De Morgan's Laws demonstration
-let p = true;
-let q = false;
-print "  De Morgan's Law: !(p && q) == (!p || !q)";
-print "    p={p}, q={q}";
-let left_side = !(p && q);
-let right_side = !p || !q;
-print "    !(p && q) = {left_side}";
-print "    (!p || !q) = {right_side}";
-assert left_side == right_side, "De Morgan's Law should hold";
-if left_side == right_side {
-    print "    ✓ De Morgan's Law verified!";
-}
-print "";
-
-print "=== Demo Complete ===";
-print "=== All assertions passed! ===";
+print ut.stats;
+exit(ut.healthy);

@@ -1,35 +1,20 @@
 #!/usr/bin/env stargate-shell
 # Demo: Property completion and access
 
-print "=== Property Completion Demo ===";
-print "";
-print "In the REPL, you can now use tab completion for properties!";
-print "";
+use ut;
 
-print "Examples that work in the REPL:";
-print "1. Type: list-directory.<TAB>";
-print "   → Shows: entries, recursive, total_count";
-print "";
+[test]
+fn test_property_access() {
+    let count = (list-directory).total_count;
+    ut.assert_true(count > 0, "Directory should have items");
+}
 
-print "2. Type: (list-directory).e<TAB>";
-print "   → Completes to: (list-directory).entries";
-print "";
+[test]
+fn test_array_access() {
+    let entries = (list-directory).entries;
+    let first = entries[0].name;
+    ut.assert_not_equals(first, "", "First entry should have name");
+}
 
-print "3. Type: (list-directory).entries[0].<TAB>";
-print "   → Shows available properties of first entry";
-print "";
-
-print "Working examples in scripts:";
-print "";
-
-let count = (list-directory).total_count;
-print "Directory has {count} items";
-print "";
-
-let entries = (list-directory).entries;
-let first = entries[0].name;
-print "First entry: {first}";
-print "";
-
-print "Try the REPL for interactive completion!";
-print "Start with: ./target/debug/stargate-shell";
+print ut.stats;
+exit(ut.healthy);

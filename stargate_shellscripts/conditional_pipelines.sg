@@ -1,28 +1,26 @@
 #!/usr/bin/env stargate-shell
 # Complex script demonstrating conditionals with command outputs
 
-print "=== Conditional Pipeline Processing ===";
-print "";
+use ut;
 
-# Check directory size
-print "Analyzing directory contents...";
-let total_files = list-directory | collect-count;
-print "Total items: {total_files}";
-print "";
-
-# Execute different pipelines based on size
-if total_files > 20 {
-    print "Large directory - showing first 10 files only";
-    list-directory | head -10;
-} else {
-    if total_files > 10 {
-        print "Medium directory - showing all files";
-        list-directory;
+[test]
+fn test_conditional_pipelines() {
+    let total_files = (list-directory).total_count;
+    ut.assert_true(total_files >= 0, "Directory count should be non-negative");
+    
+    let executed = "none";
+    if total_files > 20 {
+        let executed = "large";
     } else {
-        print "Small directory - showing with find-text filter";
-        list-directory | find-text toml;
+        if total_files > 10 {
+            let executed = "medium";
+        } else {
+            let executed = "small";
+        }
     }
+    
+    ut.assert_not_equals(executed, "none", "Should have executed a branch");
 }
-print "";
 
-print "Analysis complete!";
+print ut.stats;
+exit(ut.healthy);

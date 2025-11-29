@@ -22,5 +22,5 @@ fn test_pipeline_with_collect_count() {
     ut.assert_not_equals(count, "", "Pipeline should return count");
 }
 
-print (ut).stats;
-exit((ut).healthy);
+print ut.stats;
+exit(ut.healthy);

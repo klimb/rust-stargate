@@ -1,93 +1,89 @@
 #!/usr/bin/env stargate-shell
-# Simple demonstration of bool() type conversion
+# Boolean Type Conversion Tests
 
-print "=== Boolean Type Conversion Demo ===";
-print "";
+use ut;
 
-# Example 1: Converting zero and non-zero integers
-print "1. Converting integers to booleans:";
-let zero = 0;
-let one = 1;
-let five = 5;
-let negative = -3;
-
-print "   Original values:";
-print "     zero = {zero}";
-print "     one = {one}";
-print "     five = {five}";
-print "     negative = {negative}";
-print "";
-
-print "   After bool() conversion:";
-let zero_bool = bool(zero);
-let one_bool = bool(one);
-let five_bool = bool(five);
-let neg_bool = bool(negative);
-print "     bool(0) = {zero_bool}";
-print "     bool(1) = {one_bool}";
-print "     bool(5) = {five_bool}";
-print "     bool(-3) = {neg_bool}";
-print "";
-
-print "   Rule: 0 converts to false, any other number converts to true";
-print "";
-
-# Example 2: Using bool() in conditions
-print "2. Using bool() in if statements:";
-let count = 0;
-
-if bool(count) {
-    print "   count is non-zero";
-} else {
-    print "   ✓ count is zero (bool(0) is false)";
+[test]
+fn test_zero_converts_to_false() {
+    let zero = 0;
+    let zero_bool = bool(zero);
+    ut.assert_equals(zero_bool, false, "bool(0) should be false");
 }
 
-count = 42;
-if bool(count) {
-    print "   ✓ count is non-zero (bool(42) is true)";
-}
-print "";
-
-# Example 3: Practical file count check
-print "3. Practical example - checking file count:";
-let file_count = (list-directory).total_count;
-print "   Files in directory: {file_count}";
-
-if bool(file_count) {
-    print "   ✓ Directory has files (converted to true)";
-} else {
-    print "   Directory is empty (converted to false)";
-}
-print "";
-
-# Example 4: Converting and storing
-print "4. Converting and storing as boolean variable:";
-let num = 0;
-let is_nonzero = bool(num);
-print "   num = {num}";
-print "   is_nonzero = bool(num) = {is_nonzero}";
-
-num = 100;
-is_nonzero = bool(num);
-print "   num = {num}";
-print "   is_nonzero = bool(num) = {is_nonzero}";
-print "";
-
-# Example 5: Combining with logical operators
-print "5. Combining bool() with logical operators:";
-let a = 0;
-let b = 5;
-
-print "   a = {a}, b = {b}";
-if bool(a) || bool(b) {
-    print "   ✓ At least one is non-zero";
+[test]
+fn test_one_converts_to_true() {
+    let one = 1;
+    let one_bool = bool(one);
+    ut.assert_equals(one_bool, true, "bool(1) should be true");
 }
 
-if bool(a) && bool(b) {
-    print "   Both are non-zero";
-} else {
-    print "   ✓ At least one is zero";
+[test]
+fn test_positive_converts_to_true() {
+    let five = 5;
+    let five_bool = bool(five);
+    ut.assert_equals(five_bool, true, "bool(5) should be true");
 }
-print "";
 
-print "=== Demo Complete ===";
+[test]
+fn test_negative_converts_to_true() {
+    let negative = -3;
+    let neg_bool = bool(negative);
+    ut.assert_equals(neg_bool, true, "bool(-3) should be true");
+}
+
+[test]
+fn test_bool_in_if_statement() {
+    let count = 0;
+    let result = false;
+    if bool(count) {
+        let result = true;
+    }
+    ut.assert_equals(result, false, "bool(0) in if should be false");
+}
+
+[test]
+fn test_bool_with_nonzero() {
+    let count = 42;
+    let result = false;
+    if bool(count) {
+        let result = true;
+    }
+    ut.assert_equals(result, true, "bool(42) in if should be true");
+}
+
+[test]
+fn test_file_count_bool() {
+    let file_count = (list-directory).total_count;
+    let has_files = bool(file_count);
+    ut.assert_equals(has_files, true, "Directory should have files");
+}
+
+[test]
+fn test_bool_with_logical_or() {
+    let a = 0;
+    let b = 5;
+    let result = bool(a) || bool(b);
+    ut.assert_equals(result, true, "bool(0) || bool(5) should be true");
+}
+
+[test]
+fn test_bool_with_logical_and() {
+    let a = 0;
+    let b = 5;
+    let result = bool(a) && bool(b);
+    ut.assert_equals(result, false, "bool(0) && bool(5) should be false");
+}
+
+[test]
+fn test_bool_reassignment() {
+    let num = 0;
+    let is_nonzero = bool(num);
+    ut.assert_equals(is_nonzero, false, "bool(0) should be false initially");
+    
+    let num = 100;
+    let is_nonzero = bool(num);
+    ut.assert_equals(is_nonzero, true, "bool(100) should be true after reassignment");
+}
+
+print ut.stats;
+exit(ut.healthy);

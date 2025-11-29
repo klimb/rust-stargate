@@ -1,246 +1,110 @@
 #!/usr/bin/env stargate-shell
 # Advanced demonstration of && (AND) and || (OR) logical operators
 
-print "=== Advanced Logical Operators Demo ===";
-print "";
+use ut;
 
-# =============================================================================
-# Example 1: Basic && (AND) - Both conditions must be true
-# =============================================================================
-print "1. AND operator (&&) - requires ALL conditions to be true:";
-let file_count = (list-directory).total_count;
-print "   Files in directory: {file_count}";
-
-if file_count > 0 && file_count < 1000 {
-    print "   ✓ PASS: Directory has files AND is not too large";
-}
-print "";
-
-# =============================================================================
-# Example 2: Basic || (OR) - At least one condition must be true
-# =============================================================================
-print "2. OR operator (||) - requires AT LEAST ONE condition to be true:";
-let value = 75;
-let min = 0;
-let max = 100;
-
-print "   Testing value={value} against range [{min}, {max}]";
-if value >= min && value <= max {
-    print "   ✓ PASS: Value is within range (both conditions true)";
+[test]
+fn test_basic_and() {
+    let file_count = (list-directory).total_count;
+    ut.assert_true(file_count > 0 && file_count < 1000, "Directory should have files and not be too large");
 }
 
-if value < min || value > max {
-    print "   FAIL: Value is out of range";
-} else {
-    print "   ✓ PASS: Value is in valid range";
-}
-print "";
-
-# =============================================================================
-# Example 3: Chaining multiple && operators
-# =============================================================================
-print "3. Chaining AND operators - ALL must be true:";
-let a = 10;
-let b = 20;
-let c = 30;
-
-print "   Values: a={a}, b={b}, c={c}";
-if a < b && b < c {
-    print "   ✓ PASS: a < b < c (ascending order)";
+[test]
+fn test_range_checking() {
+    let value = 75;
+    let min = 0;
+    let max = 100;
+    ut.assert_true(value >= min && value <= max, "Value should be within range");
 }
 
-if a < b && b < c && a < c {
-    print "   ✓ PASS: All three comparison conditions true";
-}
-print "";
-
-# =============================================================================
-# Example 4: Chaining multiple || operators
-# =============================================================================
-print "4. Chaining OR operators - AT LEAST ONE must be true:";
-print "   Testing: a={a}, b={b}, c={c}";
-
-if a == b || b == c || a == c {
-    print "   FAIL: Some values are equal";
-} else {
-    print "   ✓ PASS: All values are distinct (no equalities found)";
-}
-print "";
-
-# =============================================================================
-# Example 5: Combining && and || with parentheses
-# =============================================================================
-print "5. Combining && and || (mixed operators):";
-let is_admin = false;
-let is_authenticated = true;
-let has_permission = true;
-
-print "   Admin={is_admin}, Authenticated={is_authenticated}, Permission={has_permission}";
-
-# Admin OR (authenticated AND has permission)
-if is_admin || (is_authenticated && has_permission) {
-    print "   ✓ PASS: Access granted via (admin OR (authenticated AND permitted))";
-}
-print "";
-
-# =============================================================================
-# Example 6: Multi-step validation with &&
-# =============================================================================
-print "6. Multi-step validation (progressive AND chaining):";
-let step1 = true;
-let step2 = true;
-let step3 = false;
-
-print "   Step 1={step1}, Step 2={step2}, Step 3={step3}";
-
-if step1 {
-    print "   ✓ Step 1 passed";
+[test]
+fn test_chained_and() {
+    let a = 10;
+    let b = 20;
+    let c = 30;
+    ut.assert_true(a < b && b < c, "Should be in ascending order");
+    ut.assert_true(a < b && b < c && a < c, "All three comparisons should be true");
 }
 
-if step1 && step2 {
-    print "   ✓ Steps 1 AND 2 passed";
+[test]
+fn test_chained_or() {
+    let a = 10;
+    let b = 20;
+    let c = 30;
+    ut.assert_equals(a == b || b == c || a == c, false, "All values should be distinct");
 }
 
-if step1 && step2 && step3 {
-    print "   ✓ All steps passed";
-} else {
-    print "   ⚠ FAIL: Not all steps passed (step 3 failed)";
+[test]
+fn test_mixed_operators() {
+    let is_admin = false;
+    let is_authenticated = true;
+    let has_permission = true;
+    ut.assert_true(is_admin || (is_authenticated && has_permission), "Access granted via admin OR (authenticated AND permitted)");
 }
 
-# Show success case
-print "   Testing when all steps pass:";
-if true && true && true {
-    print "   ✓ PASS: When all three conditions are true, result is true";
-}
-print "";
-
-# =============================================================================
-# Example 7: Deeply nested parentheses
-# =============================================================================
-print "7. Complex nested expressions:";
-let user_active = true;
-let has_email = true;
-let has_phone = false;
-let verified = true;
-
-print "   Active={user_active}, Email={has_email}, Phone={has_phone}, Verified={verified}";
-
-# (active AND (email OR phone)) AND verified
-let can_proceed = ((user_active && (has_email || has_phone)) && verified);
-print "   Expression: ((active && (email || phone)) && verified)";
-print "   Result: {can_proceed}";
-
-if can_proceed {
-    print "   ✓ PASS: User has contact method AND is verified";
-}
-print "";
-
-# =============================================================================
-# Example 8: The user's requested syntax - triple nesting
-# =============================================================================
-print "8. Triple-nested parentheses (maximum complexity):";
-let x = true;
-let y = true;
-let z = false;
-let w = true;
-let final = true;
-
-print "   Values: x={x}, y={y}, z={z}, w={w}, final={final}";
-
-# (((x && y) || (z && w)) && final)
-let result = (((x && y) || (z && w)) && final);
-print "   Expression: (((x && y) || (z && w)) && final)";
-print "   Breakdown:";
-let xy = x && y;
-let zw = z && w;
-let or_result = xy || zw;
-print "     - (x && y) = {xy}";
-print "     - (z && w) = {zw}";
-print "     - ({xy} || {zw}) = {or_result}";
-print "     - ({or_result} && {final}) = {result}";
-print "   Final result: {result}";
-
-if result {
-    print "   ✓ PASS: Complex nested evaluation worked correctly";
-}
-print "";
-
-# =============================================================================
-# Example 9: NOT operator (!) - Boolean negation
-# =============================================================================
-print "9. NOT operator (!) - negates boolean values:";
-let active = 1;
-let inactive = 0;
-
-print "   active={active}, inactive={inactive}";
-let not_active = !active;
-let not_inactive = !inactive;
-print "   !active = {not_active}";
-print "   !inactive = {not_inactive}";
-
-if !inactive {
-    print "   ✓ PASS: !inactive is true";
+[test]
+fn test_progressive_and() {
+    let step1 = true;
+    let step2 = true;
+    let step3 = false;
+    ut.assert_true(step1, "Step 1 should pass");
+    ut.assert_true(step1 && step2, "Steps 1 and 2 should pass");
+    ut.assert_equals(step1 && step2 && step3, false, "Not all steps passed");
+    ut.assert_true(true && true && true, "All true conditions should be true");
 }
 
-# Double negation preserves original value
-let test_val = 1;
-let double_neg = !!test_val;
-print "   !!test_val = {double_neg} (double negation)";
-if double_neg == test_val {
-    print "   ✓ PASS: Double negation returns original value";
-}
-print "";
-
-# =============================================================================
-# Example 10: Combining NOT with AND/OR - De Morgan's Laws
-# =============================================================================
-print "10. NOT with AND/OR - De Morgan's Laws:";
-let a = 1;
-let b = 0;
-
-print "   a={a}, b={b}";
-print "";
-print "   De Morgan's First Law: !(a && b) == (!a || !b)";
-let law1_left = !(a && b);
-let law1_right = !a || !b;
-print "     !(a && b) = {law1_left}";
-print "     (!a || !b) = {law1_right}";
-if law1_left == law1_right {
-    print "     ✓ PASS: First law verified";
+[test]
+fn test_nested_expressions() {
+    let user_active = true;
+    let has_email = true;
+    let has_phone = false;
+    let verified = true;
+    let can_proceed = ((user_active && (has_email || has_phone)) && verified);
+    ut.assert_true(can_proceed, "User has contact method AND is verified");
 }
 
-print "";
-print "   De Morgan's Second Law: !(a || b) == (!a && !b)";
-let law2_left = !(a || b);
-let law2_right = !a && !b;
-print "     !(a || b) = {law2_left}";
-print "     (!a && !b) = {law2_right}";
-if law2_left == law2_right {
-    print "     ✓ PASS: Second law verified";
-}
-print "";
-
-# =============================================================================
-# Example 11: Practical NOT usage - access control
-# =============================================================================
-print "11. Practical NOT usage - access control logic:";
-let is_guest = 0;
-let is_banned = 0;
-let has_paid = 1;
-
-print "   guest={is_guest}, banned={is_banned}, paid={has_paid}";
-
-# Allow access if: not banned AND (not guest OR has paid)
-if !is_banned && (!is_guest || has_paid) {
-    print "   ✓ PASS: Access granted (not banned AND (not guest OR paid))";
+[test]
+fn test_triple_nesting() {
+    let x = true;
+    let y = true;
+    let z = false;
+    let w = true;
+    let final = true;
+    let result = (((x && y) || (z && w)) && final);
+    ut.assert_true(result, "Complex nested evaluation should work");
 }
 
-# Deny access if: banned OR (guest AND not paid)
-if is_banned || (is_guest && !has_paid) {
-    print "   Access denied";
-} else {
-    print "   ✓ PASS: Access not denied";
+[test]
+fn test_not_operator() {
+    let active = 1;
+    let inactive = 0;
+    ut.assert_equals(!inactive, true, "!inactive should be true");
+    let test_val = true;
+    let double_neg = !!test_val;
+    ut.assert_equals(double_neg, test_val, "Double negation should return original");
 }
-print "";
 
-print "=== All Examples Complete ===";
+[test]
+fn test_de_morgan_laws() {
+    let a = 1;
+    let b = 0;
+    let law1_left = !(a && b);
+    let law1_right = !a || !b;
+    ut.assert_equals(law1_left, law1_right, "De Morgan's first law should hold");
+    
+    let law2_left = !(a || b);
+    let law2_right = !a && !b;
+    ut.assert_equals(law2_left, law2_right, "De Morgan's second law should hold");
+}
+
+[test]
+fn test_access_control() {
+    let is_guest = 0;
+    let is_banned = 0;
+    let has_paid = 1;
+    ut.assert_true(!is_banned && (!is_guest || has_paid), "Access granted");
+    ut.assert_equals(is_banned || (is_guest && !has_paid), false, "Access not denied");
+}
+
+print ut.stats;
+exit(ut.healthy);

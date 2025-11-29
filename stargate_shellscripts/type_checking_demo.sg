@@ -1,69 +1,45 @@
 #!/usr/bin/env stargate-shell
 # Demonstration of strict type checking in if conditions
 
-print "=== Strict Type Checking Demo ===";
-print "";
+use ut;
 
-# Valid cases
-print "VALID CASES (these work):";
-print "";
+[test]
+fn test_boolean_literals() {
+    ut.assert_true(true, "true should be true");
+    ut.assert_equals(!false, true, "!false should be true");
+}
 
-print "1. Boolean literals:";
-if true {
-    print "   ✓ if true works";
+[test]
+fn test_comparison_operators() {
+    let x = 10;
+    ut.assert_true(x > 5, "x > 5 should be true");
+    ut.assert_true(x == 10, "x == 10 should be true");
+    ut.assert_true(x != 0, "x != 0 should be true");
 }
-if !false {
-    print "   ✓ if !false works";
-}
-print "";
 
-print "2. Comparison operators (return boolean):";
-let x = 10;
-if x > 5 {
-    print "   ✓ if x > 5 works";
+[test]
+fn test_logical_operators() {
+    let a = true;
+    let b = false;
+    ut.assert_true(a && !b, "a && !b should be true");
+    ut.assert_true(a || b, "a || b should be true");
 }
-if x == 10 {
-    print "   ✓ if x == 10 works";
-}
-if x != 0 {
-    print "   ✓ if x != 0 works";
-}
-print "";
 
-print "3. Logical operators (return boolean):";
-let a = true;
-let b = false;
-if a && !b {
-    print "   ✓ if a && !b works";
+[test]
+fn test_bool_conversion() {
+    let num = 42;
+    ut.assert_true(bool(num), "bool(42) should be true");
+    
+    let zero = 0;
+    ut.assert_equals(!bool(zero), true, "!bool(0) should be true");
 }
-if a || b {
-    print "   ✓ if a || b works";
-}
-print "";
 
-print "4. bool() conversion function:";
-let num = 42;
-if bool(num) {
-    print "   ✓ if bool(num) works";
+[test]
+fn test_combined_conditions() {
+    let age = 25;
+    let has_license = true;
+    ut.assert_true(age >= 18 && has_license, "Combined condition should be true");
 }
-let zero = 0;
-if !bool(zero) {
-    print "   ✓ if !bool(zero) works";
-}
-print "";
 
-print "5. Combining comparisons with logical operators:";
-let age = 25;
-let has_license = true;
-if age >= 18 && has_license {
-    print "   ✓ if age >= 18 && has_license works";
-}
-print "";
-
-print "=== Type Safety Enforced! ===";
-print "";
-print "Summary:";
-print "  • Only boolean values allowed in if conditions";
-print "  • Comparisons (>, <, ==, !=, >=, <=) return booleans";
-print "  • Logical operators (&&, ||, !) return booleans";
-print "  • Use bool() to explicitly convert other types";
+print ut.stats;
+exit(ut.healthy);

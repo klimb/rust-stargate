@@ -70,5 +70,5 @@ fn test_number_equality() {
     ut.assert_equals(x, y, "Numbers should be equal");
 }
 
-print (ut).stats;
-exit((ut).healthy);
+print ut.stats;
+exit(ut.healthy);
