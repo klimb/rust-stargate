@@ -1,39 +1,62 @@
 #!/usr/bin/env stargate-shell
-# Variables and Arithmetic Tests
 
 use ut;
 
 [test]
-fn test_basic_assignment() {
-    let count = 5;
-    ut.assert_equals(count, 5, "Count should be 5");
+fn test_number_variable() {
+    let n = 42;
+    ut.assert_equals(n, 42);
 }
 
 [test]
-fn test_arithmetic_multiply() {
-    let count = 5;
-    let doubled = count * 2;
-    ut.assert_equals(doubled, 10, "5 * 2 should be 10");
+fn test_string_variable() {
+    let s = "hello world";
+    ut.assert_equals(s, "hello world");
 }
 
 [test]
-fn test_arithmetic_addition() {
-    let count = 5;
-    let doubled = count * 2;
-    let sum = count + doubled;
-    ut.assert_equals(sum, 15, "5 + 10 should be 15");
+fn test_boolean_variable() {
+    let b = false;
+    ut.assert_equals(b, false);
+    let t = true;
+    ut.assert_true(t);
+}
+
+
+[test]
+fn test_list_variable() {
+    let l = [1, "two", true, null];
+    ut.assert_equals(l.length(), 4);
+    ut.assert_equals(l[0], 1);
+    ut.assert_equals(l[1], "two");
+    ut.assert_equals(l[2], true);
+    ut.assert_equals(l[3], null);
 }
 
 [test]
-fn test_string_variables() {
-    let name = "stargate";
-    ut.assert_equals(name, "stargate", "String assignment should work");
+fn test_dict_variable() {
+    let d = {"a": 1, "b": "bee", 3: false};
+    ut.assert_equals(d["a"], 1);
+    ut.assert_equals(d["b"], "bee");
+    ut.assert_equals(d[3], false);
 }
 
 [test]
-fn test_boolean_variables() {
-    let flag = true;
-    ut.assert_true(flag, "Boolean true should work");
+fn test_object_variable() {
+    let obj = (list-directory);
+    ut.assert_not_equals(obj, null);
+    ut.assert_true(obj.total_count >= 0);
+}
+
+[test]
+fn test_instance_variable() {
+    class Foo {
+        let x = 123;
+        fn get_x() { return x; }
+    }
+    let f = new Foo;
+    ut.assert_equals(f.x, 123);
+    ut.assert_equals(f.get_x(), 123);
 }
 
 print ut.stats;

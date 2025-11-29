@@ -11,7 +11,7 @@ fn test_unix_ls() {
 }
 
 [test]
-fn test_unix_uptime() {
+fn test_list_directory() {
     let current_dir = (list-directory).entries;
     ut.assert_not_equals(current_dir, "", "system commands should work");
 }
