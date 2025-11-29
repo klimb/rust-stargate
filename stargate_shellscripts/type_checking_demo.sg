@@ -1,0 +1,69 @@
+#!/usr/bin/env stargate-shell
+# Demonstration of strict type checking in if conditions
+
+print "=== Strict Type Checking Demo ===";
+print "";
+
+# Valid cases
+print "VALID CASES (these work):";
+print "";
+
+print "1. Boolean literals:";
+if true {
+    print "   ✓ if true works";
+}
+if !false {
+    print "   ✓ if !false works";
+}
+print "";
+
+print "2. Comparison operators (return boolean):";
+let x = 10;
+if x > 5 {
+    print "   ✓ if x > 5 works";
+}
+if x == 10 {
+    print "   ✓ if x == 10 works";
+}
+if x != 0 {
+    print "   ✓ if x != 0 works";
+}
+print "";
+
+print "3. Logical operators (return boolean):";
+let a = true;
+let b = false;
+if a && !b {
+    print "   ✓ if a && !b works";
+}
+if a || b {
+    print "   ✓ if a || b works";
+}
+print "";
+
+print "4. bool() conversion function:";
+let num = 42;
+if bool(num) {
+    print "   ✓ if bool(num) works";
+}
+let zero = 0;
+if !bool(zero) {
+    print "   ✓ if !bool(zero) works";
+}
+print "";
+
+print "5. Combining comparisons with logical operators:";
+let age = 25;
+let has_license = true;
+if age >= 18 && has_license {
+    print "   ✓ if age >= 18 && has_license works";
+}
+print "";
+
+print "=== Type Safety Enforced! ===";
+print "";
+print "Summary:";
+print "  • Only boolean values allowed in if conditions";
+print "  • Comparisons (>, <, ==, !=, >=, <=) return booleans";
+print "  • Logical operators (&&, ||, !) return booleans";
+print "  • Use bool() to explicitly convert other types";
