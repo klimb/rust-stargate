@@ -896,6 +896,16 @@ impl Parser {
             return Ok(Expression::Value(Value::String(string_content.to_string())));
         }
 
+        // Check if this looks like a command (contains hyphens and next token is pipe or end)
+        // This handles cases like: let x = list-directory | collect-count;
+        if token.contains('-') && !token.starts_with('-') {
+            let next = self.peek().map(|s| s.as_str());
+            if next == Some("|") || next == Some(";") {
+                // This is a standalone command, wrap it as CommandOutput
+                return Ok(Expression::CommandOutput(token));
+            }
+        }
+
         // Otherwise it's a variable
         Ok(Expression::Variable(token))
     }

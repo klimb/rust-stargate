@@ -15,6 +15,14 @@ fn is_object_native_command(cmd: &str) -> bool {
 }
 
 pub fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
+    execute_single_command_impl(cmd_parts, false)
+}
+
+pub fn execute_single_command_with_obj(cmd_parts: &[String]) -> Result<String, String> {
+    execute_single_command_impl(cmd_parts, true)
+}
+
+fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<String, String> {
     if cmd_parts.is_empty() {
         return Err("Empty command".to_string());
     }
@@ -24,17 +32,16 @@ pub fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
         .and_then(|p| p.parent().map(|d| d.join("stargate")))
         .unwrap_or_else(|| "stargate".into());
 
-    // Check if --obj flag is already present
-    let has_obj_flag = cmd_parts.iter().any(|s| s == "-o" || s == "--obj");
-    
-    // Check if this is a JSON-native command that doesn't need --obj
-    let cmd_name = cmd_parts.first().map(|s| s.as_str()).unwrap_or("");
-    let is_object_native = is_object_native_command(cmd_name);
-    
-    // Automatically add --obj for stargate-shell scripting convenience
+    // Optionally add --obj flag for script mode
     let mut args = cmd_parts.to_vec();
-    if !has_obj_flag && !is_object_native {
-        args.insert(1, "--obj".to_string());
+    if add_obj {
+        let has_obj_flag = cmd_parts.iter().any(|s| s == "-o" || s == "--obj");
+        let cmd_name = cmd_parts.first().map(|s| s.as_str()).unwrap_or("");
+        let is_object_native = is_object_native_command(cmd_name);
+        
+        if !has_obj_flag && !is_object_native {
+            args.insert(1, "--obj".to_string());
+        }
     }
 
     let mut child = Command::new(&stargate_bin)
@@ -210,8 +217,8 @@ pub fn execute_pipeline_capture(input: &str) -> Result<String, String> {
     }
 
     if commands.len() == 1 {
-        // Single command, no pipe
-        execute_single_command(&commands[0])
+        // Single command, no pipe - add --obj for script mode
+        execute_single_command_with_obj(&commands[0])
     } else {
         // Pipeline
         let mut json_data: Option<String> = None;
