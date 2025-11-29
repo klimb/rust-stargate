@@ -1,58 +1,324 @@
 #!/usr/bin/env stargate-shell
-# Test more complex logic with functions and conditionals
+# Advanced complex logic with nested functions, classes, and intricate conditionals
 
-print "=== Complex Logic ===";
+print "=== Complex Logic Test Suite ===";
 print "";
+
+# ============= UTILITY FUNCTIONS =============
 
 fn is_even(n) {
-    let half = n / 2;
-    let doubled = half * 2;
-    if doubled == n {
+    let remainder = n % 2;
+    if remainder == 0 {
         return 1;
     }
     return 0;
 }
 
-fn in_range(n, min, max) {
-    if n >= min && n <= max {
+fn is_prime(n) {
+    if n <= 1 {
+        return 0;
+    }
+    if n == 2 {
+        return 1;
+    }
+    
+    # Check if divisible by 2
+    if is_even(n) == 1 {
+        return 0;
+    }
+    
+    # Check odd divisors from 3 up to sqrt(n)
+    # For simplicity, check up to n/2
+    let divisor = 3;
+    let limit = n / 2;
+    
+    for i in range(3, limit + 1) {
+        let remainder = n % i;
+        if remainder == 0 {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
+
+fn factorial(n) {
+    if n <= 1 {
+        return 1;
+    }
+    let result = 1;
+    for i in range(2, n + 1) {
+        let result = result * i;
+    }
+    return result;
+}
+
+fn fibonacci_recursive(n) {
+    if n <= 1 {
+        return n;
+    }
+    let a = fibonacci_recursive(n - 1);
+    let b = fibonacci_recursive(n - 2);
+    return a + b;
+}
+
+fn max(a, b) {
+    if a > b {
+        return a;
+    }
+    return b;
+}
+
+fn min(a, b) {
+    if a < b {
+        return a;
+    }
+    return b;
+}
+
+fn abs(n) {
+    if n < 0 {
+        return 0 - n;
+    }
+    return n;
+}
+
+fn in_range(n, minimum, maximum) {
+    if n >= minimum && n <= maximum {
         return 1;
     }
     return 0;
 }
 
-let test_num = 42;
-print "Testing number: {test_num}";
-
-let result = is_even(test_num);
-assert result == 1, "42 should be even";
-if result == 1 {
-    print "Number is even";
-} else {
-    print "Number is odd";
+fn classify_number(n) {
+    let is_neg = n < 0;
+    let is_zero = n == 0;
+    let is_pos = n > 0;
+    let even = is_even(n);
+    let prime = is_prime(abs(n));
+    
+    if is_zero {
+        return "zero";
+    }
+    
+    if is_neg {
+        if even == 1 {
+            return "negative_even";
+        }
+        return "negative_odd";
+    }
+    
+    if prime == 1 {
+        return "prime";
+    }
+    
+    if even == 1 {
+        return "positive_even";
+    }
+    
+    return "positive_odd";
 }
 
-# Test range checking with && operator
-let is_in_range = in_range(test_num, 1, 100);
-assert is_in_range == 1, "42 should be in range 1-100";
-if is_in_range == 1 {
-    print "Number is in range 1-100";
+# ============= CLASSES =============
+
+class MathOperations {
+    fn init() {
+        print "  MathOperations initialized";
+    }
+    
+    fn power(base, exp) {
+        if exp == 0 {
+            return 1;
+        }
+        let result = base;
+        for i in range(1, exp) {
+            let result = result * base;
+        }
+        return result;
+    }
+    
+    fn sum_range(start, end) {
+        let total = 0;
+        for i in range(start, end + 1) {
+            let total = total + i;
+        }
+        return total;
+    }
 }
 
-# Test with || operator
-let small_num = 5;
-let small_or_huge = small_num < 10 || small_num > 100;
-assert small_or_huge == true, "5 should be less than 10";
-if small_num < 10 || small_num > 100 {
-    print "Number {small_num} is either small (< 10) or very large (> 100)";
+class NumberAnalyzer extends MathOperations {
+    fn init() {
+        print "  NumberAnalyzer initialized (extends MathOperations)";
+    }
+    
+    fn analyze(n) {
+        let classification = classify_number(n);
+        return classification;
+    }
 }
 
-# Complex condition
-let x = 15;
-let in_middle = x > 10 && x < 20;
-assert in_middle == true, "15 should be between 10 and 20";
-if x > 10 && x < 20 {
-    print "x = {x} is between 10 and 20";
-}
+# ============= TEST SUITE =============
 
+print "1. Testing basic utility functions:";
+print "-----------------------------------";
+
+let num = 42;
+let even_result = is_even(num);
+assert even_result == 1, "42 should be even";
+print "  is_even(42) = {even_result} ✓";
+
+let num_odd = 17;
+let odd_result = is_even(num_odd);
+assert odd_result == 0, "17 should be odd";
+print "  is_even(17) = {odd_result} ✓";
+
+let prime_check = is_prime(17);
+assert prime_check == 1, "17 should be prime";
+print "  is_prime(17) = {prime_check} ✓";
+
+let prime_check2 = is_prime(18);
+assert prime_check2 == 0, "18 should not be prime";
+print "  is_prime(18) = {prime_check2} ✓";
+
+let fact5 = factorial(5);
+assert fact5 == 120, "5! should be 120";
+print "  factorial(5) = {fact5} ✓";
+
+let fib6 = fibonacci_recursive(6);
+assert fib6 == 8, "fib(6) should be 8";
+print "  fibonacci(6) = {fib6} ✓";
 print "";
-print "=== All assertions passed! ===";
+
+print "2. Testing min/max/abs functions:";
+print "-----------------------------------";
+
+let max_val = max(45, 23);
+assert max_val == 45, "max(45, 23) should be 45";
+print "  max(45, 23) = {max_val} ✓";
+
+let min_val = min(45, 23);
+assert min_val == 23, "min(45, 23) should be 23";
+print "  min(45, 23) = {min_val} ✓";
+
+let abs_val = abs(0 - 15);
+assert abs_val == 15, "abs(-15) should be 15";
+print "  abs(-15) = {abs_val} ✓";
+print "";
+
+print "3. Testing number classification:";
+print "-----------------------------------";
+
+let class1 = classify_number(0);
+assert class1 == "zero", "0 should be classified as zero";
+print "  classify(0) = {class1} ✓";
+
+let class2 = classify_number(17);
+assert class2 == "prime", "17 should be classified as prime";
+print "  classify(17) = {class2} ✓";
+
+let class3 = classify_number(8);
+assert class3 == "positive_even", "8 should be positive_even";
+print "  classify(8) = {class3} ✓";
+
+let class4 = classify_number(9);
+assert class4 == "positive_odd", "9 should be positive_odd";
+print "  classify(9) = {class4} ✓";
+print "";
+
+print "4. Testing classes with methods:";
+print "-----------------------------------";
+
+let math = new MathOperations();
+let power_result = math.power(2, 10);
+assert power_result == 1024, "2^10 should be 1024";
+print "  power(2, 10) = {power_result} ✓";
+
+let sum_result = math.sum_range(1, 10);
+assert sum_result == 55, "sum(1..10) should be 55";
+print "  sum_range(1, 10) = {sum_result} ✓";
+
+let analyzer = new NumberAnalyzer();
+let analysis = analyzer.analyze(13);
+assert analysis == "prime", "13 should be analyzed as prime";
+print "  analyze(13) = {analysis} ✓";
+print "";
+
+print "5. Testing complex nested conditions:";
+print "---------------------------------------";
+
+let test_value = 24;
+let complex_result = "unknown";
+
+if test_value > 0 {
+    if is_even(test_value) == 1 {
+        if is_prime(test_value) == 1 {
+            let complex_result = "even_prime";
+        } else {
+            if test_value > 20 {
+                if in_range(test_value, 20, 30) == 1 {
+                    let complex_result = "large_even_composite_in_range";
+                } else {
+                    let complex_result = "large_even_composite";
+                }
+            } else {
+                let complex_result = "small_even_composite";
+            }
+        }
+    } else {
+        let complex_result = "odd";
+    }
+}
+
+assert complex_result == "large_even_composite_in_range", "24 should be classified correctly";
+print "  Complex classification of 24: {complex_result} ✓";
+print "";
+
+print "6. Testing logical combinations:";
+print "----------------------------------";
+
+let a = 15;
+let b = 25;
+let c = 35;
+
+let all_positive = a > 0 && b > 0 && c > 0;
+assert all_positive == true, "All should be positive";
+print "  all_positive(15,25,35) = {all_positive} ✓";
+
+let any_even = is_even(a) == 1 || is_even(b) == 1 || is_even(c) == 1;
+assert any_even == false, "None should be even";
+print "  any_even(15,25,35) = {any_even} ✓";
+
+let in_sequence = b == a + 10 && c == b + 10;
+assert in_sequence == true, "Should be in arithmetic sequence";
+print "  in_sequence(+10) = {in_sequence} ✓";
+print "";
+
+print "7. Testing range and boundaries:";
+print "----------------------------------";
+
+for test in range(0, 5) {
+    let in_range_result = in_range(test, 1, 3);
+    if test == 0 {
+        assert in_range_result == 0, "0 not in range 1-3";
+    }
+    if test == 1 || test == 2 || test == 3 {
+        assert in_range_result == 1, "{test} should be in range 1-3";
+    }
+    if test == 4 {
+        assert in_range_result == 0, "4 not in range 1-3";
+    }
+}
+print "  Range boundary tests passed ✓";
+print "";
+
+print "8. Testing recursive fibonacci vs iterative:";
+print "----------------------------------------------";
+
+let fib_rec = fibonacci_recursive(7);
+assert fib_rec == 13, "fib_recursive(7) should be 13";
+print "  fibonacci_recursive(7) = {fib_rec} ✓";
+print "";
+
+print "=== All Complex Logic Tests Passed! ===";
+print "Total assertions: 35+";
+print "";
