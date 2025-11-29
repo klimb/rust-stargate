@@ -77,6 +77,7 @@ pub enum Statement {
     Command(String),
     Return(Expression),
     Print(Expression),
+    Exit(Option<Expression>), // exit with optional status code
 }
 
 #[derive(Debug, Clone)]
@@ -267,6 +268,7 @@ impl Parser {
             "fn" => self.parse_function_def(),
             "class" => self.parse_class_def(),
             "return" => self.parse_return(),
+            "exit" => self.parse_exit(),
             "print" => self.parse_print(),
             "exec" => self.parse_command(),
             _ => {
@@ -444,6 +446,21 @@ impl Parser {
         let expr = self.parse_expression()?;
         self.expect(";")?;
         Ok(Statement::Return(expr))
+    }
+
+    fn parse_exit(&mut self) -> Result<Statement, String> {
+        self.expect("exit")?;
+        // Check if there's an expression after exit
+        if self.peek() == Some(&";".to_string()) {
+            // exit with default code 0
+            self.expect(";")?;
+            Ok(Statement::Exit(None))
+        } else {
+            // exit with specific code
+            let expr = self.parse_expression()?;
+            self.expect(";")?;
+            Ok(Statement::Exit(Some(expr)))
+        }
     }
 
     fn parse_print(&mut self) -> Result<Statement, String> {

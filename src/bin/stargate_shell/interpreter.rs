@@ -9,6 +9,7 @@ pub struct Interpreter {
     functions: HashMap<String, (Vec<String>, Vec<Statement>)>,
     classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>, // class name -> (parent, fields, methods)
     return_value: Option<Value>,
+    exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
 }
 
@@ -19,6 +20,7 @@ impl Interpreter {
             functions: HashMap::new(),
             classes: HashMap::new(),
             return_value: None,
+            exit_code: None,
             variable_names: None,
         }
     }
@@ -29,18 +31,19 @@ impl Interpreter {
             functions: HashMap::new(),
             classes: HashMap::new(),
             return_value: None,
+            exit_code: None,
             variable_names: Some(variable_names),
         }
     }
 
-    pub fn execute(&mut self, statements: Vec<Statement>) -> Result<(), String> {
+    pub fn execute(&mut self, statements: Vec<Statement>) -> Result<i32, String> {
         for stmt in statements {
             self.execute_statement(stmt)?;
-            if self.return_value.is_some() {
+            if self.return_value.is_some() || self.exit_code.is_some() {
                 break;
             }
         }
-        Ok(())
+        Ok(self.exit_code.unwrap_or(0))
     }
 
     fn execute_statement(&mut self, stmt: Statement) -> Result<(), String> {
@@ -140,6 +143,18 @@ impl Interpreter {
             Statement::Print(expr) => {
                 let value = self.eval_expression(expr)?;
                 println!("{}", value.to_string());
+            }
+            Statement::Exit(expr_opt) => {
+                let code = if let Some(expr) = expr_opt {
+                    let value = self.eval_expression(expr)?;
+                    match value {
+                        Value::Number(n) => n as i32,
+                        _ => return Err("Exit code must be a number".to_string()),
+                    }
+                } else {
+                    0
+                };
+                self.exit_code = Some(code);
             }
         }
         Ok(())
@@ -462,17 +477,17 @@ impl Interpreter {
     }
 }
 
-pub fn execute_script(script: &str) -> Result<(), String> {
+pub fn execute_script(script: &str) -> Result<i32, String> {
     let mut parser = Parser::new(script);
     let statements = parser.parse()?;
     let mut interpreter = Interpreter::new();
-    interpreter.execute(statements)?;
-    Ok(())
+    let exit_code = interpreter.execute(statements)?;
+    Ok(exit_code)
 }
 
-pub fn execute_script_with_interpreter(script: &str, interpreter: &mut Interpreter) -> Result<(), String> {
+pub fn execute_script_with_interpreter(script: &str, interpreter: &mut Interpreter) -> Result<i32, String> {
     let mut parser = Parser::new(script);
     let statements = parser.parse()?;
-    interpreter.execute(statements)?;
-    Ok(())
+    let exit_code = interpreter.execute(statements)?;
+    Ok(exit_code)
 }

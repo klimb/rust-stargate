@@ -34,11 +34,13 @@ fn main() {
                     contents
                 };
                 
-                if let Err(e) = execute_script(&script_code) {
-                    eprintln!("Script error: {}", e);
-                    std::process::exit(1);
+                match execute_script(&script_code) {
+                    Ok(exit_code) => std::process::exit(exit_code),
+                    Err(e) => {
+                        eprintln!("Script error: {}", e);
+                        std::process::exit(1);
+                    }
                 }
-                return;
             }
             Err(e) => {
                 eprintln!("Error reading script file '{}': {}", script_file, e);
@@ -60,11 +62,13 @@ fn main() {
                 script_code
             };
             
-            if let Err(e) = execute_script(&script_code) {
-                eprintln!("Script error: {}", e);
-                std::process::exit(1);
+            match execute_script(&script_code) {
+                Ok(exit_code) => std::process::exit(exit_code),
+                Err(e) => {
+                    eprintln!("Script error: {}", e);
+                    std::process::exit(1);
+                }
             }
-            return;
         }
     }
     
@@ -111,8 +115,9 @@ fn main() {
                     }
                     _ if input.starts_with(SCRIPT_PREFIX) => {
                         let script_code = input[SCRIPT_PREFIX.len()..].trim();
-                        if let Err(e) = execute_script_with_interpreter(script_code, &mut interpreter) {
-                            eprintln!("Script error: {}", e);
+                        match execute_script_with_interpreter(script_code, &mut interpreter) {
+                            Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                            Err(e) => eprintln!("Script error: {}", e),
                         }
                     }
                     _ if input.starts_with(SCRIPT_BLOCK_START) => {
@@ -136,8 +141,9 @@ fn main() {
                         }
                         
                         let script = script_lines.join("\n");
-                        if let Err(e) = execute_script_with_interpreter(&script, &mut interpreter) {
-                            eprintln!("Script error: {}", e);
+                        match execute_script_with_interpreter(&script, &mut interpreter) {
+                            Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                            Err(e) => eprintln!("Script error: {}", e),
                         }
                     }
                     _ => {
@@ -163,8 +169,9 @@ fn main() {
                                 format!("print {};", input)
                             };
                             
-                            if let Err(e) = execute_script_with_interpreter(&script_code, &mut interpreter) {
-                                eprintln!("Script error: {}", e);
+                            match execute_script_with_interpreter(&script_code, &mut interpreter) {
+                                Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                                Err(e) => eprintln!("Script error: {}", e),
                             }
                         } else if let Err(e) = execute_pipeline(input) {
                             eprintln!("Error: {}", e);
