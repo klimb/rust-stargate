@@ -475,6 +475,46 @@ impl Interpreter {
         
         Ok(field_values)
     }
+    
+    // Methods for completion support
+    pub fn get_variable_class(&self, var_name: &str) -> Option<String> {
+        if let Some(Value::Instance { class_name, .. }) = self.variables.get(var_name) {
+            Some(class_name.clone())
+        } else {
+            None
+        }
+    }
+    
+    pub fn get_class_fields(&self, class_name: &str) -> Option<Vec<String>> {
+        // Collect all fields including inherited ones
+        let mut field_names = HashSet::new();
+        let mut current_class = Some(class_name.to_string());
+        
+        while let Some(ref cls) = current_class {
+            if let Some((parent, fields, _methods)) = self.classes.get(cls) {
+                for (field_name, _) in fields {
+                    field_names.insert(field_name.clone());
+                }
+                current_class = parent.clone();
+            } else {
+                break;
+            }
+        }
+        
+        if field_names.is_empty() {
+            None
+        } else {
+            let mut result: Vec<String> = field_names.into_iter().collect();
+            result.sort();
+            Some(result)
+        }
+    }
+    
+    pub fn get_all_class_names(&self) -> Vec<String> {
+        let mut class_names: Vec<String> = self.classes.keys().cloned().collect();
+        class_names.sort();
+        class_names
+    }
 }
 
 pub fn execute_script(script: &str) -> Result<i32, String> {
