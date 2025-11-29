@@ -39,6 +39,7 @@ use sgcore::line_ending::LineEnding;
 use sgcore::signals::signal_by_name_or_value;
 use sgcore::translate;
 use sgcore::{format_usage, show_warning};
+use sgcore::object_output::{self, JsonOutputOptions};
 
 use thiserror::Error;
 
@@ -109,6 +110,21 @@ fn print_env(line_ending: LineEnding) {
     for (n, v) in env::vars() {
         write!(stdout, "{n}={v}{line_ending}").unwrap();
     }
+}
+
+/// produce JSON output of all environment variables
+fn produce_json(object_output: JsonOutputOptions) -> UResult<()> {
+    let env_vars: serde_json::Map<String, serde_json::Value> = env::vars()
+        .map(|(k, v)| (k, serde_json::Value::String(v)))
+        .collect();
+    
+    let output = serde_json::json!({
+        "environment": env_vars,
+        "count": env_vars.len()
+    });
+    
+    object_output::output(object_output, output, || Ok(()))?;
+    Ok(())
 }
 
 fn parse_name_value_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<bool> {
@@ -223,96 +239,22 @@ fn load_config_file(opts: &mut Options) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(crate_name!())
+    let cmd = Command::new(crate_name!())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("env-about"))
         .override_usage(format_usage(&translate!("env-usage")))
         .after_help(translate!("env-after-help"))
         .infer_long_args(true)
-        .trailing_var_arg(true)
-        .arg(
-            Arg::new(options::IGNORE_ENVIRONMENT)
-                .short('i')
-                .long(options::IGNORE_ENVIRONMENT)
-                .help(translate!("env-help-ignore-environment"))
-                .action(ArgAction::SetTrue)
-        )
-        .arg(
-            Arg::new(options::CHDIR)
-                .short('C') // GNU env compatibility
-                .long(options::CHDIR)
-                .number_of_values(1)
-                .value_name("DIR")
-                .value_parser(ValueParser::os_string())
-                .value_hint(clap::ValueHint::DirPath)
-                .help(translate!("env-help-chdir"))
-        )
         .arg(
             Arg::new(options::NULL)
                 .short('0')
                 .long(options::NULL)
                 .help(translate!("env-help-null"))
                 .action(ArgAction::SetTrue)
-        )
-        .arg(
-            Arg::new(options::FILE)
-                .short('f')
-                .long(options::FILE)
-                .value_name("PATH")
-                .value_hint(clap::ValueHint::FilePath)
-                .value_parser(ValueParser::os_string())
-                .action(ArgAction::Append)
-                .help(translate!("env-help-file"))
-        )
-        .arg(
-            Arg::new(options::UNSET)
-                .short('u')
-                .long(options::UNSET)
-                .value_name("NAME")
-                .action(ArgAction::Append)
-                .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-unset"))
-        )
-        .arg(
-            Arg::new(options::DEBUG)
-                .short('v')
-                .long(options::DEBUG)
-                .action(ArgAction::Count)
-                .help(translate!("env-help-debug"))
-        )
-        .arg(
-            Arg::new(options::SPLIT_STRING) // split string handling is implemented directly, not using CLAP. But this entry here is needed for the help information output.
-                .short('S')
-                .long(options::SPLIT_STRING)
-                .value_name("S")
-                .action(ArgAction::Set)
-                .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-split-string"))
-        )
-        .arg(
-            Arg::new(options::ARGV0)
-                .overrides_with(options::ARGV0)
-                .short('a')
-                .long(options::ARGV0)
-                .value_name("a")
-                .action(ArgAction::Set)
-                .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-argv0"))
-        )
-        .arg(
-            Arg::new("vars")
-                .action(ArgAction::Append)
-                .value_parser(ValueParser::os_string())
-        )
-        .arg(
-            Arg::new(options::IGNORE_SIGNAL)
-                .long(options::IGNORE_SIGNAL)
-                .value_name("SIG")
-                .action(ArgAction::Append)
-                .value_parser(ValueParser::os_string())
-                .help(translate!("env-help-ignore-signal"))
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 pub fn parse_args_from_str(text: &NativeIntStr) -> UResult<Vec<NativeIntString>> {
@@ -517,46 +459,18 @@ impl EnvAppData {
     }
 
     fn run_env(&mut self, original_args: impl sgcore::Args) -> UResult<()> {
-        let (original_args, matches) = self.parse_arguments(original_args)?;
+        let (_, matches) = self.parse_arguments(original_args)?;
 
-        self.do_debug_printing = self.do_debug_printing || (0 != matches.get_count("debug"));
-        self.do_input_debug_printing = self
-            .do_input_debug_printing
-            .or(Some(matches.get_count("debug") >= 2));
-        if let Some(value) = self.do_input_debug_printing {
-            if value {
-                debug_print_args(&original_args);
-                self.do_input_debug_printing = Some(false);
-            }
-        }
+        let object_output = JsonOutputOptions::from_matches(&matches);
+        let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::NULL));
 
-        let mut opts = make_options(&matches)?;
-
-        apply_change_directory(&opts)?;
-
-        // NOTE: we manually set and unset the env vars below rather than using Command::env() to more
-        //       easily handle the case where no command is given
-
-        apply_removal_of_all_env_vars(&opts);
-
-        // load .env-style config file prior to those given on the command-line
-        load_config_file(&mut opts)?;
-
-        apply_unset_env_vars(&opts)?;
-
-        apply_specified_env_vars(&opts);
-
-        #[cfg(unix)]
-        apply_ignore_signal(&opts)?;
-
-        if opts.program.is_empty() {
-            // no program provided, so just dump all env vars to stdout
-            print_env(opts.line_ending);
+        // Just output all env vars
+        if object_output.object_output {
+            produce_json(object_output)
         } else {
-            return self.run_program(&opts, self.do_debug_printing);
+            print_env(line_ending);
+            Ok(())
         }
-
-        Ok(())
     }
 
     /// Run the program specified by the options.

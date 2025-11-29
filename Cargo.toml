@@ -64,7 +64,7 @@ feat_common_core = [
   "dirname",
   "du",
   "echo",
-  "env",
+  "get_environment",
   "expand",
   "expr",
   "factor",
@@ -381,7 +381,7 @@ dircolors = { optional = true, version = "0.4.0", package = "sg_dircolors", path
 dirname = { optional = true, version = "0.4.0", package = "sg_dirname", path = "src/sg/dirname" }
 du = { optional = true, version = "0.4.0", package = "sg_du", path = "src/sg/du" }
 echo = { optional = true, version = "0.4.0", package = "sg_echo", path = "src/sg/echo" }
-env = { optional = true, version = "0.4.0", package = "sg_env", path = "src/sg/env" }
+get_environment = { optional = true, version = "0.4.0", package = "sg_get_environment", path = "src/sg/env" }
 expand = { optional = true, version = "0.4.0", package = "sg_expand", path = "src/sg/expand" }
 expr = { optional = true, version = "0.4.0", package = "sg_expr", path = "src/sg/expr" }
 factor = { optional = true, version = "0.4.0", package = "sg_factor", path = "src/sg/factor" }

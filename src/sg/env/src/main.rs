@@ -1,1 +1,1 @@
-sgcore::bin!(sg_env);
+sgcore::bin!(sg_get_environment);
