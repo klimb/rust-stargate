@@ -124,6 +124,10 @@ pub enum Expression {
         object: Box<Expression>,
         index: Box<Expression>,
     },
+    Pipeline {
+        input: Box<Expression>,
+        command: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -335,12 +339,8 @@ impl Parser {
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
         
-        // Check if the right-hand side is a pipeline or command
-        let expr = if self.contains_pipe_before_semicolon() || self.looks_like_command() {
-            self.parse_pipeline_expr()?
-        } else {
-            self.parse_expression()?
-        };
+        // Parse expression (which now handles pipes as operators)
+        let expr = self.parse_expression()?;
         
         self.expect(";")?;
         Ok(Statement::VarDecl(name, expr))
@@ -350,12 +350,8 @@ impl Parser {
         let name = self.advance().ok_or("Expected variable name")?;
         self.expect("=")?;
         
-        // Check if the right-hand side is a pipeline or command
-        let expr = if self.contains_pipe_before_semicolon() || self.looks_like_command() {
-            self.parse_pipeline_expr()?
-        } else {
-            self.parse_expression()?
-        };
+        // Parse expression (which now handles pipes as operators)
+        let expr = self.parse_expression()?;
         
         self.expect(";")?;
         Ok(Statement::Assignment(name, expr))
@@ -560,7 +556,45 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self) -> Result<Expression, String> {
-        self.parse_or()
+        self.parse_pipeline_op()
+    }
+
+    fn parse_pipeline_op(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_or()?;
+
+        // Handle pipeline operator (|) as expression-level operator
+        while self.peek().map(|s| s.as_str()) == Some("|") {
+            // Check if this looks like a pipeline with commands (not just |)
+            if self.pos + 1 < self.tokens.len() {
+                let next_token = &self.tokens[self.pos + 1];
+                // If next token looks like a command, parse as pipeline
+                if next_token.contains('-') || next_token.chars().all(|c| c.is_alphanumeric() || c == '-') {
+                    self.advance(); // consume '|'
+                    
+                    // Collect tokens for just this stage of the pipeline (until next | or ;)
+                    let mut pipeline_parts = Vec::new();
+                    while self.peek().is_some() {
+                        let peek_val = self.peek().map(|s| s.as_str());
+                        if peek_val == Some(";") || peek_val == Some(")") || peek_val == Some("|") {
+                            break;
+                        }
+                        pipeline_parts.push(self.advance().unwrap());
+                    }
+                    
+                    let command = pipeline_parts.join(" ");
+                    left = Expression::Pipeline {
+                        input: Box::new(left),
+                        command,
+                    };
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left)
     }
 
     fn contains_pipe_before_semicolon(&self) -> bool {
