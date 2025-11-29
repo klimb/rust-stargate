@@ -10,6 +10,7 @@ pub mod commands;
 pub mod completion;
 pub mod execution;
 pub mod parsing;
+pub mod path;
 pub mod scripting;
 pub mod interpreter;
 pub mod ui;

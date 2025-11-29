@@ -6,11 +6,15 @@ use std::sync::{Arc, Mutex};
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,
-    functions: HashMap<String, (Vec<String>, Vec<Statement>)>,
+    functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>, // params, body, annotations
     classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>, // class name -> (parent, fields, methods)
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
+    test_functions: Vec<String>, // Track test functions
+    ut_enabled: bool, // Whether ut module is imported
+    test_passed: usize,
+    test_failed: usize,
 }
 
 impl Interpreter {
@@ -22,6 +26,10 @@ impl Interpreter {
             return_value: None,
             exit_code: None,
             variable_names: None,
+            test_functions: Vec::new(),
+            ut_enabled: false,
+            test_passed: 0,
+            test_failed: 0,
         }
     }
     
@@ -33,17 +41,99 @@ impl Interpreter {
             return_value: None,
             exit_code: None,
             variable_names: Some(variable_names),
+            test_functions: Vec::new(),
+            ut_enabled: false,
+            test_passed: 0,
+            test_failed: 0,
         }
     }
 
     pub fn execute(&mut self, statements: Vec<Statement>) -> Result<i32, String> {
+        // Store print/exit statements that might reference ut for later
+        let mut deferred_stmts = Vec::new();
+        
         for stmt in statements {
+            // Defer print and exit statements if ut is enabled
+            if self.ut_enabled && matches!(stmt, Statement::Print(_) | Statement::Exit(_)) {
+                deferred_stmts.push(stmt);
+                continue;
+            }
+            
             self.execute_statement(stmt)?;
             if self.return_value.is_some() || self.exit_code.is_some() {
                 break;
             }
         }
+        
+        // If ut module was imported, automatically run all test functions
+        if self.ut_enabled && !self.test_functions.is_empty() {
+            self.run_all_tests()?;
+        }
+        
+        // Now execute deferred statements (print/exit with ut.stats/ut.healthy)
+        for stmt in deferred_stmts {
+            self.execute_statement(stmt)?;
+            if self.return_value.is_some() || self.exit_code.is_some() {
+                break;
+            }
+        }
+        
         Ok(self.exit_code.unwrap_or(0))
+    }
+    
+    fn run_all_tests(&mut self) -> Result<(), String> {
+        let test_fns = self.test_functions.clone();
+        
+        println!("\n=== Running {} test(s) ===\n", test_fns.len());
+        
+        self.test_passed = 0;
+        self.test_failed = 0;
+        
+        for test_name in test_fns {
+            print!("Running test: {}... ", test_name);
+            match self.call_function(&test_name, Vec::new()) {
+                Ok(_) => {
+                    println!("✓ PASSED");
+                    self.test_passed += 1;
+                }
+                Err(e) => {
+                    println!("✗ FAILED");
+                    eprintln!("  Error: {}", e);
+                    self.test_failed += 1;
+                }
+            }
+        }
+        
+        println!("\n=== Test Results ===");
+        println!("Passed: {}", self.test_passed);
+        println!("Failed: {}", self.test_failed);
+        println!("Total:  {}\n", self.test_passed + self.test_failed);
+        
+        // Update ut object with stats and healthy properties
+        self.update_ut_stats();
+        
+        // Don't return error - let the script handle it with exit((ut).healthy)
+        Ok(())
+    }
+    
+    fn update_ut_stats(&mut self) {
+        let mut ut_fields = HashMap::new();
+        ut_fields.insert("assert_equals".to_string(), Value::String("assert_equals".to_string()));
+        ut_fields.insert("assert_not_equals".to_string(), Value::String("assert_not_equals".to_string()));
+        ut_fields.insert("assert_true".to_string(), Value::String("assert_true".to_string()));
+        
+        // Add stats as formatted string
+        let stats = format!("Passed: {}, Failed: {}, Total: {}", 
+            self.test_passed, self.test_failed, self.test_passed + self.test_failed);
+        ut_fields.insert("stats".to_string(), Value::String(stats));
+        
+        // Add healthy as boolean (true if no failures)
+        ut_fields.insert("healthy".to_string(), Value::Bool(self.test_failed == 0));
+        
+        self.variables.insert("ut".to_string(), Value::Instance {
+            class_name: "UT".to_string(),
+            fields: ut_fields,
+        });
     }
 
     fn execute_statement(&mut self, stmt: Statement) -> Result<(), String> {
@@ -154,8 +244,28 @@ impl Interpreter {
                     }
                 }
             }
-            Statement::FunctionDef { name, params, body } => {
-                self.functions.insert(name, (params, body));
+            Statement::Use(module) => {
+                // Handle use statements
+                if module == "ut" {
+                    self.ut_enabled = true;
+                    // Create ut object with assertion methods
+                    let mut ut_methods = HashMap::new();
+                    ut_methods.insert("assert_equals".to_string(), Value::String("assert_equals".to_string()));
+                    ut_methods.insert("assert_not_equals".to_string(), Value::String("assert_not_equals".to_string()));
+                    ut_methods.insert("assert_true".to_string(), Value::String("assert_true".to_string()));
+                    
+                    self.variables.insert("ut".to_string(), Value::Instance {
+                        class_name: "UT".to_string(),
+                        fields: ut_methods,
+                    });
+                }
+            }
+            Statement::FunctionDef { name, params, body, annotations } => {
+                // Track test functions
+                if annotations.contains(&"test".to_string()) {
+                    self.test_functions.push(name.clone());
+                }
+                self.functions.insert(name, (params, body, annotations));
             }
             Statement::ClassDef { name, parent, fields, methods } => {
                 self.classes.insert(name, (parent, fields, methods));
@@ -194,12 +304,17 @@ impl Interpreter {
                     let value = self.eval_expression(expr)?;
                     match value {
                         Value::Number(n) => n as i32,
-                        _ => return Err("Exit code must be a number".to_string()),
+                        Value::Bool(b) => if b { 0 } else { 1 },  // true = 0 (success), false = 1 (failure)
+                        _ => return Err("Exit code must be a number or boolean".to_string()),
                     }
                 } else {
                     0
                 };
                 self.exit_code = Some(code);
+            }
+            Statement::ExprStmt(expr) => {
+                // Evaluate expression and discard result (for method calls)
+                self.eval_expression(expr)?;
             }
         }
         Ok(())
@@ -423,6 +538,11 @@ impl Interpreter {
                 
                 match obj_value {
                     Value::Instance { class_name, fields } => {
+                        // Handle ut built-in object methods
+                        if class_name == "UT" {
+                            return self.call_ut_method(&method, args);
+                        }
+                        
                         // Find the method in the class hierarchy
                         let mut current_class = Some(class_name.clone());
                         
@@ -603,11 +723,33 @@ impl Interpreter {
                 
                 return Ok(Value::Object(serde_json::Value::Array(numbers)));
             }
+            "execute-process" => {
+                if arg_values.is_empty() {
+                    return Err("execute-process() expects at least 1 argument (command path)".to_string());
+                }
+                
+                let cmd_path = arg_values[0].to_string();
+                let cmd_args: Vec<String> = arg_values[1..].iter().map(|v| v.to_string()).collect();
+                
+                // Execute the native command
+                let output = ProcessCommand::new(&cmd_path)
+                    .args(&cmd_args)
+                    .output()
+                    .map_err(|e| format!("Failed to execute '{}': {}", cmd_path, e))?;
+                
+                if output.status.success() {
+                    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+                    return Ok(Value::String(stdout));
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                    return Err(format!("Command '{}' failed: {}", cmd_path, stderr));
+                }
+            }
             _ => {}
         }
 
         // Get user-defined function definition
-        let (params, body) = self
+        let (params, body, _annotations) = self
             .functions
             .get(name)
             .cloned()
@@ -696,6 +838,62 @@ impl Interpreter {
             Some(class_name.clone())
         } else {
             None
+        }
+    }
+
+    fn call_ut_method(&mut self, method: &str, args: Vec<Expression>) -> Result<Value, String> {
+        match method {
+            "assert_equals" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err("ut.assert_equals() expects 2 or 3 arguments (a, b, [message])".to_string());
+                }
+                let a = self.eval_expression(args[0].clone())?;
+                let b = self.eval_expression(args[1].clone())?;
+                let message = if args.len() == 3 {
+                    self.eval_expression(args[2].clone())?.to_string()
+                } else {
+                    format!("Expected {:?} to equal {:?}", a.to_string(), b.to_string())
+                };
+                
+                if a.to_string() != b.to_string() {
+                    return Err(format!("Assertion failed: {}", message));
+                }
+                Ok(Value::Bool(true))
+            }
+            "assert_not_equals" => {
+                if args.len() < 2 || args.len() > 3 {
+                    return Err("ut.assert_not_equals() expects 2 or 3 arguments (a, b, [message])".to_string());
+                }
+                let a = self.eval_expression(args[0].clone())?;
+                let b = self.eval_expression(args[1].clone())?;
+                let message = if args.len() == 3 {
+                    self.eval_expression(args[2].clone())?.to_string()
+                } else {
+                    format!("Expected {:?} to not equal {:?}", a.to_string(), b.to_string())
+                };
+                
+                if a.to_string() == b.to_string() {
+                    return Err(format!("Assertion failed: {}", message));
+                }
+                Ok(Value::Bool(true))
+            }
+            "assert_true" => {
+                if args.len() < 1 || args.len() > 2 {
+                    return Err("ut.assert_true() expects 1 or 2 arguments (condition, [message])".to_string());
+                }
+                let condition = self.eval_expression(args[0].clone())?;
+                let message = if args.len() == 2 {
+                    self.eval_expression(args[1].clone())?.to_string()
+                } else {
+                    "Expected condition to be true".to_string()
+                };
+                
+                if !condition.to_bool() {
+                    return Err(format!("Assertion failed: {}", message));
+                }
+                Ok(Value::Bool(true))
+            }
+            _ => Err(format!("Unknown ut method: {}", method))
         }
     }
     
