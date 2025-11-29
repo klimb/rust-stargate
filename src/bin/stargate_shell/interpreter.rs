@@ -112,6 +112,48 @@ impl Interpreter {
                     }
                 }
             }
+            Statement::For {
+                var_name,
+                iterable,
+                body,
+            } => {
+                let iter_value = self.eval_expression(iterable)?;
+                
+                // Extract array from the value
+                let items = match iter_value {
+                    Value::Object(serde_json::Value::Array(arr)) => {
+                        // Convert JSON array to Vec<Value>
+                        arr.into_iter().map(|v| self.json_to_value(v)).collect::<Vec<_>>()
+                    }
+                    _ => {
+                        return Err(format!("For loop requires an iterable (array), got: {:?}", iter_value));
+                    }
+                };
+                
+                // Iterate through items
+                for item in items {
+                    self.variables.insert(var_name.clone(), item);
+                    
+                    // Update completion list
+                    if let Some(ref var_names) = self.variable_names {
+                        if let Ok(mut names) = var_names.lock() {
+                            names.insert(var_name.clone());
+                        }
+                    }
+                    
+                    // Execute loop body
+                    for stmt in &body {
+                        self.execute_statement(stmt.clone())?;
+                        if self.return_value.is_some() {
+                            break;
+                        }
+                    }
+                    
+                    if self.return_value.is_some() {
+                        break;
+                    }
+                }
+            }
             Statement::FunctionDef { name, params, body } => {
                 self.functions.insert(name, (params, body));
             }

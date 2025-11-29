@@ -1,0 +1,33 @@
+#!/usr/bin/env stargate-shell
+
+print "=== For Loop Demo ===";
+print "";
+
+# Example 1: Iterate through directory entries
+print "1. Listing all files and directories:";
+let entries = (list-directory).entries;
+for entry in entries {
+    print "  {entry.name} ({entry.type})";
+}
+print "";
+
+# Example 2: Filter and process
+print "2. Showing only files (not directories):";
+for entry in entries {
+    let is_file = entry.type == "file";
+    if (is_file) {
+        print "  File: {entry.name}";
+    }
+}
+print "";
+
+# Example 3: Count items
+print "3. Counting items:";
+let count = 0;
+for entry in entries {
+    let count = count + 1;
+}
+print "  Total items: {count}";
+print "";
+
+print "=== For Loop Demo Complete ===";

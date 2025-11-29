@@ -59,6 +59,11 @@ pub enum Statement {
         then_block: Vec<Statement>,
         else_block: Option<Vec<Statement>>,
     },
+    For {
+        var_name: String,
+        iterable: Expression,
+        body: Vec<Statement>,
+    },
     FunctionDef {
         name: String,
         params: Vec<String>,
@@ -270,6 +275,7 @@ impl Parser {
         match token.as_str() {
             "let" => self.parse_var_decl(),
             "if" => self.parse_if(),
+            "for" => self.parse_for(),
             "fn" => self.parse_function_def(),
             "class" => self.parse_class_def(),
             "return" => self.parse_return(),
@@ -367,6 +373,21 @@ impl Parser {
             condition,
             then_block,
             else_block,
+        })
+    }
+
+    fn parse_for(&mut self) -> Result<Statement, String> {
+        self.expect("for")?;
+        let var_name = self.advance().ok_or("Expected variable name after 'for'")?;
+        self.expect("in")?;
+        let iterable = self.parse_expression()?;
+        self.expect("{")?;
+        let body = self.parse_block()?;
+
+        Ok(Statement::For {
+            var_name,
+            iterable,
+            body,
         })
     }
 
