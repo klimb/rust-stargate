@@ -51,7 +51,7 @@ fn main() {
     
     // Check if stdin is being piped (not a TTY)
     if !std::io::stdin().is_terminal() {
-        // Reading from pipe/file - execute entire input as script
+        // Reading from pipe/file
         use std::io::Read;
         let mut script_code = String::new();
         if let Ok(_) = std::io::stdin().read_to_string(&mut script_code) {
@@ -59,14 +59,30 @@ fn main() {
             let script_code = if script_code.starts_with("#!") {
                 script_code.lines().skip(1).collect::<Vec<_>>().join("\n")
             } else {
-                script_code
+                script_code.clone()
             };
             
-            match execute_script(&script_code) {
-                Ok(exit_code) => std::process::exit(exit_code),
-                Err(e) => {
-                    eprintln!("Script error: {}", e);
-                    std::process::exit(1);
+            // Check if it's a single-line command or multi-line script
+            // Single-line commands without semicolons are executed as pipelines (interactive style)
+            // Multi-line or semicolon-containing input is executed as script
+            let trimmed = script_code.trim();
+            if !trimmed.contains('\n') && !trimmed.contains(';') {
+                // Single-line command - execute as pipeline for human-readable output
+                match execute_pipeline(trimmed) {
+                    Ok(_) => std::process::exit(0),
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                // Multi-line or script with semicolons - execute as script
+                match execute_script(&script_code) {
+                    Ok(exit_code) => std::process::exit(exit_code),
+                    Err(e) => {
+                        eprintln!("Script error: {}", e);
+                        std::process::exit(1);
+                    }
                 }
             }
         }
