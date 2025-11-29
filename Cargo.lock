@@ -2714,18 +2714,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_env"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "nix 0.30.1",
- "rust-ini",
- "sgcore",
- "thiserror 2.0.17",
-]
-
-[[package]]
 name = "sg_expand"
 version = "0.4.0"
 dependencies = [
@@ -2858,6 +2846,19 @@ dependencies = [
  "hostname",
  "serde_json",
  "sgcore",
+]
+
+[[package]]
+name = "sg_get_environment"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "nix 0.30.1",
+ "rust-ini",
+ "serde_json",
+ "sgcore",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -3901,7 +3902,6 @@ dependencies = [
  "sg_dirname",
  "sg_du",
  "sg_echo",
- "sg_env",
  "sg_expand",
  "sg_expr",
  "sg_factor",
@@ -3913,6 +3913,7 @@ dependencies = [
  "sg_get_contents",
  "sg_get_date",
  "sg_get_domainname",
+ "sg_get_environment",
  "sg_get_fqdn",
  "sg_get_hostname",
  "sg_get_range",

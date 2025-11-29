@@ -1,0 +1,35 @@
+#!/usr/bin/env stargate-shell
+# Environment Variables Demo - shows get-environment with property access
+# For slice/dice examples, use interactive shell:
+#   get-environment | slice-object count
+#   get-environment | slice-object environment | dice-object SHELL TERM
+
+print "=== Environment Variables Demo ===";
+print "";
+
+let env = (get-environment);
+print "Total environment variables: {env.count}";
+print "";
+
+print "=== Direct Property Access ===";
+print "Shell: {env.environment.SHELL}";
+print "Terminal: {env.environment.TERM}";
+print "Language: {env.environment.LANG}";
+print "";
+
+print "=== Development Tools ===";
+if bool(env.environment.GIT_PAGER) {
+    print "Git Pager: {env.environment.GIT_PAGER}";
+}
+print "";
+
+print "=== Interactive Examples ===";
+print "Slice to get just count:";
+get-environment | slice-object count;
+print "";
+print "Slice environment, then dice specific variables:";
+get-environment | slice-object environment | dice-object SHELL TERM LANG;
+print "";
+
+assert env.count > 0, "Should have at least some environment variables";
+print "All tests passed!";
