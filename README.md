@@ -252,7 +252,7 @@ link  list-directory  ln  ls  ld
 
 stargate> c<TAB>
 cat  cd  change-directory  cksum  chmod  chown  chroot  ...
-
+```
 ### Platform Support
 
 - FreeBSD
