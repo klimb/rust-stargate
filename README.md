@@ -1,7 +1,7 @@
 # Stargate 🌠
 ### A Modern UNIX Userland with Object Pipes & Interactive Scripting
 
-**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting shell. No more text parsing, embrace object-oriented pipelines that are signifi faster and infinitely more expressive.
+**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful object-oriented scripting shell. No more unstructured text parsing, embrace object-oriented pipelines that are significantly faster and infinitely more expressive.
 
 ## ✨ Why Stargate?
 
@@ -86,13 +86,55 @@ fn is_even(n) {
 }
 ```
 
-**Conditionals:**
+**Conditionals with Strict Type Checking:**
 ```rust
-if count > 10 {
-    print "Large count!";
-} else {
-    print "Small count";
+let age = 25;
+if age > 18 {
+    print "Adult";
 }
+
+let is_valid = true;
+if is_valid {
+    print "Access granted";
+}
+
+# Type safety: integers require bool() conversion
+let count = 5;
+if bool(count) {
+    print "Count is non-zero";
+}
+```
+
+**Logical Operators:**
+```rust
+let has_permission = true;
+let is_admin = false;
+
+if has_permission && !is_admin {
+    print "Regular user";
+}
+
+if is_admin || has_permission {
+    print "User can proceed";
+}
+```
+
+**Classes with Inheritance:**
+```rust
+# Define base class
+class Animal {
+    let name = "Unknown";
+    let sound = "...";
+}
+
+# Inherit and extend
+class Dog extends Animal {
+    let sound = "Woof";    # Override parent field
+    let breed = "Labrador"; # Add new field
+}
+
+let dog = new Dog;
+# dog has: name="Unknown", sound="Woof", breed="Labrador"
 ```
 
 **Sequence & Object Access:**

@@ -9,6 +9,10 @@ pub enum Value {
     Bool(bool),
     Null,
     Object(serde_json::Value), // JSON object/array
+    Instance {
+        class_name: String,
+        fields: std::collections::HashMap<String, Value>,
+    },
 }
 
 impl Value {
@@ -19,6 +23,7 @@ impl Value {
             Value::Bool(b) => b.to_string(),
             Value::Null => "null".to_string(),
             Value::Object(obj) => obj.to_string(),
+            Value::Instance { class_name, .. } => format!("<{} instance>", class_name),
         }
     }
 
@@ -29,6 +34,7 @@ impl Value {
             Value::String(s) => !s.is_empty(),
             Value::Null => false,
             Value::Object(_) => true,
+            Value::Instance { .. } => true,
         }
     }
 
@@ -39,6 +45,7 @@ impl Value {
             Value::String(s) => s.parse().unwrap_or(0.0),
             Value::Null => 0.0,
             Value::Object(_) => 0.0,
+            Value::Instance { .. } => 0.0,
         }
     }
 }
@@ -56,6 +63,12 @@ pub enum Statement {
         name: String,
         params: Vec<String>,
         body: Vec<Statement>,
+    },
+    ClassDef {
+        name: String,
+        parent: Option<String>, // parent class name for inheritance
+        fields: Vec<(String, Expression)>, // field name and default value
+        methods: Vec<(String, Vec<String>, Vec<Statement>)>, // method name, params, body
     },
     FunctionCall {
         name: String,
@@ -82,6 +95,9 @@ pub enum Expression {
     FunctionCall {
         name: String,
         args: Vec<Expression>,
+    },
+    NewInstance {
+        class_name: String,
     },
     CommandOutput(String),
     InterpolatedString(String), // String with {var} placeholders
@@ -249,6 +265,7 @@ impl Parser {
             "let" => self.parse_var_decl(),
             "if" => self.parse_if(),
             "fn" => self.parse_function_def(),
+            "class" => self.parse_class_def(),
             "return" => self.parse_return(),
             "print" => self.parse_print(),
             "exec" => self.parse_command(),
@@ -363,6 +380,63 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Statement::FunctionDef { name, params, body })
+    }
+
+    fn parse_class_def(&mut self) -> Result<Statement, String> {
+        self.expect("class")?;
+        let name = self.advance().ok_or("Expected class name")?;
+        
+        // Check for optional "extends ParentClass"
+        let parent = if self.peek().map(|s| s.as_str()) == Some("extends") {
+            self.advance(); // consume "extends"
+            Some(self.advance().ok_or("Expected parent class name")?)
+        } else {
+            None
+        };
+        
+        self.expect("{")?;
+        
+        let mut fields = Vec::new();
+        let mut methods = Vec::new();
+        
+        while self.peek().map(|s| s.as_str()) != Some("}") {
+            if self.peek().is_none() {
+                return Err("Unexpected end of class definition".to_string());
+            }
+            
+            let token = self.peek().unwrap().clone();
+            if token == "let" {
+                // Parse field
+                self.advance(); // consume "let"
+                let field_name = self.advance().ok_or("Expected field name")?;
+                self.expect("=")?;
+                let default_value = self.parse_expression()?;
+                self.expect(";")?;
+                fields.push((field_name, default_value));
+            } else if token == "fn" {
+                // Parse method
+                self.advance(); // consume "fn"
+                let method_name = self.advance().ok_or("Expected method name")?;
+                self.expect("(")?;
+                
+                let mut params = Vec::new();
+                while self.peek().map(|s| s.as_str()) != Some(")") {
+                    params.push(self.advance().ok_or("Expected parameter name")?);
+                    if self.peek().map(|s| s.as_str()) == Some(",") {
+                        self.advance();
+                    }
+                }
+                self.expect(")")?;
+                self.expect("{")?;
+                let body = self.parse_block()?;
+                methods.push((method_name, params, body));
+            } else {
+                return Err(format!("Unexpected token in class definition: {}", token));
+            }
+        }
+        
+        self.expect("}")?;
+        Ok(Statement::ClassDef { name, parent, fields, methods })
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
@@ -675,6 +749,11 @@ impl Parser {
             "true" => return Ok(Expression::Value(Value::Bool(true))),
             "false" => return Ok(Expression::Value(Value::Bool(false))),
             "null" => return Ok(Expression::Value(Value::Null)),
+            "new" => {
+                // Parse new ClassName
+                let class_name = self.advance().ok_or("Expected class name after 'new'")?;
+                return Ok(Expression::NewInstance { class_name });
+            }
             _ => {}
         }
 
