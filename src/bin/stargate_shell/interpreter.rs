@@ -235,7 +235,7 @@ impl Interpreter {
                 }
             }
             Expression::InterpolatedString(template) => {
-                // Replace {var} with variable values
+                // Replace {var} or {expr} with evaluated values
                 let mut result = template.clone();
                 let mut start = 0;
                 
@@ -243,11 +243,29 @@ impl Interpreter {
                     let open_pos = start + open_pos;
                     if let Some(close_pos) = result[open_pos..].find('}') {
                         let close_pos = open_pos + close_pos;
-                        let var_name = &result[open_pos + 1..close_pos];
+                        let expr_str = &result[open_pos + 1..close_pos];
                         
-                        let value = self.variables
-                            .get(var_name)
-                            .ok_or(format!("Variable '{}' not found in interpolation", var_name))?;
+                        // Try to parse and evaluate as an expression
+                        let value = if expr_str.contains('.') {
+                            // Parse as property access expression
+                            let mut parser = Parser::new(expr_str);
+                            match parser.parse_expression() {
+                                Ok(expr) => self.eval_expression(expr)?,
+                                Err(_) => {
+                                    // Fallback to simple variable lookup
+                                    self.variables
+                                        .get(expr_str)
+                                        .ok_or(format!("Variable '{}' not found in interpolation", expr_str))?
+                                        .clone()
+                                }
+                            }
+                        } else {
+                            // Simple variable lookup
+                            self.variables
+                                .get(expr_str)
+                                .ok_or(format!("Variable '{}' not found in interpolation", expr_str))?
+                                .clone()
+                        };
                         
                         let replacement = value.to_string();
                         result.replace_range(open_pos..=close_pos, &replacement);
@@ -327,6 +345,81 @@ impl Interpreter {
                         }
                     }
                     _ => Err("Cannot index non-object value".to_string())
+                }
+            }
+            Expression::MethodCall { object, method, args } => {
+                let obj_value = self.eval_expression(*object)?;
+                
+                match obj_value {
+                    Value::Instance { class_name, fields } => {
+                        // Find the method in the class hierarchy
+                        let mut current_class = Some(class_name.clone());
+                        
+                        while let Some(ref cls) = current_class {
+                            if let Some((parent, _, methods)) = self.classes.get(cls) {
+                                // Look for the method in this class
+                                for (method_name, params, body) in methods {
+                                    if method_name == &method {
+                                        // Clone the method data before using it
+                                        let params = params.clone();
+                                        let body = body.clone();
+                                        
+                                        // Create a new scope for the method
+                                        let mut method_scope = HashMap::new();
+                                        
+                                        // Add all instance fields to the scope
+                                        for (field_name, field_value) in &fields {
+                                            method_scope.insert(field_name.clone(), field_value.clone());
+                                        }
+                                        
+                                        // Evaluate and bind arguments
+                                        if args.len() != params.len() {
+                                            return Err(format!(
+                                                "Method {} expects {} arguments, got {}",
+                                                method, params.len(), args.len()
+                                            ));
+                                        }
+                                        
+                                        for (i, arg_expr) in args.iter().enumerate() {
+                                            let arg_value = self.eval_expression(arg_expr.clone())?;
+                                            method_scope.insert(params[i].clone(), arg_value);
+                                        }
+                                        
+                                        // Save current variables and use method scope
+                                        let saved_vars = self.variables.clone();
+                                        self.variables.extend(method_scope);
+                                        
+                                        // Execute method body
+                                        let mut return_value = Value::Null;
+                                        for stmt in &body {
+                                            match stmt {
+                                                Statement::Return(expr) => {
+                                                    return_value = self.eval_expression(expr.clone())?;
+                                                    break;
+                                                }
+                                                _ => {
+                                                    self.execute_statement(stmt.clone())?;
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Restore variables
+                                        self.variables = saved_vars;
+                                        
+                                        return Ok(return_value);
+                                    }
+                                }
+                                
+                                // Method not found in this class, check parent
+                                current_class = parent.clone();
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        Err(format!("Method '{}' not found in class {}", method, class_name))
+                    }
+                    _ => Err(format!("Cannot call method on non-instance value"))
                 }
             }
         }

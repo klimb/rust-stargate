@@ -1,0 +1,46 @@
+#!/usr/bin/env stargate-shell
+
+# Base Car class with common properties
+class Car {
+    let brand = "Generic";
+    let top_speed = 120;
+    let color = "white";
+    
+    fn get_current_speed() { return 5; }
+}
+
+# Ferrari extends Car with specific values
+class Ferrari extends Car {
+    let brand = "Ferrari";
+    let model = "F8 Tributo";
+    let top_speed = 340;
+    let color = "red";
+    let speed = 320;
+
+    fn get_current_speed() { return speed; }
+}
+
+print "=== Car and Driver Demo ===";
+print "";
+
+# Driver class with personal info and car reference
+class Driver {
+    let first_name = "Dmitry";
+    let last_name = "Kalashnikov";
+    let car = new Ferrari;
+}
+
+let driver = new Driver;
+
+print "Driver Details:";
+print "  Name: {driver.first_name} {driver.last_name}";
+print "  Car: {driver.car.brand} {driver.car.model}";
+print "   Top Speed: {driver.car.top_speed}";
+let current_speed = driver.car.get_current_speed();
+print "   Current Speed: {current_speed}";
+
+if (current_speed == 320) {
+    exit;
+} else {
+    exit 1;
+}

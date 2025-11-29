@@ -106,6 +106,11 @@ pub enum Expression {
         object: Box<Expression>,
         property: String,
     },
+    MethodCall {
+        object: Box<Expression>,
+        method: String,
+        args: Vec<Expression>,
+    },
     IndexAccess {
         object: Box<Expression>,
         index: Box<Expression>,
@@ -512,7 +517,7 @@ impl Parser {
         Ok(statements)
     }
 
-    fn parse_expression(&mut self) -> Result<Expression, String> {
+    pub fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_or()
     }
 
@@ -661,10 +666,35 @@ impl Parser {
                 Some(".") => {
                     self.advance(); // consume '.'
                     let property = self.advance().ok_or("Expected property name after '.'")?;
-                    expr = Expression::PropertyAccess {
-                        object: Box::new(expr),
-                        property,
-                    };
+                    
+                    // Check if this is a method call (property followed by '(')
+                    if self.peek().map(|s| s.as_str()) == Some("(") {
+                        self.advance(); // consume '('
+                        let mut args = Vec::new();
+                        
+                        if self.peek().map(|s| s.as_str()) != Some(")") {
+                            loop {
+                                args.push(self.parse_expression()?);
+                                if self.peek().map(|s| s.as_str()) == Some(",") {
+                                    self.advance(); // consume ','
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        self.expect(")")?;
+                        expr = Expression::MethodCall {
+                            object: Box::new(expr),
+                            method: property,
+                            args,
+                        };
+                    } else {
+                        expr = Expression::PropertyAccess {
+                            object: Box::new(expr),
+                            property,
+                        };
+                    }
                 }
                 Some("[") => {
                     self.advance(); // consume '['
