@@ -1,0 +1,58 @@
+#!/usr/bin/env stargate-shell
+# Test examples for README
+
+print "=== Testing README Examples ===";
+print "";
+
+# Test 1: Classes example
+print "1. Classes with inheritance:";
+class Animal {
+    let name = "Unknown";
+    let sound = "...";
+}
+
+class Dog extends Animal {
+    let sound = "Woof";
+    let breed = "Labrador";
+}
+
+let dog = new Dog;
+let d_name = dog.name;
+let d_sound = dog.sound;
+let d_breed = dog.breed;
+print "   Dog: name={d_name}, sound={d_sound}, breed={d_breed}";
+print "";
+
+# Test 2: Conditionals with boolean
+print "2. Conditionals with strict typing:";
+let age = 25;
+if age > 18 {
+    print "   Adult (age > 18)";
+}
+
+let is_valid = true;
+if is_valid {
+    print "   Valid user";
+}
+
+let count = 5;
+if bool(count) {
+    print "   Count is non-zero: {count}";
+}
+print "";
+
+# Test 3: Logical operators
+print "3. Logical operators:";
+let has_permission = true;
+let is_admin = false;
+
+if has_permission && !is_admin {
+    print "   Regular user with permission";
+}
+
+if is_admin || has_permission {
+    print "   User can proceed";
+}
+print "";
+
+print "=== All README Examples Work! ===";

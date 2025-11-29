@@ -1,0 +1,60 @@
+#!/usr/bin/env stargate-shell
+# Simple class inheritance demonstration
+
+print "=== Class Inheritance Demo ===";
+print "";
+
+# Base Animal class
+class Animal {
+    let name = "Unknown";
+    let sound = "...";
+    let age = 0;
+}
+
+# Dog inherits from Animal and overrides sound
+class Dog extends Animal {
+    let sound = "Woof";
+    let breed = "Mixed";
+}
+
+# Cat inherits from Animal and overrides sound
+class Cat extends Animal {
+    let sound = "Meow";
+    let indoor = true;
+}
+
+print "1. Creating an Animal:";
+let animal = new Animal;
+let a_name = animal.name;
+let a_sound = animal.sound;
+let a_age = animal.age;
+print "   Name: {a_name}";
+print "   Sound: {a_sound}";
+print "   Age: {a_age}";
+print "";
+
+print "2. Creating a Dog (inherits from Animal):";
+let dog = new Dog;
+let d_name = dog.name;
+let d_sound = dog.sound;
+let d_age = dog.age;
+let d_breed = dog.breed;
+print "   Name: {d_name} (inherited)";
+print "   Sound: {d_sound} (overridden)";
+print "   Age: {d_age} (inherited)";
+print "   Breed: {d_breed} (new field)";
+print "";
+
+print "3. Creating a Cat (inherits from Animal):";
+let cat = new Cat;
+let c_name = cat.name;
+let c_sound = cat.sound;
+let c_age = cat.age;
+let c_indoor = cat.indoor;
+print "   Name: {c_name} (inherited)";
+print "   Sound: {c_sound} (overridden)";
+print "   Age: {c_age} (inherited)";
+print "   Indoor: {c_indoor} (new field)";
+print "";
+
+print "=== Inheritance Working! ===";

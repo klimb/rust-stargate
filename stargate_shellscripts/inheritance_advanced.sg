@@ -1,0 +1,75 @@
+#!/usr/bin/env stargate-shell
+# Multi-level inheritance demonstration
+
+print "=== Multi-Level Inheritance Demo ===";
+print "";
+
+# Three-level inheritance chain
+class Animal {
+    let name = "Unknown";
+    let age = 0;
+}
+
+class Dog extends Animal {
+    let breed = "Mixed";
+    let sound = "Woof";
+}
+
+class Puppy extends Dog {
+    let age = 1;
+    let playful = true;
+}
+
+print "1. Base class - Animal:";
+let animal = new Animal;
+let a_name = animal.name;
+let a_age = animal.age;
+print "   Name: {a_name}";
+print "   Age: {a_age}";
+print "";
+
+print "2. Child class - Dog (extends Animal):";
+let dog = new Dog;
+let d_name = dog.name;
+let d_age = dog.age;
+let d_breed = dog.breed;
+let d_sound = dog.sound;
+print "   Name: {d_name} (from Animal)";
+print "   Age: {d_age} (from Animal)";
+print "   Breed: {d_breed} (new field)";
+print "   Sound: {d_sound} (new field)";
+print "";
+
+print "3. Grandchild class - Puppy (extends Dog extends Animal):";
+let puppy = new Puppy;
+let p_name = puppy.name;
+let p_age = puppy.age;
+let p_breed = puppy.breed;
+let p_sound = puppy.sound;
+let p_playful = puppy.playful;
+print "   Name: {p_name} (from Animal)";
+print "   Age: {p_age} (overridden from Animal)";
+print "   Breed: {p_breed} (from Dog)";
+print "   Sound: {p_sound} (from Dog)";
+print "   Playful: {p_playful} (new field)";
+print "";
+
+# Multiple children from same parent
+class Cat extends Animal {
+    let sound = "Meow";
+    let indoor = true;
+}
+
+print "4. Another child - Cat (also extends Animal):";
+let cat = new Cat;
+let c_name = cat.name;
+let c_age = cat.age;
+let c_sound = cat.sound;
+let c_indoor = cat.indoor;
+print "   Name: {c_name} (from Animal)";
+print "   Age: {c_age} (from Animal)";
+print "   Sound: {c_sound} (new field)";
+print "   Indoor: {c_indoor} (new field)";
+print "";
+
+print "=== Multi-Level Inheritance Working! ===";
