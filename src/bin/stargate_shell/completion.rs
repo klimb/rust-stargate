@@ -10,21 +10,23 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
 
 use super::commands::{get_stargate_commands, get_command_parameters, SHELL_COMMANDS};
+use super::interpreter::Interpreter;
 
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
 
 pub struct StargateCompletion {
     commands: Vec<String>,
     variables: Arc<Mutex<HashSet<String>>>,
+    interpreter: Arc<Mutex<Interpreter>>,
 }
 
 impl StargateCompletion {
-    pub fn new(variables: Arc<Mutex<HashSet<String>>>) -> Self {
+    pub fn new(variables: Arc<Mutex<HashSet<String>>>, interpreter: Arc<Mutex<Interpreter>>) -> Self {
         let mut commands = get_stargate_commands();
         commands.extend(SHELL_COMMANDS.iter().map(|s| s.to_string()));
         commands.sort();
         commands.dedup();
-        Self { commands, variables }
+        Self { commands, variables, interpreter }
     }
 }
 
@@ -115,6 +117,26 @@ impl Completer for StargateCompletion {
                     (before_dot[cmd_start..].trim(), true)
                 };
                 
+                // Check if it's a variable with an instance value
+                if let Ok(interp) = self.interpreter.lock() {
+                    if let Some(class_name) = interp.get_variable_class(cmd_str) {
+                        if let Some(fields) = interp.get_class_fields(&class_name) {
+                            let matches: Vec<Pair> = fields
+                                .into_iter()
+                                .filter(|field| field.starts_with(after_dot))
+                                .map(|field| Pair {
+                                    display: field.clone(),
+                                    replacement: field,
+                                })
+                                .collect();
+                            
+                            if !matches.is_empty() {
+                                return Ok((dot_pos + 1, matches));
+                            }
+                        }
+                    }
+                }
+                
                 // Check if it's a stargate command
                 if self.commands.contains(&cmd_str.to_string()) && !SHELL_COMMANDS.contains(&cmd_str) {
                     // Execute command to get JSON schema
@@ -183,6 +205,26 @@ impl Completer for StargateCompletion {
                     .map(|var| Pair {
                         display: var.clone(),
                         replacement: var.clone(),
+                    })
+                    .collect();
+                
+                if !matches.is_empty() {
+                    return Ok((start, matches));
+                }
+            }
+        }
+
+        // Check if we're after 'new ' - suggest class names
+        if before_word.ends_with("new") {
+            // Get class names from interpreter
+            if let Ok(interp) = self.interpreter.lock() {
+                let class_names = interp.get_all_class_names();
+                let matches: Vec<Pair> = class_names
+                    .into_iter()
+                    .filter(|class| class.starts_with(prefix))
+                    .map(|class| Pair {
+                        display: class.clone(),
+                        replacement: class,
                     })
                     .collect();
                 

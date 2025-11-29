@@ -78,16 +78,16 @@ fn main() {
     // Shared variable names for completion
     let variable_names = Arc::new(Mutex::new(HashSet::new()));
     
-    let helper = StargateCompletion::new(variable_names.clone());
+    // Create persistent interpreter for REPL session with completion support
+    let interpreter = Arc::new(Mutex::new(Interpreter::new_with_completion(variable_names.clone())));
+    
+    let helper = StargateCompletion::new(variable_names.clone(), interpreter.clone());
     let config = Config::builder()
         .completion_type(CompletionType::List)
         .auto_add_history(true)
         .build();
     let mut rl = Editor::with_config(config).expect("Failed to create readline editor");
     rl.set_helper(Some(helper));
-    
-    // Create persistent interpreter for REPL session with completion support
-    let mut interpreter = Interpreter::new_with_completion(variable_names);
 
     loop {
         match rl.readline("stargate> ") {
@@ -115,9 +115,11 @@ fn main() {
                     }
                     _ if input.starts_with(SCRIPT_PREFIX) => {
                         let script_code = input[SCRIPT_PREFIX.len()..].trim();
-                        match execute_script_with_interpreter(script_code, &mut interpreter) {
-                            Ok(_exit_code) => {}, // In REPL mode, don't exit the process
-                            Err(e) => eprintln!("Script error: {}", e),
+                        if let Ok(mut interp) = interpreter.lock() {
+                            match execute_script_with_interpreter(script_code, &mut interp) {
+                                Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                                Err(e) => eprintln!("Script error: {}", e),
+                            }
                         }
                     }
                     _ if input.starts_with(SCRIPT_BLOCK_START) => {
@@ -141,14 +143,45 @@ fn main() {
                         }
                         
                         let script = script_lines.join("\n");
-                        match execute_script_with_interpreter(&script, &mut interpreter) {
-                            Ok(_exit_code) => {}, // In REPL mode, don't exit the process
-                            Err(e) => eprintln!("Script error: {}", e),
+                        if let Ok(mut interp) = interpreter.lock() {
+                            match execute_script_with_interpreter(&script, &mut interp) {
+                                Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                                Err(e) => eprintln!("Script error: {}", e),
+                            }
+                        }
+                    }
+                    _ if input.starts_with("class ") && !input.contains('}') => {
+                        // Multi-line class definition mode
+                        let mut class_lines = vec![input.to_string()];
+                        
+                        loop {
+                            match rl.readline("... ") {
+                                Ok(line) => {
+                                    class_lines.push(line.clone());
+                                    // Check if we've found the closing brace
+                                    if line.trim() == "}" || line.trim().ends_with('}') {
+                                        break;
+                                    }
+                                }
+                                Err(_) => {
+                                    eprintln!("Class definition interrupted");
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        let class_def = class_lines.join("\n");
+                        if let Ok(mut interp) = interpreter.lock() {
+                            match execute_script_with_interpreter(&class_def, &mut interp) {
+                                Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                                Err(e) => eprintln!("Script error: {}", e),
+                            }
                         }
                     }
                     _ => {
                         // Check if this looks like a script statement or expression
                         let is_statement = input.starts_with("let ") 
+                            || input.starts_with("class ")
                             || input.starts_with("print ")
                             || input.contains(" = ")
                             || input.ends_with(';');
@@ -169,9 +202,11 @@ fn main() {
                                 format!("print {};", input)
                             };
                             
-                            match execute_script_with_interpreter(&script_code, &mut interpreter) {
-                                Ok(_exit_code) => {}, // In REPL mode, don't exit the process
-                                Err(e) => eprintln!("Script error: {}", e),
+                            if let Ok(mut interp) = interpreter.lock() {
+                                match execute_script_with_interpreter(&script_code, &mut interp) {
+                                    Ok(_exit_code) => {}, // In REPL mode, don't exit the process
+                                    Err(e) => eprintln!("Script error: {}", e),
+                                }
                             }
                         } else if let Err(e) = execute_pipeline(input) {
                             eprintln!("Error: {}", e);

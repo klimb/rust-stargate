@@ -3,6 +3,59 @@
 ## Overview
 Stargate shell supports **single inheritance** for classes, allowing child classes to inherit fields from parent classes with full support for multi-level inheritance chains.
 
+## Interactive Mode
+
+Classes can be defined and used **interactively** in the stargate shell with **tab completion** for instance properties.
+
+**Multi-line class definitions** are supported for better readability:
+
+```bash
+stargate> class Person {
+... let first_name = "Dmitry";
+... let last_name = "Kalashnikov";
+... let age = 30;
+... }
+stargate> let p = new Person();
+stargate> p.<TAB>
+age    first_name    last_name
+stargate> p.first_name
+Dmitry
+```
+
+**Single-line classes** also work:
+
+```bash
+stargate> class Point { let x = 0; let y = 0; }
+stargate> let pt = new Point;
+stargate> pt.x
+0
+```
+
+**Tab completion works for:**
+- All instance fields (own and inherited)
+- Multi-level inheritance chains
+- Variable names
+- **Class names after `new` keyword**
+
+Example:
+```bash
+stargate> class Person { let name = "foo"; }
+stargate> class PersonManager { let count = 5; }
+stargate> let p = new Per<TAB>
+Person         PersonManager
+stargate> let p = new Person;
+```
+
+**Instance creation supports:**
+- `new ClassName` - without parentheses
+- `new ClassName()` - with explicit empty parentheses
+
+**Multi-line continuation:**
+- Start typing `class Name {` without closing brace
+- Shell prompts with `... ` for continuation lines
+- Type fields and methods on separate lines
+- Close with `}` to complete the definition
+
 ## Simple Example
 
 ```stargate

@@ -767,8 +767,13 @@ impl Parser {
             "false" => return Ok(Expression::Value(Value::Bool(false))),
             "null" => return Ok(Expression::Value(Value::Null)),
             "new" => {
-                // Parse new ClassName
+                // Parse new ClassName or new ClassName()
                 let class_name = self.advance().ok_or("Expected class name after 'new'")?;
+                // Check for optional empty parentheses
+                if self.peek() == Some(&"(".to_string()) {
+                    self.advance(); // consume '('
+                    self.expect(")")?; // expect ')'
+                }
                 return Ok(Expression::NewInstance { class_name });
             }
             _ => {}
