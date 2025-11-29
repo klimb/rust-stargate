@@ -196,11 +196,15 @@ fn main() {
                     }
                     _ => {
                         // Check if this looks like a script statement or expression
+                        let is_builtin_command = input.starts_with("cd ") 
+                            || input.starts_with("change-directory ");
+                        
                         let is_statement = input.starts_with("let ") 
                             || input.starts_with("class ")
                             || input.starts_with("print ")
                             || input.contains(" = ")
-                            || input.ends_with(';');
+                            || input.ends_with(';')
+                            || is_builtin_command;
                         
                         let has_property_access = input.contains('.') 
                             || (input.contains('[') && input.contains(']'));

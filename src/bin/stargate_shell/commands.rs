@@ -2,7 +2,7 @@
 use std::process::Command;
 
 // List of built-in shell commands
-pub const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command"];
+pub const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command", "cd", "change-directory"];
 
 // List of stargate commands (extracted from the binary)
 pub fn get_stargate_commands() -> Vec<String> {
