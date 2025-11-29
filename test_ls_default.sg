@@ -1,4 +1,0 @@
-#!/usr/bin/env stargate-shell
-
-print "Testing default list-directory flags";
-list-directory;

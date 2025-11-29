@@ -3,6 +3,7 @@ use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
 
 use super::parsing::parse_pipeline;
+use super::commands::get_command_aliases;
 
 // Commands that already consume/produce JSON and shouldn't get -o flag
 const OBJECT_NATIVE_COMMANDS: &[&str] = &[
@@ -12,6 +13,62 @@ const OBJECT_NATIVE_COMMANDS: &[&str] = &[
 
 fn is_object_native_command(cmd: &str) -> bool {
     OBJECT_NATIVE_COMMANDS.contains(&cmd)
+}
+
+// Resolve alias to actual command name
+fn resolve_alias(cmd: &str) -> String {
+    // This will be resolved via the shared alias system in commands module
+    // For now, just handle the most common ones inline
+    match cmd {
+        "ls" => "list-directory".to_string(),
+        _ => {
+            // Check auto-generated aliases by trying to find matching command
+            let commands = get_all_commands();
+            for full_cmd in commands {
+                if let Some(alias) = generate_alias(&full_cmd) {
+                    if alias == cmd {
+                        return full_cmd;
+                    }
+                }
+            }
+            cmd.to_string()
+        }
+    }
+}
+
+// Generate an alias from a command name using first letters of each word
+fn generate_alias(command: &str) -> Option<String> {
+    let parts: Vec<&str> = command.split('-').collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let alias: String = parts.iter().filter_map(|part| part.chars().next()).collect();
+    if alias.len() >= 2 {
+        Some(alias)
+    } else {
+        None
+    }
+}
+
+// Get all available stargate commands
+fn get_all_commands() -> Vec<String> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+
+    if let Ok(output) = Command::new(&stargate_bin).arg("--list").output() {
+        if output.status.success() {
+            let text = String::from_utf8_lossy(&output.stdout);
+            return text
+                .lines()
+                .map(|line| line.trim())
+                .filter(|line| !line.is_empty() && *line != "[" && *line != "]")
+                .map(|s| s.to_string())
+                .collect();
+        }
+    }
+    Vec::new()
 }
 
 fn handle_cd(args: &[String]) -> Result<String, String> {
@@ -57,8 +114,10 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
         return Err("Empty command".to_string());
     }
 
+    // Resolve alias to actual command name
+    let cmd_name = resolve_alias(&cmd_parts[0]);
+    
     // Handle built-in commands
-    let cmd_name = cmd_parts[0].as_str();
     if cmd_name == "cd" || cmd_name == "change-directory" {
         return handle_cd(&cmd_parts[1..]);
     }
@@ -68,12 +127,14 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
         .and_then(|p| p.parent().map(|d| d.join("stargate")))
         .unwrap_or_else(|| "stargate".into());
 
+    // Build command with resolved alias
+    let mut args = vec![cmd_name.clone()];
+    args.extend_from_slice(&cmd_parts[1..]);
+    
     // Optionally add --obj flag for script mode
-    let mut args = cmd_parts.to_vec();
     if add_obj {
         let has_obj_flag = cmd_parts.iter().any(|s| s == "-o" || s == "--obj");
-        let cmd_name = cmd_parts.first().map(|s| s.as_str()).unwrap_or("");
-        let is_object_native = is_object_native_command(cmd_name);
+        let is_object_native = is_object_native_command(&cmd_name);
         
         if !has_obj_flag && !is_object_native {
             args.insert(1, "--obj".to_string());
