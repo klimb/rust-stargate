@@ -57,4 +57,12 @@ print "   Age: {c_age} (inherited)";
 print "   Indoor: {c_indoor} (new field)";
 print "";
 
+# Verify inheritance with assertions
+assert a_sound == "...", "Animal sound should be ...";
+assert d_sound == "Woof", "Dog sound should be Woof";
+assert c_sound == "Meow", "Cat sound should be Meow";
+assert d_name == "Unknown", "Dog inherits name from Animal";
+assert c_age == 0, "Cat inherits age from Animal";
+
 print "=== Inheritance Working! ===";
+print "=== All assertions passed! ===";

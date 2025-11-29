@@ -38,6 +38,8 @@ for i in range(1, 11) {
     let sum = sum + i;
 }
 print "  Sum = {sum}";
+assert sum == 55, "Sum of 1 to 10 should be 55";
 print "";
 
 print "=== Range Demo Complete ===";
+print "=== All assertions passed! ===";

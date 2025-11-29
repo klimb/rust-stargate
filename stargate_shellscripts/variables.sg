@@ -11,3 +11,10 @@ let sum = count + doubled;
 print "count: {count}";
 print "doubled: {doubled}";
 print "sum: {sum}";
+
+assert count == 5, "Count should be 5";
+assert doubled == 10, "Doubled should be 10";
+assert sum == 15, "Sum should be 15";
+
+print "";
+print "=== All assertions passed! ===";
