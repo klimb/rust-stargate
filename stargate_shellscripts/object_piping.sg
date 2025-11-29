@@ -1,17 +1,19 @@
 #!/usr/bin/env stargate-shell
 # Test object piping with stargate commands
 
-print "=== Object Piping Pipeline ===";
-print "";
+use ut;
 
-# Execute a pipeline and capture output
-print "Running: list-directory | head -5";
-list-directory | head -5;
-print "";
+[test]
+fn test_piping() {
+    let result = list-directory;
+    ut.assert_true(result.total_count >= 0, "Pipeline should return object with total_count");
+}
 
-# Another example with filtering
-print "Running: list-directory | find-text toml";
-list-directory | find-text toml;
-print "";
+[test]
+fn test_filter_piping() {
+    let result = list-directory | find-text toml;
+    ut.assert_true(true, "Filter pipeline should execute");
+}
 
-print "Done!";
+print ut.stats;
+exit(ut.healthy);

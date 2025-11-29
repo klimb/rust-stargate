@@ -51,5 +51,5 @@ fn test_range_larger_numbers() {
     ut.assert_equals(count, 6, "Range(10,16) should iterate 6 times");
 }
 
-print (ut).stats;
-exit((ut).healthy);
+print ut.stats;
+exit(ut.healthy);

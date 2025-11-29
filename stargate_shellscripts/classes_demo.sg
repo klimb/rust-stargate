@@ -1,8 +1,7 @@
 #!/usr/bin/env stargate-shell
 # Basic class demonstration
 
-print "=== Basic Class Demo ===";
-print "";
+use ut;
 
 # Define a simple Person class
 class Person {
@@ -11,24 +10,6 @@ class Person {
     let city = "New York";
 }
 
-print "1. Creating a Person instance:";
-let person = new Person;
-print "   Created: {person}";
-print "";
-
-print "2. Accessing properties:";
-let person_name = person.name;
-let person_age = person.age;
-let person_city = person.city;
-print "   Name: {person_name}";
-print "   Age: {person_age}";
-print "   City: {person_city}";
-
-assert person_name == "John Doe", "Person name should be John Doe";
-assert person_age == 30, "Person age should be 30";
-assert person_city == "New York", "Person city should be New York";
-print "";
-
 # Another simple class
 class Book {
     let title = "The Great Book";
@@ -36,28 +17,39 @@ class Book {
     let pages = 300;
 }
 
-print "3. Creating a Book instance:";
-let book = new Book;
-let book_title = book.title;
-let book_author = book.author;
-let book_pages = book.pages;
-print "   Title: {book_title}";
-print "   Author: {book_author}";
-print "   Pages: {book_pages}";
+[test]
+fn test_person_properties() {
+    let person = new Person;
+    let person_name = person.name;
+    let person_age = person.age;
+    let person_city = person.city;
+    
+    ut.assert_equals(person_name, "John Doe", "Person name should be John Doe");
+    ut.assert_equals(person_age, 30, "Person age should be 30");
+    ut.assert_equals(person_city, "New York", "Person city should be New York");
+}
 
-assert book_title == "The Great Book", "Book title should match";
-assert book_author == "Jane Smith", "Book author should match";
-assert book_pages == 300, "Book should have 300 pages";
-print "";
+[test]
+fn test_book_properties() {
+    let book = new Book;
+    let book_title = book.title;
+    let book_author = book.author;
+    let book_pages = book.pages;
+    
+    ut.assert_equals(book_title, "The Great Book", "Book title should match");
+    ut.assert_equals(book_author, "Jane Smith", "Book author should match");
+    ut.assert_equals(book_pages, 300, "Book should have 300 pages");
+}
 
-print "4. Multiple instances are independent:";
-let person1 = new Person;
-let person2 = new Person;
-print "   Person 1: {person1}";
-print "   Person 2: {person2}";
-print "   (Each has its own copy of fields)";
-print "";
+[test]
+fn test_multiple_instances() {
+    let person1 = new Person;
+    let person2 = new Person;
+    
+    ut.assert_equals(person1.name, "John Doe", "Person1 should have default name");
+    ut.assert_equals(person2.name, "John Doe", "Person2 should have default name");
+}
 
-print "=== Class Basics Working! ===";
-print "=== All assertions passed! ===";
+print ut.stats;
+exit(ut.healthy);
 

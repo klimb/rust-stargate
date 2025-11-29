@@ -36,5 +36,5 @@ fn test_boolean_variables() {
     ut.assert_true(flag, "Boolean true should work");
 }
 
-print (ut).stats;
-exit((ut).healthy);
+print ut.stats;
+exit(ut.healthy);

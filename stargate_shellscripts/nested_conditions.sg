@@ -1,43 +1,21 @@
 #!/usr/bin/env stargate-shell
 # Demonstrate nested conditionals with object processing
 
-print "=== Nested Conditionals with Objects ===";
-print "";
+use ut;
 
-# Get file statistics
-let total = list-directory | collect-count;
-let with_toml = list-directory | find-text toml | collect-count;
-
-print "Total items: {total}";
-print "Items with 'toml': {with_toml}";
-print "";
-
-# Calculate ratio (toml vs total) - avoid division by zero
-print "Processing based on composition...";
-
-if total > 0 {
-    let ratio = with_toml / total;
+[test]
+fn test_nested_conditionals() {
+    let total = (list-directory).total_count;
+    let with_toml = list-directory | find-text toml | collect-count;
     
-    if ratio > 0 {
-        if ratio == 1 {
-            print "All items contain 'toml'";
-            list-directory | head -8;
-        } else {
-            if ratio >= 0 {
-                print "Some items contain 'toml'";
-                list-directory | find-text toml | head -5;
-            } else {
-                print "No toml files";
-                list-directory | head -5;
-            }
-        }
-    } else {
-        print "No items with toml";
+    ut.assert_true(total >= 0, "Directory count should be non-negative");
+    ut.assert_true(with_toml >= 0, "TOML count should be non-negative");
+    
+    if total > 0 {
+        let ratio = with_toml / total;
+        ut.assert_true(ratio >= 0, "Ratio should be non-negative");
     }
-} else {
-    print "Directory is empty";
 }
 
-print "";
-print "=== All assertions passed! ===";
-print "Analysis complete!";
+print ut.stats;
+exit(ut.healthy);

@@ -30,5 +30,5 @@ fn test_iterate_all_entries() {
     ut.assert_true(found, "Should find entries with names");
 }
 
-print (ut).stats;
-exit((ut).healthy);
+print ut.stats;
+exit(ut.healthy);
