@@ -24,6 +24,7 @@ let test_num = 42;
 print "Testing number: {test_num}";
 
 let result = is_even(test_num);
+assert result == 1, "42 should be even";
 if result == 1 {
     print "Number is even";
 } else {
@@ -32,18 +33,26 @@ if result == 1 {
 
 # Test range checking with && operator
 let is_in_range = in_range(test_num, 1, 100);
+assert is_in_range == 1, "42 should be in range 1-100";
 if is_in_range == 1 {
     print "Number is in range 1-100";
 }
 
 # Test with || operator
 let small_num = 5;
+let small_or_huge = small_num < 10 || small_num > 100;
+assert small_or_huge == true, "5 should be less than 10";
 if small_num < 10 || small_num > 100 {
     print "Number {small_num} is either small (< 10) or very large (> 100)";
 }
 
 # Complex condition
 let x = 15;
+let in_middle = x > 10 && x < 20;
+assert in_middle == true, "15 should be between 10 and 20";
 if x > 10 && x < 20 {
     print "x = {x} is between 10 and 20";
 }
+
+print "";
+print "=== All assertions passed! ===";

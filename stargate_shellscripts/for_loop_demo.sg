@@ -28,6 +28,8 @@ for entry in entries {
     let count = count + 1;
 }
 print "  Total items: {count}";
+assert count > 0, "Should have at least one entry in directory";
 print "";
 
 print "=== For Loop Demo Complete ===";
+print "=== All assertions passed! ===";
