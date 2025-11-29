@@ -148,6 +148,37 @@ impl Interpreter {
                     }
                 }
             }
+            Statement::IndexAssignment { object, index, value } => {
+                // Get the list/object to modify
+                let obj_value = self.variables.get(&object).cloned()
+                    .ok_or(format!("Variable '{}' not found", object))?;
+                
+                let index_value = self.eval_expression(index)?;
+                let new_value = self.eval_expression(value)?;
+                
+                match obj_value {
+                    Value::List(mut list) => {
+                        let idx = index_value.to_number() as i64;
+                        let actual_idx = if idx < 0 {
+                            let len = list.len() as i64;
+                            if len + idx < 0 {
+                                return Err(format!("Index {} out of bounds (list length: {})", idx, list.len()));
+                            }
+                            (len + idx) as usize
+                        } else {
+                            idx as usize
+                        };
+                        
+                        if actual_idx >= list.len() {
+                            return Err(format!("Index {} out of bounds (list length: {})", idx, list.len()));
+                        }
+                        
+                        list[actual_idx] = new_value;
+                        self.variables.insert(object.clone(), Value::List(list));
+                    }
+                    _ => return Err(format!("Cannot use index assignment on non-list value"))
+                }
+            }
             Statement::VarDecl(name, expr) => {
                 let value = self.eval_expression(expr)?;
                 self.variables.insert(name.clone(), value);
@@ -183,6 +214,9 @@ impl Interpreter {
                     }
                     Value::Instance { .. } => {
                         return Err("Type error: if condition must be a boolean. Use bool() to convert instances.".to_string());
+                    }
+                    Value::List(_) => {
+                        return Err("Type error: if condition must be a boolean. Use bool() to convert lists.".to_string());
                     }
                 }
                 
@@ -502,6 +536,25 @@ impl Interpreter {
                 let index_value = self.eval_expression(*index)?;
                 
                 match obj_value {
+                    Value::List(list) => {
+                        let idx = index_value.to_number() as i64;
+                        let actual_idx = if idx < 0 {
+                            // Python-style negative indexing
+                            let len = list.len() as i64;
+                            if len + idx < 0 {
+                                return Err(format!("Index {} out of bounds (list length: {})", idx, list.len()));
+                            }
+                            (len + idx) as usize
+                        } else {
+                            idx as usize
+                        };
+                        
+                        if actual_idx < list.len() {
+                            Ok(list[actual_idx].clone())
+                        } else {
+                            Err(format!("Index {} out of bounds (list length: {})", idx, list.len()))
+                        }
+                    }
                     Value::Object(json_obj) => {
                         match json_obj {
                             serde_json::Value::Array(arr) => {
@@ -530,13 +583,82 @@ impl Interpreter {
                             _ => Err("Cannot index non-array/non-object JSON value".to_string())
                         }
                     }
-                    _ => Err("Cannot index non-object value".to_string())
+                    _ => Err("Cannot index non-list/non-object value".to_string())
                 }
             }
             Expression::MethodCall { object, method, args } => {
                 let obj_value = self.eval_expression(*object)?;
                 
                 match obj_value {
+                    Value::List(mut list) => {
+                        // Handle list built-in methods
+                        match method.as_str() {
+                            "append" => {
+                                if args.len() != 1 {
+                                    return Err(format!("append() expects 1 argument, got {}", args.len()));
+                                }
+                                let value = self.eval_expression(args[0].clone())?;
+                                list.push(value);
+                                Ok(Value::List(list))
+                            }
+                            "insert" => {
+                                if args.len() != 2 {
+                                    return Err(format!("insert() expects 2 arguments, got {}", args.len()));
+                                }
+                                let index_value = self.eval_expression(args[0].clone())?;
+                                let value = self.eval_expression(args[1].clone())?;
+                                let idx = index_value.to_number() as usize;
+                                if idx > list.len() {
+                                    return Err(format!("Index {} out of bounds for insert (list length: {})", idx, list.len()));
+                                }
+                                list.insert(idx, value);
+                                Ok(Value::List(list))
+                            }
+                            "remove" => {
+                                if args.len() != 1 {
+                                    return Err(format!("remove() expects 1 argument, got {}", args.len()));
+                                }
+                                let index_value = self.eval_expression(args[0].clone())?;
+                                let idx = index_value.to_number() as i64;
+                                let actual_idx = if idx < 0 {
+                                    (list.len() as i64 + idx) as usize
+                                } else {
+                                    idx as usize
+                                };
+                                if actual_idx >= list.len() {
+                                    return Err(format!("Index {} out of bounds (list length: {})", idx, list.len()));
+                                }
+                                list.remove(actual_idx);
+                                Ok(Value::List(list))
+                            }
+                            "length" => {
+                                if !args.is_empty() {
+                                    return Err(format!("length() expects 0 arguments, got {}", args.len()));
+                                }
+                                Ok(Value::Number(list.len() as f64))
+                            }
+                            "pop" => {
+                                if !args.is_empty() {
+                                    return Err(format!("pop() expects 0 arguments, got {}", args.len()));
+                                }
+                                if list.is_empty() {
+                                    return Err("Cannot pop from empty list".to_string());
+                                }
+                                let value = list.pop().unwrap();
+                                // Note: This modifies the list but we can't persist it without assignment
+                                // For now, just return the popped value
+                                Ok(value)
+                            }
+                            "clear" => {
+                                if !args.is_empty() {
+                                    return Err(format!("clear() expects 0 arguments, got {}", args.len()));
+                                }
+                                list.clear();
+                                Ok(Value::List(list))
+                            }
+                            _ => Err(format!("Unknown list method: {}", method))
+                        }
+                    }
                     Value::Instance { class_name, fields } => {
                         // Handle ut built-in object methods
                         if class_name == "UT" {
@@ -610,7 +732,7 @@ impl Interpreter {
                         
                         Err(format!("Method '{}' not found in class {}", method, class_name))
                     }
-                    _ => Err(format!("Cannot call method on non-instance value"))
+                    _ => Err(format!("Cannot call method on non-instance/non-list value"))
                 }
             }
             Expression::Pipeline { input, command } => {
@@ -626,6 +748,7 @@ impl Interpreter {
                     Value::Bool(b) => b.to_string(),
                     Value::Null => "null".to_string(),
                     Value::Instance { .. } => return Err("Cannot pipe instance objects".to_string()),
+                    Value::List(_) => return Err("Cannot pipe list objects yet".to_string()),
                 };
                 
                 // Execute the pipeline with the JSON input
@@ -640,6 +763,15 @@ impl Interpreter {
                 } else {
                     Ok(Value::String(output.trim().to_string()))
                 }
+            }
+            Expression::ListLiteral(elements) => {
+                // Evaluate each element expression and collect into a list
+                let mut list = Vec::new();
+                for elem_expr in elements {
+                    let elem_value = self.eval_expression(elem_expr)?;
+                    list.push(elem_value);
+                }
+                Ok(Value::List(list))
             }
         }
     }

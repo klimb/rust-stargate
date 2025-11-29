@@ -13,6 +13,7 @@ pub enum Value {
         class_name: String,
         fields: std::collections::HashMap<String, Value>,
     },
+    List(Vec<Value>),
 }
 
 impl Value {
@@ -24,6 +25,10 @@ impl Value {
             Value::Null => "null".to_string(),
             Value::Object(obj) => obj.to_string(),
             Value::Instance { class_name, .. } => format!("<{} instance>", class_name),
+            Value::List(items) => {
+                let items_str: Vec<String> = items.iter().map(|v| v.to_string()).collect();
+                format!("[{}]", items_str.join(", "))
+            }
         }
     }
 
@@ -35,6 +40,7 @@ impl Value {
             Value::Null => false,
             Value::Object(_) => true,
             Value::Instance { .. } => true,
+            Value::List(items) => !items.is_empty(),
         }
     }
 
@@ -46,6 +52,7 @@ impl Value {
             Value::Null => 0.0,
             Value::Object(_) => 0.0,
             Value::Instance { .. } => 0.0,
+            Value::List(items) => items.len() as f64,
         }
     }
 }
@@ -54,6 +61,11 @@ impl Value {
 pub enum Statement {
     VarDecl(String, Expression),
     Assignment(String, Expression),
+    IndexAssignment {
+        object: String,
+        index: Expression,
+        value: Expression,
+    },
     If {
         condition: Expression,
         then_block: Vec<Statement>,
@@ -131,6 +143,7 @@ pub enum Expression {
         input: Box<Expression>,
         command: String,
     },
+    ListLiteral(Vec<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -209,6 +222,13 @@ impl Parser {
                         }
                     }
                     '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' | '[' | ']' | '.' | '|' | '&' => {
+                        // Special handling for '.' - check if it's part of a number
+                        if ch == '.' && !current.is_empty() && current.chars().all(|c| c.is_numeric()) && chars.peek().map(|c| c.is_numeric()).unwrap_or(false) {
+                            // This is a decimal point in a number like 3.14
+                            current.push(ch);
+                            continue;
+                        }
+                        
                         if !current.is_empty() {
                             tokens.push(current.clone());
                             current.clear();
@@ -331,6 +351,27 @@ impl Parser {
                 }
                 
                 // Check if it's an assignment, function call, or method call
+                // First check for index assignment: var[idx] = value
+                if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some("[") {
+                    // Look ahead to find the = after ]
+                    let mut lookahead = self.pos + 2; // After var and [
+                    let mut bracket_depth = 1;
+                    while lookahead < self.tokens.len() && bracket_depth > 0 {
+                        let tok = &self.tokens[lookahead];
+                        if tok == "[" {
+                            bracket_depth += 1;
+                        } else if tok == "]" {
+                            bracket_depth -= 1;
+                        }
+                        lookahead += 1;
+                    }
+                    // Check if next token is =
+                    if self.tokens.get(lookahead).map(|s| s.as_str()) == Some("=") {
+                        return self.parse_assignment();
+                    }
+                    // Not an assignment, fall through to other checks
+                }
+                
                 if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some("=") {
                     self.parse_assignment()
                 } else if self.tokens.get(self.pos + 1).map(|s| s.as_str()) == Some("(") {
@@ -370,6 +411,22 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Result<Statement, String> {
         let name = self.advance().ok_or("Expected variable name")?;
+        
+        // Check if this is an index assignment like: list[0] = value
+        if self.peek().map(|s| s.as_str()) == Some("[") {
+            self.advance(); // consume '['
+            let index = self.parse_expression()?;
+            self.expect("]")?;
+            self.expect("=")?;
+            let value = self.parse_expression()?;
+            self.expect(";")?;
+            return Ok(Statement::IndexAssignment {
+                object: name,
+                index,
+                value,
+            });
+        }
+        
         self.expect("=")?;
         
         // Parse expression (which now handles pipes as operators)
@@ -880,6 +937,31 @@ impl Parser {
                 self.expect(")")?;
                 return Ok(expr);
             }
+        }
+
+        if token == "[" {
+            // Parse list literal: [expr, expr, ...]
+            let mut elements = Vec::new();
+            
+            // Handle empty list
+            if self.peek().map(|s| s.as_str()) == Some("]") {
+                self.advance(); // consume ']'
+                return Ok(Expression::ListLiteral(elements));
+            }
+            
+            // Parse comma-separated expressions
+            loop {
+                elements.push(self.parse_expression()?);
+                
+                if self.peek().map(|s| s.as_str()) == Some(",") {
+                    self.advance(); // consume ','
+                } else {
+                    break;
+                }
+            }
+            
+            self.expect("]")?;
+            return Ok(Expression::ListLiteral(elements));
         }
 
         if token == "$" {
