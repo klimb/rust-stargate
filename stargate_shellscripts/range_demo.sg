@@ -1,45 +1,55 @@
 #!/usr/bin/env stargate-shell
+# Range Function Demo
 
-print "=== Range Function Demo ===";
-print "";
+use ut;
 
-# Example 0: Simple for loop, python style range 
-# instead  for (int i=0; i<5; i++)
-for x in range(0, 5) {
-    print("simple for loop: {x}");
+[test]
+fn test_range_iteration() {
+    let count = 0;
+    for x in range(0, 5) {
+        let count = count + 1;
+    }
+    ut.assert_equals(count, 5, "Range(0,5) should iterate 5 times");
 }
 
-# Example 1: Simple range iteration
-print "1. Counting from 1 to 5:";
-for x in range(1, 6) {
-    print "  {x}";
+[test]
+fn test_range_values() {
+    let first = 0;
+    for x in range(1, 6) {
+        if first == 0 {
+            let first = x;
+        }
+    }
+    ut.assert_equals(first, 1, "First value in range(1,6) should be 1");
 }
-print "";
 
-# Example 2: Using range values in expressions
-print "2. Squares of numbers 1-5:";
-for n in range(1, 6) {
-    let square = n * n;
-    print "  {n}² = {square}";
+[test]
+fn test_range_squares() {
+    let sum_of_squares = 0;
+    for n in range(1, 6) {
+        let square = n * n;
+        let sum_of_squares = sum_of_squares + square;
+    }
+    ut.assert_equals(sum_of_squares, 55, "Sum of squares 1-5 should be 55");
 }
-print "";
 
-# Example 3: Range with larger numbers
-print "3. Numbers from 10 to 15:";
-for num in range(10, 16) {
-    print "  Number: {num}";
+[test]
+fn test_range_sum() {
+    let sum = 0;
+    for i in range(1, 11) {
+        let sum = sum + i;
+    }
+    ut.assert_equals(sum, 55, "Sum of 1 to 10 should be 55");
 }
-print "";
 
-# Example 4: Countdown (using negative logic)
-print "4. Sum of numbers 1 to 10:";
-let sum = 0;
-for i in range(1, 11) {
-    let sum = sum + i;
+[test]
+fn test_range_larger_numbers() {
+    let count = 0;
+    for num in range(10, 16) {
+        let count = count + 1;
+    }
+    ut.assert_equals(count, 6, "Range(10,16) should iterate 6 times");
 }
-print "  Sum = {sum}";
-assert sum == 55, "Sum of 1 to 10 should be 55";
-print "";
 
-print "=== Range Demo Complete ===";
-print "=== All assertions passed! ===";
+print (ut).stats;
+exit((ut).healthy);

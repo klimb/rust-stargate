@@ -1,35 +1,34 @@
 #!/usr/bin/env stargate-shell
+# For Loop Demo
 
-print "=== For Loop Demo ===";
-print "";
+use ut;
 
-# Example 1: Iterate through directory entries
-print "1. Listing all files and directories:";
 let entries = (list-directory).entries;
-for entry in entries {
-    print "  {entry.name} ({entry.type})";
-}
-print "";
 
-# Example 2: Filter and process
-print "2. Showing only files (not directories):";
-for entry in entries {
-    let is_file = entry.type == "file";
-    if (is_file) {
-        print "  File: {entry.name}";
+[test]
+fn test_entries_not_empty() {
+    ut.assert_not_equals(entries, "", "Directory should have entries");
+}
+
+[test]
+fn test_count_items() {
+    let count = 0;
+    for entry in entries {
+        let count = count + 1;
     }
+    ut.assert_true(count > 0, "Should have at least one entry in directory");
 }
-print "";
 
-# Example 3: Count items
-print "3. Counting items:";
-let count = 0;
-for entry in entries {
-    let count = count + 1;
+[test]
+fn test_iterate_all_entries() {
+    let found = false;
+    for entry in entries {
+        if entry.name != "" {
+            let found = true;
+        }
+    }
+    ut.assert_true(found, "Should find entries with names");
 }
-print "  Total items: {count}";
-assert count > 0, "Should have at least one entry in directory";
-print "";
 
-print "=== For Loop Demo Complete ===";
-print "=== All assertions passed! ===";
+print (ut).stats;
+exit((ut).healthy);
