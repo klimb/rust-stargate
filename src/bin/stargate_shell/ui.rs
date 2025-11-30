@@ -3,7 +3,6 @@ use crate::VERSION;
 
 pub fn print_banner() {
     println!("Stargate Shell {VERSION}");
-    println!("A Unix-like shell for chaining stargate commands with JSON pipes");
     println!("Type 'help' for usage, 'exit' to quit");
     println!("Use Tab for command completion\n");
 }
