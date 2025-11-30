@@ -503,4 +503,5 @@ cat  cd  change-directory  cksum  chmod  chown  chroot  ...
 - Some stats: Rust is way better for this than C (by like 1 million percent, give or take).
 - Target platforms: FreeBSD, OpenBSD, GNU/Linux & Mac OS X.
 
-Its much easier to do AI magic when your stuff speaks ultra simple English. 
+Articles:
+- [Project Stargate : UNIX userland replacement](https://www.linkedin.com/pulse/project-stargate-unix-userland-replacement-dmitry-kalashnikov-3kzgc/?trackingId=jZPd0ssvT3Ghgffat6lNkQ%3D%3D)
