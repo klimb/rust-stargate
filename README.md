@@ -6,11 +6,11 @@
 ## ✨ Why Stargate?
 
 ```bash
-# Traditional UNIX: Parse, grep, awk, sed, repeat...
-ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
+# Traditional: operate on unstructured stream of text
+zsh# ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
 # Stargate: Clean, fast, type-safe object pipelines
-list-directory | slice-object entries | collect-count
+stargate> list-directory | slice-object entries | dice-object name size type
 ```
 
 ### 🎯 Key Features
