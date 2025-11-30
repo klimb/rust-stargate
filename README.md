@@ -3,6 +3,12 @@
 
 **Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
+https://github.com/user-attachments/assets/29243d01-1473-49d5-b9a9-ff87daba5edf
+
+https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
+
+
+
 ## ✨ Why Stargate?
 
 ```bash
