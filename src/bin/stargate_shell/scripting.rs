@@ -16,6 +16,7 @@ pub enum Value {
     },
     List(Vec<Value>),
     Dict(std::collections::HashMap<Value, Value>),
+    Set(std::collections::HashSet<Value>),
 }
 
 impl Value {
@@ -38,6 +39,11 @@ impl Value {
                 pairs.sort();
                 format!("{{{}}}", pairs.join(", "))
             }
+            Value::Set(items) => {
+                let mut items_str: Vec<String> = items.iter().map(|v| v.to_string()).collect();
+                items_str.sort();
+                format!("{{{}}}", items_str.join(", "))
+            }
         }
     }
 
@@ -51,6 +57,7 @@ impl Value {
             Value::Instance { .. } => true,
             Value::List(items) => !items.is_empty(),
             Value::Dict(map) => !map.is_empty(),
+            Value::Set(items) => !items.is_empty(),
         }
     }
 
@@ -64,6 +71,7 @@ impl Value {
             Value::Instance { .. } => 0.0,
             Value::List(items) => items.len() as f64,
             Value::Dict(map) => map.len() as f64,
+            Value::Set(items) => items.len() as f64,
         }
     }
 }
@@ -82,6 +90,7 @@ impl PartialEq for Value {
             }
             (Value::List(a), Value::List(b)) => a == b,
             (Value::Dict(a), Value::Dict(b)) => a == b,
+            (Value::Set(a), Value::Set(b)) => a == b,
             _ => false,
         }
     }
@@ -138,6 +147,15 @@ impl Hash for Value {
                 for (k, v) in pairs {
                     k.hash(state);
                     v.hash(state);
+                }
+            }
+            Value::Set(items) => {
+                8u8.hash(state);
+                // Hash set items in a deterministic order
+                let mut items_vec: Vec<_> = items.iter().collect();
+                items_vec.sort_by_key(|v| v.to_string());
+                for item in items_vec {
+                    item.hash(state);
                 }
             }
         }
@@ -233,6 +251,7 @@ pub enum Expression {
     },
     ListLiteral(Vec<Expression>),
     DictLiteral(Vec<(Expression, Expression)>),
+    SetLiteral(Vec<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1064,37 +1083,62 @@ impl Parser {
         }
 
         if token == "{" {
-            // Parse dictionary literal: {key: value, key: value, ...}
-            let mut pairs = Vec::new();
+            // Parse dictionary or set literal
+            // Dict: {key: value, key: value, ...}
+            // Set: {value, value, ...}
             
-            // Handle empty dict
+            // Handle empty dict/set - default to dict for backwards compatibility
             if self.peek().map(|s| s.as_str()) == Some("}") {
                 self.advance(); // consume '}'
-                return Ok(Expression::DictLiteral(pairs));
+                return Ok(Expression::DictLiteral(Vec::new()));
             }
             
-            // Parse comma-separated key: value pairs
-            loop {
-                // Parse key expression
-                let key = self.parse_expression()?;
+            // Parse first element to determine if it's a dict or set
+            let first_expr = self.parse_expression()?;
+            
+            // Check if this is a dict (has colon) or set (no colon)
+            if self.peek().map(|s| s.as_str()) == Some(":") {
+                // It's a dict
+                self.advance(); // consume ':'
+                let first_value = self.parse_expression()?;
+                let mut pairs = vec![(first_expr, first_value)];
                 
-                // Expect colon
-                self.expect(":")?;
-                
-                // Parse value expression
-                let value = self.parse_expression()?;
-                
-                pairs.push((key, value));
-                
-                if self.peek().map(|s| s.as_str()) == Some(",") {
+                // Parse remaining key: value pairs
+                while self.peek().map(|s| s.as_str()) == Some(",") {
                     self.advance(); // consume ','
-                } else {
-                    break;
+                    
+                    // Check for trailing comma
+                    if self.peek().map(|s| s.as_str()) == Some("}") {
+                        break;
+                    }
+                    
+                    let key = self.parse_expression()?;
+                    self.expect(":")?;
+                    let value = self.parse_expression()?;
+                    pairs.push((key, value));
                 }
+                
+                self.expect("}")?;
+                return Ok(Expression::DictLiteral(pairs));
+            } else {
+                // It's a set
+                let mut elements = vec![first_expr];
+                
+                // Parse remaining elements
+                while self.peek().map(|s| s.as_str()) == Some(",") {
+                    self.advance(); // consume ','
+                    
+                    // Check for trailing comma
+                    if self.peek().map(|s| s.as_str()) == Some("}") {
+                        break;
+                    }
+                    
+                    elements.push(self.parse_expression()?);
+                }
+                
+                self.expect("}")?;
+                return Ok(Expression::SetLiteral(elements));
             }
-            
-            self.expect("}")?;
-            return Ok(Expression::DictLiteral(pairs));
         }
 
         if token == "$" {
