@@ -1,5 +1,6 @@
 use super::scripting::*;
 use super::execution::{execute_pipeline, execute_pipeline_capture};
+use super::testing::TestRunner;
 use std::collections::{HashMap, HashSet};
 use std::process::Command as ProcessCommand;
 use std::sync::{Arc, Mutex};
@@ -11,10 +12,7 @@ pub struct Interpreter {
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
-    test_functions: Vec<String>, // Track test functions
-    ut_enabled: bool, // Whether ut module is imported
-    test_passed: usize,
-    test_failed: usize,
+    test_runner: TestRunner,
 }
 
 impl Interpreter {
@@ -26,10 +24,7 @@ impl Interpreter {
             return_value: None,
             exit_code: None,
             variable_names: None,
-            test_functions: Vec::new(),
-            ut_enabled: false,
-            test_passed: 0,
-            test_failed: 0,
+            test_runner: TestRunner::new(),
         }
     }
     
@@ -41,10 +36,7 @@ impl Interpreter {
             return_value: None,
             exit_code: None,
             variable_names: Some(variable_names),
-            test_functions: Vec::new(),
-            ut_enabled: false,
-            test_passed: 0,
-            test_failed: 0,
+            test_runner: TestRunner::new(),
         }
     }
 
@@ -54,7 +46,7 @@ impl Interpreter {
         
         for stmt in statements {
             // Defer print and exit statements if ut is enabled
-            if self.ut_enabled && matches!(stmt, Statement::Print(_) | Statement::Exit(_)) {
+            if self.test_runner.is_enabled() && matches!(stmt, Statement::Print(_) | Statement::Exit(_)) {
                 deferred_stmts.push(stmt);
                 continue;
             }
@@ -66,7 +58,7 @@ impl Interpreter {
         }
         
         // If ut module was imported, automatically run all test functions
-        if self.ut_enabled && !self.test_functions.is_empty() {
+        if self.test_runner.is_enabled() && self.test_runner.has_tests() {
             self.run_all_tests()?;
         }
         
@@ -82,32 +74,32 @@ impl Interpreter {
     }
     
     fn run_all_tests(&mut self) -> Result<(), String> {
-        let test_fns = self.test_functions.clone();
+        let test_fns = self.test_runner.test_functions.clone();
         
-        println!("\n=== Running {} test(s) ===\n", test_fns.len());
+        println!("\nRunning {} test(s)\n", test_fns.len());
         
-        self.test_passed = 0;
-        self.test_failed = 0;
+        self.test_runner.test_passed = 0;
+        self.test_runner.test_failed = 0;
         
         for test_name in test_fns {
             print!("Running test: {}... ", test_name);
             match self.call_function(&test_name, Vec::new()) {
                 Ok(_) => {
                     println!("✓ PASSED");
-                    self.test_passed += 1;
+                    self.test_runner.test_passed += 1;
                 }
                 Err(e) => {
                     println!("✗ FAILED");
                     eprintln!("  Error: {}", e);
-                    self.test_failed += 1;
+                    self.test_runner.test_failed += 1;
                 }
             }
         }
         
-        println!("\n=== Test Results ===");
-        println!("Passed: {}", self.test_passed);
-        println!("Failed: {}", self.test_failed);
-        println!("Total:  {}\n", self.test_passed + self.test_failed);
+        println!("\nTest Results");
+        println!("Passed: {}", self.test_runner.test_passed);
+        println!("Failed: {}", self.test_runner.test_failed);
+        println!("Total:  {}\n", self.test_runner.test_passed + self.test_runner.test_failed);
         
         // Update ut object with stats and healthy properties
         self.update_ut_stats();
@@ -117,23 +109,8 @@ impl Interpreter {
     }
     
     fn update_ut_stats(&mut self) {
-        let mut ut_fields = HashMap::new();
-        ut_fields.insert("assert_equals".to_string(), Value::String("assert_equals".to_string()));
-        ut_fields.insert("assert_not_equals".to_string(), Value::String("assert_not_equals".to_string()));
-        ut_fields.insert("assert_true".to_string(), Value::String("assert_true".to_string()));
-        
-        // Add stats as formatted string
-        let stats = format!("Passed: {}, Failed: {}, Total: {}", 
-            self.test_passed, self.test_failed, self.test_passed + self.test_failed);
-        ut_fields.insert("stats".to_string(), Value::String(stats));
-        
-        // Add healthy as boolean (true if no failures)
-        ut_fields.insert("healthy".to_string(), Value::Bool(self.test_failed == 0));
-        
-        self.variables.insert("ut".to_string(), Value::Instance {
-            class_name: "UT".to_string(),
-            fields: ut_fields,
-        });
+        let ut_instance = self.test_runner.create_ut_instance();
+        self.variables.insert("ut".to_string(), ut_instance);
     }
 
     fn execute_statement(&mut self, stmt: Statement) -> Result<(), String> {
@@ -199,34 +176,7 @@ impl Interpreter {
                 else_block,
             } => {
                 let cond_value = self.eval_expression(condition)?;
-                // Enforce strict type checking - only booleans allowed in conditions
-                match &cond_value {
-                    Value::Bool(_) => {
-                        // OK - boolean value
-                    }
-                    Value::Number(_) => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert numbers.".to_string());
-                    }
-                    Value::String(_) => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert strings.".to_string());
-                    }
-                    Value::Null => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert null.".to_string());
-                    }
-                    Value::Object(_) => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert objects.".to_string());
-                    }
-                    Value::Instance { .. } => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert instances.".to_string());
-                    }
-                    Value::List(_) => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert lists.".to_string());
-                    }
-                    Value::Dict(_) => {
-                        return Err("Type error: if condition must be a boolean. Use bool() to convert dicts.".to_string());
-                    }
-                }
-                
+                // Auto-convert to boolean (Rust-style: none is falsy, values are truthy)
                 if cond_value.to_bool() {
                     for stmt in then_block {
                         self.execute_statement(stmt)?;
@@ -245,66 +195,145 @@ impl Interpreter {
             }
             Statement::For {
                 var_name,
+                value_name,
                 iterable,
                 body,
             } => {
                 let iter_value = self.eval_expression(iterable)?;
                 
-                // Extract array from the value
-                let items = match iter_value {
+                match iter_value {
+                    // Dictionary iteration
+                    Value::Dict(map) => {
+                        if let Some(val_name) = value_name {
+                            // for k, v in dict - iterate over key-value pairs
+                            for (key, value) in map {
+                                self.variables.insert(var_name.clone(), key);
+                                self.variables.insert(val_name.clone(), value);
+                                
+                                // Update completion list
+                                if let Some(ref var_names) = self.variable_names {
+                                    if let Ok(mut names) = var_names.lock() {
+                                        names.insert(var_name.clone());
+                                        names.insert(val_name.clone());
+                                    }
+                                }
+                                
+                                // Execute loop body
+                                for stmt in &body {
+                                    self.execute_statement(stmt.clone())?;
+                                    if self.return_value.is_some() {
+                                        break;
+                                    }
+                                }
+                                
+                                if self.return_value.is_some() {
+                                    break;
+                                }
+                            }
+                        } else {
+                            // for k in dict - iterate over keys only
+                            for key in map.keys() {
+                                self.variables.insert(var_name.clone(), key.clone());
+                                
+                                // Update completion list
+                                if let Some(ref var_names) = self.variable_names {
+                                    if let Ok(mut names) = var_names.lock() {
+                                        names.insert(var_name.clone());
+                                    }
+                                }
+                                
+                                // Execute loop body
+                                for stmt in &body {
+                                    self.execute_statement(stmt.clone())?;
+                                    if self.return_value.is_some() {
+                                        break;
+                                    }
+                                }
+                                
+                                if self.return_value.is_some() {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // Array iteration (existing behavior)
                     Value::Object(serde_json::Value::Array(arr)) => {
+                        if value_name.is_some() {
+                            return Err("Cannot use key-value syntax with arrays. Use 'for item in array' instead.".to_string());
+                        }
+                        
                         // Convert JSON array to Vec<Value>
-                        arr.into_iter().map(|v| self.json_to_value(v)).collect::<Vec<_>>()
+                        let items: Vec<Value> = arr.into_iter().map(|v| self.json_to_value(v)).collect();
+                        
+                        // Iterate through items
+                        for item in items {
+                            self.variables.insert(var_name.clone(), item);
+                            
+                            // Update completion list
+                            if let Some(ref var_names) = self.variable_names {
+                                if let Ok(mut names) = var_names.lock() {
+                                    names.insert(var_name.clone());
+                                }
+                            }
+                            
+                            // Execute loop body
+                            for stmt in &body {
+                                self.execute_statement(stmt.clone())?;
+                                if self.return_value.is_some() {
+                                    break;
+                                }
+                            }
+                            
+                            if self.return_value.is_some() {
+                                break;
+                            }
+                        }
+                    }
+                    // List iteration
+                    Value::List(items) => {
+                        if value_name.is_some() {
+                            return Err("Cannot use key-value syntax with lists. Use 'for item in list' instead.".to_string());
+                        }
+                        
+                        for item in items {
+                            self.variables.insert(var_name.clone(), item);
+                            
+                            // Update completion list
+                            if let Some(ref var_names) = self.variable_names {
+                                if let Ok(mut names) = var_names.lock() {
+                                    names.insert(var_name.clone());
+                                }
+                            }
+                            
+                            // Execute loop body
+                            for stmt in &body {
+                                self.execute_statement(stmt.clone())?;
+                                if self.return_value.is_some() {
+                                    break;
+                                }
+                            }
+                            
+                            if self.return_value.is_some() {
+                                break;
+                            }
+                        }
                     }
                     _ => {
-                        return Err(format!("For loop requires an iterable (array), got: {:?}", iter_value));
-                    }
-                };
-                
-                // Iterate through items
-                for item in items {
-                    self.variables.insert(var_name.clone(), item);
-                    
-                    // Update completion list
-                    if let Some(ref var_names) = self.variable_names {
-                        if let Ok(mut names) = var_names.lock() {
-                            names.insert(var_name.clone());
-                        }
-                    }
-                    
-                    // Execute loop body
-                    for stmt in &body {
-                        self.execute_statement(stmt.clone())?;
-                        if self.return_value.is_some() {
-                            break;
-                        }
-                    }
-                    
-                    if self.return_value.is_some() {
-                        break;
+                        return Err(format!("For loop requires an iterable (array, list, or dict), got: {:?}", iter_value));
                     }
                 }
             }
             Statement::Use(module) => {
                 // Handle use statements
                 if module == "ut" {
-                    self.ut_enabled = true;
-                    // Create ut object with assertion methods
-                    let mut ut_methods = HashMap::new();
-                    ut_methods.insert("assert_equals".to_string(), Value::String("assert_equals".to_string()));
-                    ut_methods.insert("assert_not_equals".to_string(), Value::String("assert_not_equals".to_string()));
-                    ut_methods.insert("assert_true".to_string(), Value::String("assert_true".to_string()));
-                    
-                    self.variables.insert("ut".to_string(), Value::Instance {
-                        class_name: "UT".to_string(),
-                        fields: ut_methods,
-                    });
+                    let ut_instance = self.test_runner.enable_ut_module();
+                    self.variables.insert("ut".to_string(), ut_instance);
                 }
             }
             Statement::FunctionDef { name, params, body, annotations } => {
                 // Track test functions
                 if annotations.contains(&"test".to_string()) {
-                    self.test_functions.push(name.clone());
+                    self.test_runner.register_test(name.clone());
                 }
                 self.functions.insert(name, (params, body, annotations));
             }
@@ -603,6 +632,53 @@ impl Interpreter {
             Expression::MethodCall { object, method, args } => {
                 let obj_value = self.eval_expression(*object)?;
                 
+                // Handle universal optional value methods (Rust-style Option methods)
+                match method.as_str() {
+                    "is_none" => {
+                        if !args.is_empty() {
+                            return Err(format!("is_none() expects 0 arguments, got {}", args.len()));
+                        }
+                        return Ok(Value::Bool(matches!(obj_value, Value::None)));
+                    }
+                    "is_some" => {
+                        if !args.is_empty() {
+                            return Err(format!("is_some() expects 0 arguments, got {}", args.len()));
+                        }
+                        return Ok(Value::Bool(!matches!(obj_value, Value::None)));
+                    }
+                    "unwrap" => {
+                        if !args.is_empty() {
+                            return Err(format!("unwrap() expects 0 arguments, got {}", args.len()));
+                        }
+                        return match obj_value {
+                            Value::None => Err("Called unwrap() on a none value".to_string()),
+                            val => Ok(val),
+                        };
+                    }
+                    "unwrap_or" => {
+                        if args.len() != 1 {
+                            return Err(format!("unwrap_or() expects 1 argument, got {}", args.len()));
+                        }
+                        return match obj_value {
+                            Value::None => self.eval_expression(args[0].clone()),
+                            val => Ok(val),
+                        };
+                    }
+                    "expect" => {
+                        if args.len() != 1 {
+                            return Err(format!("expect() expects 1 argument, got {}", args.len()));
+                        }
+                        return match obj_value {
+                            Value::None => {
+                                let msg = self.eval_expression(args[0].clone())?;
+                                Err(msg.to_string())
+                            }
+                            val => Ok(val),
+                        };
+                    }
+                    _ => {} // Continue to type-specific methods
+                }
+                
                 match obj_value {
                     Value::List(mut list) => {
                         // Handle list built-in methods
@@ -645,9 +721,9 @@ impl Interpreter {
                                 list.remove(actual_idx);
                                 Ok(Value::List(list))
                             }
-                            "length" => {
+                            "size" => {
                                 if !args.is_empty() {
-                                    return Err(format!("length() expects 0 arguments, got {}", args.len()));
+                                    return Err(format!("size() expects 0 arguments, got {}", args.len()));
                                 }
                                 Ok(Value::Number(list.len() as f64))
                             }
@@ -674,46 +750,58 @@ impl Interpreter {
                         }
                     }
                     Value::Dict(mut map) => {
-                        // Handle dict built-in methods
+                        // Handle dict built-in methods (Rust HashMap-style)
                         match method.as_str() {
+                            // Core access methods
                             "get" => {
-                                if args.len() != 1 && args.len() != 2 {
-                                    return Err(format!("get() expects 1 or 2 arguments, got {}", args.len()));
+                                if args.len() != 1 {
+                                    return Err(format!("get() expects 1 argument, got {}", args.len()));
                                 }
                                 let key = self.eval_expression(args[0].clone())?;
-                                
+                                Ok(map.get(&key).cloned().unwrap_or(Value::None))
+                            }
+                            "get_or" => {
+                                if args.len() != 2 {
+                                    return Err(format!("get_or() expects 2 arguments (key, default), got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
                                 if let Some(value) = map.get(&key) {
                                     Ok(value.clone())
-                                } else if args.len() == 2 {
-                                    // Return default value
-                                    self.eval_expression(args[1].clone())
                                 } else {
-                                    Ok(Value::Null)
+                                    self.eval_expression(args[1].clone())
                                 }
                             }
-                            "set" => {
+                            "insert" => {
                                 if args.len() != 2 {
-                                    return Err(format!("set() expects 2 arguments, got {}", args.len()));
+                                    return Err(format!("insert() expects 2 arguments (key, value), got {}", args.len()));
                                 }
                                 let key = self.eval_expression(args[0].clone())?;
                                 let value = self.eval_expression(args[1].clone())?;
-                                map.insert(key, value);
-                                Ok(Value::Dict(map))
+                                let old_value = map.insert(key, value);
+                                // Return the old value if it existed, otherwise none
+                                Ok(old_value.unwrap_or(Value::None))
                             }
                             "remove" => {
                                 if args.len() != 1 {
                                     return Err(format!("remove() expects 1 argument, got {}", args.len()));
                                 }
                                 let key = self.eval_expression(args[0].clone())?;
-                                map.remove(&key);
-                                Ok(Value::Dict(map))
+                                let removed = map.remove(&key);
+                                Ok(removed.unwrap_or(Value::None))
                             }
+                            "contains_key" => {
+                                if args.len() != 1 {
+                                    return Err(format!("contains_key() expects 1 argument, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                Ok(Value::Bool(map.contains_key(&key)))
+                            }
+                            // Collection methods
                             "keys" => {
                                 if !args.is_empty() {
                                     return Err(format!("keys() expects 0 arguments, got {}", args.len()));
                                 }
                                 let mut keys: Vec<Value> = map.keys().cloned().collect();
-                                // Sort keys by their string representation
                                 keys.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
                                 Ok(Value::List(keys))
                             }
@@ -724,25 +812,76 @@ impl Interpreter {
                                 let values: Vec<Value> = map.values().cloned().collect();
                                 Ok(Value::List(values))
                             }
-                            "has_key" => {
-                                if args.len() != 1 {
-                                    return Err(format!("has_key() expects 1 argument, got {}", args.len()));
-                                }
-                                let key = self.eval_expression(args[0].clone())?;
-                                Ok(Value::Bool(map.contains_key(&key)))
-                            }
-                            "length" => {
+                            "entries" | "iter" => {
                                 if !args.is_empty() {
-                                    return Err(format!("length() expects 0 arguments, got {}", args.len()));
+                                    return Err(format!("entries() expects 0 arguments, got {}", args.len()));
+                                }
+                                let entries: Vec<Value> = map.iter()
+                                    .map(|(k, v)| Value::List(vec![k.clone(), v.clone()]))
+                                    .collect();
+                                Ok(Value::List(entries))
+                            }
+                            // Size methods
+                            "len" | "size" => {
+                                if !args.is_empty() {
+                                    return Err(format!("len() expects 0 arguments, got {}", args.len()));
                                 }
                                 Ok(Value::Number(map.len() as f64))
                             }
+                            "is_empty" => {
+                                if !args.is_empty() {
+                                    return Err(format!("is_empty() expects 0 arguments, got {}", args.len()));
+                                }
+                                Ok(Value::Bool(map.is_empty()))
+                            }
+                            // Mutation methods
                             "clear" => {
                                 if !args.is_empty() {
                                     return Err(format!("clear() expects 0 arguments, got {}", args.len()));
                                 }
                                 map.clear();
                                 Ok(Value::Dict(map))
+                            }
+                            "retain" => {
+                                if args.len() != 1 {
+                                    return Err(format!("retain() expects 1 argument (predicate function), got {}", args.len()));
+                                }
+                                // This would need closure support - placeholder for now
+                                Err("retain() not yet implemented - requires closure support".to_string())
+                            }
+                            // Capacity/optimization methods
+                            "reserve" => {
+                                if args.len() != 1 {
+                                    return Err(format!("reserve() expects 1 argument, got {}", args.len()));
+                                }
+                                // HashMap reserve - no-op in our case, just return the dict
+                                Ok(Value::Dict(map))
+                            }
+                            "shrink_to_fit" => {
+                                if !args.is_empty() {
+                                    return Err(format!("shrink_to_fit() expects 0 arguments, got {}", args.len()));
+                                }
+                                // No-op, just return the dict
+                                Ok(Value::Dict(map))
+                            }
+                            // Deprecated aliases for compatibility
+                            "set" => {
+                                // Deprecated: use insert() instead
+                                if args.len() != 2 {
+                                    return Err(format!("set() expects 2 arguments, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                let value = self.eval_expression(args[1].clone())?;
+                                map.insert(key, value);
+                                Ok(Value::Dict(map))
+                            }
+                            "has_key" => {
+                                // Deprecated: use contains_key() instead
+                                if args.len() != 1 {
+                                    return Err(format!("has_key() expects 1 argument, got {}", args.len()));
+                                }
+                                let key = self.eval_expression(args[0].clone())?;
+                                Ok(Value::Bool(map.contains_key(&key)))
                             }
                             _ => Err(format!("Unknown dict method: {}", method))
                         }
@@ -791,7 +930,7 @@ impl Interpreter {
                                         self.variables.extend(method_scope);
                                         
                                         // Execute method body
-                                        let mut return_value = Value::Null;
+                                        let mut return_value = Value::None;
                                         for stmt in &body {
                                             match stmt {
                                                 Statement::Return(expr) => {
@@ -834,7 +973,7 @@ impl Interpreter {
                     Value::String(s) => s.clone(),
                     Value::Number(n) => n.to_string(),
                     Value::Bool(b) => b.to_string(),
-                    Value::Null => "null".to_string(),
+                    Value::None => "none".to_string(),
                     Value::Instance { .. } => return Err("Cannot pipe instance objects".to_string()),
                     Value::List(_) => return Err("Cannot pipe list objects yet".to_string()),
                     Value::Dict(_) => return Err("Cannot pipe dict objects yet".to_string()),
@@ -880,8 +1019,25 @@ impl Interpreter {
             Operator::Add => match (left, right) {
                 (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
                 (Value::String(a), Value::String(b)) => Ok(Value::String(format!("{}{}", a, b))),
-                (Value::String(a), b) => Ok(Value::String(format!("{}{}", a, b.to_string()))),
-                (a, Value::String(b)) => Ok(Value::String(format!("{}{}", a.to_string(), b))),
+                // None concatenation: none + string = string
+                (Value::None, Value::String(b)) => Ok(Value::String(b)),
+                (Value::String(a), Value::None) => Ok(Value::String(a)),
+                (Value::None, Value::None) => Ok(Value::String("".to_string())),
+                // String concatenation with other types (none converts to empty string)
+                (Value::String(a), b) => {
+                    let b_str = match b {
+                        Value::None => "".to_string(),
+                        _ => b.to_string(),
+                    };
+                    Ok(Value::String(format!("{}{}", a, b_str)))
+                }
+                (a, Value::String(b)) => {
+                    let a_str = match a {
+                        Value::None => "".to_string(),
+                        _ => a.to_string(),
+                    };
+                    Ok(Value::String(format!("{}{}", a_str, b)))
+                }
                 _ => Err("Invalid operands for +".to_string()),
             },
             Operator::Sub => Ok(Value::Number(left.to_number() - right.to_number())),
@@ -906,12 +1062,16 @@ impl Interpreter {
                 (Value::Number(a), Value::Number(b)) => a == b,
                 (Value::String(a), Value::String(b)) => a == b,
                 (Value::Bool(a), Value::Bool(b)) => a == b,
+                (Value::None, Value::None) => true,
+                (Value::None, _) | (_, Value::None) => false,
                 _ => false,
             })),
             Operator::Ne => Ok(Value::Bool(match (left, right) {
                 (Value::Number(a), Value::Number(b)) => a != b,
                 (Value::String(a), Value::String(b)) => a != b,
                 (Value::Bool(a), Value::Bool(b)) => a != b,
+                (Value::None, Value::None) => false,
+                (Value::None, _) | (_, Value::None) => true,
                 _ => true,
             })),
             Operator::Lt => Ok(Value::Bool(left.to_number() < right.to_number())),
@@ -1012,7 +1172,7 @@ impl Interpreter {
             }
         }
 
-        let result = self.return_value.take().unwrap_or(Value::Null);
+        let result = self.return_value.take().unwrap_or(Value::None);
 
         // Restore variable state
         self.variables = saved_vars;
@@ -1022,7 +1182,7 @@ impl Interpreter {
 
     fn json_to_value(&self, json: serde_json::Value) -> Value {
         match json {
-            serde_json::Value::Null => Value::Null,
+            serde_json::Value::Null => Value::None,
             serde_json::Value::Bool(b) => Value::Bool(b),
             serde_json::Value::Number(n) => {
                 if let Some(i) = n.as_i64() {

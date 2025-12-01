@@ -11,14 +11,14 @@ fn test_dict_operations() {
     };
     
     ut.assert_equals(d["nested"]["x"], 10);
-    ut.assert_equals(d["list"].length(), 3);
+    ut.assert_equals(d["list"].size(), 3);
 }
 
 [test]
 fn test_list_operations() {
     let mixed = [(list-directory), "text", 77, true];
     
-    ut.assert_equals(mixed.length(), 4);
+    ut.assert_equals(mixed.size(), 4);
     ut.assert_equals(mixed[-1], true);
     
     mixed[2] = "replaced";

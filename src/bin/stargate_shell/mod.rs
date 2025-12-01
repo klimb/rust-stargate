@@ -13,6 +13,7 @@ pub mod parsing;
 pub mod path;
 pub mod scripting;
 pub mod interpreter;
+pub mod testing;
 pub mod ui;
 
 pub use completion::StargateCompletion;

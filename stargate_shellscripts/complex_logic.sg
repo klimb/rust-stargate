@@ -3,7 +3,7 @@
 
 use ut;
 
-# ============= UTILITY FUNCTIONS =============
+# UTILITY FUNCTIONS
 
 fn is_even(n) {
     let remainder = n % 2;
@@ -115,7 +115,7 @@ fn classify_number(n) {
     return "positive_odd";
 }
 
-# ============= CLASSES =============
+# CLASSES
 
 class MathOperations {
     fn init() {
@@ -151,7 +151,7 @@ class NumberAnalyzer extends MathOperations {
     }
 }
 
-# ============= TEST SUITE =============
+# TEST SUITE
 
 [test]
 fn test_even_odd() {

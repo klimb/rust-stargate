@@ -25,12 +25,12 @@ fn test_boolean_variable() {
 
 [test]
 fn test_list_variable() {
-    let l = [1, "two", true, null];
-    ut.assert_equals(l.length(), 4);
+    let l = [1, "two", true, none];
+    ut.assert_equals(l.size(), 4);
     ut.assert_equals(l[0], 1);
     ut.assert_equals(l[1], "two");
     ut.assert_equals(l[2], true);
-    ut.assert_equals(l[3], null);
+    ut.assert_equals(l[3], none);
 }
 
 [test]
@@ -44,7 +44,7 @@ fn test_dict_variable() {
 [test]
 fn test_object_variable() {
     let obj = (list-directory);
-    ut.assert_not_equals(obj, null);
+    ut.assert_not_equals(obj, none);
     ut.assert_true(obj.total_count >= 0);
 }
 

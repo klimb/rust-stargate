@@ -5,13 +5,13 @@ use ut;
 [test]
 fn test_empty_dict() {
     let empty = {};
-    ut.assert_equals(empty.length(), 0);
+    ut.assert_equals(empty.size(), 0);
 }
 
 [test]
 fn test_dict_with_data() {
     let person = {"name": "Alice", "age": 30, "city": "NYC"};
-    ut.assert_equals(person.length(), 3);
+    ut.assert_equals(person.size(), 3);
 }
 
 [test]
@@ -33,7 +33,7 @@ fn test_dict_set_new() {
     let data = {"x": 1};
     let updated = data.set("y", 2);
     ut.assert_equals(updated["y"], 2);
-    ut.assert_equals(updated.length(), 2);
+    ut.assert_equals(updated.size(), 2);
 }
 
 [test]
@@ -48,14 +48,14 @@ fn test_dict_index_assign_new() {
     let settings = {"theme": "dark"};
     settings["lang"] = "en";
     ut.assert_equals(settings["lang"], "en");
-    ut.assert_equals(settings.length(), 2);
+    ut.assert_equals(settings.size(), 2);
 }
 
 [test]
 fn test_dict_get_with_default() {
     let data = {"a": 1};
-    let val1 = data.get("a", 99);
-    let val2 = data.get("missing", 99);
+    let val1 = data.get_or("a", 99);
+    let val2 = data.get_or("missing", 99);
     ut.assert_equals(val1, 1);
     ut.assert_equals(val2, 99);
 }
@@ -64,7 +64,7 @@ fn test_dict_get_with_default() {
 fn test_dict_get_without_default() {
     let data = {"key": "value"};
     let val = data.get("missing");
-    ut.assert_equals(val, null);
+    ut.assert_equals(val, none);
 }
 
 [test]
@@ -78,7 +78,7 @@ fn test_dict_has_key() {
 fn test_dict_remove() {
     let data = {"x": 1, "y": 2, "z": 3};
     let updated = data.remove("y");
-    ut.assert_equals(updated.length(), 2);
+    ut.assert_equals(updated.size(), 2);
     ut.assert_equals(updated.has_key("y"), false);
     ut.assert_true(updated.has_key("x"));
 }
@@ -87,7 +87,7 @@ fn test_dict_remove() {
 fn test_dict_keys() {
     let data = {"name": "Test", "id": 42};
     let keys = data.keys();
-    ut.assert_equals(keys.length(), 2);
+    ut.assert_equals(keys.size(), 2);
     ut.assert_equals(keys[0], "id");
     ut.assert_equals(keys[1], "name");
 }
@@ -96,14 +96,14 @@ fn test_dict_keys() {
 fn test_dict_values() {
     let scores = {"alice": 95, "bob": 87};
     let vals = scores.values();
-    ut.assert_equals(vals.length(), 2);
+    ut.assert_equals(vals.size(), 2);
 }
 
 [test]
 fn test_dict_clear() {
     let data = {"a": 1, "b": 2, "c": 3};
     let empty = data.clear();
-    ut.assert_equals(empty.length(), 0);
+    ut.assert_equals(empty.size(), 0);
 }
 
 [test]
@@ -119,7 +119,7 @@ fn test_dict_mixed_types() {
 fn test_dict_with_lists() {
     let data = {"colors": ["red", "green", "blue"], "numbers": [1, 2, 3]};
     let colors = data["colors"];
-    ut.assert_equals(colors.length(), 3);
+    ut.assert_equals(colors.size(), 3);
     ut.assert_equals(colors[0], "red");
 }
 
@@ -129,7 +129,7 @@ fn test_list_of_dicts() {
         {"name": "Alice", "age": 30},
         {"name": "Bob", "age": 25}
     ];
-    ut.assert_equals(users.length(), 2);
+    ut.assert_equals(users.size(), 2);
     ut.assert_equals(users[0]["name"], "Alice");
     ut.assert_equals(users[1]["age"], 25);
 }
@@ -173,7 +173,7 @@ fn test_dict_any_key_types() {
     d["name"] = "Alice";
     ut.assert_equals(d["name"], "Alice");
     
-    ut.assert_equals(d.length(), 5);
+    ut.assert_equals(d.size(), 5);
 }
 
 [test]
@@ -189,7 +189,7 @@ fn test_dict_complex_values() {
     
     ut.assert_equals(data["number"], 77);
     ut.assert_equals(data["bool"], true);
-    ut.assert_equals(data["list"].length(), 3);
+    ut.assert_equals(data["list"].size(), 3);
     ut.assert_equals(data["nested"]["x"], 10);
     ut.assert_equals(data["object"], obj);
 }

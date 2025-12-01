@@ -8,7 +8,7 @@ pub enum Value {
     String(String),
     Number(f64),
     Bool(bool),
-    Null,
+    None,
     Object(serde_json::Value), // JSON object/array
     Instance {
         class_name: String,
@@ -24,7 +24,7 @@ impl Value {
             Value::String(s) => s.clone(),
             Value::Number(n) => n.to_string(),
             Value::Bool(b) => b.to_string(),
-            Value::Null => "null".to_string(),
+            Value::None => "none".to_string(),
             Value::Object(obj) => obj.to_string(),
             Value::Instance { class_name, .. } => format!("<{} instance>", class_name),
             Value::List(items) => {
@@ -46,7 +46,7 @@ impl Value {
             Value::Bool(b) => *b,
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
-            Value::Null => false,
+            Value::None => false,
             Value::Object(_) => true,
             Value::Instance { .. } => true,
             Value::List(items) => !items.is_empty(),
@@ -59,7 +59,7 @@ impl Value {
             Value::Number(n) => *n,
             Value::Bool(b) => if *b { 1.0 } else { 0.0 },
             Value::String(s) => s.parse().unwrap_or(0.0),
-            Value::Null => 0.0,
+            Value::None => 0.0,
             Value::Object(_) => 0.0,
             Value::Instance { .. } => 0.0,
             Value::List(items) => items.len() as f64,
@@ -75,7 +75,7 @@ impl PartialEq for Value {
             (Value::String(a), Value::String(b)) => a == b,
             (Value::Number(a), Value::Number(b)) => a == b,
             (Value::Bool(a), Value::Bool(b)) => a == b,
-            (Value::Null, Value::Null) => true,
+            (Value::None, Value::None) => true,
             (Value::Object(a), Value::Object(b)) => a == b,
             (Value::Instance { class_name: c1, fields: f1 }, Value::Instance { class_name: c2, fields: f2 }) => {
                 c1 == c2 && f1 == f2
@@ -106,7 +106,7 @@ impl Hash for Value {
                 2u8.hash(state);
                 b.hash(state);
             }
-            Value::Null => {
+            Value::None => {
                 3u8.hash(state);
             }
             Value::Object(obj) => {
@@ -160,6 +160,7 @@ pub enum Statement {
     },
     For {
         var_name: String,
+        value_name: Option<String>, // For dict iteration: for k, v in dict
         iterable: Expression,
         body: Vec<Statement>,
     },
@@ -548,6 +549,15 @@ impl Parser {
     fn parse_for(&mut self) -> Result<Statement, String> {
         self.expect("for")?;
         let var_name = self.advance().ok_or("Expected variable name after 'for'")?;
+        
+        // Check if there's a comma for dictionary iteration: for k, v in dict
+        let value_name = if self.peek().map(|s| s.as_str()) == Some(",") {
+            self.advance(); // consume ","
+            Some(self.advance().ok_or("Expected value variable name after ','")?)
+        } else {
+            None
+        };
+        
         self.expect("in")?;
         let iterable = self.parse_expression()?;
         self.expect("{")?;
@@ -555,6 +565,7 @@ impl Parser {
 
         Ok(Statement::For {
             var_name,
+            value_name,
             iterable,
             body,
         })
@@ -1113,7 +1124,7 @@ impl Parser {
         match token.as_str() {
             "true" => return Ok(Expression::Value(Value::Bool(true))),
             "false" => return Ok(Expression::Value(Value::Bool(false))),
-            "null" => return Ok(Expression::Value(Value::Null)),
+            "none" => return Ok(Expression::Value(Value::None)),
             "new" => {
                 // Parse new ClassName or new ClassName()
                 let class_name = self.advance().ok_or("Expected class name after 'new'")?;
