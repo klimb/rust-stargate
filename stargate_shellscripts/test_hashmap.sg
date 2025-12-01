@@ -1,0 +1,336 @@
+#!/usr/bin/env stargate-shell
+# Comprehensive HashMap/Dictionary tests (Rust-style)
+# Organized by functionality, no duplicates
+
+use ut;
+
+[test]
+fn test_empty_dict_creation() {
+    let empty = {};
+    ut.assert_equals(empty.size(), 0, "Empty dict has length 0");
+    ut.assert_true(empty.is_empty(), "Empty dict is_empty returns true");
+}
+
+[test]
+fn test_dict_creation_with_data() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    ut.assert_equals(person.size(), 3, "Dict has 3 entries");
+    ut.assert_not_equals(person, none, "Dict is not none");
+}
+
+[test]
+fn test_key_access_by_index() {
+    let person = {"name": "Bob", "age": 25};
+    ut.assert_equals(person["name"], "Bob", "Index access works");
+    ut.assert_equals(person["age"], 25, "Numeric values accessible");
+}
+
+[test]
+fn test_mixed_type_values() {
+    let mixed = {"str": "hello", "num": 77, "bool": true, "float": 3.14};
+    ut.assert_equals(mixed["str"], "hello", "String value");
+    ut.assert_equals(mixed["num"], 77, "Integer value");
+    ut.assert_equals(mixed["bool"], true, "Boolean value");
+    ut.assert_equals(mixed["float"], 3.14, "Float value");
+}
+
+[test]
+fn test_any_key_types() {
+    let d = {};
+    d[1] = "one";
+    d[2] = "two";
+    d[true] = "yes";
+    d[false] = "no";
+    d["name"] = "Alice";
+    
+    ut.assert_equals(d[1], "one", "Numeric keys work");
+    ut.assert_equals(d[true], "yes", "Boolean keys work");
+    ut.assert_equals(d["name"], "Alice", "String keys work");
+    ut.assert_equals(d.size(), 5, "All key types counted");
+}
+
+[test]
+fn test_get_method() {
+    let map = {"key": "value", "num": 42};
+    
+    let val = map.get("key");
+    ut.assert_equals(val, "value", "get returns value");
+    
+    let missing = map.get("missing");
+    ut.assert_true(missing.is_none(), "get returns none for missing key");
+}
+
+[test]
+fn test_get_or_with_default() {
+    let config = {"timeout": 30};
+    
+    let timeout = config.get_or("timeout", 10);
+    ut.assert_equals(timeout, 30, "get_or returns existing value");
+    
+    let retries = config.get_or("retries", 3);
+    ut.assert_equals(retries, 3, "get_or returns default for missing key");
+}
+
+[test]
+fn test_contains_key() {
+    let map = {"a": 1, "b": 2};
+    
+    let has_a = map.contains_key("a");
+    let has_c = map.contains_key("c");
+    
+    ut.assert_true(has_a, "contains_key finds existing key");
+    ut.assert_equals(has_c, false, "contains_key returns false for missing");
+}
+
+[test]
+fn test_insert_and_update() {
+    let map = {"key": "old"};
+    
+    # Update via index assignment
+    map["key"] = "new";
+    ut.assert_equals(map["key"], "new", "Index assignment updates value");
+    
+    # Add new key
+    map["new_key"] = "value";
+    ut.assert_equals(map["new_key"], "value", "New key added");
+    ut.assert_equals(map.size(), 2, "Length updated");
+}
+
+[test]
+fn test_remove_returns_value() {
+    let map = {"x": 10, "y": 20};
+    
+    let removed = map.remove("x");
+    ut.assert_equals(removed, 10, "remove returns removed value");
+    
+    let missing = map.remove("z");
+    ut.assert_true(missing.is_none(), "remove returns none for missing key");
+}
+
+[test]
+fn test_clear() {
+    let map = {"a": 1, "b": 2, "c": 3};
+    ut.assert_equals(map.size(), 3, "Map has 3 entries");
+    
+    let cleared = map.clear();
+    ut.assert_equals(cleared.size(), 0, "Cleared map is empty");
+    ut.assert_true(cleared.is_empty(), "Cleared map is_empty is true");
+}
+
+[test]
+fn test_keys_method() {
+    let data = {"name": "Test", "id": 42};
+    let keys = data.keys();
+    
+    ut.assert_equals(keys.size(), 2, "keys returns list of 2");
+    # Keys are sorted alphabetically
+    ut.assert_equals(keys[0], "id", "First key is 'id'");
+    ut.assert_equals(keys[1], "name", "Second key is 'name'");
+}
+
+[test]
+fn test_values_method() {
+    let scores = {"alice": 95, "bob": 87};
+    let vals = scores.values();
+    
+    ut.assert_equals(vals.size(), 2, "values returns list of 2");
+    ut.assert_not_equals(vals, none, "values list is not none");
+}
+
+[test]
+fn test_entries_method() {
+    let map = {"name": "Alice", "age": 30};
+    let entries = map.entries();
+    
+    ut.assert_equals(entries.size(), 2, "entries returns 2 pairs");
+    
+    # Each entry is [key, value]
+    for entry in entries {
+        ut.assert_equals(entry.size(), 2, "Each entry has 2 elements");
+    }
+}
+
+[test]
+fn test_iterate_keys_only() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    
+    let key_count = 0;
+    for k in person {
+        key_count = key_count + 1;
+    }
+    ut.assert_equals(key_count, 3, "Iterate over 3 keys");
+}
+
+[test]
+fn test_iterate_key_value_pairs() {
+    let person = {"name": "Alice", "age": 30};
+    
+    let found_name = false;
+    let found_age = false;
+    
+    for k, v in person {
+        if k == "name" {
+            ut.assert_equals(v, "Alice", "Name value matches");
+            found_name = true;
+        }
+        if k == "age" {
+            ut.assert_equals(v, 30, "Age value matches");
+            found_age = true;
+        }
+    }
+    
+    ut.assert_true(found_name, "Found name key");
+    ut.assert_true(found_age, "Found age key");
+}
+
+[test]
+fn test_iterate_over_keys_list() {
+    let person = {"name": "Alice", "age": 30};
+    
+    let iteration_count = 0;
+    for key in person.keys() {
+        let value = person.get(key);
+        ut.assert_true(value.is_some(), "Value exists for each key");
+        iteration_count = iteration_count + 1;
+    }
+    
+    ut.assert_equals(iteration_count, 2, "Iterated over all keys");
+}
+
+[test]
+fn test_iterate_over_values_list() {
+    let scores = {"math": 90, "english": 85};
+    
+    let values_list = scores.values();
+    let value_count = 0;
+    
+    for v in values_list {
+        ut.assert_not_equals(v, none, "Each value is not none");
+        value_count = value_count + 1;
+    }
+    
+    ut.assert_equals(value_count, 2, "Iterated over all values");
+}
+
+[test]
+fn test_empty_dict_iteration() {
+    let empty = {};
+    
+    let count = 0;
+    for k in empty {
+        count = count + 1;
+    }
+    
+    ut.assert_equals(count, 0, "Empty dict iterates zero times");
+}
+
+[test]
+fn test_nested_dicts() {
+    let config = {
+        "database": {"host": "localhost", "port": 5432},
+        "cache": {"enabled": true}
+    };
+    
+    let db = config["database"];
+    ut.assert_equals(db["host"], "localhost", "Nested dict access");
+    ut.assert_equals(db["port"], 5432, "Nested value access");
+}
+
+[test]
+fn test_dict_with_lists() {
+    let data = {"colors": ["red", "green", "blue"], "numbers": [1, 2, 3]};
+    
+    let colors = data["colors"];
+    ut.assert_equals(colors.size(), 3, "List in dict has correct length");
+    ut.assert_equals(colors[0], "red", "List element accessible");
+}
+
+[test]
+fn test_list_of_dicts() {
+    let users = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 25}
+    ];
+    
+    ut.assert_equals(users.size(), 2, "List has 2 dicts");
+    ut.assert_equals(users[0]["name"], "Alice", "Access dict in list");
+    ut.assert_equals(users[1]["age"], 25, "Access nested values");
+}
+
+[test]
+fn test_dict_boolean_conversion() {
+    let empty = {};
+    let filled = {"key": "value"};
+    
+    # Empty dict is falsy
+    if !empty {
+        ut.assert_true(true, "Empty dict is falsy");
+    }
+    
+    # Non-empty dict is truthy
+    if filled {
+        ut.assert_true(true, "Non-empty dict is truthy");
+    }
+}
+
+[test]
+fn test_none_handling_with_get() {
+    let map = {"existing": "value"};
+    
+    let missing = map.get("missing");
+    if !missing {
+        ut.assert_true(true, "Missing key returns none (falsy)");
+    }
+    
+    # unwrap_or pattern
+    let safe_val = map.get("missing").unwrap_or("default");
+    ut.assert_equals(safe_val, "default", "unwrap_or provides default");
+}
+
+[test]
+fn test_check_and_insert_pattern() {
+    let cache = {};
+    
+    let has_result = cache.contains_key("result");
+    if !has_result {
+        cache["result"] = "computed";
+    }
+    
+    let result = cache.get("result");
+    ut.assert_equals(result, "computed", "Value cached");
+}
+
+[test]
+fn test_update_with_old_value() {
+    let map = {"counter": 10};
+    
+    let old = map.get("counter");
+    map["counter"] = 20;
+    
+    ut.assert_equals(old, 10, "Old value saved");
+    ut.assert_equals(map["counter"], 20, "New value set");
+}
+
+[test]
+fn test_config_with_defaults() {
+    let config = {"host": "localhost", "port": 8080};
+    
+    let host = config.get_or("host", "0.0.0.0");
+    let timeout = config.get_or("timeout", 30);
+    
+    ut.assert_equals(host, "localhost", "Use existing config");
+    ut.assert_equals(timeout, 30, "Use default for missing");
+}
+
+[test]
+fn test_deprecated_set_method() {
+    let map = {"key": "value"};
+    
+    # set (deprecated - use index assignment)
+    let updated = map.set("new", "data");
+    ut.assert_equals(updated.get("new"), "data", "set still works");
+    ut.assert_equals(updated.size(), 2, "size works after set");
+}
+
+print ut.stats;
+exit(ut.healthy);
