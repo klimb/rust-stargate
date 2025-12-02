@@ -41,11 +41,10 @@ fn test_chained_apply() {
     ut.assert_equals(result, 169, "5 → *2 → +3 → ^2 = 169");
 }
 
-# Test 5: Apply on command objects
+# Test 5: Apply on command objects - fully inlined
 [test]
 fn test_apply_on_commands() {
-    let dir = (list-directory .);
-    let total_files = dir.entries.apply(list:
+    let total_files = (list-directory .).entries.apply(list:
         list.filter(e: e.type == "file").size()
     );
     ut.assert_true(total_files >= 0, "Should count files");
@@ -75,11 +74,10 @@ fn test_nested_extraction() {
     ut.assert_equals(db_port, 5432, "Should extract nested port value");
 }
 
-# Test 8: Apply on command object directly
+# Test 8: Apply on command object directly - inline for maximum conciseness
 [test]
 fn test_apply_object_command() {
-    let dir_obj = (list-directory .);
-    let entry_count = dir_obj.apply(obj: obj.entries.size());
+    let entry_count = (list-directory .).apply(obj: obj.entries.size());
     ut.assert_true(entry_count > 0, "Should get entry count from object");
 }
 
