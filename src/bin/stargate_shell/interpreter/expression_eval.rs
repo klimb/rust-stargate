@@ -311,6 +311,66 @@ impl Interpreter {
                     Value::Set(set) => {
                         handle_set_methods(&method, set, &args, &mut |expr| self.eval_expression(expr))
                     }
+                    Value::Object(json_obj) => {
+                        // Handle methods on JSON objects
+                        // If the object is a JSON array, convert it to a List and handle functional methods
+                        if let serde_json::Value::Array(arr) = json_obj {
+                            // Convert JSON array to Value::List
+                            let list: Vec<Value> = arr.iter()
+                                .map(|v| self.json_to_value(v.clone()))
+                                .collect();
+                            
+                            // Handle functional methods
+                            match method.as_str() {
+                                "map" => {
+                                    if args.len() != 1 {
+                                        return Err(format!("map() expects 1 argument (closure), got {}", args.len()));
+                                    }
+                                    let closure = self.eval_expression(args[0].clone())?;
+                                    
+                                    let mut mapped = Vec::new();
+                                    for item in list {
+                                        let result = self.apply_closure(closure.clone(), vec![item])?;
+                                        mapped.push(result);
+                                    }
+                                    Ok(Value::List(mapped))
+                                }
+                                "filter" => {
+                                    if args.len() != 1 {
+                                        return Err(format!("filter() expects 1 argument (closure), got {}", args.len()));
+                                    }
+                                    let closure = self.eval_expression(args[0].clone())?;
+                                    
+                                    let mut filtered = Vec::new();
+                                    for item in list {
+                                        let result = self.apply_closure(closure.clone(), vec![item.clone()])?;
+                                        if result.to_bool() {
+                                            filtered.push(item);
+                                        }
+                                    }
+                                    Ok(Value::List(filtered))
+                                }
+                                "reduce" => {
+                                    if args.len() != 2 {
+                                        return Err(format!("reduce() expects 2 arguments (initial_value, closure), got {}", args.len()));
+                                    }
+                                    let mut accumulator = self.eval_expression(args[0].clone())?;
+                                    let closure = self.eval_expression(args[1].clone())?;
+                                    
+                                    for item in list {
+                                        accumulator = self.apply_closure(closure.clone(), vec![accumulator, item])?;
+                                    }
+                                    Ok(accumulator)
+                                }
+                                _ => {
+                                    // Handle other list methods on the converted list
+                                    handle_list_methods(&method, list, &args, &mut |expr| self.eval_expression(expr))
+                                }
+                            }
+                        } else {
+                            Err(format!("Cannot call method '{}' on non-array JSON object", method))
+                        }
+                    }
                     Value::Instance { class_name, fields} => {
                         // Handle ut built-in object methods
                         if class_name == "UT" {
