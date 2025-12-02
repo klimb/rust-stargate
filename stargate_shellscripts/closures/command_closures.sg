@@ -7,8 +7,7 @@ use ut;
 # Test 1: Use map on directory entries
 [test]
 fn test_directory_map() {
-    let dir_obj = (list-directory .);
-    let names = dir_obj.entries.map(entry: entry.name);
+    let names = (list-directory .).entries.map(entry: entry.name);
     
     # Verify we got a list back with some items
     ut.assert_true(names.size() > 0, "map should return non-empty list");
@@ -21,8 +20,7 @@ fn test_directory_map() {
 # Test 2: Use filter on directory entries
 [test]
 fn test_directory_filter() {
-    let dir_obj = (list-directory .);
-    let rust_files = dir_obj.entries.filter(entry: entry.name.ends_with(".rs"));
+    let rust_files = (list-directory .).entries.filter(entry: entry.name.ends_with(".rs"));
     
     # Verify filter returns a list (should have at least one .rs file)
     ut.assert_true(rust_files.size() >= 0, "filter should return a list");
@@ -36,8 +34,7 @@ fn test_directory_filter() {
 # Test 3: Use reduce to count total size
 [test]
 fn test_directory_reduce() {
-    let dir_obj = (list-directory .);
-    let total_size = dir_obj.entries.reduce(0, acc, entry: acc + entry.size);
+    let total_size = (list-directory .).entries.reduce(0, acc, entry: acc + entry.size);
     
     ut.assert_true(total_size > 0, "Total size should be positive");
 }
@@ -45,10 +42,8 @@ fn test_directory_reduce() {
 # Test 4: Chain multiple operations
 [test]
 fn test_directory_chain() {
-    let dir_obj = (list-directory .);
-    
     # Get total size of all .toml files
-    let toml_total = dir_obj.entries
+    let toml_total = (list-directory .).entries
         .filter(entry: entry.name.ends_with(".toml"))
         .map(entry: entry.size)
         .reduce(0, acc, size: acc + size);
@@ -59,8 +54,7 @@ fn test_directory_chain() {
 # Test 5: Map to extract specific fields
 [test]
 fn test_extract_field() {
-    let dir_obj = (list-directory .);
-    let types = dir_obj.entries.map(entry: entry.type);
+    let types = (list-directory .).entries.map(entry: entry.type);
     
     # Verify we got a list with items
     ut.assert_true(types.size() > 0, "Should get a non-empty list of types");
@@ -75,8 +69,7 @@ fn test_extract_field() {
 # Test 6: Filter and count
 [test]
 fn test_filter_count() {
-    let dir_obj = (list-directory .);
-    let file_count = dir_obj.entries
+    let file_count = (list-directory .).entries
         .filter(entry: entry.type == "file")
         .size();
     
@@ -86,8 +79,7 @@ fn test_filter_count() {
 # Test 7: Find largest file
 [test]
 fn test_find_largest() {
-    let dir_obj = (list-directory .);
-    let sizes = dir_obj.entries.map(entry: entry.size);
+    let sizes = (list-directory .).entries.map(entry: entry.size);
     let max_size = sizes.reduce(0, acc, size: acc + size);  # Just sum for now
     
     ut.assert_true(max_size >= 0, "Total size should be non-negative");
@@ -96,9 +88,8 @@ fn test_find_largest() {
 # Test 8: Handle empty filter result
 [test]
 fn test_empty_filter() {
-    let dir_obj = (list-directory .);
     # Filter for files that definitely don't exist
-    let impossible = dir_obj.entries.filter(entry: entry.name == "this_file_absolutely_does_not_exist_12345.xyz");
+    let impossible = (list-directory .).entries.filter(entry: entry.name == "this_file_absolutely_does_not_exist_12345.xyz");
     
     ut.assert_equals(impossible.size(), 0, "Should get empty list for impossible filter");
 }
