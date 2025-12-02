@@ -15,8 +15,26 @@ https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
 # Traditional: operate on unstructured stream of text
 zsh# ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
-# Stargate: Clean, fast, type-safe object pipelines
-stargate> list-directory | slice-object entries | dice-object name size type
+# Stargate: Inline, expressive one-liners with type-safe object pipelines
+stargate> let rust_files = (list-directory .).entries.filter(e: e.name.ends_with(".rs")).size();
+```
+
+**Maximum Expressivity**: Commands can be inlined and chained for ultra-concise code:
+```rust
+# Get total size of all .toml files in one expression
+let toml_size = (list-directory "/tmp").entries
+    .filter(e: e.name.ends_with(".toml"))
+    .map(e: e.size)
+    .reduce(0, a, b: a + b);
+
+# Count files in a single line
+let file_count = (list-directory "/tmp").entries.filter(e: e.type == "file").size();
+
+# Extract specific data with chained apply
+let largest_file = (list-directory "/tmp")
+    .apply(obj: obj.entries)
+    .apply(list: list.map(e: e.size))
+    .apply(sizes: sizes.reduce(0, max, s: max));
 ```
 
 ### 🎯 Key Features
@@ -79,7 +97,7 @@ let evens_squared = data.apply(list:
 );  # [4, 16]
 
 # Apply on command objects
-let dir = (list-directory .);
+let dir = (list-directory "/tmp");
 let total_size = dir.apply(obj:
     obj.entries
         .filter(e: e.type == "file")
@@ -126,40 +144,37 @@ fn test_functional_operations() {
 
 Commands that return JSON objects with arrays can use functional methods directly:
 ```rust
-# Get all file names from directory listing
-let dir = (list-directory .);
-let names = dir.entries.map(entry: entry.name);
+# Get all file names from directory listing - inlined and concise
+let names = (list-directory "/tmp").entries.map(entry: entry.name);
 
-# Filter for specific file types
-let rust_files = dir.entries.filter(entry: entry.name.ends_with(".rs"));
+# Filter for specific file types - inline command
+let rust_files = (list-directory "/tmp").entries.filter(entry: entry.name.ends_with(".rs"));
 
-# Calculate total size of all files
-let total_size = dir.entries.reduce(0, acc, entry: acc + entry.size);
+# Calculate total size of all files - inline and functional
+let total_size = (list-directory "/tmp").entries.reduce(0, acc, entry: acc + entry.size);
 
-# Chain operations for complex queries
-let toml_total = dir.entries
+# Chain operations for complex queries - fully inlined
+let toml_total = (list-directory "/tmp").entries
     .filter(entry: entry.name.ends_with(".toml"))
     .map(entry: entry.size)
     .reduce(0, acc, size: acc + size);
 
-# Extract specific fields
-let file_types = dir.entries.map(entry: entry.type);
+# Extract specific fields - no intermediate variables
+let file_types = (list-directory "/tmp").entries.map(entry: entry.type);
 # Result: ["file", "directory", "file", ...]
 
 [test]
 fn test_command_closures() {
-    let dir = (list-directory .);
-    
-    # Map over command results
-    let sizes = dir.entries.map(entry: entry.size);
+    # Map over command results - fully inlined
+    let sizes = (list-directory "/tmp").entries.map(entry: entry.size);
     ut.assert_true(sizes.size() > 0, "Should have file sizes");
     
-    # Filter command results
-    let files = dir.entries.filter(entry: entry.type == "file");
+    # Filter command results - inline and expressive
+    let files = (list-directory "/tmp").entries.filter(entry: entry.type == "file");
     ut.assert_true(files.size() >= 0, "Should get file list");
     
-    # Reduce command results
-    let total = dir.entries.reduce(0, acc, e: acc + e.size);
+    # Reduce command results - chained inline operations
+    let total = (list-directory "/tmp").entries.reduce(0, acc, e: acc + e.size);
     ut.assert_true(total >= 0, "Total size should be non-negative");
 }
 ```

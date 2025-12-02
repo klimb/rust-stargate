@@ -3,37 +3,33 @@
 
 use ut;
 
-# Test 1: Apply on command object - extract property
+# Test 1: Apply on command object - extract property (fully inlined)
 [test]
 fn test_apply_extract_property() {
-    let dir = (list-directory .);
-    let count = dir.apply(obj: obj.total_count);
+    let count = (list-directory "/tmp").apply(obj: obj.total_count);
     ut.assert_true(count > 0, "Should extract total_count property");
 }
 
-# Test 2: Apply on command object - transform entries
+# Test 2: Apply on command object - transform entries (inline for clarity)
 [test]
 fn test_apply_transform_entries() {
-    let dir = (list-directory .);
-    let file_names = dir.apply(obj: obj.entries.map(e: e.name));
+    let file_names = (list-directory "/tmp").apply(obj: obj.entries.map(e: e.name));
     ut.assert_true(file_names.size() > 0, "Should get list of file names");
 }
 
-# Test 3: Apply with filtering on command object
+# Test 3: Apply with filtering on command object (inline)
 [test]
 fn test_apply_filter_entries() {
-    let dir = (list-directory .);
-    let rust_files = dir.apply(obj: 
+    let rust_files = (list-directory "/tmp").apply(obj: 
         obj.entries.filter(e: e.name.ends_with(".rs"))
     );
     ut.assert_true(rust_files.size() >= 0, "Should filter .rs files");
 }
 
-# Test 4: Apply complex pipeline on command object
+# Test 4: Apply complex pipeline on command object (fully inlined)
 [test]
 fn test_apply_complex_pipeline() {
-    let dir = (list-directory .);
-    let total_size = dir.apply(obj:
+    let total_size = (list-directory "/tmp").apply(obj:
         obj.entries
             .filter(e: e.type == "file")
             .map(e: e.size)
@@ -42,29 +38,26 @@ fn test_apply_complex_pipeline() {
     ut.assert_true(total_size >= 0, "Should calculate total file size");
 }
 
-# Test 5: Chain apply on command objects
+# Test 5: Chain apply on command objects (inline with chaining)
 [test]
 fn test_chain_apply_on_object() {
-    let dir = (list-directory .);
-    let result = dir
+    let result = (list-directory "/tmp")
         .apply(obj: obj.entries)
         .apply(list: list.size());
     ut.assert_true(result > 0, "Should chain apply calls on object");
 }
 
-# Test 6: Apply to extract nested array from object
+# Test 6: Apply to extract nested array from object (inline)
 [test]
 fn test_apply_nested_array() {
-    let dir = (list-directory .);
-    let types = dir.apply(obj: obj.entries.map(e: e.type));
+    let types = (list-directory "/tmp").apply(obj: obj.entries.map(e: e.type));
     ut.assert_true(types.size() > 0, "Should extract type array");
 }
 
-# Test 7: Apply with multiple transformations
+# Test 7: Apply with multiple transformations (inline)
 [test]
 fn test_apply_multi_transform() {
-    let dir = (list-directory .);
-    let large_files = dir.apply(obj:
+    let large_files = (list-directory "/tmp").apply(obj:
         obj.entries
             .filter(e: e.type == "file")
             .filter(e: e.size > 1000)
@@ -72,11 +65,10 @@ fn test_apply_multi_transform() {
     ut.assert_true(large_files.size() >= 0, "Should filter large files");
 }
 
-# Test 8: Apply to count specific types
+# Test 8: Apply to count specific types (fully inlined)
 [test]
 fn test_apply_count_directories() {
-    let dir = (list-directory .);
-    let dir_count = dir.apply(obj:
+    let dir_count = (list-directory "/tmp").apply(obj:
         obj.entries
             .filter(e: e.type == "directory")
             .size()
