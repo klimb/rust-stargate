@@ -90,6 +90,10 @@ pub enum Expression {
     ListLiteral(Vec<Expression>),
     DictLiteral(Vec<(Expression, Expression)>),
     SetLiteral(Vec<Expression>),
+    Closure {
+        params: Vec<String>,
+        body: Box<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
