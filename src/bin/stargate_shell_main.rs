@@ -67,6 +67,28 @@ fn main() {
             // Multi-line input can either be scripts (with semicolons) or line-by-line commands
             let trimmed = script_code.trim();
             if !trimmed.contains('\n') && !trimmed.contains(';') {
+                // Handle && operator in single-line mode
+                if trimmed.contains("&&") {
+                    let commands: Vec<&str> = trimmed.split("&&").map(|s| s.trim()).collect();
+                    let mut exit_code = 0;
+                    
+                    for cmd in commands {
+                        if cmd.is_empty() {
+                            continue;
+                        }
+                        
+                        match execute_pipeline(cmd) {
+                            Ok(_) => {},
+                            Err(e) => {
+                                eprintln!("Error: {}", e);
+                                exit_code = 1;
+                                break; // Stop on first failure
+                            }
+                        }
+                    }
+                    std::process::exit(exit_code);
+                }
+                
                 // Single-line command - execute as pipeline for human-readable output
                 match execute_pipeline(trimmed) {
                     Ok(_) => std::process::exit(0),
@@ -87,6 +109,51 @@ fn main() {
                     if line == "exit" || line == "quit" {
                         break;
                     }
+                    
+                    // Handle && operator in line-by-line mode
+                    if line.contains("&&") {
+                        let commands: Vec<&str> = line.split("&&").map(|s| s.trim()).collect();
+                        let mut should_continue = true;
+                        
+                        for cmd in commands {
+                            if !should_continue {
+                                break;
+                            }
+                            if cmd.is_empty() {
+                                continue;
+                            }
+                            
+                            let is_statement = cmd.starts_with("let ") 
+                                || cmd.starts_with("class ")
+                                || cmd.starts_with("print ")
+                                || cmd.contains(" = ");
+                            
+                            let success = if is_statement {
+                                let script = format!("{};", cmd);
+                                match execute_script(&script) {
+                                    Ok(_) => true,
+                                    Err(e) => {
+                                        eprintln!("Script error: {}", e);
+                                        exit_code = 1;
+                                        false
+                                    }
+                                }
+                            } else {
+                                match execute_pipeline(cmd) {
+                                    Ok(_) => true,
+                                    Err(e) => {
+                                        eprintln!("Error: {}", e);
+                                        exit_code = 1;
+                                        false
+                                    }
+                                }
+                            };
+                            
+                            should_continue = success;
+                        }
+                        continue;
+                    }
+                    
                     // Try executing as script statement first (for let, class, etc.)
                     let is_statement = line.starts_with("let ") 
                         || line.starts_with("class ")
@@ -155,6 +222,51 @@ fn main() {
 
                 // Add to history
                 let _ = rl.add_history_entry(input);
+
+                // Handle && operator (conditional execution like bash/zsh)
+                if input.contains("&&") && !input.starts_with("let ") && !input.starts_with("class ") {
+                    let commands: Vec<&str> = input.split("&&").map(|s| s.trim()).collect();
+                    let mut should_continue = true;
+                    
+                    for cmd in commands {
+                        if !should_continue {
+                            break;
+                        }
+                        
+                        if cmd.is_empty() {
+                            continue;
+                        }
+                        
+                        // Execute each command and check success
+                        let success = if cmd.starts_with("let ") || cmd.starts_with("print ") || cmd.contains(" = ") {
+                            // Script statement
+                            let script_code = if cmd.ends_with(';') { cmd.to_string() } else { format!("{};", cmd) };
+                            if let Ok(mut interp) = interpreter.lock() {
+                                match execute_script_with_interpreter(&script_code, &mut interp) {
+                                    Ok(_) => true,
+                                    Err(e) => {
+                                        eprintln!("Script error: {}", e);
+                                        false
+                                    }
+                                }
+                            } else {
+                                false
+                            }
+                        } else {
+                            // Pipeline command
+                            match execute_pipeline(cmd) {
+                                Ok(_) => true,
+                                Err(e) => {
+                                    eprintln!("Error: {}", e);
+                                    false
+                                }
+                            }
+                        };
+                        
+                        should_continue = success;
+                    }
+                    continue;
+                }
 
                 match input {
                     "exit" | "quit" => break,
