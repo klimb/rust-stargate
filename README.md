@@ -147,6 +147,124 @@ fn test_list_operations() {
 }
 ```
 
+#### **Functional Programming with Closures**
+Closures with `.map()`, `.filter()`, and `.reduce()` for elegant data transformations:
+```rust
+# Transform elements with .map()
+let numbers = [1, 2, 3, 4, 5];
+let doubled = numbers.map(|x| x * 2);
+# Result: [2, 4, 6, 8, 10]
+
+# Filter elements with .filter()
+let evens = numbers.filter(|x| x % 2 == 0);
+# Result: [2, 4]
+
+# Accumulate with .reduce()
+let sum = numbers.reduce(0, |acc, x| acc + x);
+# Result: 15
+
+# Chain operations for complex transformations
+let result = numbers
+    .map(|x| x * x)           # Square each: [1, 4, 9, 16, 25]
+    .filter(|x| x > 10)        # Keep > 10: [16, 25]
+    .reduce(0, |acc, x| acc + x);  # Sum: 41
+```
+
+**Multi-parameter closures:**
+```rust
+# Reduce with accumulator and item
+let product = [2, 3, 4].reduce(1, |acc, n| acc * n);  # 24
+
+# Custom max function
+let max = [3, 7, 2, 9, 1].reduce(0, |acc, x| if x > acc { x } else { acc });
+# Result: 9
+```
+
+**Test closures:**
+```rust
+[test]
+fn test_functional_operations() {
+    let numbers = [1, 2, 3, 4, 5];
+    
+    # Test map
+    let doubled = numbers.map(|x| x * 2);
+    ut.assert_equals(doubled[0], 2, "First should be doubled");
+    ut.assert_equals(doubled.size(), 5, "Size preserved");
+    
+    # Test filter
+    let evens = numbers.filter(|x| x % 2 == 0);
+    ut.assert_equals(evens.size(), 2, "Should have 2 evens");
+    
+    # Test reduce
+    let sum = numbers.reduce(0, |acc, x| acc + x);
+    ut.assert_equals(sum, 15, "Sum should be 15");
+    
+    # Test chaining
+    let result = numbers
+        .filter(|x| x > 2)
+        .map(|x| x * x)
+        .reduce(0, |acc, x| acc + x);
+    ut.assert_equals(result, 50, "3² + 4² + 5² = 50");
+}
+```
+
+#### **Safe Null Handling with `none`**
+Stargate uses `none` instead of `null` to avoid billion-dollar mistakes:
+
+**Why `none` > `null`:**
+- ✅ **Explicit**: `none` is a first-class value you can check, assign, and return
+- ✅ **Safe**: No null pointer exceptions or undefined behavior
+- ✅ **Testable**: `none` works with equality checks and type conversions
+- ❌ **`null` is broken**: Invented by Tony Hoare, who called it his "billion-dollar mistake"
+
+```rust
+# none is an actual value, not an error state
+let result = none;
+let is_valid = result != none;  # false
+
+# Safe dictionary access with defaults
+let config = {"timeout": 30};
+let port = config.get("port", 8080);  # Returns 8080 if key missing
+
+# none converts to false in boolean context
+let value = none;
+if value {
+    print "This won't run";  # none is falsy
+}
+
+# Test none behavior
+[test]
+fn test_none_handling() {
+    let empty = none;
+    ut.assert_equals(empty, none, "none equals none");
+    ut.assert_equals(bool(empty), false, "none is falsy");
+    
+    # Dictionary with none values
+    let data = {"present": 42, "absent": none};
+    ut.assert_equals(data["absent"], none, "Can store none");
+    
+    # Default values prevent none propagation
+    let val = data.get("missing", 0);
+    ut.assert_equals(val, 0, "Default prevents none");
+}
+```
+
+**Why avoiding `null` matters:**
+```rust
+# Traditional languages with null - runtime crashes!
+# user.address.city  ← NullPointerException if address is null
+
+# Stargate with none - explicit and safe
+let city = user.get("address", {}).get("city", "Unknown");
+
+# Or check explicitly
+if user != none && user.get("address") != none {
+    let city = user["address"]["city"];
+}
+```
+
+> **Tony Hoare (inventor of null)**: "I call it my billion-dollar mistake. It has led to innumerable errors, vulnerabilities, and system crashes."
+
 #### **Object-Oriented Programming with Classes**
 Full class support with inheritance and methods:
 ```rust
