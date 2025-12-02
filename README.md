@@ -208,6 +208,48 @@ fn test_functional_operations() {
 }
 ```
 
+**Closures on Command Objects:**
+
+Commands that return JSON objects with arrays can use functional methods directly:
+```rust
+# Get all file names from directory listing
+let dir = (list-directory .);
+let names = dir.entries.map(|entry| entry.name);
+
+# Filter for specific file types
+let rust_files = dir.entries.filter(|entry| entry.name.ends_with(".rs"));
+
+# Calculate total size of all files
+let total_size = dir.entries.reduce(0, |acc, entry| acc + entry.size);
+
+# Chain operations for complex queries
+let toml_total = dir.entries
+    .filter(|entry| entry.name.ends_with(".toml"))
+    .map(|entry| entry.size)
+    .reduce(0, |acc, size| acc + size);
+
+# Extract specific fields
+let file_types = dir.entries.map(|entry| entry.type);
+# Result: ["file", "directory", "file", ...]
+
+[test]
+fn test_command_closures() {
+    let dir = (list-directory .);
+    
+    # Map over command results
+    let sizes = dir.entries.map(|entry| entry.size);
+    ut.assert_true(sizes.size() > 0, "Should have file sizes");
+    
+    # Filter command results
+    let files = dir.entries.filter(|entry| entry.type == "file");
+    ut.assert_true(files.size() >= 0, "Should get file list");
+    
+    # Reduce command results
+    let total = dir.entries.reduce(0, |acc, e| acc + e.size);
+    ut.assert_true(total >= 0, "Total size should be non-negative");
+}
+```
+
 #### **Safe Null Handling with `none`**
 Stargate uses `none` instead of `null` to avoid billion-dollar mistakes:
 

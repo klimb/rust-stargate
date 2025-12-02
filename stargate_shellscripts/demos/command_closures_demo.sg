@@ -1,0 +1,59 @@
+#!/usr/bin/env stargate-shell
+# Demo: Using closures on interactive command objects
+# This demonstrates how functional programming works with structured command output
+
+print "=== Closures on Command Objects Demo ===";
+print "";
+
+# Get directory listing
+print "1. Getting directory listing...";
+let dir = (list-directory .);
+print "   Found {dir.total_count} items";
+print "";
+
+# Map: Extract all file names
+print "2. Extract all names using .map()";
+let names = dir.entries.map(|entry| entry.name);
+let first_name = names[0];
+let second_name = names[1];
+let third_name = names[2];
+print "   First 3 names: {first_name}, {second_name}, {third_name}";
+print "";
+
+# Filter: Get only Rust files
+print "3. Filter for .rs files using .filter()";
+let rust_files = dir.entries.filter(|entry| entry.name.ends_with(".rs"));
+let rust_count = rust_files.size();
+print "   Found {rust_count} Rust source files";
+if rust_count > 0 {
+    let example_file = rust_files[0].name;
+    print "   Example: {example_file}";
+}
+print "";
+
+# Reduce: Calculate total size
+print "4. Calculate total size using .reduce()";
+let total_size = dir.entries.reduce(0, |acc, entry| acc + entry.size);
+print "   Total size of all files: {total_size} bytes";
+print "";
+
+# Chain: Complex query
+print "5. Chain operations: get total size of .toml files";
+let toml_total = dir.entries
+    .filter(|entry| entry.name.ends_with(".toml"))
+    .map(|entry| entry.size)
+    .reduce(0, |acc, size| acc + size);
+print "   Total .toml size: {toml_total} bytes";
+print "";
+
+# Extract specific fields
+print "6. Extract file types using .map()";
+let types = dir.entries.map(|entry| entry.type);
+let file_count = types.filter(|t| t == "file").size();
+let dir_count = types.filter(|t| t == "directory").size();
+print "   Files: {file_count}, Directories: {dir_count}";
+print "";
+
+print "=== Demo Complete! ===";
+print "You can now use .map(), .filter(), and .reduce() on any command";
+print "that returns JSON objects with arrays!";
