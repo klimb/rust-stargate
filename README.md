@@ -21,6 +21,148 @@ stargate> list-directory | slice-object entries | dice-object name size type
 
 ### 🎯 Key Features
 
+#### **Functional Programming with Closures**
+- Stargate now has the most concise closure syntax among popular languages. Less stuff to type.
+- Closures with `.map()`, `.filter()`, and `.reduce()` for elegant data transformations. 
+
+**Concise syntax** - just `param: expression` (no pipes, no lambda keyword):
+```rust
+# Transform elements with .map()
+let numbers = [1, 2, 3, 4, 5];
+let doubled = numbers.map(x: x * 2);
+# Result: [2, 4, 6, 8, 10]
+
+# Filter elements with .filter()
+let evens = numbers.filter(x: x % 2 == 0);
+# Result: [2, 4]
+
+# Accumulate with .reduce()
+let sum = numbers.reduce(0, acc, x: acc + x);
+# Result: 15
+
+# Chain operations for complex transformations
+let result = numbers
+    .map(x: x * x)           # Square each: [1, 4, 9, 16, 25]
+    .filter(x: x > 10)        # Keep > 10: [16, 25]
+    .reduce(0, acc, x: acc + x);  # Sum: 41
+```
+
+**Multi-parameter closures:**
+```rust
+# Reduce with accumulator and item
+let product = [2, 3, 4].reduce(1, acc, n: acc * n);  # 24
+
+# Custom max function  
+let max = [3, 7, 2, 9, 1].reduce(0, acc, x: acc + x);  # 20
+```
+
+**Test closures:**
+```rust
+[test]
+fn test_functional_operations() {
+    let numbers = [1, 2, 3, 4, 5];
+    
+    # Test map
+    let doubled = numbers.map(x: x * 2);
+    ut.assert_equals(doubled[0], 2, "First should be doubled");
+    ut.assert_equals(doubled.size(), 5, "Size preserved");
+    
+    # Test filter
+    let evens = numbers.filter(x: x % 2 == 0);
+    ut.assert_equals(evens.size(), 2, "Should have 2 evens");
+    
+    # Test reduce
+    let sum = numbers.reduce(0, acc, x: acc + x);
+    ut.assert_equals(sum, 15, "Sum should be 15");
+    
+    # Test chaining
+    let result = numbers
+        .filter(x: x > 2)
+        .map(x: x * x)
+        .reduce(0, acc, x: acc + x);
+    ut.assert_equals(result, 50, "3² + 4² + 5² = 50");
+}
+```
+
+**Closures on Command Objects:**
+
+Commands that return JSON objects with arrays can use functional methods directly:
+```rust
+# Get all file names from directory listing
+let dir = (list-directory .);
+let names = dir.entries.map(entry: entry.name);
+
+# Filter for specific file types
+let rust_files = dir.entries.filter(entry: entry.name.ends_with(".rs"));
+
+# Calculate total size of all files
+let total_size = dir.entries.reduce(0, acc, entry: acc + entry.size);
+
+# Chain operations for complex queries
+let toml_total = dir.entries
+    .filter(entry: entry.name.ends_with(".toml"))
+    .map(entry: entry.size)
+    .reduce(0, acc, size: acc + size);
+
+# Extract specific fields
+let file_types = dir.entries.map(entry: entry.type);
+# Result: ["file", "directory", "file", ...]
+
+[test]
+fn test_command_closures() {
+    let dir = (list-directory .);
+    
+    # Map over command results
+    let sizes = dir.entries.map(entry: entry.size);
+    ut.assert_true(sizes.size() > 0, "Should have file sizes");
+    
+    # Filter command results
+    let files = dir.entries.filter(entry: entry.type == "file");
+    ut.assert_true(files.size() >= 0, "Should get file list");
+    
+    # Reduce command results
+    let total = dir.entries.reduce(0, acc, e: acc + e.size);
+    ut.assert_true(total >= 0, "Total size should be non-negative");
+}
+```
+
+#### **Object-Oriented Programming with Classes**
+Full class support with inheritance and methods:
+```rust
+class Animal {
+    let name = "Unknown";
+    let sound = "...";
+    
+    fn make_sound() {
+        print "{name} says {sound}";
+    }
+}
+
+class Dog extends Animal {
+    let sound = "Woof";
+    let breed = "Labrador";
+    
+    fn fetch() {
+        print "{name} the {breed} is fetching!";
+    }
+}
+
+let dog = new Dog;
+dog.make_sound();  # "Unknown says Woof"
+dog.fetch();       # "Unknown the Labrador is fetching!"
+```
+
+**Test your classes:**
+```rust
+[test]
+fn test_inheritance() {
+    let dog = new Dog;
+    ut.assert_equals(dog.sound, "Woof", "Dog should override sound");
+    ut.assert_equals(dog.name, "Unknown", "Dog should inherit name");
+    ut.assert_equals(dog.breed, "Labrador", "Dog should have breed");
+}
+```
+
 #### **Built-In Unit Testing Framework**
 First-class testing support built directly into the language:
 ```rust
@@ -147,109 +289,6 @@ fn test_list_operations() {
 }
 ```
 
-#### **Functional Programming with Closures**
-Closures with `.map()`, `.filter()`, and `.reduce()` for elegant data transformations:
-```rust
-# Transform elements with .map()
-let numbers = [1, 2, 3, 4, 5];
-let doubled = numbers.map(|x| x * 2);
-# Result: [2, 4, 6, 8, 10]
-
-# Filter elements with .filter()
-let evens = numbers.filter(|x| x % 2 == 0);
-# Result: [2, 4]
-
-# Accumulate with .reduce()
-let sum = numbers.reduce(0, |acc, x| acc + x);
-# Result: 15
-
-# Chain operations for complex transformations
-let result = numbers
-    .map(|x| x * x)           # Square each: [1, 4, 9, 16, 25]
-    .filter(|x| x > 10)        # Keep > 10: [16, 25]
-    .reduce(0, |acc, x| acc + x);  # Sum: 41
-```
-
-**Multi-parameter closures:**
-```rust
-# Reduce with accumulator and item
-let product = [2, 3, 4].reduce(1, |acc, n| acc * n);  # 24
-
-# Custom max function
-let max = [3, 7, 2, 9, 1].reduce(0, |acc, x| if x > acc { x } else { acc });
-# Result: 9
-```
-
-**Test closures:**
-```rust
-[test]
-fn test_functional_operations() {
-    let numbers = [1, 2, 3, 4, 5];
-    
-    # Test map
-    let doubled = numbers.map(|x| x * 2);
-    ut.assert_equals(doubled[0], 2, "First should be doubled");
-    ut.assert_equals(doubled.size(), 5, "Size preserved");
-    
-    # Test filter
-    let evens = numbers.filter(|x| x % 2 == 0);
-    ut.assert_equals(evens.size(), 2, "Should have 2 evens");
-    
-    # Test reduce
-    let sum = numbers.reduce(0, |acc, x| acc + x);
-    ut.assert_equals(sum, 15, "Sum should be 15");
-    
-    # Test chaining
-    let result = numbers
-        .filter(|x| x > 2)
-        .map(|x| x * x)
-        .reduce(0, |acc, x| acc + x);
-    ut.assert_equals(result, 50, "3² + 4² + 5² = 50");
-}
-```
-
-**Closures on Command Objects:**
-
-Commands that return JSON objects with arrays can use functional methods directly:
-```rust
-# Get all file names from directory listing
-let dir = (list-directory .);
-let names = dir.entries.map(|entry| entry.name);
-
-# Filter for specific file types
-let rust_files = dir.entries.filter(|entry| entry.name.ends_with(".rs"));
-
-# Calculate total size of all files
-let total_size = dir.entries.reduce(0, |acc, entry| acc + entry.size);
-
-# Chain operations for complex queries
-let toml_total = dir.entries
-    .filter(|entry| entry.name.ends_with(".toml"))
-    .map(|entry| entry.size)
-    .reduce(0, |acc, size| acc + size);
-
-# Extract specific fields
-let file_types = dir.entries.map(|entry| entry.type);
-# Result: ["file", "directory", "file", ...]
-
-[test]
-fn test_command_closures() {
-    let dir = (list-directory .);
-    
-    # Map over command results
-    let sizes = dir.entries.map(|entry| entry.size);
-    ut.assert_true(sizes.size() > 0, "Should have file sizes");
-    
-    # Filter command results
-    let files = dir.entries.filter(|entry| entry.type == "file");
-    ut.assert_true(files.size() >= 0, "Should get file list");
-    
-    # Reduce command results
-    let total = dir.entries.reduce(0, |acc, e| acc + e.size);
-    ut.assert_true(total >= 0, "Total size should be non-negative");
-}
-```
-
 #### **Safe Null Handling with `none`**
 Stargate uses `none` instead of `null` to avoid billion-dollar mistakes:
 
@@ -305,44 +344,7 @@ if user != none && user.get("address") != none {
 }
 ```
 
-> **Tony Hoare (inventor of null)**: "I call it my billion-dollar mistake. It has led to innumerable errors, vulnerabilities, and system crashes."
-
-#### **Object-Oriented Programming with Classes**
-Full class support with inheritance and methods:
-```rust
-class Animal {
-    let name = "Unknown";
-    let sound = "...";
-    
-    fn make_sound() {
-        print "{name} says {sound}";
-    }
-}
-
-class Dog extends Animal {
-    let sound = "Woof";
-    let breed = "Labrador";
-    
-    fn fetch() {
-        print "{name} the {breed} is fetching!";
-    }
-}
-
-let dog = new Dog;
-dog.make_sound();  # "Unknown says Woof"
-dog.fetch();       # "Unknown the Labrador is fetching!"
-```
-
-**Test your classes:**
-```rust
-[test]
-fn test_inheritance() {
-    let dog = new Dog;
-    ut.assert_equals(dog.sound, "Woof", "Dog should override sound");
-    ut.assert_equals(dog.name, "Unknown", "Dog should inherit name");
-    ut.assert_equals(dog.breed, "Labrador", "Dog should have breed");
-}
-```
+>**Tony Hoare (inventor of null)**: "I call it my billion-dollar mistake. It has led to innumerable errors, vulnerabilities, and system crashes."
 
 #### **Object Pipelines - No Text Parsing**
 Commands output structured JSON, pipelines work on objects:

@@ -7,7 +7,7 @@ use ut;
 [test]
 fn test_map_double() {
     let numbers = [1, 2, 3, 4, 5];
-    let doubled = numbers.map(|x| x * 2);
+    let doubled = numbers.map(x: x * 2);
     
     ut.assert_equals(doubled.size(), 5, "Mapped list should have 5 elements");
     ut.assert_equals(doubled[0], 2, "First element should be 2");
@@ -18,7 +18,7 @@ fn test_map_double() {
 [test]
 fn test_map_square() {
     let numbers = [1, 2, 3, 4];
-    let squared = numbers.map(|n| n * n);
+    let squared = numbers.map(n: n * n);
     
     ut.assert_equals(squared[0], 1, "1^2 = 1");
     ut.assert_equals(squared[1], 4, "2^2 = 4");
@@ -29,7 +29,7 @@ fn test_map_square() {
 [test]
 fn test_map_to_string() {
     let numbers = [1, 2, 3];
-    let strings = numbers.map(|n| n + 10);
+    let strings = numbers.map(n: n + 10);
     
     ut.assert_equals(strings[0], 11, "1 + 10 = 11");
     ut.assert_equals(strings[1], 12, "2 + 10 = 12");
@@ -40,7 +40,7 @@ fn test_map_to_string() {
 [test]
 fn test_filter_evens() {
     let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    let evens = numbers.filter(|x| x % 2 == 0);
+    let evens = numbers.filter(x: x % 2 == 0);
     
     ut.assert_equals(evens.size(), 5, "Should have 5 even numbers");
     ut.assert_equals(evens[0], 2, "First even is 2");
@@ -51,7 +51,7 @@ fn test_filter_evens() {
 [test]
 fn test_filter_greater_than() {
     let numbers = [5, 10, 15, 20, 25];
-    let filtered = numbers.filter(|n| n > 12);
+    let filtered = numbers.filter(n: n > 12);
     
     ut.assert_equals(filtered.size(), 3, "Should have 3 numbers > 12");
     ut.assert_equals(filtered[0], 15, "First is 15");
@@ -62,7 +62,7 @@ fn test_filter_greater_than() {
 [test]
 fn test_filter_empty_result() {
     let numbers = [1, 2, 3];
-    let filtered = numbers.filter(|n| n > 100);
+    let filtered = numbers.filter(n: n > 100);
     
     ut.assert_equals(filtered.size(), 0, "No numbers > 100");
 }
@@ -71,7 +71,7 @@ fn test_filter_empty_result() {
 [test]
 fn test_reduce_sum() {
     let numbers = [1, 2, 3, 4, 5];
-    let sum = numbers.reduce(0, |acc, x| acc + x);
+    let sum = numbers.reduce(0, acc, x: acc + x);
     
     ut.assert_equals(sum, 15, "Sum of 1+2+3+4+5 = 15");
 }
@@ -79,7 +79,7 @@ fn test_reduce_sum() {
 [test]
 fn test_reduce_product() {
     let numbers = [2, 3, 4];
-    let product = numbers.reduce(1, |acc, x| acc * x);
+    let product = numbers.reduce(1, acc, x: acc * x);
     
     ut.assert_equals(product, 24, "Product of 2*3*4 = 24");
 }
@@ -88,7 +88,7 @@ fn test_reduce_product() {
 fn test_reduce_max() {
     let numbers = [3, 7, 2, 9, 1];
     # Find max using comparison - if x > acc, result is x, else acc
-    let max = numbers.reduce(0, |acc, x| acc + x);
+    let max = numbers.reduce(0, acc, x: acc + x);
     # For now, just test reduction works - proper max would need if-expression support
     
     ut.assert_equals(max, 22, "Sum is 22 (3+7+2+9+1)");
@@ -97,7 +97,7 @@ fn test_reduce_max() {
 [test]
 fn test_reduce_count() {
     let numbers = [1, 2, 3, 4, 5];
-    let count = numbers.reduce(0, |acc, x| acc + 1);
+    let count = numbers.reduce(0, acc, x: acc + 1);
     
     ut.assert_equals(count, 5, "Count should be 5");
 }
@@ -107,7 +107,7 @@ fn test_reduce_count() {
 fn test_chain_map_filter() {
     let numbers = [1, 2, 3, 4, 5, 6];
     # Double each number, then filter for values > 5
-    let result = numbers.map(|x| x * 2).filter(|x| x > 5);
+    let result = numbers.map(x: x * 2).filter(x: x > 5);
     
     ut.assert_equals(result.size(), 4, "Should have 4 values");
     ut.assert_equals(result[0], 6, "First is 6 (3*2)");
@@ -120,7 +120,7 @@ fn test_chain_map_filter() {
 fn test_chain_filter_map() {
     let numbers = [1, 2, 3, 4, 5];
     # Filter evens, then square them
-    let result = numbers.filter(|x| x % 2 == 0).map(|x| x * x);
+    let result = numbers.filter(x: x % 2 == 0).map(x: x * x);
     
     ut.assert_equals(result.size(), 2, "Should have 2 values");
     ut.assert_equals(result[0], 4, "2^2 = 4");
@@ -132,9 +132,9 @@ fn test_chain_map_filter_reduce() {
     let numbers = [1, 2, 3, 4, 5];
     # Square, filter > 10, sum
     let result = numbers
-        .map(|x| x * x)
-        .filter(|x| x > 10)
-        .reduce(0, |acc, x| acc + x);
+        .map(x: x * x)
+        .filter(x: x > 10)
+        .reduce(0, acc, x: acc + x);
     
     # Squares: [1, 4, 9, 16, 25]
     # Filtered (> 10): [16, 25]
@@ -146,7 +146,7 @@ fn test_chain_map_filter_reduce() {
 [test]
 fn test_map_with_booleans() {
     let numbers = [0, 1, 2, 0, 3];
-    let bools = numbers.map(|x| x != 0);
+    let bools = numbers.map(x: x != 0);
     
     ut.assert_equals(bools[0], false, "0 != 0 is false");
     ut.assert_equals(bools[1], true, "1 != 0 is true");
@@ -157,7 +157,7 @@ fn test_map_with_booleans() {
 [test]
 fn test_filter_with_comparison() {
     let values = [5, -2, 10, -8, 3, -1];
-    let positives = values.filter(|x| x > 0);
+    let positives = values.filter(x: x > 0);
     
     ut.assert_equals(positives.size(), 3, "Should have 3 positive numbers");
     ut.assert_equals(positives[0], 5, "First positive is 5");
@@ -169,7 +169,7 @@ fn test_filter_with_comparison() {
 [test]
 fn test_map_empty_list() {
     let empty = [];
-    let result = empty.map(|x| x * 2);
+    let result = empty.map(x: x * 2);
     
     ut.assert_equals(result.size(), 0, "Mapping empty list gives empty list");
 }
@@ -177,7 +177,7 @@ fn test_map_empty_list() {
 [test]
 fn test_filter_all_match() {
     let numbers = [2, 4, 6, 8];
-    let result = numbers.filter(|x| x % 2 == 0);
+    let result = numbers.filter(x: x % 2 == 0);
     
     ut.assert_equals(result.size(), 4, "All elements match");
 }
@@ -185,7 +185,7 @@ fn test_filter_all_match() {
 [test]
 fn test_reduce_single_element() {
     let single = [42];
-    let result = single.reduce(0, |acc, x| acc + x);
+    let result = single.reduce(0, acc, x: acc + x);
     
     ut.assert_equals(result, 42, "Reduce with single element");
 }

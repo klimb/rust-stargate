@@ -8,8 +8,8 @@ fn test_sales_data_processing() {
     # Data transformation pipeline with filter and map
     let sales = [120, 340, 89, 450, 210, 95];
     let high_sales = sales
-        .filter(|x| x > 100)
-        .map(|x| x * 1.1);  # Add 10% bonus
+        .filter(x: x > 100)
+        .map(x: x * 1.1);  # Add 10% bonus
     
     ut.assert_equals(high_sales.size(), 4, "Should have 4 high performers");
     # Floating point results - just check first value precisely
@@ -21,8 +21,8 @@ fn test_sales_data_processing() {
 fn test_temperature_aggregation() {
     # Using reduce for aggregation operations
     let temperatures = [72, 85, 68, 91, 77, 82];
-    let sum = temperatures.reduce(0, |acc, t| acc + t);
-    let count = temperatures.reduce(0, |acc, t| acc + 1);
+    let sum = temperatures.reduce(0, acc, t: acc + t);
+    let count = temperatures.reduce(0, acc, t: acc + 1);
     
     ut.assert_equals(sum, 475, "Sum of all temperatures");
     ut.assert_equals(count, 6, "Count of temperature readings");
@@ -33,9 +33,9 @@ fn test_complex_chaining() {
     # Complex data pipeline: filter, map, reduce
     let scores = [45, 67, 82, 91, 58, 73, 88, 95];
     let result = scores
-        .filter(|s| s >= 70)           # Keep passing grades
-        .map(|s| s * s)                 # Square them
-        .reduce(0, |sum, s| sum + s);   # Sum
+        .filter(s: s >= 70)           # Keep passing grades
+        .map(s: s * s)                 # Square them
+        .reduce(0, sum, s: sum + s);   # Sum
     
     # Passing scores: 82, 91, 73, 88, 95
     # Squared: 6724, 8281, 5329, 7744, 9025
@@ -66,7 +66,7 @@ fn test_none_handling() {
 fn test_closure_with_comparisons() {
     # Closures with comparison operators
     let numbers = [10, 25, 5, 30, 15, 20];
-    let above_threshold = numbers.filter(|n| n > 15);
+    let above_threshold = numbers.filter(n: n > 15);
     
     ut.assert_equals(above_threshold.size(), 3, "Should have 3 numbers > 15");
     ut.assert_equals(above_threshold[0], 25, "First: 25");
@@ -78,7 +78,7 @@ fn test_closure_with_comparisons() {
 fn test_closure_with_arithmetic() {
     # Closures performing arithmetic operations
     let prices = [10, 20, 30, 40];
-    let discounted = prices.map(|p| p * 0.8);  # 20% off
+    let discounted = prices.map(p: p * 0.8);  # 20% off
     
     ut.assert_equals(discounted[0], 8, "10 * 0.8 = 8");
     ut.assert_equals(discounted[1], 16, "20 * 0.8 = 16");
@@ -90,7 +90,7 @@ fn test_closure_with_arithmetic() {
 fn test_product_accumulation() {
     # Using reduce for multiplication
     let factors = [2, 3, 4, 5];
-    let product = factors.reduce(1, |acc, n| acc * n);
+    let product = factors.reduce(1, acc, n: acc * n);
     
     ut.assert_equals(product, 120, "2 * 3 * 4 * 5 = 120");
 }
@@ -99,9 +99,9 @@ fn test_product_accumulation() {
 fn test_empty_list_operations() {
     # Edge case: operations on empty lists
     let empty = [];
-    let mapped = empty.map(|x| x * 2);
-    let filtered = empty.filter(|x| x > 0);
-    let reduced = empty.reduce(0, |acc, x| acc + x);
+    let mapped = empty.map(x: x * 2);
+    let filtered = empty.filter(x: x > 0);
+    let reduced = empty.reduce(0, acc, x: acc + x);
     
     ut.assert_equals(mapped.size(), 0, "Map on empty list gives empty");
     ut.assert_equals(filtered.size(), 0, "Filter on empty list gives empty");
