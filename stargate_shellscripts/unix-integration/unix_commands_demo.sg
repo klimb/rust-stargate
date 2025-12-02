@@ -47,7 +47,7 @@ fn test_external_in_pipeline() {
 fn test_stargate_piped_to_external() {
     # Test that stargate commands can pipe to external commands
     # This tests the integration at the pipeline level
-    let file_count = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/*.sg 2>/dev/null | wc -l");
+    let file_count = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/*/*.sg 2>/dev/null | wc -l");
     ut.assert_not_equals(file_count, "", "Stargate to external pipeline should work");
 }
 

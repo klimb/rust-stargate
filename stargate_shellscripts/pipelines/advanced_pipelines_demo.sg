@@ -6,14 +6,14 @@ use ut;
 [test]
 fn test_stargate_list_piped_to_grep() {
     # List directory and filter with Unix grep
-    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/*.sg | /bin/grep demo");
+    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/*/*.sg | /bin/grep demo");
     ut.assert_not_equals(result, "", "list-directory | grep should work");
 }
 
 [test]
 fn test_unix_ls_piped_to_stargate() {
     # Unix ls piped to processing
-    let result = execute-process("/bin/sh", "-c", "/bin/ls -1 stargate_shellscripts | /bin/grep demo");
+    let result = execute-process("/bin/sh", "-c", "/bin/ls -1 stargate_shellscripts/demos | /bin/grep demo");
     ut.assert_not_equals(result, "", "Unix ls piped should work");
 }
 
