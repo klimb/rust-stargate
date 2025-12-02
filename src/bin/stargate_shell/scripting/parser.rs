@@ -692,7 +692,7 @@ impl Parser {
                         
                         if self.peek().map(|s| s.as_str()) != Some(")") {
                             loop {
-                                args.push(self.parse_expression()?);
+                                args.push(self.parse_arg_or_closure()?);
                                 if self.peek().map(|s| s.as_str()) == Some(",") {
                                     self.advance(); // consume ','
                                 } else {
@@ -969,7 +969,9 @@ impl Parser {
         let mut args = Vec::new();
 
         while self.peek().map(|s| s.as_str()) != Some(")") {
-            args.push(self.parse_expression()?);
+            // Check if this is a closure with new syntax: param: expr or param1, param2: expr
+            let arg = self.parse_arg_or_closure()?;
+            args.push(arg);
             if self.peek().map(|s| s.as_str()) == Some(",") {
                 self.advance();
             }
@@ -977,6 +979,97 @@ impl Parser {
 
         self.expect(")")?;
         Ok(args)
+    }
+    
+    fn parse_arg_or_closure(&mut self) -> Result<Expression, String> {
+        // Try to detect closure pattern: param: expr or param1, param2: expr
+        // We need to look ahead carefully to distinguish between:
+        //   - Closure: x: x * 2  or  acc, x: acc + x
+        //   - Regular expression: foo.bar
+        
+        let start_pos = self.pos;
+        
+        // Look ahead to check for closure pattern
+        let mut lookahead_pos = self.pos;
+        let mut found_colon = false;
+        let mut identifiers_seen = 0;
+        
+        // Scan ahead looking for pattern: identifier [, identifier]* :
+        loop {
+            if lookahead_pos >= self.tokens.len() {
+                break;
+            }
+            
+            let tok = &self.tokens[lookahead_pos];
+            
+            if tok == ":" {
+                // Found colon - if we've seen at least one identifier, this is a closure
+                if identifiers_seen > 0 {
+                    found_colon = true;
+                }
+                break;
+            } else if tok == "," {
+                // Comma - could be between params
+                lookahead_pos += 1;
+            } else if tok.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                // Looks like an identifier
+                if tok.chars().next().map(|c| c.is_numeric()).unwrap_or(false) {
+                    // Starts with number - not an identifier for params
+                    break;
+                }
+                identifiers_seen += 1;
+                lookahead_pos += 1;
+            } else {
+                // Something else - not a closure pattern
+                break;
+            }
+        }
+        
+        if found_colon {
+            // This is a closure! Parse parameters
+            let mut params = Vec::new();
+            
+            loop {
+                let param = self.advance().ok_or("Expected parameter name in closure")?;
+                
+                // Validate identifier
+                if param.is_empty() || !param.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                    return Err(format!("Invalid parameter name: {}", param));
+                }
+                if param.chars().next().unwrap().is_numeric() {
+                    return Err(format!("Parameter name cannot start with digit: {}", param));
+                }
+                
+                params.push(param);
+                
+                let next = self.peek().map(|s| s.as_str());
+                if next == Some(",") {
+                    self.advance(); // consume ','
+                } else if next == Some(":") {
+                    self.advance(); // consume ':'
+                    break;
+                } else {
+                    return Err(format!("Expected ',' or ':' in closure, got {:?}", next));
+                }
+            }
+            
+            // Parse the body expression
+            let body = self.parse_or()?;
+            
+            return Ok(Expression::Closure {
+                params,
+                body: Box::new(body),
+            });
+        }
+        
+        // Not a closure, parse as normal expression
+        self.pos = start_pos;
+        self.parse_expression()
+    }
+    
+    fn parse_closure_body(&mut self) -> Result<Expression, String> {
+        // Parse expression but stop at ',' or ')' at the same nesting level
+        self.parse_or()
     }
 
     fn expect(&mut self, expected: &str) -> Result<(), String> {
