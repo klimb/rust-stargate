@@ -257,7 +257,53 @@ impl Interpreter {
                         handle_string_methods(&method, s, &args, &mut |expr| self.eval_expression(expr))
                     }
                     Value::List(list) => {
-                        handle_list_methods(&method, list, &args, &mut |expr| self.eval_expression(expr))
+                        // Handle functional methods that need closures
+                        match method.as_str() {
+                            "map" => {
+                                if args.len() != 1 {
+                                    return Err(format!("map() expects 1 argument (closure), got {}", args.len()));
+                                }
+                                let closure = self.eval_expression(args[0].clone())?;
+                                
+                                let mut mapped = Vec::new();
+                                for item in list {
+                                    let result = self.apply_closure(closure.clone(), vec![item])?;
+                                    mapped.push(result);
+                                }
+                                Ok(Value::List(mapped))
+                            }
+                            "filter" => {
+                                if args.len() != 1 {
+                                    return Err(format!("filter() expects 1 argument (closure), got {}", args.len()));
+                                }
+                                let closure = self.eval_expression(args[0].clone())?;
+                                
+                                let mut filtered = Vec::new();
+                                for item in list {
+                                    let result = self.apply_closure(closure.clone(), vec![item.clone()])?;
+                                    if result.to_bool() {
+                                        filtered.push(item);
+                                    }
+                                }
+                                Ok(Value::List(filtered))
+                            }
+                            "reduce" => {
+                                if args.len() != 2 {
+                                    return Err(format!("reduce() expects 2 arguments (initial_value, closure), got {}", args.len()));
+                                }
+                                let mut accumulator = self.eval_expression(args[0].clone())?;
+                                let closure = self.eval_expression(args[1].clone())?;
+                                
+                                for item in list {
+                                    accumulator = self.apply_closure(closure.clone(), vec![accumulator, item])?;
+                                }
+                                Ok(accumulator)
+                            }
+                            _ => {
+                                // Handle other list methods
+                                handle_list_methods(&method, list, &args, &mut |expr| self.eval_expression(expr))
+                            }
+                        }
                     }
                     Value::Dict(map) => {
                         handle_dict_methods(&method, map, &args, &mut |expr| self.eval_expression(expr))
@@ -357,6 +403,7 @@ impl Interpreter {
                     Value::List(_) => return Err("Cannot pipe list objects yet".to_string()),
                     Value::Dict(_) => return Err("Cannot pipe dict objects yet".to_string()),
                     Value::Set(_) => return Err("Cannot pipe set objects yet".to_string()),
+                    Value::Closure { .. } => return Err("Cannot pipe closure objects".to_string()),
                 };
                 
                 // Execute the pipeline with the JSON input
@@ -398,6 +445,13 @@ impl Interpreter {
                     set.insert(elem_value);
                 }
                 Ok(Value::Set(set))
+            }
+            Expression::Closure { params, body } => {
+                // Return the closure as a value without evaluating the body
+                Ok(Value::Closure {
+                    params,
+                    body,
+                })
             }
         }
     }
@@ -469,6 +523,47 @@ impl Interpreter {
             Operator::And => Ok(Value::Bool(left.to_bool() && right.to_bool())),
             Operator::Or => Ok(Value::Bool(left.to_bool() || right.to_bool())),
             Operator::Not => Err("NOT is a unary operator and should not be used in apply_operator".to_string()),
+        }
+    }
+
+    /// Apply a closure to arguments
+    pub(super) fn apply_closure(&mut self, closure: Value, args: Vec<Value>) -> Result<Value, String> {
+        match closure {
+            Value::Closure { params, body } => {
+                if params.len() != args.len() {
+                    return Err(format!(
+                        "Closure expects {} arguments, got {}",
+                        params.len(),
+                        args.len()
+                    ));
+                }
+
+                // Save current variable bindings
+                let saved_vars: HashMap<String, Value> = params
+                    .iter()
+                    .filter_map(|p| self.variables.get(p).map(|v| (p.clone(), v.clone())))
+                    .collect();
+
+                // Bind closure parameters to arguments
+                for (param, arg) in params.iter().zip(args.iter()) {
+                    self.variables.insert(param.clone(), arg.clone());
+                }
+
+                // Evaluate the closure body
+                let result = self.eval_expression(*body);
+
+                // Restore previous variable bindings
+                for param in &params {
+                    if let Some(old_value) = saved_vars.get(param) {
+                        self.variables.insert(param.clone(), old_value.clone());
+                    } else {
+                        self.variables.remove(param);
+                    }
+                }
+
+                result
+            }
+            _ => Err("Expected a closure".to_string()),
         }
     }
 }

@@ -1,5 +1,6 @@
 use serde_json;
 use std::hash::{Hash, Hasher};
+use super::ast::Expression;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -15,6 +16,10 @@ pub enum Value {
     List(Vec<Value>),
     Dict(std::collections::HashMap<Value, Value>),
     Set(std::collections::HashSet<Value>),
+    Closure {
+        params: Vec<String>,
+        body: Box<Expression>,
+    },
 }
 
 impl Value {
@@ -42,6 +47,9 @@ impl Value {
                 items_str.sort();
                 format!("{{{}}}", items_str.join(", "))
             }
+            Value::Closure { params, .. } => {
+                format!("<closure |{}|>", params.join(", "))
+            }
         }
     }
 
@@ -56,6 +64,7 @@ impl Value {
             Value::List(items) => !items.is_empty(),
             Value::Dict(map) => !map.is_empty(),
             Value::Set(items) => !items.is_empty(),
+            Value::Closure { .. } => true,
         }
     }
 
@@ -70,6 +79,7 @@ impl Value {
             Value::List(items) => items.len() as f64,
             Value::Dict(map) => map.len() as f64,
             Value::Set(items) => items.len() as f64,
+            Value::Closure { .. } => 0.0,
         }
     }
 }
@@ -89,6 +99,9 @@ impl PartialEq for Value {
             (Value::List(a), Value::List(b)) => a == b,
             (Value::Dict(a), Value::Dict(b)) => a == b,
             (Value::Set(a), Value::Set(b)) => a == b,
+            (Value::Closure { params: p1, body: b1 }, Value::Closure { params: p2, body: b2 }) => {
+                p1 == p2 && format!("{:?}", b1) == format!("{:?}", b2)
+            }
             _ => false,
         }
     }
@@ -155,6 +168,14 @@ impl Hash for Value {
                 for item in items_vec {
                     item.hash(state);
                 }
+            }
+            Value::Closure { params, body } => {
+                9u8.hash(state);
+                for param in params {
+                    param.hash(state);
+                }
+                // Hash the debug representation of the body
+                format!("{:?}", body).hash(state);
             }
         }
     }

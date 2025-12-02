@@ -58,7 +58,7 @@ impl Parser {
                             current.clear();
                         }
                     }
-                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '<' | '>' | '!' | '[' | ']' | '.' | '|' | '&' | ':' => {
+                    '(' | ')' | '{' | '}' | ';' | ',' | '=' | '+' | '*' | '/' | '%' | '<' | '>' | '!' | '[' | ']' | '.' | '|' | '&' | ':' => {
                         // Special handling for '.' - check if it's part of a number
                         if ch == '.' && !current.is_empty() && current.chars().all(|c| c.is_numeric()) && chars.peek().map(|c| c.is_numeric()).unwrap_or(false) {
                             // This is a decimal point in a number like 3.14
@@ -868,6 +868,35 @@ impl Parser {
                 self.expect("}")?;
                 return Ok(Expression::SetLiteral(elements));
             }
+        }
+
+        if token == "|" {
+            // Parse closure: |param1, param2| expression
+            let mut params = Vec::new();
+            
+            // Parse parameters
+            if self.peek().map(|s| s.as_str()) != Some("|") {
+                loop {
+                    let param = self.advance().ok_or("Expected parameter name in closure")?;
+                    params.push(param);
+                    
+                    if self.peek().map(|s| s.as_str()) == Some(",") {
+                        self.advance(); // consume ','
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            self.expect("|")?; // closing pipe
+            
+            // Parse the body expression
+            let body = self.parse_expression()?;
+            
+            return Ok(Expression::Closure {
+                params,
+                body: Box::new(body),
+            });
         }
 
         if token == "$" {
