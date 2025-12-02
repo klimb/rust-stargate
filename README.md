@@ -56,6 +56,44 @@ let product = [2, 3, 4].reduce(1, acc, n: acc * n);  # 24
 let max = [3, 7, 2, 9, 1].reduce(0, acc, x: acc + x);  # 20
 ```
 
+**Apply closures to any value:**
+```rust
+# Apply works on any type - numbers, strings, lists, objects
+let x = 5;
+let doubled = x.apply(n: n * 2);  # 10
+
+let greeting = "world".apply(s: "Hello, " + s);  # "Hello, world"
+
+let sum = [1, 2, 3].apply(list: list.reduce(0, a, b: a + b));  # 6
+
+# Chain apply for functional composition
+let result = 10
+    .apply(x: x + 5)      # 15
+    .apply(x: x * 2)      # 30
+    .apply(x: x - 10);    # 20
+
+# Apply complex transformations
+let data = [1, 2, 3, 4, 5];
+let evens_squared = data.apply(list: 
+    list.filter(x: x % 2 == 0).map(x: x * x)
+);  # [4, 16]
+
+# Apply on command objects
+let dir = (list-directory .);
+let total_size = dir.apply(obj:
+    obj.entries
+        .filter(e: e.type == "file")
+        .map(e: e.size)
+        .reduce(0, a, b: a + b)
+);
+
+# Chain apply on objects
+let file_count = dir
+    .apply(obj: obj.entries)
+    .apply(list: list.filter(e: e.type == "file"))
+    .apply(list: list.size());
+```
+
 **Test closures:**
 ```rust
 [test]

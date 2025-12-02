@@ -1,0 +1,88 @@
+#!/usr/bin/env stargate-shell
+# Test apply() on command objects (JSON objects)
+
+use ut;
+
+# Test 1: Apply on command object - extract property
+[test]
+fn test_apply_extract_property() {
+    let dir = (list-directory .);
+    let count = dir.apply(obj: obj.total_count);
+    ut.assert_true(count > 0, "Should extract total_count property");
+}
+
+# Test 2: Apply on command object - transform entries
+[test]
+fn test_apply_transform_entries() {
+    let dir = (list-directory .);
+    let file_names = dir.apply(obj: obj.entries.map(e: e.name));
+    ut.assert_true(file_names.size() > 0, "Should get list of file names");
+}
+
+# Test 3: Apply with filtering on command object
+[test]
+fn test_apply_filter_entries() {
+    let dir = (list-directory .);
+    let rust_files = dir.apply(obj: 
+        obj.entries.filter(e: e.name.ends_with(".rs"))
+    );
+    ut.assert_true(rust_files.size() >= 0, "Should filter .rs files");
+}
+
+# Test 4: Apply complex pipeline on command object
+[test]
+fn test_apply_complex_pipeline() {
+    let dir = (list-directory .);
+    let total_size = dir.apply(obj:
+        obj.entries
+            .filter(e: e.type == "file")
+            .map(e: e.size)
+            .reduce(0, a, b: a + b)
+    );
+    ut.assert_true(total_size >= 0, "Should calculate total file size");
+}
+
+# Test 5: Chain apply on command objects
+[test]
+fn test_chain_apply_on_object() {
+    let dir = (list-directory .);
+    let result = dir
+        .apply(obj: obj.entries)
+        .apply(list: list.size());
+    ut.assert_true(result > 0, "Should chain apply calls on object");
+}
+
+# Test 6: Apply to extract nested array from object
+[test]
+fn test_apply_nested_array() {
+    let dir = (list-directory .);
+    let types = dir.apply(obj: obj.entries.map(e: e.type));
+    ut.assert_true(types.size() > 0, "Should extract type array");
+}
+
+# Test 7: Apply with multiple transformations
+[test]
+fn test_apply_multi_transform() {
+    let dir = (list-directory .);
+    let large_files = dir.apply(obj:
+        obj.entries
+            .filter(e: e.type == "file")
+            .filter(e: e.size > 1000)
+    );
+    ut.assert_true(large_files.size() >= 0, "Should filter large files");
+}
+
+# Test 8: Apply to count specific types
+[test]
+fn test_apply_count_directories() {
+    let dir = (list-directory .);
+    let dir_count = dir.apply(obj:
+        obj.entries
+            .filter(e: e.type == "directory")
+            .size()
+    );
+    ut.assert_true(dir_count >= 0, "Should count directories");
+}
+
+print ut.stats;
+exit(ut.healthy);
