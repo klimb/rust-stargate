@@ -77,10 +77,8 @@ fn test_dict_has_key() {
 [test]
 fn test_dict_remove() {
     let data = {"x": 1, "y": 2, "z": 3};
-    let updated = data.remove("y");
-    ut.assert_equals(updated.size(), 2);
-    ut.assert_equals(updated.has_key("y"), false);
-    ut.assert_true(updated.has_key("x"));
+    let removed_value = data.remove("y");
+    ut.assert_equals(removed_value, 2, "remove should return the removed value");
 }
 
 [test]

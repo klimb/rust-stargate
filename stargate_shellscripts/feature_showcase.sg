@@ -1,0 +1,62 @@
+#!/usr/bin/env stargate-shell
+# Complete feature demonstration for Unix command execution in Stargate
+
+use ut;
+
+[test]
+fn test_absolute_path_echo() {
+    let result = execute-process("/bin/echo", "✓ /bin/echo works");
+    ut.assert_not_equals(result, "", "Absolute path echo should work");
+    ut.assert_equals(result, "✓ /bin/echo works", "Output should match input");
+}
+
+[test]
+fn test_absolute_path_printf() {
+    let result = execute-process("/usr/bin/printf", "✓ /usr/bin/printf works: %d\n", "42");
+    ut.assert_not_equals(result, "", "Absolute path printf should work");
+}
+
+[test]
+fn test_absolute_path_date() {
+    let result = execute-process("/bin/date", "+%Y-%m-%d");
+    ut.assert_not_equals(result, "", "Absolute path date should work");
+}
+
+[test]
+fn test_relative_path_execution() {
+    let result = execute-process("./stargate_shellscripts/shell-integration/simple_test.sh", "✓ Relative path execution works");
+    ut.assert_not_equals(result, "", "Relative path should work");
+}
+
+[test]
+fn test_path_resolved_which() {
+    let result = execute-process("which", "echo");
+    ut.assert_not_equals(result, "", "which via PATH should work");
+}
+
+[test]
+fn test_path_resolved_uname() {
+    let result = execute-process("/usr/bin/uname", "-s");
+    ut.assert_not_equals(result, "", "uname should return OS");
+}
+
+[test]
+fn test_pipeline_echo_grep() {
+    let result = execute-process("/bin/sh", "-c", "echo 'testing pipeline' | /bin/grep pipe");
+    ut.assert_not_equals(result, "", "Pipeline with grep should work");
+}
+
+[test]
+fn test_environment_inheritance() {
+    let result = execute-process("/bin/sh", "-c", "echo $HOME");
+    ut.assert_not_equals(result, "", "Environment variables should be inherited");
+}
+
+[test]
+fn test_find_wc_workflow() {
+    let result = execute-process("/bin/sh", "-c", "/usr/bin/find stargate_shellscripts -name '*.sg' -type f | /usr/bin/wc -l");
+    ut.assert_not_equals(result, "", "Complex workflow should work");
+}
+
+print ut.stats;
+exit(ut.healthy);

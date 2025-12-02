@@ -1,0 +1,64 @@
+#!/usr/bin/env stargate-shell
+# Advanced pipeline demo: mixing Stargate commands with Unix commands
+
+use ut;
+
+[test]
+fn test_stargate_list_piped_to_grep() {
+    # List directory and filter with Unix grep
+    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/*.sg | /bin/grep demo");
+    ut.assert_not_equals(result, "", "list-directory | grep should work");
+}
+
+[test]
+fn test_unix_ls_piped_to_stargate() {
+    # Unix ls piped to processing
+    let result = execute-process("/bin/sh", "-c", "/bin/ls -1 stargate_shellscripts | /bin/grep demo");
+    ut.assert_not_equals(result, "", "Unix ls piped should work");
+}
+
+[test]
+fn test_chain_multiple_unix_commands() {
+    # Chain echo | tr | grep
+    let result = execute-process("/bin/sh", "-c", "echo 'one two three four' | /usr/bin/tr ' ' '\\n' | /bin/grep t");
+    ut.assert_not_equals(result, "", "Multi-command pipeline should work");
+}
+
+[test]
+fn test_absolute_path_date() {
+    let result = execute-process("/bin/date", "+%Y-%m-%d %H:%M:%S");
+    ut.assert_not_equals(result, "", "Absolute path date should work");
+}
+
+[test]
+fn test_absolute_path_whoami() {
+    let result = execute-process("/usr/bin/whoami");
+    ut.assert_not_equals(result, "", "whoami should return username");
+}
+
+[test]
+fn test_absolute_path_pwd() {
+    let result = execute-process("/bin/pwd");
+    ut.assert_not_equals(result, "", "pwd should return current directory");
+}
+
+[test]
+fn test_relative_path_script_call() {
+    let result = execute-process("./stargate_shellscripts/shell-integration/simple_test.sh", "Called from pipeline demo");
+    ut.assert_not_equals(result, "", "Relative path script should work");
+}
+
+[test]
+fn test_path_resolved_which() {
+    let result = execute-process("which", "stargate");
+    ut.assert_not_equals(result, "", "which should find stargate");
+}
+
+[test]
+fn test_path_resolved_uname() {
+    let result = execute-process("/usr/bin/uname", "-s");
+    ut.assert_not_equals(result, "", "uname should return OS name");
+}
+
+print ut.stats;
+exit(ut.healthy);

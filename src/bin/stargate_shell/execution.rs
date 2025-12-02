@@ -5,6 +5,7 @@ use std::process::{Command, Stdio};
 use super::parsing::parse_pipeline;
 use super::commands::{get_command_aliases, is_stargate_command};
 use super::path::find_in_path;
+use std::path::PathBuf;
 
 // Commands that already consume/produce JSON and shouldn't get -o flag
 const OBJECT_NATIVE_COMMANDS: &[&str] = &[
@@ -135,9 +136,60 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
         .and_then(|p| p.parent().map(|d| d.join("stargate")))
         .unwrap_or_else(|| "stargate".into());
 
+    // If the command contains a path separator, treat it as an explicit path
+    if cmd_parts[0].contains('/') {
+        let path = PathBuf::from(&cmd_parts[0]);
+        if !path.exists() {
+            return Err(format!("Command not found: {}", cmd_parts[0]));
+        }
+
+        let mut child = Command::new(path)
+            .args(&cmd_parts[1..])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("Failed to execute command: {}", e))?;
+
+        let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+        let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+        let mut output = String::new();
+        let mut error_output = String::new();
+
+        BufReader::new(stdout)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    output.push_str(&line);
+                    output.push('\n');
+                }
+            });
+
+        BufReader::new(stderr)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    error_output.push_str(&line);
+                    error_output.push('\n');
+                }
+            });
+
+        let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
+
+        if !error_output.is_empty() {
+            eprint!("{}", error_output);
+        }
+
+        if status.success() {
+            return Ok(output);
+        } else {
+            return Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)));
+        }
+    }
+
     // Check if this is a stargate command or should use PATH
     let is_stargate_cmd = is_stargate_command(&cmd_name);
-    
+
     if is_stargate_cmd {
         // Execute as stargate command
         let mut args = vec![cmd_name.clone()];
@@ -258,12 +310,72 @@ pub fn execute_with_object_pipe(cmd_parts: &[String], json_input: Option<&str>, 
 
     // Check if -o or --obj flag is already present
     let has_obj_flag = cmd_parts.iter().any(|s| s == "-o" || s == "--obj");
-    
+
     // Check if this is a JSON-native command that doesn't need -o
     let cmd_name = cmd_parts.first().map(|s| s.as_str()).unwrap_or("");
     let is_object_native = is_object_native_command(cmd_name);
-    
-    // Automatically add --obj for JSON output in pipelines
+
+    // If command contains a path separator, run it directly
+    if cmd_parts[0].contains('/') {
+        let path = PathBuf::from(&cmd_parts[0]);
+        if !path.exists() {
+            return Err(format!("Command not found: {}", cmd_parts[0]));
+        }
+
+        let mut child = Command::new(path)
+            .args(&cmd_parts[1..])
+            .stdin(if json_input.is_some() { Stdio::piped() } else { Stdio::inherit() })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("Failed to execute command: {}", e))?;
+
+        // If we have JSON input, write it to stdin
+        if let Some(input) = json_input {
+            if let Some(mut stdin) = child.stdin.take() {
+                stdin.write_all(input.as_bytes())
+                    .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+            }
+        }
+
+        let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+        let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+        let mut output = String::new();
+        let mut error_output = String::new();
+
+        BufReader::new(stdout)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    output.push_str(&line);
+                    output.push('\n');
+                }
+            });
+
+        BufReader::new(stderr)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    error_output.push_str(&line);
+                    error_output.push('\n');
+                }
+            });
+
+        let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
+
+        if !error_output.is_empty() {
+            eprint!("{}", error_output);
+        }
+
+        if status.success() {
+            return Ok(output);
+        } else {
+            return Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)));
+        }
+    }
+
+    // Automatically add --obj for JSON output in pipelines for stargate commands
     let mut args = cmd_parts.to_vec();
     if should_output_json && !has_obj_flag && !is_object_native {
         // Insert --obj after the command name (first arg)
@@ -272,57 +384,118 @@ pub fn execute_with_object_pipe(cmd_parts: &[String], json_input: Option<&str>, 
         }
     }
 
-    let mut child = Command::new(&stargate_bin)
-        .args(&args)
-        .stdin(if json_input.is_some() { Stdio::piped() } else { Stdio::inherit() })
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("Failed to execute command: {}", e))?;
+    // If this is a stargate command -> run the stargate binary; else try PATH
+    if is_stargate_command(cmd_name) {
+        let mut child = Command::new(&stargate_bin)
+            .args(&args)
+            .stdin(if json_input.is_some() { Stdio::piped() } else { Stdio::inherit() })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("Failed to execute command: {}", e))?;
 
-    // If we have JSON input, write it to stdin
-    if let Some(input) = json_input {
-        if let Some(mut stdin) = child.stdin.take() {
-            stdin.write_all(input.as_bytes())
-                .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+        // If we have JSON input, write it to stdin
+        if let Some(input) = json_input {
+            if let Some(mut stdin) = child.stdin.take() {
+                stdin.write_all(input.as_bytes())
+                    .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+            }
+        }
+
+        let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+        let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+        let mut output = String::new();
+        let mut error_output = String::new();
+
+        BufReader::new(stdout)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    output.push_str(&line);
+                    output.push('\n');
+                }
+            });
+
+        BufReader::new(stderr)
+            .lines()
+            .for_each(|line| {
+                if let Ok(line) = line {
+                    error_output.push_str(&line);
+                    error_output.push('\n');
+                }
+            });
+
+        let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
+
+        if !error_output.is_empty() {
+            eprint!("{}", error_output);
+        }
+
+        if status.success() {
+            Ok(output)
+        } else {
+            Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)))
+        }
+    } else {
+        // Not a stargate command: try PATH
+        if let Some(path_cmd) = find_in_path(cmd_name) {
+            let mut child = Command::new(path_cmd)
+                .args(&cmd_parts[1..])
+                .stdin(if json_input.is_some() { Stdio::piped() } else { Stdio::inherit() })
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .map_err(|e| format!("Failed to execute command: {}", e))?;
+
+            // If we have JSON input, write it to stdin
+            if let Some(input) = json_input {
+                if let Some(mut stdin) = child.stdin.take() {
+                    stdin.write_all(input.as_bytes())
+                        .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+                }
+            }
+
+            let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+            let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
+
+            let mut output = String::new();
+            let mut error_output = String::new();
+
+            BufReader::new(stdout)
+                .lines()
+                .for_each(|line| {
+                    if let Ok(line) = line {
+                        output.push_str(&line);
+                        output.push('\n');
+                    }
+                });
+
+            BufReader::new(stderr)
+                .lines()
+                .for_each(|line| {
+                    if let Ok(line) = line {
+                        error_output.push_str(&line);
+                        error_output.push('\n');
+                    }
+                });
+
+            let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
+
+            if !error_output.is_empty() {
+                eprint!("{}", error_output);
+            }
+
+            if status.success() {
+                Ok(output)
+            } else {
+                Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)))
+            }
+        } else {
+            Err(format!("Command not found: {}", cmd_name))
         }
     }
 
-    let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
-    let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
-
-    let mut output = String::new();
-    let mut error_output = String::new();
-
-    BufReader::new(stdout)
-        .lines()
-        .for_each(|line| {
-            if let Ok(line) = line {
-                output.push_str(&line);
-                output.push('\n');
-            }
-        });
-
-    BufReader::new(stderr)
-        .lines()
-        .for_each(|line| {
-            if let Ok(line) = line {
-                error_output.push_str(&line);
-                error_output.push('\n');
-            }
-        });
-
-    let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
-
-    if !error_output.is_empty() {
-        eprint!("{}", error_output);
-    }
-
-    if status.success() {
-        Ok(output)
-    } else {
-        Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)))
-    }
 }
 
 pub fn execute_pipeline(input: &str) -> Result<(), String> {

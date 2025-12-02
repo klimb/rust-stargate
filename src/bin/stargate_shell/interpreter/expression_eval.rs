@@ -253,6 +253,9 @@ impl Interpreter {
                 }
                 
                 match obj_value {
+                    Value::String(s) => {
+                        handle_string_methods(&method, s, &args, &mut |expr| self.eval_expression(expr))
+                    }
                     Value::List(list) => {
                         handle_list_methods(&method, list, &args, &mut |expr| self.eval_expression(expr))
                     }
