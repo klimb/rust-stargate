@@ -252,6 +252,15 @@ impl Interpreter {
                     return result;
                 }
                 
+                // Handle universal apply method - apply a closure to any value
+                if method == "apply" {
+                    if args.len() != 1 {
+                        return Err(format!("apply() expects 1 argument (closure), got {}", args.len()));
+                    }
+                    let closure = self.eval_expression(args[0].clone())?;
+                    return self.apply_closure(closure, vec![obj_value]);
+                }
+                
                 match obj_value {
                     Value::String(s) => {
                         handle_string_methods(&method, s, &args, &mut |expr| self.eval_expression(expr))
