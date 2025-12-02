@@ -11,7 +11,7 @@ fn test_find_sg_scripts() {
 
 [test]
 fn test_list_with_grep() {
-    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts | /bin/grep .sg | /usr/bin/head -3");
+    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts/basics | /bin/grep .sg | /usr/bin/head -3");
     ut.assert_not_equals(result, "", "ls | grep should filter scripts");
 }
 
@@ -29,7 +29,7 @@ fn test_count_sg_files() {
 
 [test]
 fn test_grep_for_keyword() {
-    let result = execute-process("/bin/sh", "-c", "/bin/grep -l pipeline stargate_shellscripts/*.sg 2>/dev/null | /usr/bin/wc -l");
+    let result = execute-process("/bin/sh", "-c", "/bin/grep -l pipeline stargate_shellscripts/*/*.sg 2>/dev/null | /usr/bin/wc -l");
     ut.assert_not_equals(result, "", "grep search should work");
 }
 

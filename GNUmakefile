@@ -316,7 +316,7 @@ test:
 test-scripting:
 	@echo "Running stargate-shell scripting tests..."
 	@${CARGO} build --bin stargate-shell --bin stargate $(PROFILE_CMD)
-	@for script in $(BASEDIR)/stargate_shellscripts/*.sg; do \
+	@for script in $(BASEDIR)/stargate_shellscripts/*/*.sg; do \
 		echo "Running $$script..."; \
 		$(BUILDDIR)/stargate-shell "$$script" || exit 1; \
 		echo ""; \
