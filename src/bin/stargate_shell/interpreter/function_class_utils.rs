@@ -50,7 +50,8 @@ impl Interpreter {
                 
                 if output.status.success() {
                     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-                    return Ok(Value::String(stdout));
+                    // Automatically trim trailing newline from command output
+                    return Ok(Value::String(stdout.trim_end().to_string()));
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
                     return Err(format!("Command '{}' failed: {}", cmd_path, stderr));

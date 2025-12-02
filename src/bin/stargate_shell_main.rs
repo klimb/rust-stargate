@@ -245,8 +245,15 @@ fn main() {
                             || input.ends_with(';')
                             || is_builtin_command;
                         
-                        let has_property_access = input.contains('.') 
-                            || (input.contains('[') && input.contains(']'));
+                        // Check for property access, but exclude file paths (./foo, ../bar, /path)
+                        let is_path_like = input.starts_with("./") 
+                            || input.starts_with("../")
+                            || input.starts_with('/');
+                        
+                        let has_property_access = !is_path_like && (
+                            (input.contains('.') && input.chars().filter(|c| *c == '.').count() > 0)
+                            || (input.contains('[') && input.contains(']'))
+                        );
                         
                         if is_statement || has_property_access {
                             // Execute as script

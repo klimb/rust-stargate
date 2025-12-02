@@ -1,0 +1,37 @@
+#!/usr/bin/env stargate-shell
+# Practical workflow example: Using external Unix tools alongside Stargate commands
+
+use ut;
+
+[test]
+fn test_find_sg_scripts() {
+    let result = execute-process("/bin/sh", "-c", "/usr/bin/find stargate_shellscripts -name '*.sg' -type f | /usr/bin/head -5");
+    ut.assert_not_equals(result, "", "find should locate .sg files");
+}
+
+[test]
+fn test_list_with_grep() {
+    let result = execute-process("/bin/sh", "-c", "ls stargate_shellscripts | /bin/grep .sg | /usr/bin/head -3");
+    ut.assert_not_equals(result, "", "ls | grep should filter scripts");
+}
+
+[test]
+fn test_custom_analysis_script() {
+    let result = execute-process("./stargate_shellscripts/shell-integration/file_analyzer.sh");
+    ut.assert_not_equals(result, "", "Custom analysis script should work");
+}
+
+[test]
+fn test_count_sg_files() {
+    let result = execute-process("/bin/sh", "-c", "/usr/bin/find stargate_shellscripts -name '*.sg' | /usr/bin/wc -l");
+    ut.assert_not_equals(result, "", "Count pipeline should work");
+}
+
+[test]
+fn test_grep_for_keyword() {
+    let result = execute-process("/bin/sh", "-c", "/bin/grep -l pipeline stargate_shellscripts/*.sg 2>/dev/null | /usr/bin/wc -l");
+    ut.assert_not_equals(result, "", "grep search should work");
+}
+
+print ut.stats;
+exit(ut.healthy);
