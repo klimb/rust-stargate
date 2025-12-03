@@ -1,13 +1,16 @@
 use ut;
+
 [test]
 fn test_relative_path_with_dot_slash() {
     let result = execute-process("./stargate-language/scripts/shell-integration/simple_test.sh", "Executing via relative path");
     ut.assert_not_equals(result, "", "Relative path execution should work");
 }
+
 [test]
 fn test_relative_path_in_subdirectory() {
     let result = execute-process("./stargate-language/scripts/shell-integration/json_producer.sh");
     ut.assert_not_equals(result, "", "Subdirectory relative path should work");
 }
+
 print ut.stats;
 exit(ut.healthy);

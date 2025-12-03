@@ -1,22 +1,26 @@
 use ut;
+
 [test]
 fn test_users_object() {
     let users_obj = (users);
     let count = users_obj.count;
     ut.assert_true(count >= 0, "users should return user count");
 }
+
 [test]
 fn test_pathchk_object() {
     let check = (pathchk /tmp);
     let all_valid = check.all_valid;
     ut.assert_equals(all_valid, true, "pathchk should validate /tmp");
 }
+
 [test]
 fn test_sync_object() {
     let sync_data = (sync);
     let success = sync_data.success;
     ut.assert_equals(success, true, "sync should return success status");
 }
+
 [test]
 fn test_mktemp_object() {
     let tmpfile = (mktemp);
@@ -25,5 +29,6 @@ fn test_mktemp_object() {
     ut.assert_not_equals(path, "", "mktemp should create temp file");
     ut.assert_equals(temp_type, "file", "mktemp should create file by default");
 }
+
 print ut.stats;
 exit(ut.healthy);

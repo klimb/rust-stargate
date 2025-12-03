@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_and_operator() {
     let x = 5;
@@ -8,6 +9,7 @@ fn test_and_operator() {
     let x_pos_y_small = x > 0 && y < 5;
     ut.assert_equals(x_pos_y_small, false, "y is not less than 5");
 }
+
 [test]
 fn test_or_operator() {
     let a = 15;
@@ -17,6 +19,7 @@ fn test_or_operator() {
     let either_negative = a < 0 || b < 0;
     ut.assert_equals(either_negative, false, "Neither a nor b is negative");
 }
+
 [test]
 fn test_combined_operators() {
     let age = 25;
@@ -26,6 +29,7 @@ fn test_combined_operators() {
     let cannot_drive = age < 16 || !has_license;
     ut.assert_equals(cannot_drive, false, "Person meets driving requirements");
 }
+
 [test]
 fn test_not_operator() {
     let enabled = true;
@@ -36,6 +40,7 @@ fn test_not_operator() {
     let double_negated = !!value;
     ut.assert_equals(double_negated, true, "Double negation should return original");
 }
+
 [test]
 fn test_bool_conversion() {
     let num = 0;
@@ -45,6 +50,7 @@ fn test_bool_conversion() {
     let as_bool2 = bool(num2);
     ut.assert_equals(as_bool2, true, "bool(5) should be true");
 }
+
 [test]
 fn test_not_with_and_or() {
     let is_admin = false;
@@ -52,6 +58,7 @@ fn test_not_with_and_or() {
     ut.assert_equals(!is_admin && is_logged_in, true, "User is logged in but not admin");
     ut.assert_equals(!is_admin || !is_logged_in, true, "At least one condition true");
 }
+
 [test]
 fn test_de_morgan_law() {
     let p = true;
@@ -60,6 +67,7 @@ fn test_de_morgan_law() {
     let right_side = !p || !q;
     ut.assert_equals(left_side, right_side, "De Morgan's Law should hold");
 }
+
 [test]
 fn test_complex_nested_logic() {
     let a = true;
@@ -70,5 +78,6 @@ fn test_complex_nested_logic() {
     let result = (((a && b) || (c && d)) && z);
     ut.assert_equals(result, true, "Complex nested condition should evaluate correctly");
 }
+
 print ut.stats;
 exit(ut.healthy);

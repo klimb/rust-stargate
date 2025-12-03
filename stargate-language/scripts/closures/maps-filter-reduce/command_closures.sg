@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_directory_map() {
     let names = (list-directory .).entries.map(entry: entry.name);
@@ -6,6 +7,7 @@ fn test_directory_map() {
     let cargo_files = names.filter(name: name == "Cargo.toml");
     ut.assert_true(cargo_files.size() > 0, "Should find Cargo.toml in directory");
 }
+
 [test]
 fn test_directory_filter() {
     let rust_files = (list-directory .).entries.filter(entry: entry.name.ends_with(".rs"));
@@ -14,11 +16,13 @@ fn test_directory_filter() {
         ut.assert_true(file.name.ends_with(".rs"), "Filtered items should end with .rs");
     }
 }
+
 [test]
 fn test_directory_reduce() {
     let total_size = (list-directory .).entries.reduce(0, acc, entry: acc + entry.size);
     ut.assert_true(total_size > 0, "Total size should be positive");
 }
+
 [test]
 fn test_directory_chain() {
     let toml_total = (list-directory .).entries
@@ -27,6 +31,7 @@ fn test_directory_chain() {
         .reduce(0, acc, size: acc + size);
     ut.assert_true(toml_total >= 0, "TOML files total should be non-negative");
 }
+
 [test]
 fn test_extract_field() {
     let types = (list-directory .).entries.map(entry: entry.type);
@@ -36,6 +41,7 @@ fn test_extract_field() {
         ut.assert_true(valid, "Type should be file, directory, or symlink");
     }
 }
+
 [test]
 fn test_filter_count() {
     let file_count = (list-directory .).entries
@@ -43,16 +49,19 @@ fn test_filter_count() {
         .size();
     ut.assert_true(file_count >= 0, "File count should be non-negative");
 }
+
 [test]
 fn test_find_largest() {
     let sizes = (list-directory .).entries.map(entry: entry.size);
     let max_size = sizes.reduce(0, acc, size: acc + size);  
     ut.assert_true(max_size >= 0, "Total size should be non-negative");
 }
+
 [test]
 fn test_empty_filter() {
     let impossible = (list-directory .).entries.filter(entry: entry.name == "this_file_absolutely_does_not_exist_12345.xyz");
     ut.assert_equals(impossible.size(), 0, "Should get empty list for impossible filter");
 }
+
 print ut.stats;
 exit(ut.healthy);

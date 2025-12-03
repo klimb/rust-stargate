@@ -1,14 +1,17 @@
 use ut;
+
 [test]
 fn test_apply_extract_property() {
     let count = (list-directory .).apply(obj: obj.total_count);
     ut.assert_true(count > 0, "Should extract total_count property");
 }
+
 [test]
 fn test_apply_transform_entries() {
     let file_names = (list-directory .).apply(obj: obj.entries.map(e: e.name));
     ut.assert_true(file_names.size() > 0, "Should get list of file names");
 }
+
 [test]
 fn test_apply_filter_entries() {
     let rust_files = (list-directory .).apply(obj: 
@@ -16,6 +19,7 @@ fn test_apply_filter_entries() {
     );
     ut.assert_true(rust_files.size() >= 0, "Should filter .rs files");
 }
+
 [test]
 fn test_apply_complex_pipeline() {
     let total_size = (list-directory .).apply(obj:
@@ -26,6 +30,7 @@ fn test_apply_complex_pipeline() {
     );
     ut.assert_true(total_size >= 0, "Should calculate total file size");
 }
+
 [test]
 fn test_chain_apply_on_object() {
     let result = (list-directory .)
@@ -33,11 +38,13 @@ fn test_chain_apply_on_object() {
         .apply(list: list.size());
     ut.assert_true(result > 0, "Should chain apply calls on object");
 }
+
 [test]
 fn test_apply_nested_array() {
     let types = (list-directory .).apply(obj: obj.entries.map(e: e.type));
     ut.assert_true(types.size() > 0, "Should extract type array");
 }
+
 [test]
 fn test_apply_multi_transform() {
     let large_files = (list-directory .).apply(obj:
@@ -47,6 +54,7 @@ fn test_apply_multi_transform() {
     );
     ut.assert_true(large_files.size() >= 0, "Should filter large files");
 }
+
 [test]
 fn test_apply_count_directories() {
     let dir_count = (list-directory .).apply(obj:
@@ -56,5 +64,6 @@ fn test_apply_count_directories() {
     );
     ut.assert_true(dir_count >= 0, "Should count directories");
 }
+
 print ut.stats;
 exit(ut.healthy);

@@ -1,29 +1,35 @@
 use ut;
+
 [test]
 fn test_piping() {
     let result = list-directory;
     ut.assert_true(result.total_count >= 0, "Pipeline should return object with total_count");
 }
+
 [test]
 fn test_filter_piping() {
     let result = list-directory | find-text toml;
     ut.assert_true(true, "Filter pipeline should execute");
 }
+
 [test]
 fn test_users_piping() {
     let user_list = (users) | slice-object users;
     ut.assert_true(user_list.size() >= 0, "Should get array of users");
 }
+
 [test]
 fn test_pathchk_validation_piping() {
     let validation = (pathchk /tmp) | slice-object paths;
     ut.assert_true(validation.size() >= 1, "Should validate paths");
 }
+
 [test]
 fn test_sync_operation_piping() {
     let sync_result = (sync);
     let operation = sync_result.operation;
     ut.assert_equals(operation, "sync", "Should report sync operation type");
 }
+
 print ut.stats;
 exit(ut.healthy);

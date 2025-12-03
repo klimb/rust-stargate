@@ -1,20 +1,24 @@
 use ut;
+
 [test]
 fn test_absolute_path_echo() {
     let result = execute-process("/bin/echo", "Hello from /bin/echo");
     ut.assert_not_equals(result, "", "/bin/echo should produce output");
     ut.assert_equals(result, "Hello from /bin/echo", "Output should match input");
 }
+
 [test]
 fn test_absolute_path_which() {
     let result = execute-process("/usr/bin/which", "stargate");
     ut.assert_not_equals(result, "", "/usr/bin/which should find stargate");
 }
+
 [test]
 fn test_relative_path_execution() {
     let result = execute-process("./stargate-language/scripts/shell-integration/simple_test.sh", "test");
     ut.assert_not_equals(result, "", "Relative path execution should work");
 }
+
 [test]
 fn test_mixed_stargate_and_external() {
     let sg_result = execute-process("echo", "Stargate echo");
@@ -23,25 +27,30 @@ fn test_mixed_stargate_and_external() {
     ut.assert_not_equals(ext_result, "", "External echo should work");
     ut.assert_equals(ext_result, "External echo", "Output should match input");
 }
+
 [test]
 fn test_external_in_pipeline() {
     let result = execute-process("/bin/sh", "-c", "echo 'testing grep' | /bin/grep test");
     ut.assert_not_equals(result, "", "Pipeline with external command should work");
 }
+
 [test]
 fn test_stargate_piped_to_external() {
     let file_count = execute-process("/bin/sh", "-c", "ls stargate-language/scripts/*/*.sg 2>/dev/null | wc -l");
     ut.assert_not_equals(file_count, "", "Stargate to external pipeline should work");
 }
+
 [test]
 fn test_path_resolved_which() {
     let result = execute-process("which", "echo");
     ut.assert_not_equals(result, "", "which should resolve via PATH");
 }
+
 [test]
 fn test_path_resolved_date() {
     let result = execute-process("date", "+%Y-%m-%d");
     ut.assert_not_equals(result, "", "date should work via PATH");
 }
+
 print ut.stats;
 exit(ut.healthy);

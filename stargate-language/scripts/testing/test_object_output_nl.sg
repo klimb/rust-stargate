@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_nl_object_output_simple() {
     echo "line 1\nline 2\nline 3" > /tmp/nl_test_simple.txt;
@@ -7,6 +8,7 @@ fn test_nl_object_output_simple() {
     ut.assert_equals(total, 3, "Should have 3 lines");
     rm /tmp/nl_test_simple.txt;
 }
+
 [test]
 fn test_nl_object_output_empty() {
     echo "" > /tmp/nl_test_empty.txt;
@@ -15,6 +17,7 @@ fn test_nl_object_output_empty() {
     ut.assert_equals(total, 0, "Empty file should have 0 lines");
     rm /tmp/nl_test_empty.txt;
 }
+
 [test]
 fn test_nl_object_output_with_blanks() {
     echo "line 1\n\nline 3" > /tmp/nl_test_blanks.txt;
@@ -23,6 +26,7 @@ fn test_nl_object_output_with_blanks() {
     ut.assert_equals(total, 3, "Should count blank lines");
     rm /tmp/nl_test_blanks.txt;
 }
+
 [test]
 fn test_nl_object_output_number_all() {
     echo "line 1\n\nline 3" > /tmp/nl_test_all.txt;
@@ -31,6 +35,7 @@ fn test_nl_object_output_number_all() {
     ut.assert_true(true, "Number all lines mode works");
     rm /tmp/nl_test_all.txt;
 }
+
 [test]
 fn test_nl_object_output_starting_line() {
     echo "first\nsecond" > /tmp/nl_test_start.txt;
@@ -39,6 +44,7 @@ fn test_nl_object_output_starting_line() {
     ut.assert_equals(total, 2, "Custom starting line number works");
     rm /tmp/nl_test_start.txt;
 }
+
 [test]
 fn test_nl_object_output_increment() {
     echo "a\nb\nc" > /tmp/nl_test_inc.txt;
@@ -47,6 +53,7 @@ fn test_nl_object_output_increment() {
     ut.assert_equals(total, 3, "Custom increment works");
     rm /tmp/nl_test_inc.txt;
 }
+
 [test]
 fn test_nl_object_output_pretty() {
     echo "test line" > /tmp/nl_test_pretty.txt;
@@ -55,6 +62,7 @@ fn test_nl_object_output_pretty() {
     ut.assert_equals(total, 1, "Pretty output works");
     rm /tmp/nl_test_pretty.txt;
 }
+
 [test]
 fn test_nl_object_output_format() {
     echo "formatted" > /tmp/nl_test_format.txt;
@@ -63,6 +71,7 @@ fn test_nl_object_output_format() {
     ut.assert_equals(total, 1, "Custom format works");
     rm /tmp/nl_test_format.txt;
 }
+
 [test]
 fn test_nl_object_output_field_filter() {
     echo "line" > /tmp/nl_test_filter.txt;
@@ -70,6 +79,7 @@ fn test_nl_object_output_field_filter() {
     ut.assert_equals(total_only, 1, "Field filter extracts total_lines");
     rm /tmp/nl_test_filter.txt;
 }
+
 [test]
 fn test_nl_object_output_multiple_files() {
     echo "file1" > /tmp/nl_test_file1.txt;
@@ -79,5 +89,6 @@ fn test_nl_object_output_multiple_files() {
     ut.assert_equals(total, 2, "Multiple files should combine");
     rm /tmp/nl_test_file1.txt /tmp/nl_test_file2.txt;
 }
+
 print ut.stats;
 exit(ut.healthy);

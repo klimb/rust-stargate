@@ -1,64 +1,81 @@
 use ut;
+
 class Car {
     let brand = "Generic";
     let top_speed = 120;
     let color = "white";
+
     fn get_current_speed() { return 5; }
 }
+
 class Ferrari extends Car {
     let brand = "Ferrari";
     let model = "F8 Tributo";
     let top_speed = 340;
     let color = "red";
     let speed = 320;
+
     fn get_current_speed() { return speed; }
 }
+
 class Driver {
     let first_name = "Dmitry";
     let last_name = "Kalashnikov";
     let car = new Ferrari;
+
     fn get_full_name() { return first_name + " " + last_name; } 
 }
+
 let driver = new Driver;
+
 [test]
 fn test_driver_first_name() {
     ut.assert_equals(driver.first_name, "Dmitry", "Driver first name should be Dmitry");
 }
+
 [test]
 fn test_driver_last_name() {
     ut.assert_equals(driver.last_name, "Kalashnikov", "Driver last name should be Kalashnikov");
 }
+
 [test]
 fn test_car_brand() {
     ut.assert_equals(driver.car.brand, "Ferrari", "Car brand should be Ferrari");
 }
+
 [test]
 fn test_car_model() {
     ut.assert_equals(driver.car.model, "F8 Tributo", "Car model should be F8 Tributo");
 }
+
 [test]
 fn test_car_top_speed() {
     ut.assert_equals(driver.car.top_speed, 340, "Ferrari top speed should be 340");
 }
+
 [test]
 fn test_car_color() {
     ut.assert_equals(driver.car.color, "red", "Ferrari color should be red");
 }
+
 [test]
 fn test_current_speed_method() {
     let current_speed = driver.car.get_current_speed();
     ut.assert_equals(current_speed, 320, "Current speed should be 320");
 }
+
 [test]
 fn test_inheritance() {
     let generic_car = new Car;
     ut.assert_equals(generic_car.brand, "Generic", "Base car brand should be Generic");
     ut.assert_equals(generic_car.top_speed, 120, "Base car top speed should be 120");
 }
+
 [test]
 fn test_get_full_name() {
     let full_name = driver.get_full_name();
     ut.assert_equals(full_name, "Dmitry Kalashnikov", "Full name should be Dmitry Kalashnikov");
 }
+
 print ut.stats;
 exit(ut.healthy);

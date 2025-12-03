@@ -1,14 +1,17 @@
 use ut;
+
 class Person {
     let name = "John Doe";
     let age = 30;
     let city = "New York";
 }
+
 class Book {
     let title = "The Great Book";
     let author = "Jane Smith";
     let pages = 300;
 }
+
 [test]
 fn test_person_properties() {
     let person = new Person;
@@ -19,6 +22,7 @@ fn test_person_properties() {
     ut.assert_equals(person_age, 30, "Person age should be 30");
     ut.assert_equals(person_city, "New York", "Person city should be New York");
 }
+
 [test]
 fn test_book_properties() {
     let book = new Book;
@@ -29,6 +33,7 @@ fn test_book_properties() {
     ut.assert_equals(book_author, "Jane Smith", "Book author should match");
     ut.assert_equals(book_pages, 300, "Book should have 300 pages");
 }
+
 [test]
 fn test_multiple_instances() {
     let person1 = new Person;
@@ -36,5 +41,6 @@ fn test_multiple_instances() {
     ut.assert_equals(person1.name, "John Doe", "Person1 should have default name");
     ut.assert_equals(person2.name, "John Doe", "Person2 should have default name");
 }
+
 print ut.stats;
 exit(ut.healthy);

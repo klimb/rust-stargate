@@ -1,11 +1,15 @@
 use ut;
+
 class FibonacciCalculator {
+
     fn init() {
     }
+
     fn compute(n) {
         if (n <= 1) {
             return n;
         }
+
         let prev = 0;
         let curr = 1;
         for i in range(2, n + 1) {
@@ -13,29 +17,36 @@ class FibonacciCalculator {
             let prev = curr;
             let curr = next;
         }
+
         return curr;
     }
 }
+
 let fib = new FibonacciCalculator();
+
 [test]
 fn test_fibonacci_0() {
     let result = fib.compute(0);
     ut.assert_equals(result, 0, "Fibonacci(0) should be 0");
 }
+
 [test]
 fn test_fibonacci_1() {
     let result = fib.compute(1);
     ut.assert_equals(result, 1, "Fibonacci(1) should be 1");
 }
+
 [test]
 fn test_fibonacci_5() {
     let result = fib.compute(5);
     ut.assert_equals(result, 5, "Fibonacci(5) should be 5");
 }
+
 [test]
 fn test_fibonacci_10() {
     let result = fib.compute(10);
     ut.assert_equals(result, 55, "Fibonacci(10) should be 55");
 }
+
 print ut.stats;
 exit(ut.healthy);

@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_dict_operations() {
     let d = {
@@ -9,6 +10,7 @@ fn test_dict_operations() {
     ut.assert_equals(d["nested"]["x"], 10);
     ut.assert_equals(d["list"].size(), 3);
 }
+
 [test]
 fn test_list_operations() {
     let mixed = [(list-directory), "text", 77, true];
@@ -17,5 +19,6 @@ fn test_list_operations() {
     mixed[2] = "replaced";
     ut.assert_equals(mixed[2], "replaced");
 }
+
 print ut.stats;
 exit(ut.healthy);

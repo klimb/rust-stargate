@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_nested_conditionals() {
     let total = (list-directory).total_count;
@@ -10,5 +11,6 @@ fn test_nested_conditionals() {
         ut.assert_true(ratio >= 0, "Ratio should be non-negative");
     }
 }
+
 print ut.stats;
 exit(ut.healthy);
