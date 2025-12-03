@@ -7,6 +7,8 @@ use std::io::Error;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError};
 use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 use sgcore::signals::{ALL_SIGNALS, signal_by_name_or_value, signal_name_by_value};
 use sgcore::{format_usage, show};
@@ -36,6 +38,8 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let obs_signal = handle_obsolete(&mut args);
 
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
     let mode = if matches.get_flag(options::TABLE) {
         Mode::Table
@@ -76,23 +80,53 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
             if pids.is_empty() {
                 Err(USimpleError::new(1, translate!("kill-error-no-process-id")))
             } else {
-                kill(sig, &pids);
+                if opts.object_output {
+                    let results = kill_with_results(sig, &pids);
+                    let output = object_output::filter_fields(
+                        json!({
+                            "signal": sig.map_or(0, |s| s as i32),
+                            "signal_name": sig_name,
+                            "processes": results
+                        }),
+                        field_filter
+                    );
+                    object_output::output(opts, output, || Ok(()))?;
+                } else {
+                    kill(sig, &pids);
+                }
                 Ok(())
             }
         }
         Mode::Table => {
-            table();
+            if opts.object_output {
+                let signals: Vec<_> = ALL_SIGNALS.iter().enumerate()
+                    .map(|(idx, signal)| json!({
+                        "number": idx,
+                        "name": signal
+                    }))
+                    .collect();
+                let output = object_output::filter_fields(json!({"signals": signals}), field_filter);
+                object_output::output(opts, output, || Ok(()))?;
+            } else {
+                table();
+            }
             Ok(())
         }
         Mode::List => {
-            list(&pids_or_signals);
+            if opts.object_output {
+                let output = list_as_json(&pids_or_signals)?;
+                let filtered = object_output::filter_fields(output, field_filter);
+                object_output::output(opts, filtered, || Ok(()))?;
+            } else {
+                list(&pids_or_signals);
+            }
             Ok(())
         }
     }
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("kill-about"))
@@ -128,7 +162,9 @@ pub fn uu_app() -> Command {
             Arg::new(options::PIDS_OR_SIGNALS)
                 .hide(true)
                 .action(ArgAction::Append)
-        )
+        );
+
+    object_output::add_json_args(cmd)
 }
 
 fn handle_obsolete(args: &mut Vec<String>) -> Option<usize> {
@@ -240,3 +276,84 @@ fn kill(sig: Option<Signal>, pids: &[i32]) {
         }
     }
 }
+
+fn kill_with_results(sig: Option<Signal>, pids: &[i32]) -> Vec<serde_json::Value> {
+    pids.iter()
+        .map(|&pid| {
+            let result = signal::kill(Pid::from_raw(pid), sig);
+            match result {
+                Ok(_) => json!({
+                    "pid": pid,
+                    "status": "success"
+                }),
+                Err(e) => json!({
+                    "pid": pid,
+                    "status": "error",
+                    "error": format!("{}", Error::from_raw_os_error(e as i32))
+                }),
+            }
+        })
+        .collect()
+}
+
+fn get_signal_info(signal_name_or_value: &str) -> UResult<serde_json::Value> {
+    let lower_8_bits = |x: usize| x & 0xff;
+    let option_num_parse = signal_name_or_value.parse::<usize>().ok();
+
+    for (value, &signal) in ALL_SIGNALS.iter().enumerate() {
+        if signal.eq_ignore_ascii_case(signal_name_or_value)
+            || format!("SIG{signal}").eq_ignore_ascii_case(signal_name_or_value)
+        {
+            return Ok(json!({
+                "query": signal_name_or_value,
+                "number": value,
+                "name": signal
+            }));
+        } else if signal_name_or_value == value.to_string()
+            || option_num_parse.is_some_and(|signal_value| lower_8_bits(signal_value) == value)
+            || option_num_parse.is_some_and(|signal_value| signal_value == value + OFFSET)
+        {
+            return Ok(json!({
+                "query": signal_name_or_value,
+                "number": value,
+                "name": signal
+            }));
+        }
+    }
+    Err(USimpleError::new(
+        1,
+        translate!("kill-error-invalid-signal", "signal" => signal_name_or_value.quote())
+    ).into())
+}
+
+fn list_as_json(signals: &Vec<String>) -> UResult<serde_json::Value> {
+    if signals.is_empty() {
+        let all_signals: Vec<_> = ALL_SIGNALS.iter()
+            .map(|signal| json!({"name": signal}))
+            .collect();
+        Ok(json!({"signals": all_signals}))
+    } else {
+        let mut results = Vec::new();
+        let mut has_error = false;
+        
+        for signal in signals {
+            match get_signal_info(signal) {
+                Ok(info) => results.push(info),
+                Err(e) => {
+                    results.push(json!({
+                        "query": signal,
+                        "error": e.to_string()
+                    }));
+                    has_error = true;
+                }
+            }
+        }
+        
+        if has_error {
+            Ok(json!({"signals": results, "has_errors": true}))
+        } else {
+            Ok(json!({"signals": results}))
+        }
+    }
+}
+
