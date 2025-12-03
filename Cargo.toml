@@ -193,6 +193,7 @@ feat_require_unix_core = [
   "nice",
   "nohup",
   "pathchk",
+  "ps",
   "stat",
   "stty",
   "timeout",
@@ -420,6 +421,7 @@ pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "
 pinky = { optional = true, version = "0.4.0", package = "sg_pinky", path = "src/sg/pinky" }
 pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "src/sg/pr" }
 printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "src/sg/printenv" }
+ps = { optional = true, version = "0.4.0", package = "sg_ps", path = "src/sg/ps" }
 printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "src/sg/printf" }
 ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "src/sg/ptx" }
 pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "src/sg/pwd" }
