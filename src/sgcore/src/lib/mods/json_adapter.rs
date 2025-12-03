@@ -12,48 +12,18 @@ use serde_json::Value;
 use std::io::Read;
 use std::path::PathBuf;
 
-/// Extract file paths from JSON input.
-///
-/// Supports multiple patterns:
-/// - `{"entries": [{"path": "...", "type": "file"}]}` (list-directory format)
-/// - `{"files": ["file1", "file2"]}`
-/// - `["file1", "file2", "file3"]` (flat array)
-/// - `{"results": [{"filename": "..."}]}`
-/// - Any nested structure with common file path field names
-///
-/// # Examples
-///
-/// ```
-/// use sgcore::json_adapter::extract_file_paths;
-/// use serde_json::json;
-///
-/// // list-directory format
-/// let json = json!({"entries": [{"path": "test.txt", "type": "file"}]});
-/// let paths = extract_file_paths(&json);
-/// assert_eq!(paths.len(), 1);
-///
-/// // Simple array
-/// let json = json!(["file1.txt", "file2.txt"]);
-/// let paths = extract_file_paths(&json);
-/// assert_eq!(paths.len(), 2);
-/// ```
 pub fn extract_file_paths(value: &Value) -> Vec<PathBuf> {
     match value {
-        // String value - treat as file path
         Value::String(s) => vec![PathBuf::from(s)],
         
-        // Array - process each element
         Value::Array(arr) => arr.iter()
             .flat_map(extract_file_paths)
             .collect(),
         
-        // Object - look for common patterns
         Value::Object(map) => {
-            // Pattern 1: {entries: [...]} - common in list-directory
             if let Some(Value::Array(entries)) = map.get("entries") {
                 return entries.iter()
                     .filter_map(|entry| {
-                        // Only process if it's a file (not directory)
                         if let Value::Object(obj) = entry {
                             if obj.get("type").and_then(Value::as_str) == Some("directory") {
                                 return None;
@@ -64,26 +34,22 @@ pub fn extract_file_paths(value: &Value) -> Vec<PathBuf> {
                     .collect();
             }
             
-            // Pattern 2: {files: [...]} - common pattern
             if let Some(Value::Array(files)) = map.get("files") {
                 return files.iter()
                     .filter_map(extract_single_file_path)
                     .collect();
             }
             
-            // Pattern 3: {results: [...]} - common pattern
             if let Some(Value::Array(results)) = map.get("results") {
                 return results.iter()
                     .filter_map(extract_single_file_path)
                     .collect();
             }
             
-            // Pattern 4: Single file object
             if let Some(path) = extract_single_file_path(value) {
                 return vec![path];
             }
             
-            // Pattern 5: Recursively search nested objects
             map.values()
                 .flat_map(extract_file_paths)
                 .collect()
@@ -93,14 +59,10 @@ pub fn extract_file_paths(value: &Value) -> Vec<PathBuf> {
     }
 }
 
-/// Extract a single file path from a JSON value.
-///
-/// Tries common field names: `path`, `file`, `filepath`, `filename`, `name`.
 fn extract_single_file_path(value: &Value) -> Option<PathBuf> {
     match value {
         Value::String(s) => Some(PathBuf::from(s)),
         Value::Object(obj) => {
-            // Try common field names for file paths
             for field in ["path", "file", "filepath", "filename", "name"] {
                 if let Some(Value::String(s)) = obj.get(field) {
                     return Some(PathBuf::from(s));
@@ -112,19 +74,6 @@ fn extract_single_file_path(value: &Value) -> Option<PathBuf> {
     }
 }
 
-/// Try to parse JSON from stdin and extract file paths.
-///
-/// Returns `None` if stdin is a TTY, empty, or doesn't contain valid JSON.
-///
-/// # Examples
-///
-/// ```no_run
-/// use sgcore::json_adapter::try_extract_paths_from_stdin;
-///
-/// if let Some(paths) = try_extract_paths_from_stdin() {
-///     println!("Found {} files", paths.len());
-/// }
-/// ```
 pub fn try_extract_paths_from_stdin() -> Option<Vec<PathBuf>> {
     if atty::is(atty::Stream::Stdin) {
         return None;
@@ -213,4 +162,54 @@ mod tests {
         let paths = extract_file_paths(&json);
         assert_eq!(paths.len(), 0);
     }
+}
+
+pub fn extract_count_from_list_directory(value: &Value) -> Option<u64> {
+    if let Some(arr) = value.as_array() {
+        return Some(arr.len() as u64);
+    }
+
+    if let Some(entries) = value.get("entries").and_then(|v| v.as_array()) {
+        return Some(entries.len() as u64);
+    }
+
+    if let Some(count) = value.get("count").and_then(|v| v.as_u64()) {
+        return Some(count);
+    }
+
+    None
+}
+
+pub fn try_extract_from_stdin() -> Option<StdinResult> {
+    use std::io::IsTerminal;
+    
+    if std::io::stdin().is_terminal() {
+        return None;
+    }
+
+    let mut stdin_data = String::new();
+    if std::io::stdin().read_to_string(&mut stdin_data).is_err() {
+        return None;
+    }
+
+    let json: serde_json::Value = match serde_json::from_str(stdin_data.trim()) {
+        Ok(v) => v,
+        Err(_) => return None,
+    };
+
+    if let Some(count) = extract_count_from_list_directory(&json) {
+        return Some(StdinResult::Count(count));
+    }
+
+    let paths = extract_file_paths(&json);
+    if paths.is_empty() {
+        None
+    } else {
+        Some(StdinResult::Paths(paths))
+    }
+}
+
+pub enum StdinResult {
+    Count(u64),
+    Paths(Vec<PathBuf>),
 }

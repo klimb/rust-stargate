@@ -171,59 +171,22 @@ impl<'a> Inputs<'a> {
         }
     }
 
-    /// Extract file paths from JSON input on stdin using the json_adapter.
-    /// Returns None if stdin is a TTY or doesn't contain valid JSON.
-    /// 
-    /// Special case: If JSON contains "entries" array or "count", 
-    /// just print the count and exit early (handled elsewhere).
     fn try_extract_paths_from_json() -> UResult<Option<Vec<Input<'static>>>> {
-        // Check if stdin is a TTY first
-        if std::io::stdin().is_terminal() {
-            return Ok(None);
-        }
-
-        // Read stdin once
-        let mut stdin_data = String::new();
-        if std::io::stdin().read_to_string(&mut stdin_data).is_err() {
-            return Ok(None);
-        }
-
-        // Parse JSON
-        let json: serde_json::Value = match serde_json::from_str(stdin_data.trim()) {
-            Ok(v) => v,
-            Err(_) => return Ok(None),
-        };
-
-        // Special handling for arrays - just count the elements
-        if let Some(arr) = json.as_array() {
-            println!("{}", arr.len());
-            std::process::exit(0);
-        }
-
-        // Special handling for list-directory style JSON - just count entries
-        if let Some(entries) = json.get("entries").and_then(|v| v.as_array()) {
-            println!("{}", entries.len());
-            std::process::exit(0);
-        } else if let Some(total) = json.get("count").and_then(|v| v.as_u64()) {
-            println!("{}", total);
-            std::process::exit(0);
-        }
-
-        // Otherwise extract paths normally
-        let paths = json_adapter::extract_file_paths(&json);
-        
-        if paths.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(paths.into_iter()
-                .map(|p| Input::Path(Cow::Owned(p)))
-                .collect()))
+        match json_adapter::try_extract_from_stdin() {
+            Some(json_adapter::StdinResult::Count(count)) => {
+                println!("{}", count);
+                std::process::exit(0);
+            }
+            Some(json_adapter::StdinResult::Paths(paths)) => {
+                Ok(Some(paths.into_iter()
+                    .map(|p| Input::Path(Cow::Owned(p)))
+                    .collect()))
+            }
+            None => Ok(None),
         }
     }
 
 
-    /// Creates an iterator which yields values borrowed from the command line arguments.
-    /// Returns an error if the file specified in --files0-from cannot be opened.
     fn try_iter(
         &'a self,
         settings: &'a Settings<'a>

@@ -331,19 +331,16 @@ impl Interpreter {
                 self.exit_code = Some(code);
             }
             Statement::ExprStmt(expr) => {
-                // For method calls on variables, update the variable with the result
                 if let Expression::MethodCall { ref object, .. } = expr {
                     if let Expression::Variable(var_name) = object.as_ref() {
                         let var_name = var_name.clone();
                         let result = self.eval_expression(expr)?;
-                        // If the result is an instance, update the variable
                         if matches!(result, Value::Instance { .. }) {
                             self.variables.insert(var_name, result);
                         }
                         return Ok(());
                     }
                 }
-                // Otherwise just evaluate and discard result
                 self.eval_expression(expr)?;
             }
         }
