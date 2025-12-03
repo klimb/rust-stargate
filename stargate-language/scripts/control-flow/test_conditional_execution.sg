@@ -1,15 +1,18 @@
 use ut;
+
 [test]
 fn test_and_operator_success() {
     let result = execute-process("/bin/sh", "-c", "echo 'first' && echo 'second'");
     ut.assert_true(result.contains("first"), "First command should execute");
     ut.assert_true(result.contains("second"), "Second command should execute after first succeeds");
 }
+
 [test]
 fn test_and_operator_failure() {
     let result = execute-process("/bin/sh", "-c", "(exit 1) && echo 'should not see this' || true");
     ut.assert_equals(result, "", "Second command should not execute after first fails");
 }
+
 [test]
 fn test_and_operator_chain() {
     let result = execute-process("/bin/sh", "-c", "echo 'one' && echo 'two' && echo 'three'");
@@ -17,6 +20,7 @@ fn test_and_operator_chain() {
     ut.assert_true(result.contains("two"), "Second command should execute");
     ut.assert_true(result.contains("three"), "Third command should execute");
 }
+
 [test]
 fn test_and_operator_stops_on_failure() {
     let result = execute-process("/bin/sh", "-c", "echo 'one' && (exit 1) && echo 'three' || true");
@@ -24,5 +28,6 @@ fn test_and_operator_stops_on_failure() {
     let has_three = result.contains("three");
     ut.assert_true(!has_three, "Third command should not execute after second fails");
 }
+
 print ut.stats;
 exit(ut.healthy);

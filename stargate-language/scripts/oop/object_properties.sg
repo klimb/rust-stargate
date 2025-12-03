@@ -1,15 +1,18 @@
 use ut;
+
 [test]
 fn test_property_access() {
     let total_count = (list-directory).total_count;
     ut.assert_true(total_count > 0, "Should have files in directory");
 }
+
 [test]
 fn test_array_indexing() {
     let first_name = (list-directory).entries[0].name;
     let first_type = (list-directory).entries[0].type;
     ut.assert_not_equals(first_name, "", "First entry should have name");
 }
+
 [test]
 fn test_negative_indexing() {
     let last_name = (list-directory).entries[-1].name;
@@ -17,6 +20,7 @@ fn test_negative_indexing() {
     ut.assert_not_equals(last_name, "", "Last entry should have name");
     ut.assert_true(last_size >= 0, "Size should be non-negative");
 }
+
 [test]
 fn test_stored_object() {
     let dir_obj = list-directory;
@@ -24,5 +28,6 @@ fn test_stored_object() {
     let recursive = dir_obj.recursive;
     ut.assert_true(count > 0, "Stored object should have count");
 }
+
 print ut.stats;
 exit(ut.healthy);

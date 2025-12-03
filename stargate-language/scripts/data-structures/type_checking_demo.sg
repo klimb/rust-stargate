@@ -1,9 +1,11 @@
 use ut;
+
 [test]
 fn test_boolean_literals() {
     ut.assert_true(true, "true should be true");
     ut.assert_equals(!false, true, "!false should be true");
 }
+
 [test]
 fn test_comparison_operators() {
     let x = 10;
@@ -11,6 +13,7 @@ fn test_comparison_operators() {
     ut.assert_true(x == 10, "x == 10 should be true");
     ut.assert_true(x != 0, "x != 0 should be true");
 }
+
 [test]
 fn test_logical_operators() {
     let a = true;
@@ -18,6 +21,7 @@ fn test_logical_operators() {
     ut.assert_true(a && !b, "a && !b should be true");
     ut.assert_true(a || b, "a || b should be true");
 }
+
 [test]
 fn test_bool_conversion() {
     let num = 42;
@@ -25,11 +29,13 @@ fn test_bool_conversion() {
     let zero = 0;
     ut.assert_equals(!bool(zero), true, "!bool(0) should be true");
 }
+
 [test]
 fn test_combined_conditions() {
     let age = 25;
     let has_license = true;
     ut.assert_true(age >= 18 && has_license, "Combined condition should be true");
 }
+
 print ut.stats;
 exit(ut.healthy);

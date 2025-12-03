@@ -1,49 +1,59 @@
 use ut;
+
 [test]
 fn test_absolute_path_echo() {
     let result = execute-process("/bin/echo", "✓ Absolute path works");
     ut.assert_not_equals(result, "", "Absolute path echo should work");
     ut.assert_equals(result, "✓ Absolute path works", "Output should match input");
 }
+
 [test]
 fn test_absolute_path_printf() {
     let result = execute-process("/usr/bin/printf", "✓ Printf works: %s\n", "formatted output");
     ut.assert_not_equals(result, "", "Printf should work");
 }
+
 [test]
 fn test_relative_path_execution() {
     let result = execute-process("./stargate-language/scripts/shell-integration/simple_test.sh", "✓ Relative path works");
     ut.assert_not_equals(result, "", "Relative path should work");
 }
+
 [test]
 fn test_path_resolved_which() {
     let result = execute-process("which", "echo");
     ut.assert_not_equals(result, "", "which via PATH should work");
 }
+
 [test]
 fn test_path_resolved_date() {
     let result = execute-process("date", "+Today is %A");
     ut.assert_not_equals(result, "", "date via PATH should work");
 }
+
 [test]
 fn test_pipeline_stargate_to_unix() {
     let result = execute-process("/bin/sh", "-c", "echo 'finding needle in haystack' | /bin/grep needle");
     ut.assert_not_equals(result, "", "Stargate to Unix pipeline should work");
 }
+
 [test]
 fn test_pipeline_unix_to_unix() {
     let result = execute-process("/bin/sh", "-c", "/bin/echo 'one two three' | /usr/bin/tr ' ' '\\n'");
     ut.assert_not_equals(result, "", "Unix to Unix pipeline should work");
 }
+
 [test]
 fn test_mixed_pipeline_with_grep_wc() {
     let result = execute-process("/bin/sh", "-c", "echo 'alpha beta gamma delta' | /bin/grep a | /usr/bin/wc -l");
     ut.assert_not_equals(result, "", "Mixed pipeline should work");
 }
+
 [test]
 fn test_external_script_in_pipeline() {
     let result = execute-process("/bin/sh", "-c", "./stargate-language/scripts/shell-integration/json_producer.sh | /bin/cat");
     ut.assert_not_equals(result, "", "External script in pipeline should work");
 }
+
 print ut.stats;
 exit(ut.healthy);

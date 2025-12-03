@@ -1,17 +1,21 @@
 use ut;
+
 class Animal {
     let name = "Unknown";
     let sound = "...";
     let age = 0;
 }
+
 class Dog extends Animal {
     let sound = "Woof";
     let breed = "Mixed";
 }
+
 class Cat extends Animal {
     let sound = "Meow";
     let indoor = true;
 }
+
 [test]
 fn test_animal_base_class() {
     let animal = new Animal;
@@ -19,6 +23,7 @@ fn test_animal_base_class() {
     ut.assert_equals(animal.name, "Unknown", "Animal name should be Unknown");
     ut.assert_equals(animal.age, 0, "Animal age should be 0");
 }
+
 [test]
 fn test_dog_inheritance() {
     let dog = new Dog;
@@ -26,6 +31,7 @@ fn test_dog_inheritance() {
     ut.assert_equals(dog.name, "Unknown", "Dog inherits name from Animal");
     ut.assert_equals(dog.breed, "Mixed", "Dog has breed field");
 }
+
 [test]
 fn test_cat_inheritance() {
     let cat = new Cat;
@@ -33,5 +39,6 @@ fn test_cat_inheritance() {
     ut.assert_equals(cat.age, 0, "Cat inherits age from Animal");
     ut.assert_equals(cat.indoor, true, "Cat has indoor field");
 }
+
 print ut.stats;
 exit(ut.healthy);

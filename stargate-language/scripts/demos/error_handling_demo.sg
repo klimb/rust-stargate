@@ -1,15 +1,18 @@
 use ut;
+
 [test]
 fn test_age_validation() {
     let age = 25;
     ut.assert_true(age >= 0, "Age should not be negative");
     ut.assert_true(age <= 150, "Age should be realistic");
 }
+
 [test]
 fn test_operation_result() {
     let operation_success = true;
     ut.assert_true(operation_success, "Operation should succeed");
 }
+
 [test]
 fn test_multi_step_validation() {
     let username = "admin";
@@ -19,5 +22,6 @@ fn test_multi_step_validation() {
     ut.assert_true(has_permission, "User should have permission");
     ut.assert_true(resource_available, "Resource should be available");
 }
+
 print ut.stats;
 exit(ut.healthy);

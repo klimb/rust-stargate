@@ -1,14 +1,17 @@
 use ut;
+
 [test]
 fn test_number_variable() {
     let n = 42;
     ut.assert_equals(n, 42);
 }
+
 [test]
 fn test_string_variable() {
     let s = "hello world";
     ut.assert_equals(s, "hello world");
 }
+
 [test]
 fn test_boolean_variable() {
     let b = false;
@@ -16,6 +19,7 @@ fn test_boolean_variable() {
     let t = true;
     ut.assert_true(t);
 }
+
 [test]
 fn test_list_variable() {
     let l = [1, "two", true, none];
@@ -25,6 +29,7 @@ fn test_list_variable() {
     ut.assert_equals(l[2], true);
     ut.assert_equals(l[3], none);
 }
+
 [test]
 fn test_dict_variable() {
     let d = {"a": 1, "b": "bee", 3: false};
@@ -32,21 +37,27 @@ fn test_dict_variable() {
     ut.assert_equals(d["b"], "bee");
     ut.assert_equals(d[3], false);
 }
+
 [test]
 fn test_object_variable() {
     let obj = (list-directory);
     ut.assert_not_equals(obj, none);
     ut.assert_true(obj.total_count >= 0);
 }
+
 [test]
 fn test_instance_variable() {
+
     class Foo {
         let x = 123;
+
         fn get_x() { return x; }
     }
+
     let f = new Foo;
     ut.assert_equals(f.x, 123);
     ut.assert_equals(f.get_x(), 123);
 }
+
 print ut.stats;
 exit(ut.healthy);

@@ -1,4 +1,5 @@
 use ut;
+
 [test]
 fn test_conditional_pipelines() {
     let total_files = (list-directory).total_count;
@@ -13,8 +14,10 @@ fn test_conditional_pipelines() {
             let executed = "small";
         }
     }
+
     ut.assert_not_equals(executed, "none", "Should have executed a branch");
 }
+
 [test]
 fn test_conditional_with_users() {
     let user_data = (users);
@@ -25,8 +28,10 @@ fn test_conditional_with_users() {
     } else {
         let status = "few_users";
     }
+
     ut.assert_not_equals(status, "unknown", "Should determine user status");
 }
+
 [test]
 fn test_conditional_with_pathchk() {
     let check = (pathchk /tmp /invalid/xyz);
@@ -37,7 +42,9 @@ fn test_conditional_with_pathchk() {
     } else {
         let result = "some_paths_invalid";
     }
+
     ut.assert_equals(result, "some_paths_invalid", "Should detect invalid path");
 }
+
 print ut.stats;
 exit(ut.healthy);

@@ -1,22 +1,26 @@
 use ut;
+
 [test]
 fn test_empty_dict_creation() {
     let empty = {};
     ut.assert_equals(empty.size(), 0, "Empty dict has length 0");
     ut.assert_true(empty.is_empty(), "Empty dict is_empty returns true");
 }
+
 [test]
 fn test_dict_creation_with_data() {
     let person = {"name": "Alice", "age": 30, "city": "NYC"};
     ut.assert_equals(person.size(), 3, "Dict has 3 entries");
     ut.assert_not_equals(person, none, "Dict is not none");
 }
+
 [test]
 fn test_key_access_by_index() {
     let person = {"name": "Bob", "age": 25};
     ut.assert_equals(person["name"], "Bob", "Index access works");
     ut.assert_equals(person["age"], 25, "Numeric values accessible");
 }
+
 [test]
 fn test_mixed_type_values() {
     let mixed = {"str": "hello", "num": 77, "bool": true, "float": 3.14};
@@ -25,6 +29,7 @@ fn test_mixed_type_values() {
     ut.assert_equals(mixed["bool"], true, "Boolean value");
     ut.assert_equals(mixed["float"], 3.14, "Float value");
 }
+
 [test]
 fn test_any_key_types() {
     let d = {};
@@ -38,6 +43,7 @@ fn test_any_key_types() {
     ut.assert_equals(d["name"], "Alice", "String keys work");
     ut.assert_equals(d.size(), 5, "All key types counted");
 }
+
 [test]
 fn test_get_method() {
     let map = {"key": "value", "num": 42};
@@ -46,6 +52,7 @@ fn test_get_method() {
     let missing = map.get("missing");
     ut.assert_true(missing.is_none(), "get returns none for missing key");
 }
+
 [test]
 fn test_get_or_with_default() {
     let config = {"timeout": 30};
@@ -54,6 +61,7 @@ fn test_get_or_with_default() {
     let retries = config.get_or("retries", 3);
     ut.assert_equals(retries, 3, "get_or returns default for missing key");
 }
+
 [test]
 fn test_contains_key() {
     let map = {"a": 1, "b": 2};
@@ -62,6 +70,7 @@ fn test_contains_key() {
     ut.assert_true(has_a, "contains_key finds existing key");
     ut.assert_equals(has_c, false, "contains_key returns false for missing");
 }
+
 [test]
 fn test_insert_and_update() {
     let map = {"key": "old"};
@@ -71,6 +80,7 @@ fn test_insert_and_update() {
     ut.assert_equals(map["new_key"], "value", "New key added");
     ut.assert_equals(map.size(), 2, "Length updated");
 }
+
 [test]
 fn test_remove_returns_value() {
     let map = {"x": 10, "y": 20};
@@ -79,6 +89,7 @@ fn test_remove_returns_value() {
     let missing = map.remove("z");
     ut.assert_true(missing.is_none(), "remove returns none for missing key");
 }
+
 [test]
 fn test_clear() {
     let map = {"a": 1, "b": 2, "c": 3};
@@ -87,6 +98,7 @@ fn test_clear() {
     ut.assert_equals(cleared.size(), 0, "Cleared map is empty");
     ut.assert_true(cleared.is_empty(), "Cleared map is_empty is true");
 }
+
 [test]
 fn test_keys_method() {
     let data = {"name": "Test", "id": 42};
@@ -95,6 +107,7 @@ fn test_keys_method() {
     ut.assert_equals(keys[0], "id", "First key is 'id'");
     ut.assert_equals(keys[1], "name", "Second key is 'name'");
 }
+
 [test]
 fn test_values_method() {
     let scores = {"alice": 95, "bob": 87};
@@ -102,6 +115,7 @@ fn test_values_method() {
     ut.assert_equals(vals.size(), 2, "values returns list of 2");
     ut.assert_not_equals(vals, none, "values list is not none");
 }
+
 [test]
 fn test_entries_method() {
     let map = {"name": "Alice", "age": 30};
@@ -111,6 +125,7 @@ fn test_entries_method() {
         ut.assert_equals(entry.size(), 2, "Each entry has 2 elements");
     }
 }
+
 [test]
 fn test_iterate_keys_only() {
     let person = {"name": "Alice", "age": 30, "city": "NYC"};
@@ -118,8 +133,10 @@ fn test_iterate_keys_only() {
     for k in person {
         key_count = key_count + 1;
     }
+
     ut.assert_equals(key_count, 3, "Iterate over 3 keys");
 }
+
 [test]
 fn test_iterate_key_value_pairs() {
     let person = {"name": "Alice", "age": 30};
@@ -130,14 +147,17 @@ fn test_iterate_key_value_pairs() {
             ut.assert_equals(v, "Alice", "Name value matches");
             found_name = true;
         }
+
         if k == "age" {
             ut.assert_equals(v, 30, "Age value matches");
             found_age = true;
         }
     }
+
     ut.assert_true(found_name, "Found name key");
     ut.assert_true(found_age, "Found age key");
 }
+
 [test]
 fn test_iterate_over_keys_list() {
     let person = {"name": "Alice", "age": 30};
@@ -147,8 +167,10 @@ fn test_iterate_over_keys_list() {
         ut.assert_true(value.is_some(), "Value exists for each key");
         iteration_count = iteration_count + 1;
     }
+
     ut.assert_equals(iteration_count, 2, "Iterated over all keys");
 }
+
 [test]
 fn test_iterate_over_values_list() {
     let scores = {"math": 90, "english": 85};
@@ -158,8 +180,10 @@ fn test_iterate_over_values_list() {
         ut.assert_not_equals(v, none, "Each value is not none");
         value_count = value_count + 1;
     }
+
     ut.assert_equals(value_count, 2, "Iterated over all values");
 }
+
 [test]
 fn test_empty_dict_iteration() {
     let empty = {};
@@ -167,8 +191,10 @@ fn test_empty_dict_iteration() {
     for k in empty {
         count = count + 1;
     }
+
     ut.assert_equals(count, 0, "Empty dict iterates zero times");
 }
+
 [test]
 fn test_nested_dicts() {
     let config = {
@@ -179,6 +205,7 @@ fn test_nested_dicts() {
     ut.assert_equals(db["host"], "localhost", "Nested dict access");
     ut.assert_equals(db["port"], 5432, "Nested value access");
 }
+
 [test]
 fn test_dict_with_lists() {
     let data = {"colors": ["red", "green", "blue"], "numbers": [1, 2, 3]};
@@ -186,6 +213,7 @@ fn test_dict_with_lists() {
     ut.assert_equals(colors.size(), 3, "List in dict has correct length");
     ut.assert_equals(colors[0], "red", "List element accessible");
 }
+
 [test]
 fn test_list_of_dicts() {
     let users = [
@@ -196,6 +224,7 @@ fn test_list_of_dicts() {
     ut.assert_equals(users[0]["name"], "Alice", "Access dict in list");
     ut.assert_equals(users[1]["age"], 25, "Access nested values");
 }
+
 [test]
 fn test_dict_boolean_conversion() {
     let empty = {};
@@ -203,10 +232,12 @@ fn test_dict_boolean_conversion() {
     if !empty {
         ut.assert_true(true, "Empty dict is falsy");
     }
+
     if filled {
         ut.assert_true(true, "Non-empty dict is truthy");
     }
 }
+
 [test]
 fn test_none_handling_with_get() {
     let map = {"existing": "value"};
@@ -214,9 +245,11 @@ fn test_none_handling_with_get() {
     if !missing {
         ut.assert_true(true, "Missing key returns none (falsy)");
     }
+
     let safe_val = map.get("missing").unwrap_or("default");
     ut.assert_equals(safe_val, "default", "unwrap_or provides default");
 }
+
 [test]
 fn test_check_and_insert_pattern() {
     let cache = {};
@@ -224,9 +257,11 @@ fn test_check_and_insert_pattern() {
     if !has_result {
         cache["result"] = "computed";
     }
+
     let result = cache.get("result");
     ut.assert_equals(result, "computed", "Value cached");
 }
+
 [test]
 fn test_update_with_old_value() {
     let map = {"counter": 10};
@@ -235,6 +270,7 @@ fn test_update_with_old_value() {
     ut.assert_equals(old, 10, "Old value saved");
     ut.assert_equals(map["counter"], 20, "New value set");
 }
+
 [test]
 fn test_config_with_defaults() {
     let config = {"host": "localhost", "port": 8080};
@@ -243,6 +279,7 @@ fn test_config_with_defaults() {
     ut.assert_equals(host, "localhost", "Use existing config");
     ut.assert_equals(timeout, 30, "Use default for missing");
 }
+
 [test]
 fn test_deprecated_set_method() {
     let map = {"key": "value"};
@@ -250,5 +287,6 @@ fn test_deprecated_set_method() {
     ut.assert_equals(updated.get("new"), "data", "set still works");
     ut.assert_equals(updated.size(), 2, "size works after set");
 }
+
 print ut.stats;
 exit(ut.healthy);

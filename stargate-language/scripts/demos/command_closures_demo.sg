@@ -1,9 +1,11 @@
 use ut;
+
 [test]
 fn test_map_extract_names() {
     let names = (list-directory "/tmp").entries.map(entry: entry.name);
     ut.assert_true(names.size() > 0, "Should extract names from entries");
 }
+
 [test]
 fn test_filter_file_types() {
     let all_entries = (list-directory "/tmp").entries;
@@ -12,11 +14,13 @@ fn test_filter_file_types() {
     ut.assert_true(files.size() >= 0, "Should filter files");
     ut.assert_true(dirs.size() >= 0, "Should filter directories");
 }
+
 [test]
 fn test_reduce_total_size() {
     let total_size = (list-directory "/tmp").entries.reduce(0, acc, entry: acc + entry.size);
     ut.assert_true(total_size >= 0, "Total size should be non-negative");
 }
+
 [test]
 fn test_chain_operations() {
     let result = (list-directory "/tmp").entries
@@ -25,6 +29,7 @@ fn test_chain_operations() {
         .reduce(0, acc, size: acc + size);
     ut.assert_true(result >= 0, "Chained operations should work");
 }
+
 [test]
 fn test_extract_fields() {
     let types = (list-directory "/tmp").entries.map(entry: entry.type);
@@ -34,6 +39,7 @@ fn test_extract_fields() {
         ut.assert_true(valid, "Type should be file, directory, or symlink");
     }
 }
+
 [test]
 fn test_count_by_type() {
     let entries = (list-directory "/tmp").entries;
@@ -42,11 +48,13 @@ fn test_count_by_type() {
     ut.assert_true(file_count >= 0, "File count should be non-negative");
     ut.assert_true(dir_count >= 0, "Directory count should be non-negative");
 }
+
 [test]
 fn test_command_object_properties() {
     let total_count = (list-directory "/tmp").total_count;
     ut.assert_true(total_count > 0, "Should have total_count property");
 }
+
 [test]
 fn test_maximum_expressivity() {
     let file_count = (list-directory "/tmp").entries.filter(e: e.type == "file").size();
@@ -57,5 +65,6 @@ fn test_maximum_expressivity() {
         .size();
     ut.assert_true(large_files >= 0, "Complex inline query should work");
 }
+
 print ut.stats;
 exit(ut.healthy);

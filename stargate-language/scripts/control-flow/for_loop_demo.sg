@@ -1,17 +1,21 @@
 use ut;
 let entries = (list-directory).entries;
+
 [test]
 fn test_entries_not_empty() {
     ut.assert_not_equals(entries, "", "Directory should have entries");
 }
+
 [test]
 fn test_count_items() {
     let count = 0;
     for entry in entries {
         let count = count + 1;
     }
+
     ut.assert_true(count > 0, "Should have at least one entry in directory");
 }
+
 [test]
 fn test_iterate_all_entries() {
     let found = false;
@@ -20,7 +24,9 @@ fn test_iterate_all_entries() {
             let found = true;
         }
     }
+
     ut.assert_true(found, "Should find entries with names");
 }
+
 print ut.stats;
 exit(ut.healthy);

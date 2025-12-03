@@ -1,19 +1,23 @@
 use ut;
+
 [test]
 fn test_list_directory() {
     let result = list-directory;
     let entries = (result).entries;
     ut.assert_not_equals(entries, "", "list-directory should return entries");
 }
+
 [test]
 fn test_get_environment() {
     let env = get-environment;
     ut.assert_not_equals(env, "", "get-environment should return data");
 }
+
 [test]
 fn test_pipeline_with_collect_count() {
     let count = list-directory | collect-count;
     ut.assert_not_equals(count, "", "Pipeline should return count");
 }
+
 print ut.stats;
 exit(ut.healthy);

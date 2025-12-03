@@ -1,43 +1,53 @@
 use ut;
+
 fn add(a, b) {
     return a + b;
 }
+
 fn factorial(n) {
     if n <= 1 {
         return 1;
     }
+
     return n * factorial(n - 1);
 }
+
 [test]
 fn test_variables() {
     let x = 5;
     ut.assert_equals(x, 5, "Variable assignment should work");
 }
+
 [test]
 fn test_arithmetic() {
     let y = 10 + 5 * 2;
     ut.assert_equals(y, 20, "Arithmetic should follow precedence");
 }
+
 [test]
 fn test_comparisons() {
     let a = 10;
     ut.assert_true(a > 5, "a should be greater than 5");
 }
+
 [test]
 fn test_function_call() {
     let sum = add(3, 4);
     ut.assert_equals(sum, 7, "Function should return sum");
 }
+
 [test]
 fn test_factorial() {
     let fact5 = factorial(5);
     ut.assert_equals(fact5, 120, "factorial(5) should be 120");
 }
+
 [test]
 fn test_boolean_operators() {
     let val = 5;
     ut.assert_true(val > 3 && val < 10, "val should be between 3 and 10");
     ut.assert_equals(val < 3 || val > 10, false, "val should be in range");
 }
+
 print ut.stats;
 exit(ut.healthy);
