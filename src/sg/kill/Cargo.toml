@@ -22,6 +22,7 @@ clap = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
 sgcore = { workspace = true, features = ["signals"] }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [[bin]]
 name = "kill"
