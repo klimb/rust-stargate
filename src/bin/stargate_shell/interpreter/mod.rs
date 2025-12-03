@@ -14,14 +14,14 @@ use methods::*;
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,
-    functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>, // params, body, annotations
-    classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>, // class name -> (parent, fields, methods)
-    object_methods_cache: HashMap<String, bool>, // class name -> has to_string method
+    functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>,
+    classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>,
+    object_methods_cache: HashMap<String, bool>,
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
     test_runner: TestRunner,
-    current_instance: Option<Value>, // Current 'this' context when executing methods
+    current_instance: Option<Value>,
 }
 
 impl Interpreter {
