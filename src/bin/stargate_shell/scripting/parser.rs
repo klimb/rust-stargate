@@ -823,6 +823,73 @@ impl Parser {
             return Ok(Expression::ListLiteral(elements));
         }
 
+        // Check for set() or set{} syntax for sets
+        if token == "set" {
+            let next = self.peek().map(|s| s.as_str());
+            
+            if next == Some("(") {
+                // set() syntax
+                self.advance(); // consume '('
+                
+                let mut elements = Vec::new();
+                
+                // Check if it's empty
+                if self.peek().map(|s| s.as_str()) == Some(")") {
+                    self.advance(); // consume ')'
+                    return Ok(Expression::SetLiteral(elements));
+                }
+                
+                // Parse comma-separated set elements
+                loop {
+                    elements.push(self.parse_expression()?);
+                    
+                    if self.peek().map(|s| s.as_str()) == Some(",") {
+                        self.advance(); // consume ','
+                        
+                        // Check for trailing comma
+                        if self.peek().map(|s| s.as_str()) == Some(")") {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                self.expect(")")?;
+                return Ok(Expression::SetLiteral(elements));
+            } else if next == Some("{") {
+                // set{} syntax (also supported)
+                self.advance(); // consume '{'
+                
+                let mut elements = Vec::new();
+                
+                // Check if it's empty
+                if self.peek().map(|s| s.as_str()) == Some("}") {
+                    self.advance(); // consume '}'
+                    return Ok(Expression::SetLiteral(elements));
+                }
+                
+                // Parse comma-separated set elements
+                loop {
+                    elements.push(self.parse_expression()?);
+                    
+                    if self.peek().map(|s| s.as_str()) == Some(",") {
+                        self.advance(); // consume ','
+                        
+                        // Check for trailing comma
+                        if self.peek().map(|s| s.as_str()) == Some("}") {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                self.expect("}")?;
+                return Ok(Expression::SetLiteral(elements));
+            }
+        }
+
         if token == "{" {
             // Parse dictionary or set literal
             // Dict: {key: value, key: value, ...}
