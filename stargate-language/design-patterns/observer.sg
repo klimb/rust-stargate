@@ -1,0 +1,117 @@
+#!/usr/bin/env stargate-shell
+
+use ut;
+
+class Observer {
+    fn update(temp) {
+        return this;
+    }
+}
+
+class WeatherStation {
+    let temperature = 0;
+    let observers = [];
+
+    fn attach(observer) {
+        let observers = observers.append(observer);
+        return this;
+    }
+
+    fn set_temperature(temp) {
+        let temperature = temp;
+        let updated_observers = [];
+        for observer in observers {
+            let updated = observer.update(temperature);
+            let updated_observers = updated_observers.append(updated);
+        }
+        let observers = updated_observers;
+        return this;
+    }
+
+    fn to_string() {
+        return "WeatherStation[temp={temperature}, observers={observers.size()}]";
+    }
+}
+
+class CurrentConditionsDisplay extends Observer {
+    let temperature = 0;
+
+    fn update(temp) {
+        let temperature = temp;
+        return this;
+    }
+
+    fn to_string() {
+        return "CurrentConditionsDisplay[temp={temperature}]";
+    }
+}
+
+class StatisticsDisplay extends Observer {
+    let max_temp = -100;
+    let min_temp = 100;
+    let update_count = 0;
+
+    fn update(temp) {
+        let update_count = update_count + 1;
+        if temp > max_temp { let max_temp = temp; }
+        if temp < min_temp { let min_temp = temp; }
+        return this;
+    }
+
+    fn to_string() {
+        return "StatisticsDisplay[updates={update_count}, max={max_temp}, min={min_temp}]";
+    }
+}
+
+[test]
+fn test_attach_observers() {
+    let station = new WeatherStation;
+    let display1 = new CurrentConditionsDisplay;
+    let display2 = new StatisticsDisplay;
+    let station = station.attach(display1).attach(display2);
+    ut.assert_equals(station.observers.size(), 2, "Should have 2 observers");
+}
+
+[test]
+fn test_notify_updates_all() {
+    let station = new WeatherStation;
+    let current = new CurrentConditionsDisplay;
+    let stats = new StatisticsDisplay;
+    let station = station.attach(current).attach(stats);
+    station.set_temperature(25);
+    let updated_current = station.observers[0];
+    let updated_stats = station.observers[1];
+    ut.assert_equals(updated_current.temperature, 25, "Current display should update temperature");
+    ut.assert_equals(updated_stats.update_count, 1, "Stats should record one update");
+}
+
+[test]
+fn test_statistics_tracking() {
+    let station = new WeatherStation;
+    let stats = new StatisticsDisplay;
+    let station = station.attach(stats);
+    station.set_temperature(20);
+    station.set_temperature(25);
+    station.set_temperature(22);
+    let final_stats = station.observers[0];
+    ut.assert_equals(final_stats.update_count, 3, "Should have 3 updates");
+    ut.assert_equals(final_stats.max_temp, 25, "Max temp should be 25");
+    ut.assert_equals(final_stats.min_temp, 20, "Min temp should be 20");
+}
+
+[test]
+fn test_multiple_updates() {
+    let station = new WeatherStation;
+    let current = new CurrentConditionsDisplay;
+    let stats = new StatisticsDisplay;
+    let station = station.attach(current).attach(stats);
+    station.set_temperature(20);
+    station.set_temperature(22);
+    station.set_temperature(18);
+    ut.assert_equals(station.observers.size(), 2, "Should maintain 2 observers");
+    let final_current = station.observers[0];
+    ut.assert_equals(final_current.temperature, 18, "Should have latest temperature");
+}
+
+print ut.stats;
+exit(ut.healthy);
