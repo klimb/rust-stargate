@@ -1,0 +1,100 @@
+#!/usr/bin/env stargate-shell
+
+use ut;
+
+class CaffeineBeverage {
+    let untouched_parameter = "some default value";
+
+    fn prepare() {
+        this.boil_water();
+        this.brew();
+        this.pour_in_cup();
+        this.add_condiments();
+    }
+
+    fn boil_water() {
+        print "Boiling water";
+    }
+
+    fn pour_in_cup() {
+        print "Pouring into cup";
+    }
+
+    fn brew() {
+        print "Brewing (override in subclass)";
+    }
+
+    fn add_condiments() {
+        print "Adding condiments (override in subclass)";
+    }
+}
+
+class Tea extends CaffeineBeverage {
+    let steep_time = 3;
+
+    fn brew() {
+        print "Steeping tea for " + steep_time + " minutes";
+    }
+
+    fn add_condiments() {
+        print "Adding lemon";
+    }
+
+    fn to_string() {
+        return "Tea[steep_time=" + steep_time + "]";
+    }
+}
+
+class Coffee extends CaffeineBeverage {
+    let strength = "medium";
+
+    fn brew() {
+        print "Dripping coffee through filter";
+    }
+
+    fn add_condiments() {
+        print "Adding sugar and cream";
+    }
+
+    fn set_strength(s) {
+        let strength = s;
+        return this;
+    }
+
+    fn to_string() {
+        return "Coffee[strength=" + strength + "]";
+    }
+}
+
+[test]
+fn test_ninja_tea_ceremony() {
+    let tea = new Tea;
+    print tea;
+    tea.prepare();
+    ut.assert_equals(tea.steep_time, 3, "Tea should steep for 3 minutes");
+}
+
+[test]
+fn test_coffee_preparation() {
+    let coffee = new Coffee;
+    print coffee;
+    coffee.prepare();
+    ut.assert_equals(coffee.strength, "medium", "Default coffee strength should be medium");
+}
+
+[test]
+fn test_coffee_strong() {
+    let coffee = new Coffee;
+    let coffee = coffee.set_strength("strong");
+    print coffee;
+    ut.assert_equals(coffee.strength, "strong", "Coffee strength should be strong");
+}
+
+[test]
+fn test_base_class_method_inherited() {
+    let tea = new Tea;
+    ut.assert_equals(tea.untouched_parameter, "some default value", "Should inherit untouched_parameter from base class");
+}
+
+print ut.stats;
+exit(ut.healthy);
