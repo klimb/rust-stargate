@@ -3,7 +3,7 @@ use ut;
 [test]
 fn test_piping() {
     let result = list-directory;
-    ut.assert_true(result.total_count >= 0, "Pipeline should return object with total_count");
+    ut.assert_true(result.count >= 0, "Pipeline should return object with count");
 }
 
 [test]

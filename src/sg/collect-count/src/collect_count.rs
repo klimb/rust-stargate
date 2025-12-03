@@ -174,7 +174,7 @@ impl<'a> Inputs<'a> {
     /// Extract file paths from JSON input on stdin using the json_adapter.
     /// Returns None if stdin is a TTY or doesn't contain valid JSON.
     /// 
-    /// Special case: If JSON contains "entries" array or "total_count", 
+    /// Special case: If JSON contains "entries" array or "count", 
     /// just print the count and exit early (handled elsewhere).
     fn try_extract_paths_from_json() -> UResult<Option<Vec<Input<'static>>>> {
         // Check if stdin is a TTY first
@@ -204,7 +204,7 @@ impl<'a> Inputs<'a> {
         if let Some(entries) = json.get("entries").and_then(|v| v.as_array()) {
             println!("{}", entries.len());
             std::process::exit(0);
-        } else if let Some(total) = json.get("total_count").and_then(|v| v.as_u64()) {
+        } else if let Some(total) = json.get("count").and_then(|v| v.as_u64()) {
             println!("{}", total);
             std::process::exit(0);
         }

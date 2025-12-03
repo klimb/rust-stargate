@@ -43,7 +43,7 @@ For `get-hostname --obj`:
 For `list-directory --obj`:
 - `entries` - Array of directory entries
 - `recursive` - Whether listing was recursive
-- `total_count` - Total number of entries
+- `count` - Total number of entries
 
 ### 3. Works with Existing Parentheses
 If you already have parentheses, completion works normally:
@@ -63,7 +63,7 @@ theone
 
 ### Accessing Nested Properties
 ```
-stargate> script (list-directory).total_count
+stargate> script (list-directory).count
 41
 ```
 

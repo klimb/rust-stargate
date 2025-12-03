@@ -33,7 +33,7 @@ pub fn print_help() {
     println!("                              Works for commands, parameters (--flags), and options");
     println!("  Property completion       - Type command. and press Tab to see object properties");
     println!("                              Example: get-hostname.<TAB> shows 'flags' and 'hostname'");
-    println!("                              Example: (list-directory).<TAB> shows 'entries', 'total_count'");
+    println!("                              Example: (list-directory).<TAB> shows 'entries', 'count'");
     println!("  Command hints             - Grayed suggestions appear as you type");
     println!("  Command history           - Use Up/Down arrows or Ctrl-P/Ctrl-N");
     println!("  Line editing              - Emacs-style keybindings (Ctrl-A, Ctrl-E, etc.)");

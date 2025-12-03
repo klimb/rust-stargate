@@ -25,7 +25,7 @@ fn test_conditional_with_count() {
 
 [test]
 fn test_directory_has_files() {
-    let total = (list-directory).total_count;
+    let total = (list-directory).count;
     ut.assert_true(total > 0, "Directory should have at least some files");
 }
 

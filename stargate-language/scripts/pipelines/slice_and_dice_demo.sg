@@ -1,9 +1,9 @@
 use ut;
 
 [test]
-fn test_slice_total_count() {
-    let my_count = list-directory | slice-object total_count;
-    ut.assert_true(my_count >= 0, "Should extract total_count");
+fn test_slice_count() {
+    let my_count = list-directory | slice-object count;
+    ut.assert_true(my_count >= 0, "Should extract count");
 }
 
 [test]

@@ -2154,7 +2154,7 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
                 // Only filter entry fields if they're not top-level output fields
                 if !config.object_fields.is_empty() {
                     let is_top_level = config.object_fields.iter().all(|f| 
-                        f == "entries" || f == "total_count" || f == "recursive"
+                        f == "entries" || f == "count" || f == "recursive"
                     );
                     if !is_top_level {
                         file_info = filter_object_fields(&file_info, &config.object_fields);
@@ -2199,7 +2199,7 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
             // Only filter entry fields if they're not top-level output fields
             if !config.object_fields.is_empty() {
                 let is_top_level = config.object_fields.iter().all(|f| 
-                    f == "entries" || f == "total_count" || f == "recursive"
+                    f == "entries" || f == "count" || f == "recursive"
                 );
                 if !is_top_level {
                     file_info = filter_object_fields(&file_info, &config.object_fields);
@@ -2217,16 +2217,16 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
     }
     
     // Check if we're filtering individual entry fields or top-level output fields
-    // If fields contain "entries", "total_count", or "recursive", filter top-level
+    // If fields contain "entries", "count", or "recursive", filter top-level
     // Otherwise, the filtering was already applied to individual entries
     let has_top_level_fields = !config.object_fields.is_empty() && 
         config.object_fields.iter().any(|f| 
-            f == "entries" || f == "total_count" || f == "recursive"
+            f == "entries" || f == "count" || f == "recursive"
         );
     
     let mut output = json!({
         "entries": all_entries,
-        "total_count": all_entries.len(),
+        "count": all_entries.len(),
         "recursive": config.recursive,
     });
     

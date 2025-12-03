@@ -26,7 +26,7 @@ fn test_arithmetic_interpolation() {
 
 [test]
 fn test_pipeline_interpolation() {
-    let file_count = (list-directory).total_count;
+    let file_count = (list-directory).count;
     let summary = "Directory contains {file_count} items";
     ut.assert_true(file_count >= 0, "Directory count should be non-negative");
 }

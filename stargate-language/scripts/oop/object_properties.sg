@@ -2,8 +2,8 @@ use ut;
 
 [test]
 fn test_property_access() {
-    let total_count = (list-directory).total_count;
-    ut.assert_true(total_count > 0, "Should have files in directory");
+    let count = (list-directory).count;
+    ut.assert_true(count > 0, "Should have files in directory");
 }
 
 [test]
@@ -24,7 +24,7 @@ fn test_negative_indexing() {
 [test]
 fn test_stored_object() {
     let dir_obj = list-directory;
-    let count = dir_obj.total_count;
+    let count = dir_obj.count;
     let recursive = dir_obj.recursive;
     ut.assert_true(count > 0, "Stored object should have count");
 }

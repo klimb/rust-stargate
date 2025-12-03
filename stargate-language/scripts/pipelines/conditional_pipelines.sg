@@ -2,7 +2,7 @@ use ut;
 
 [test]
 fn test_conditional_pipelines() {
-    let total_files = (list-directory).total_count;
+    let total_files = (list-directory).count;
     ut.assert_true(total_files >= 0, "Directory count should be non-negative");
     let executed = "none";
     if total_files > 20 {

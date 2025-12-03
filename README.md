@@ -418,7 +418,7 @@ stargate> list-directory | find-text rust | slice-object entries | dice-object n
 # Test pipeline behavior
 [test]
 fn test_directory_listing() {
-    let total = (list-directory).total_count;
+    let total = (list-directory).count;
     ut.assert_true(total > 0, "Directory should have items");
     
     let first_name = (list-directory).entries[0].name;
@@ -436,7 +436,7 @@ link  list-directory  ln  ls  ld
 
 # Property exploration - discover available fields
 stargate> (list-directory).<TAB>
-entries      recursive    total_count
+entries      recursive    count
 
 # Nested property completion
 stargate> (list-directory).entries[0].<TAB>
@@ -457,7 +457,7 @@ A modern shell with Python-style indexing and optional semicolons:
 
 ```bash
 # Variables and expressions
-stargate> let total = (list-directory).total_count;
+stargate> let total = (list-directory).count;
 stargate> print "Found {total} items";
 Found 41 items
 
@@ -560,7 +560,7 @@ fn test_access_control() {
 fn test_complex_pipeline() {
     # Test multi-stage pipelines
     let toml_files = list-directory | find-text toml;
-    let count = toml_files.total_count;
+    let count = toml_files.count;
     ut.assert_true(count >= 0, "Should count TOML files");
     
     # Test property access on pipeline results
@@ -667,7 +667,7 @@ chmod +x my_test.sg
 **Discover available properties:**
 ```bash
 stargate> (list-directory).<TAB>
-entries      recursive    total_count
+entries      recursive    count
 
 stargate> (list-directory).entries[0].<TAB>
 gid  inode  modified  name  nlink  path  permissions  size  type  uid
