@@ -12,6 +12,8 @@ use thiserror::Error;
 use sgcore::display::Quotable;
 use sgcore::error::{UError, UResult};
 use sgcore::{format_usage, show};
+use sgcore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 use sgcore::translate;
 
@@ -48,6 +50,7 @@ impl UError for LoopNode<'_> {}
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
 
     let input = matches
         .get_one::<OsString>(options::FILE)
@@ -85,12 +88,12 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         g.add_edge(from, to);
     }
 
-    g.run_tsort();
+    g.run_tsort(opts);
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .override_usage(format_usage(&translate!("tsort-usage")))
@@ -102,7 +105,9 @@ pub fn uu_app() -> Command {
                 .hide(true)
                 .value_parser(clap::value_parser!(OsString))
                 .value_hint(clap::ValueHint::FilePath)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 /// Find the element `x` in `vec` and remove it, returning its index.
@@ -163,7 +168,9 @@ impl<'input> Graph<'input> {
     }
 
     /// Implementation of algorithm T from TAOCP (Don. Knuth), vol. 1.
-    fn run_tsort(&mut self) {
+    fn run_tsort(&mut self, opts: JsonOutputOptions) {
+        let mut sorted_nodes = Vec::new();
+        
         // First, we find nodes that have no prerequisites (independent nodes).
         // If no such node exists, then there is a cycle.
         let mut independent_nodes_queue: VecDeque<&'input str> = self
@@ -188,7 +195,13 @@ impl<'input> Graph<'input> {
         while !self.nodes.is_empty() {
             // Get the next node (breaking any cycles necessary to do so).
             let v = self.find_next_node(&mut independent_nodes_queue);
-            println!("{v}");
+            
+            if opts.object_output {
+                sorted_nodes.push(v.to_string());
+            } else {
+                println!("{v}");
+            }
+            
             if let Some(node_to_process) = self.nodes.remove(v) {
                 for successor_name in node_to_process.successor_names {
                     let successor_node = self.nodes.get_mut(successor_name).unwrap();
@@ -199,6 +212,14 @@ impl<'input> Graph<'input> {
                     }
                 }
             }
+        }
+        
+        if opts.object_output {
+            let output = json!({
+                "sorted": sorted_nodes,
+                "count": sorted_nodes.len()
+            });
+            let _ = object_output::output(opts, output, || Ok(()));
         }
     }
 
