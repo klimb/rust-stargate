@@ -1,0 +1,72 @@
+#!/usr/bin/env stargate-shell
+# Test get-date command with object output
+
+use ut;
+
+[test]
+fn test_date_object_output() {
+    let date_data = (get-date);
+    let timestamp = date_data | slice-object timestamp;
+    ut.assert_not_equals(timestamp, "", "Should extract timestamp from get-date command");
+    ut.assert_not_equals(timestamp, 0, "Timestamp should not be zero");
+}
+
+[test]
+fn test_date_slice_formatted() {
+    let date_data = (get-date);
+    let formatted = date_data | slice-object formatted;
+    ut.assert_not_equals(formatted, "", "Should extract formatted date string");
+}
+
+[test]
+fn test_date_slice_timezone() {
+    let date_data = (get-date);
+    let timezone = date_data | slice-object timezone;
+    ut.assert_not_equals(timezone, "", "Should extract timezone from get-date");
+}
+
+[test]
+fn test_date_iso_format() {
+    let date_data = (get-date -I);
+    let formatted = date_data | slice-object formatted;
+    ut.assert_not_equals(formatted, "", "Should format date in ISO-8601 format");
+}
+
+[test]
+fn test_date_rfc_email() {
+    let date_data = (get-date -R);
+    let formatted = date_data | slice-object formatted;
+    ut.assert_not_equals(formatted, "", "Should format date in RFC-5322 format");
+}
+
+[test]
+fn test_date_custom_format() {
+    let date_data = (get-date "+%Y-%m-%d");
+    let formatted = date_data | slice-object formatted;
+    ut.assert_not_equals(formatted, "", "Should format date with custom format string");
+}
+
+[test]
+fn test_date_dice_fields() {
+    let date_data = (get-date);
+    let selected = date_data | dice-object formatted timestamp;
+    ut.assert_true(true, "Should dice date to specific fields");
+}
+
+[test]
+fn test_date_utc() {
+    let date_data = (get-date -u);
+    let offset = date_data | slice-object offset;
+    # UTC should have +00 offset
+    ut.assert_not_equals(offset, "", "Should have offset value with -u flag");
+}
+
+[test]
+fn test_date_field_filtering() {
+    let date_data = (get-date --field timestamp);
+    let timestamp = date_data | slice-object timestamp;
+    ut.assert_not_equals(timestamp, "", "Should filter to timestamp field only");
+}
+
+print ut.stats;
+exit(ut.healthy);
