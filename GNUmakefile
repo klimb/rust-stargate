@@ -315,7 +315,7 @@ test:
 
 test-scripting:
 	@echo "Running stargate-shell scripting tests..."
-	@${CARGO} build --bin stargate-shell --bin stargate $(PROFILE_CMD)
+	@${CARGO} build --bin stargate-shell --bin stargate --features "${EXES} $(BUILD_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(RUSTC_ARCH)
 	@for script in $(BASEDIR)/stargate_shellscripts/*/*.sg; do \
 		echo "Running $$script..."; \
 		$(BUILDDIR)/stargate-shell "$$script" || exit 1; \

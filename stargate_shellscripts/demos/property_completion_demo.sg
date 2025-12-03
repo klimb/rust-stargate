@@ -16,5 +16,42 @@ fn test_array_access() {
     ut.assert_not_equals(first, "", "First entry should have name");
 }
 
+[test]
+fn test_users_property_access() {
+    let user_data = (users);
+    let user_list = user_data.users;
+    let user_count = user_data.count;
+    ut.assert_equals(user_list.size(), user_count, "User list size should match count");
+}
+
+[test]
+fn test_pathchk_property_access() {
+    let check = (pathchk /tmp);
+    let mode = check.mode;
+    let all_valid = check.all_valid;
+    let paths = check.paths;
+    ut.assert_not_equals(mode, "", "Should have validation mode");
+    ut.assert_true(paths.size() >= 1, "Should validate paths");
+}
+
+[test]
+fn test_mktemp_property_access() {
+    let tmp = (mktemp);
+    let path = tmp.path;
+    let type = tmp.type;
+    let is_absolute = tmp.absolute;
+    ut.assert_equals(type, "file", "Default should be file");
+    ut.assert_not_equals(path, "", "Should have path");
+}
+
+[test]
+fn test_sync_property_access() {
+    let sync_data = (sync);
+    let op = sync_data.operation;
+    let success = sync_data.success;
+    ut.assert_equals(op, "sync", "Default operation should be sync");
+    ut.assert_equals(success, true, "Sync should succeed");
+}
+
 print ut.stats;
 exit(ut.healthy);
