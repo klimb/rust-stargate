@@ -1,0 +1,58 @@
+use ut;
+[test]
+fn test_unix_ls() {
+    let result = execute-process("/usr/bin/ls", "--color=never");
+    ut.assert_not_equals(result, "", "ls should produce output");
+}
+[test]
+fn test_list_directory() {
+    let current_dir = (list-directory).entries;
+    ut.assert_not_equals(current_dir, "", "system commands should work");
+}
+[test]
+fn test_stargate_pipeline() {
+    let file_count = list-directory | collect-count;
+    ut.assert_not_equals(file_count, "", "Should return file count");
+}
+[test]
+fn test_property_access() {
+    let entries = (list-directory).entries;
+    ut.assert_not_equals(entries, "", "entries should not be empty");
+}
+[test]
+fn test_boolean_assertions() {
+    let value = true;
+    ut.assert_true(value, "Boolean value should be true");
+    let negated = !value;
+    ut.assert_true(!negated, "Negated boolean should work");
+}
+[test]
+fn test_string_equality() {
+    let a = "hello";
+    let b = "hello";
+    ut.assert_equals(a, b, "Strings should be equal");
+}
+[test]
+fn test_string_inequality() {
+    let a = "hello";
+    let b = "world";
+    ut.assert_not_equals(a, b, "Strings should not be equal");
+}
+[test]
+fn test_string_non_empty() {
+    let text = "some content";
+    ut.assert_not_equals(text, "", "String should not be empty");
+}
+[test]
+fn test_execute_process_args() {
+    let result = execute-process("/usr/bin/echo", "hello", "world");
+    ut.assert_not_equals(result, "", "echo with args should produce output");
+}
+[test]
+fn test_number_equality() {
+    let x = 42;
+    let y = 42;
+    ut.assert_equals(x, y, "Numbers should be equal");
+}
+print ut.stats;
+exit(ut.healthy);

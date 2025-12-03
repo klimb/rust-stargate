@@ -19,6 +19,7 @@ pub struct Interpreter {
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
     test_runner: TestRunner,
+    current_instance: Option<Value>, // Current 'this' context when executing methods
 }
 
 impl Interpreter {
@@ -31,6 +32,7 @@ impl Interpreter {
             exit_code: None,
             variable_names: None,
             test_runner: TestRunner::new(),
+            current_instance: None,
         }
     }
     
@@ -43,6 +45,7 @@ impl Interpreter {
             exit_code: None,
             variable_names: Some(variable_names),
             test_runner: TestRunner::new(),
+            current_instance: None,
         }
     }
 

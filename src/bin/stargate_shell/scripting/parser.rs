@@ -972,6 +972,11 @@ impl Parser {
             }
         }
 
+        // Check for 'this' keyword
+        if token == "this" {
+            return Ok(Expression::This);
+        }
+
         // Otherwise it's a variable
         Ok(Expression::Variable(token))
     }

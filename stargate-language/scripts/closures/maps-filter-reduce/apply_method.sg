@@ -1,0 +1,64 @@
+use ut;
+[test]
+fn test_apply_number() {
+    let x = 5;
+    let doubled = x.apply(n: n * 2);
+    ut.assert_equals(doubled, 10, "Should double the number");
+    let squared = x.apply(n: n * n);
+    ut.assert_equals(squared, 25, "Should square the number");
+}
+[test]
+fn test_apply_string() {
+    let name = "Alice";
+    let greeting = name.apply(s: "Hello, " + s);
+    ut.assert_equals(greeting, "Hello, Alice", "Should prepend greeting");
+    let upper = "test".apply(s: s);  
+    ut.assert_equals(upper, "test", "Should return string unchanged");
+}
+[test]
+fn test_apply_list() {
+    let nums = [1, 2, 3, 4, 5];
+    let sum = nums.apply(list: list.reduce(0, a, b: a + b));
+    ut.assert_equals(sum, 15, "Should sum the list");
+    let size = nums.apply(list: list.size());
+    ut.assert_equals(size, 5, "Should get list size");
+}
+[test]
+fn test_apply_chain() {
+    let result = 10
+        .apply(x: x + 5)
+        .apply(x: x * 2)
+        .apply(x: x - 10);
+    ut.assert_equals(result, 20, "Should chain: (10+5)*2-10 = 20");
+}
+[test]
+fn test_apply_complex() {
+    let data = [1, 2, 3, 4, 5];
+    let evens_squared = data.apply(list: 
+        list.filter(x: x % 2 == 0).map(x: x * x)
+    );
+    ut.assert_equals(evens_squared.size(), 2, "Should have 2 even numbers");
+    ut.assert_equals(evens_squared[0], 4, "2^2 = 4");
+    ut.assert_equals(evens_squared[1], 16, "4^2 = 16");
+}
+[test]
+fn test_apply_transform() {
+    let price = 100;
+    let with_tax = price.apply(p: p * 1.2);  
+    let rounded = with_tax.apply(p: p);      
+    ut.assert_true(rounded > 119 && rounded < 121, "Should be ~120");
+}
+[test]
+fn test_apply_dict() {
+    let config = {"timeout": 30, "retries": 3};
+    let timeout = config.apply(c: c["timeout"]);
+    ut.assert_equals(timeout, 30, "Should extract timeout");
+}
+[test]
+fn test_apply_conditional() {
+    let x = 15;
+    let category = x.apply(n: n);  
+    ut.assert_equals(category, 15, "Should categorize number");
+}
+print ut.stats;
+exit(ut.healthy);

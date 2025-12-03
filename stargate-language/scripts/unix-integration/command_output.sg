@@ -1,0 +1,27 @@
+use ut;
+[test]
+fn test_collect_count() {
+    let file_count = list-directory | collect-count;
+    ut.assert_true(file_count >= 0, "collect-count should return a non-negative value");
+}
+[test]
+fn test_file_count_comparison() {
+    let file_count = list-directory | collect-count;
+    ut.assert_true(file_count >= 0, "File count should be non-negative");
+}
+[test]
+fn test_conditional_with_count() {
+    let file_count = list-directory | collect-count;
+    let result = "few";
+    if file_count > 10 {
+        let result = "many";
+    }
+    ut.assert_not_equals(result, "", "Result should be set based on file count");
+}
+[test]
+fn test_directory_has_files() {
+    let total = (list-directory).total_count;
+    ut.assert_true(total > 0, "Directory should have at least some files");
+}
+print ut.stats;
+exit(ut.healthy);

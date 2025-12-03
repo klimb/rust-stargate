@@ -1,0 +1,94 @@
+use ut;
+[test]
+fn test_basic_and() {
+    let file_count = (list-directory).total_count;
+    ut.assert_true(file_count > 0 && file_count < 1000, "Directory should have files and not be too large");
+}
+[test]
+fn test_range_checking() {
+    let value = 75;
+    let min = 0;
+    let max = 100;
+    ut.assert_true(value >= min && value <= max, "Value should be within range");
+}
+[test]
+fn test_chained_and() {
+    let a = 10;
+    let b = 20;
+    let c = 30;
+    ut.assert_true(a < b && b < c, "Should be in ascending order");
+    ut.assert_true(a < b && b < c && a < c, "All three comparisons should be true");
+}
+[test]
+fn test_chained_or() {
+    let a = 10;
+    let b = 20;
+    let c = 30;
+    ut.assert_equals(a == b || b == c || a == c, false, "All values should be distinct");
+}
+[test]
+fn test_mixed_operators() {
+    let is_admin = false;
+    let is_authenticated = true;
+    let has_permission = true;
+    ut.assert_true(is_admin || (is_authenticated && has_permission), "Access granted via admin OR (authenticated AND permitted)");
+}
+[test]
+fn test_progressive_and() {
+    let step1 = true;
+    let step2 = true;
+    let step3 = false;
+    ut.assert_true(step1, "Step 1 should pass");
+    ut.assert_true(step1 && step2, "Steps 1 and 2 should pass");
+    ut.assert_equals(step1 && step2 && step3, false, "Not all steps passed");
+    ut.assert_true(true && true && true, "All true conditions should be true");
+}
+[test]
+fn test_nested_expressions() {
+    let user_active = true;
+    let has_email = true;
+    let has_phone = false;
+    let verified = true;
+    let can_proceed = ((user_active && (has_email || has_phone)) && verified);
+    ut.assert_true(can_proceed, "User has contact method AND is verified");
+}
+[test]
+fn test_triple_nesting() {
+    let x = true;
+    let y = true;
+    let z = false;
+    let w = true;
+    let final = true;
+    let result = (((x && y) || (z && w)) && final);
+    ut.assert_true(result, "Complex nested evaluation should work");
+}
+[test]
+fn test_not_operator() {
+    let active = 1;
+    let inactive = 0;
+    ut.assert_equals(!inactive, true, "!inactive should be true");
+    let test_val = true;
+    let double_neg = !!test_val;
+    ut.assert_equals(double_neg, test_val, "Double negation should return original");
+}
+[test]
+fn test_de_morgan_laws() {
+    let a = 1;
+    let b = 0;
+    let law1_left = !(a && b);
+    let law1_right = !a || !b;
+    ut.assert_equals(law1_left, law1_right, "De Morgan's first law should hold");
+    let law2_left = !(a || b);
+    let law2_right = !a && !b;
+    ut.assert_equals(law2_left, law2_right, "De Morgan's second law should hold");
+}
+[test]
+fn test_access_control() {
+    let is_guest = 0;
+    let is_banned = 0;
+    let has_paid = 1;
+    ut.assert_true(!is_banned && (!is_guest || has_paid), "Access granted");
+    ut.assert_equals(is_banned || (is_guest && !has_paid), false, "Access not denied");
+}
+print ut.stats;
+exit(ut.healthy);

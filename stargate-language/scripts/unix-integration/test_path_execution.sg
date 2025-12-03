@@ -1,0 +1,19 @@
+use ut;
+[test]
+fn test_absolute_path() {
+    let result = execute-process("/bin/echo", "✓ /bin/echo works");
+    ut.assert_not_equals(result, "", "Absolute path should work");
+    ut.assert_equals(result, "✓ /bin/echo works", "Output should match input");
+}
+[test]
+fn test_relative_path_with_dot_slash() {
+    let result = execute-process("./stargate-language/scripts/shell-integration/simple_test.sh", "✓ ./script works");
+    ut.assert_not_equals(result, "", "Relative ./ path should work");
+}
+[test]
+fn test_path_command_which() {
+    let result = execute-process("which", "echo");
+    ut.assert_not_equals(result, "", "PATH resolution should work");
+}
+print ut.stats;
+exit(ut.healthy);

@@ -1,0 +1,43 @@
+use ut;
+[test]
+fn test_conditional_pipelines() {
+    let total_files = (list-directory).total_count;
+    ut.assert_true(total_files >= 0, "Directory count should be non-negative");
+    let executed = "none";
+    if total_files > 20 {
+        let executed = "large";
+    } else {
+        if total_files > 10 {
+            let executed = "medium";
+        } else {
+            let executed = "small";
+        }
+    }
+    ut.assert_not_equals(executed, "none", "Should have executed a branch");
+}
+[test]
+fn test_conditional_with_users() {
+    let user_data = (users);
+    let count = user_data | slice-object count;
+    let status = "unknown";
+    if count > 5 {
+        let status = "many_users";
+    } else {
+        let status = "few_users";
+    }
+    ut.assert_not_equals(status, "unknown", "Should determine user status");
+}
+[test]
+fn test_conditional_with_pathchk() {
+    let check = (pathchk /tmp /invalid/xyz);
+    let all_valid = check | slice-object all_valid;
+    let result = "none";
+    if all_valid == true {
+        let result = "all_paths_valid";
+    } else {
+        let result = "some_paths_invalid";
+    }
+    ut.assert_equals(result, "some_paths_invalid", "Should detect invalid path");
+}
+print ut.stats;
+exit(ut.healthy);

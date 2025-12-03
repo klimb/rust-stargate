@@ -1,0 +1,21 @@
+use ut;
+class AdvancedObjectDemo {
+    let env = (get-environment);
+}
+let demo = new AdvancedObjectDemo();
+[test]
+fn test_environment_loaded() {
+    ut.assert_not_equals(demo.env.count, 0, "Should have environment variables");
+}
+[test]
+fn test_pipeline_with_object() {
+    let result = demo.env | slice-object environment | dice-object SHELL TERM;
+    ut.assert_not_equals(result.SHELL, "", "SHELL should not be empty");
+}
+[test]
+fn test_term_variable() {
+    let result = demo.env | slice-object environment | dice-object TERM;
+    ut.assert_not_equals(result.TERM, "", "TERM should not be empty");
+}
+print ut.stats;
+exit(ut.healthy);
