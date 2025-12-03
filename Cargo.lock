@@ -3130,6 +3130,7 @@ dependencies = [
  "codspeed-divan-compat",
  "fluent",
  "regex",
+ "serde_json",
  "sgcore",
  "tempfile",
 ]
@@ -3546,6 +3547,7 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "serde_json",
  "sgcore",
  "tempfile",
  "thiserror 2.0.17",

@@ -10,6 +10,8 @@ use std::io::{BufRead, BufReader, BufWriter, Read, Write, stdin, stdout};
 use std::path::Path;
 use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
 use sgcore::{format_usage, show_error, translate};
+use sgcore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 mod helper;
 
@@ -187,6 +189,7 @@ pub mod options {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let opts = JsonOutputOptions::from_matches(&matches);
 
     let mut settings = Settings::default();
 
@@ -210,11 +213,16 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let mut stats = Stats::new(settings.starting_line_number);
+    let mut all_lines = Vec::new();
 
     for file in &files {
         if file == "-" {
             let mut buffer = BufReader::new(stdin());
-            nl(&mut buffer, &mut stats, &settings)?;
+            if opts.object_output {
+                nl_collect(&mut buffer, &mut stats, &settings, &mut all_lines)?;
+            } else {
+                nl(&mut buffer, &mut stats, &settings)?;
+            }
         } else {
             let path = Path::new(file);
 
@@ -228,16 +236,28 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
                 let reader =
                     File::open(path).map_err_context(|| file.to_string_lossy().to_string())?;
                 let mut buffer = BufReader::new(reader);
-                nl(&mut buffer, &mut stats, &settings)?;
+                if opts.object_output {
+                    nl_collect(&mut buffer, &mut stats, &settings, &mut all_lines)?;
+                } else {
+                    nl(&mut buffer, &mut stats, &settings)?;
+                }
             }
         }
+    }
+
+    if opts.object_output {
+        let output = json!({
+            "lines": all_lines,
+            "total_lines": all_lines.len()
+        });
+        object_output::output(opts, output, || Ok(()))?;
     }
 
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .about(translate!("nl-about"))
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -342,7 +362,103 @@ pub fn uu_app() -> Command {
                 .help(translate!("nl-help-number-width"))
                 .value_name("NUMBER")
                 .value_parser(clap::value_parser!(usize))
-        )
+        );
+    
+    object_output::add_json_args(cmd)
+}
+
+/// `nl_collect` implements the functionality for collecting numbered lines into a vector for JSON output.
+fn nl_collect<T: Read>(
+    reader: &mut BufReader<T>,
+    stats: &mut Stats,
+    settings: &Settings,
+    output_lines: &mut Vec<serde_json::Value>
+) -> UResult<()> {
+    let mut current_numbering_style = &settings.body_numbering;
+    let mut line = Vec::new();
+
+    loop {
+        line.clear();
+        let n = reader
+            .read_until(b'\n', &mut line)
+            .map_err_context(|| translate!("nl-error-could-not-read-line"))?;
+        if n == 0 {
+            break;
+        }
+
+        if line.last().copied() == Some(b'\n') {
+            line.pop();
+        }
+
+        if line.is_empty() {
+            stats.consecutive_empty_lines += 1;
+        } else {
+            stats.consecutive_empty_lines = 0;
+        }
+
+        let new_numbering_style = match SectionDelimiter::parse(&line, &settings.section_delimiter)
+        {
+            Some(SectionDelimiter::Header) => Some(&settings.header_numbering),
+            Some(SectionDelimiter::Body) => Some(&settings.body_numbering),
+            Some(SectionDelimiter::Footer) => Some(&settings.footer_numbering),
+            None => None,
+        };
+
+        if let Some(new_style) = new_numbering_style {
+            current_numbering_style = new_style;
+            if settings.renumber {
+                stats.line_number = Some(settings.starting_line_number);
+            }
+            output_lines.push(json!({
+                "line": "",
+                "number": null,
+                "is_delimiter": true
+            }));
+        } else {
+            let is_line_numbered = match current_numbering_style {
+                NumberingStyle::All
+                    if line.is_empty()
+                        && settings.join_blank_lines > 0
+                        && stats.consecutive_empty_lines % settings.join_blank_lines != 0 =>
+                {
+                    false
+                }
+                NumberingStyle::All => true,
+                NumberingStyle::NonEmpty => !line.is_empty(),
+                NumberingStyle::None => false,
+                NumberingStyle::Regex(re) => re.is_match(&line),
+            };
+
+            let line_text = String::from_utf8_lossy(&line).to_string();
+            
+            if is_line_numbered {
+                let Some(line_number) = stats.line_number else {
+                    return Err(USimpleError::new(
+                        1,
+                        translate!("nl-error-line-number-overflow")
+                    ));
+                };
+                
+                output_lines.push(json!({
+                    "line": line_text,
+                    "number": line_number,
+                    "is_delimiter": false
+                }));
+                
+                match line_number.checked_add(settings.line_increment) {
+                    Some(new_line_number) => stats.line_number = Some(new_line_number),
+                    None => stats.line_number = None,
+                }
+            } else {
+                output_lines.push(json!({
+                    "line": line_text,
+                    "number": null,
+                    "is_delimiter": false
+                }));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// `nl` implements the main functionality for an individual buffer.
