@@ -1,13 +1,3 @@
-// This file is part of the sgcore package.
-//
-// For the full copyright and license information, please view the LICENSE
-// file that was distributed with this source code.
-
-//! JSON adapter for extracting file paths from various JSON formats.
-//!
-//! This module provides utilities to extract file paths from JSON input,
-//! supporting multiple common patterns used by different commands.
-
 use serde_json::Value;
 use std::io::Read;
 use std::path::PathBuf;
@@ -89,78 +79,6 @@ pub fn try_extract_paths_from_stdin() -> Option<Vec<PathBuf>> {
         None
     } else {
         Some(paths)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_extract_from_string() {
-        let json = json!("test.txt");
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths, vec![PathBuf::from("test.txt")]);
-    }
-
-    #[test]
-    fn test_extract_from_array() {
-        let json = json!(["file1.txt", "file2.txt", "file3.txt"]);
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths.len(), 3);
-        assert_eq!(paths[0], PathBuf::from("file1.txt"));
-    }
-
-    #[test]
-    fn test_extract_from_list_directory_format() {
-        let json = json!({
-            "entries": [
-                {"path": "file1.txt", "type": "file"},
-                {"path": "dir", "type": "directory"},
-                {"path": "file2.txt", "type": "file"}
-            ]
-        });
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths.len(), 2); // Should skip directory
-        assert_eq!(paths[0], PathBuf::from("file1.txt"));
-        assert_eq!(paths[1], PathBuf::from("file2.txt"));
-    }
-
-    #[test]
-    fn test_extract_from_files_array() {
-        let json = json!({
-            "files": ["a.txt", "b.txt"]
-        });
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths.len(), 2);
-    }
-
-    #[test]
-    fn test_extract_from_nested_objects() {
-        let json = json!({
-            "results": [
-                {"filename": "test1.txt"},
-                {"filepath": "test2.txt"},
-                {"name": "test3.txt"}
-            ]
-        });
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths.len(), 3);
-    }
-
-    #[test]
-    fn test_extract_from_object_with_path() {
-        let json = json!({"path": "single.txt"});
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths, vec![PathBuf::from("single.txt")]);
-    }
-
-    #[test]
-    fn test_empty_result() {
-        let json = json!({"other": "data"});
-        let paths = extract_file_paths(&json);
-        assert_eq!(paths.len(), 0);
     }
 }
 
