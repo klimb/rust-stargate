@@ -63,6 +63,14 @@ fn test_to_string() {
     let pizza2 = new Pizza.small().thin_crust().tomato_sauce();
     print pizza1;
     print pizza2;
+    ut.assert_equals(pizza1.size, "medium", "Pizza1 should be medium");
+    ut.assert_equals(pizza1.crust, "thick", "Pizza1 should have thick crust");
+    ut.assert_equals(pizza1.sauce, "bbq", "Pizza1 should have bbq sauce");
+    ut.assert_true(pizza1.extra_cheese, "Pizza1 should have extra cheese");
+    ut.assert_true(pizza1.toppings.contains("bacon"), "Pizza1 should have bacon");
+    ut.assert_equals(pizza2.size, "small", "Pizza2 should be small");
+    ut.assert_equals(pizza2.crust, "thin", "Pizza2 should have thin crust");
+    ut.assert_equals(pizza2.sauce, "tomato", "Pizza2 should have tomato sauce");
 }
 
 print ut.stats;
