@@ -1,0 +1,25 @@
+use ut;
+[test]
+fn test_valid_command_succeeds() {
+    let result = execute-process("/bin/echo", "✓ This works fine");
+    ut.assert_not_equals(result, "", "Valid command should succeed");
+    let trimmed = result.trim();
+    ut.assert_equals(trimmed, "✓ This works fine", "Output should match input");
+}
+[test]
+fn test_absolute_path_works() {
+    let result = execute-process("/bin/date", "+%Y");
+    ut.assert_not_equals(result, "", "Absolute path date should work");
+}
+[test]
+fn test_relative_path_works() {
+    let result = execute-process("./stargate-language/scripts/shell-integration/simple_test.sh", "test");
+    ut.assert_not_equals(result, "", "Valid relative path should work");
+}
+[test]
+fn test_path_command_works() {
+    let result = execute-process("which", "echo");
+    ut.assert_not_equals(result, "", "PATH command should work");
+}
+print ut.stats;
+exit(ut.healthy);

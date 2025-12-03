@@ -1,0 +1,167 @@
+use ut;
+[test]
+fn test_empty_dict() {
+    let empty = {};
+    ut.assert_equals(empty.size(), 0);
+}
+[test]
+fn test_dict_with_data() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    ut.assert_equals(person.size(), 3);
+}
+[test]
+fn test_dict_key_access() {
+    let person = {"name": "Bob", "age": 25};
+    ut.assert_equals(person["name"], "Bob");
+    ut.assert_equals(person["age"], 25);
+}
+[test]
+fn test_dict_set_existing() {
+    let data = {"count": 10};
+    let updated = data.set("count", 20);
+    ut.assert_equals(updated["count"], 20);
+}
+[test]
+fn test_dict_set_new() {
+    let data = {"x": 1};
+    let updated = data.set("y", 2);
+    ut.assert_equals(updated["y"], 2);
+    ut.assert_equals(updated.size(), 2);
+}
+[test]
+fn test_dict_index_assign_existing() {
+    let config = {"debug": true, "port": 8080};
+    config["port"] = 9000;
+    ut.assert_equals(config["port"], 9000);
+}
+[test]
+fn test_dict_index_assign_new() {
+    let settings = {"theme": "dark"};
+    settings["lang"] = "en";
+    ut.assert_equals(settings["lang"], "en");
+    ut.assert_equals(settings.size(), 2);
+}
+[test]
+fn test_dict_get_with_default() {
+    let data = {"a": 1};
+    let val1 = data.get_or("a", 99);
+    let val2 = data.get_or("missing", 99);
+    ut.assert_equals(val1, 1);
+    ut.assert_equals(val2, 99);
+}
+[test]
+fn test_dict_get_without_default() {
+    let data = {"key": "value"};
+    let val = data.get("missing");
+    ut.assert_equals(val, none);
+}
+[test]
+fn test_dict_has_key() {
+    let inventory = {"apples": 5, "oranges": 3};
+    ut.assert_true(inventory.has_key("apples"));
+    ut.assert_equals(inventory.has_key("bananas"), false);
+}
+[test]
+fn test_dict_remove() {
+    let data = {"x": 1, "y": 2, "z": 3};
+    let removed_value = data.remove("y");
+    ut.assert_equals(removed_value, 2, "remove should return the removed value");
+}
+[test]
+fn test_dict_keys() {
+    let data = {"name": "Test", "id": 42};
+    let keys = data.keys();
+    ut.assert_equals(keys.size(), 2);
+    ut.assert_equals(keys[0], "id");
+    ut.assert_equals(keys[1], "name");
+}
+[test]
+fn test_dict_values() {
+    let scores = {"alice": 95, "bob": 87};
+    let vals = scores.values();
+    ut.assert_equals(vals.size(), 2);
+}
+[test]
+fn test_dict_clear() {
+    let data = {"a": 1, "b": 2, "c": 3};
+    let empty = data.clear();
+    ut.assert_equals(empty.size(), 0);
+}
+[test]
+fn test_dict_mixed_types() {
+    let mixed = {"str": "hello", "num": 77, "bool": true, "float": 3.14};
+    ut.assert_equals(mixed["str"], "hello");
+    ut.assert_equals(mixed["num"], 77);
+    ut.assert_equals(mixed["bool"], true);
+    ut.assert_equals(mixed["float"], 3.14);
+}
+[test]
+fn test_dict_with_lists() {
+    let data = {"colors": ["red", "green", "blue"], "numbers": [1, 2, 3]};
+    let colors = data["colors"];
+    ut.assert_equals(colors.size(), 3);
+    ut.assert_equals(colors[0], "red");
+}
+[test]
+fn test_list_of_dicts() {
+    let users = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 25}
+    ];
+    ut.assert_equals(users.size(), 2);
+    ut.assert_equals(users[0]["name"], "Alice");
+    ut.assert_equals(users[1]["age"], 25);
+}
+[test]
+fn test_nested_dicts() {
+    let config = {
+        "database": {"host": "localhost", "port": 5432},
+        "cache": {"enabled": true}
+    };
+    let db = config["database"];
+    ut.assert_equals(db["host"], "localhost");
+    ut.assert_equals(db["port"], 5432);
+}
+[test]
+fn test_dict_bool_empty() {
+    let empty = {};
+    ut.assert_equals(bool(empty), false);
+}
+[test]
+fn test_dict_bool_nonempty() {
+    let data = {"key": "value"};
+    ut.assert_true(bool(data));
+}
+[test]
+fn test_dict_any_key_types() {
+    let d = {};
+    d[1] = "one";
+    d[2] = "two";
+    ut.assert_equals(d[1], "one");
+    ut.assert_equals(d[2], "two");
+    d[true] = "yes";
+    d[false] = "no";
+    ut.assert_equals(d[true], "yes");
+    ut.assert_equals(d[false], "no");
+    d["name"] = "Alice";
+    ut.assert_equals(d["name"], "Alice");
+    ut.assert_equals(d.size(), 5);
+}
+[test]
+fn test_dict_complex_values() {
+    let obj = (list-directory);
+    let data = {
+        "list": [1, 2, 3],
+        "nested": {"x": 10},
+        "object": obj,
+        "number": 77,
+        "bool": true
+    };
+    ut.assert_equals(data["number"], 77);
+    ut.assert_equals(data["bool"], true);
+    ut.assert_equals(data["list"].size(), 3);
+    ut.assert_equals(data["nested"]["x"], 10);
+    ut.assert_equals(data["object"], obj);
+}
+print ut.stats;
+exit(ut.healthy);

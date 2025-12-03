@@ -1,0 +1,78 @@
+use ut;
+[test]
+fn test_sales_data_processing() {
+    let sales = [120, 340, 89, 450, 210, 95];
+    let high_sales = sales
+        .filter(x: x > 100)
+        .map(x: x * 1.1);  
+    ut.assert_equals(high_sales.size(), 4, "Should have 4 high performers");
+    ut.assert_true(high_sales[0] > 131 && high_sales[0] < 133, "First bonus around 132");
+    ut.assert_true(high_sales[1] > 373 && high_sales[1] < 375, "Second bonus around 374");
+}
+[test]
+fn test_temperature_aggregation() {
+    let temperatures = [72, 85, 68, 91, 77, 82];
+    let sum = temperatures.reduce(0, acc, t: acc + t);
+    let count = temperatures.reduce(0, acc, t: acc + 1);
+    ut.assert_equals(sum, 475, "Sum of all temperatures");
+    ut.assert_equals(count, 6, "Count of temperature readings");
+}
+[test]
+fn test_complex_chaining() {
+    let scores = [45, 67, 82, 91, 58, 73, 88, 95];
+    let result = scores
+        .filter(s: s >= 70)           
+        .map(s: s * s)                 
+        .reduce(0, sum, s: sum + s);   
+    ut.assert_equals(result, 37103, "Sum of squared passing scores");
+}
+[test]
+fn test_none_handling() {
+    let user_data = {
+        "name": "Alice",
+        "age": 30,
+        "city": none
+    };
+    ut.assert_equals(user_data["name"], "Alice", "Name should be present");
+    ut.assert_equals(user_data["age"], 30, "Age should be present");
+    ut.assert_equals(user_data["city"], none, "City should be none");
+    let city = user_data["city"];
+    ut.assert_equals(city, none, "City value should equal none");
+    ut.assert_equals(bool(city), false, "none should convert to false");
+}
+[test]
+fn test_closure_with_comparisons() {
+    let numbers = [10, 25, 5, 30, 15, 20];
+    let above_threshold = numbers.filter(n: n > 15);
+    ut.assert_equals(above_threshold.size(), 3, "Should have 3 numbers > 15");
+    ut.assert_equals(above_threshold[0], 25, "First: 25");
+    ut.assert_equals(above_threshold[1], 30, "Second: 30");
+    ut.assert_equals(above_threshold[2], 20, "Third: 20");
+}
+[test]
+fn test_closure_with_arithmetic() {
+    let prices = [10, 20, 30, 40];
+    let discounted = prices.map(p: p * 0.8);  
+    ut.assert_equals(discounted[0], 8, "10 * 0.8 = 8");
+    ut.assert_equals(discounted[1], 16, "20 * 0.8 = 16");
+    ut.assert_equals(discounted[2], 24, "30 * 0.8 = 24");
+    ut.assert_equals(discounted[3], 32, "40 * 0.8 = 32");
+}
+[test]
+fn test_product_accumulation() {
+    let factors = [2, 3, 4, 5];
+    let product = factors.reduce(1, acc, n: acc * n);
+    ut.assert_equals(product, 120, "2 * 3 * 4 * 5 = 120");
+}
+[test]
+fn test_empty_list_operations() {
+    let empty = [];
+    let mapped = empty.map(x: x * 2);
+    let filtered = empty.filter(x: x > 0);
+    let reduced = empty.reduce(0, acc, x: acc + x);
+    ut.assert_equals(mapped.size(), 0, "Map on empty list gives empty");
+    ut.assert_equals(filtered.size(), 0, "Filter on empty list gives empty");
+    ut.assert_equals(reduced, 0, "Reduce on empty list returns initial value");
+}
+print ut.stats;
+exit(ut.healthy);

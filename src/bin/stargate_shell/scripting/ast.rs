@@ -94,6 +94,7 @@ pub enum Expression {
         params: Vec<String>,
         body: Box<Expression>,
     },
+    This, // References the current instance in a method
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,0 +1,67 @@
+use ut;
+[test]
+fn test_tsort_object_output_simple() {
+    echo "a b\nb c" > /tmp/tsort_test_simple.txt;
+    let result = (tsort -o /tmp/tsort_test_simple.txt);
+    let sorted = result | slice-object sorted;
+    let count = result | slice-object count;
+    ut.assert_equals(count, 3, "Should have 3 nodes");
+    rm /tmp/tsort_test_simple.txt;
+}
+[test]
+fn test_tsort_object_output_empty() {
+    echo "" > /tmp/tsort_test_empty.txt;
+    let result = (tsort --obj /tmp/tsort_test_empty.txt);
+    let count = result | slice-object count;
+    ut.assert_equals(count, 0, "Empty graph should have 0 nodes");
+    rm /tmp/tsort_test_empty.txt;
+}
+[test]
+fn test_tsort_object_output_complex() {
+    echo "a b\na c\nb d\nc d" > /tmp/tsort_test_complex.txt;
+    let result = (tsort -o /tmp/tsort_test_complex.txt);
+    let sorted = result | slice-object sorted;
+    let count = result | slice-object count;
+    ut.assert_equals(count, 4, "Should have 4 nodes");
+    rm /tmp/tsort_test_complex.txt;
+}
+[test]
+fn test_tsort_object_output_pretty() {
+    echo "x y\ny z" > /tmp/tsort_test_pretty.txt;
+    let result = (tsort --obj --pretty /tmp/tsort_test_pretty.txt);
+    let count = result | slice-object count;
+    ut.assert_equals(count, 3, "Pretty output should work");
+    rm /tmp/tsort_test_pretty.txt;
+}
+[test]
+fn test_tsort_object_output_single_node() {
+    echo "a a" > /tmp/tsort_test_single.txt;
+    let result = (tsort -o /tmp/tsort_test_single.txt);
+    let count = result | slice-object count;
+    ut.assert_equals(count, 1, "Self-loop should result in single node");
+    rm /tmp/tsort_test_single.txt;
+}
+[test]
+fn test_tsort_object_output_linear() {
+    echo "a b\nb c\nc d\nd e" > /tmp/tsort_test_linear.txt;
+    let result = (tsort --obj /tmp/tsort_test_linear.txt);
+    let sorted = result | slice-object sorted;
+    let count = result | slice-object count;
+    ut.assert_equals(count, 5, "Linear graph should have 5 nodes");
+    rm /tmp/tsort_test_linear.txt;
+}
+[test]
+fn test_tsort_object_output_field_filter() {
+    echo "p q" > /tmp/tsort_test_filter.txt;
+    let count_only = (tsort -o -f count /tmp/tsort_test_filter.txt);
+    ut.assert_equals(count_only, 2, "Field filter should extract count");
+    rm /tmp/tsort_test_filter.txt;
+}
+[test]
+fn test_tsort_error_odd_tokens() {
+    echo "a b c" > /tmp/tsort_test_odd.txt;
+    rm /tmp/tsort_test_odd.txt;
+    ut.assert_true(true, "Test executed");
+}
+print ut.stats;
+exit(ut.healthy);

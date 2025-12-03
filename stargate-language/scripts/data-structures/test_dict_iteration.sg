@@ -1,0 +1,100 @@
+use ut;
+[test]
+fn test_dict_creation() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    ut.assert_not_equals(person, none, "Dictionary should be created");
+}
+[test]
+fn test_iterate_keys_only() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    let key_count = 0;
+    for k in person {
+        key_count = key_count + 1;
+    }
+    ut.assert_equals(key_count, 3, "Should iterate over 3 keys");
+}
+[test]
+fn test_iterate_key_value_pairs() {
+    let person = {"name": "Alice", "age": 30};
+    let found_name = false;
+    let found_age = false;
+    for k, v in person {
+        if k == "name" {
+            ut.assert_equals(v, "Alice", "Name value should match");
+            found_name = true;
+        }
+        if k == "age" {
+            ut.assert_equals(v, 30, "Age value should match");
+            found_age = true;
+        }
+    }
+    ut.assert_true(found_name, "Should find name key");
+    ut.assert_true(found_age, "Should find age key");
+}
+[test]
+fn test_dict_keys_method() {
+    let person = {"name": "Alice", "age": 30, "city": "NYC"};
+    let keys = person.keys();
+    ut.assert_not_equals(keys, "", "keys() should return non-empty list");
+}
+[test]
+fn test_dict_values_method() {
+    let person = {"name": "Alice", "age": 30};
+    let values = person.values();
+    ut.assert_not_equals(values, "", "values() should return non-empty list");
+}
+[test]
+fn test_iterate_over_keys_result() {
+    let person = {"name": "Alice", "age": 30};
+    let iteration_count = 0;
+    for key in person.keys() {
+        let value = person.get(key);
+        ut.assert_not_equals(value, "", "Should get value for each key");
+        iteration_count = iteration_count + 1;
+    }
+    ut.assert_equals(iteration_count, 2, "Should iterate over all keys");
+}
+[test]
+fn test_dict_get_method() {
+    let person = {"name": "Alice", "age": 30};
+    let name = person.get("name");
+    ut.assert_equals(name, "Alice", "get() should return correct value");
+    let age = person.get("age");
+    ut.assert_equals(age, 30, "get() should work with numeric values");
+}
+[test]
+fn test_empty_dict_iteration() {
+    let empty = {};
+    let count = 0;
+    for k in empty {
+        count = count + 1;
+    }
+    ut.assert_equals(count, 0, "Empty dict should iterate zero times");
+}
+[test]
+fn test_dict_has_key() {
+    let person = {"name": "Alice", "city": "NYC"};
+    let has_name = person.has_key("name");
+    ut.assert_true(has_name, "Should have 'name' key");
+    let has_age = person.has_key("age");
+    ut.assert_true(!has_age, "Should not have 'age' key");
+}
+[test]
+fn test_dict_length() {
+    let scores = {"math": 90, "english": 85, "science": 92};
+    let len = scores.size();
+    ut.assert_equals(len, 3, "Dictionary should have 3 entries");
+}
+[test]
+fn test_values_iteration() {
+    let scores = {"math": 90, "english": 85};
+    let values_list = scores.values();
+    let value_count = 0;
+    for v in values_list {
+        ut.assert_not_equals(v, "", "Each value should be non-empty");
+        value_count = value_count + 1;
+    }
+    ut.assert_equals(value_count, 2, "Should iterate over all values");
+}
+print ut.stats;
+exit(ut.healthy);

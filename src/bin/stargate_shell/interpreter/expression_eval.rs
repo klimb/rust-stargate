@@ -14,6 +14,11 @@ impl Interpreter {
                     .cloned()
                     .ok_or(format!("Variable '{}' not found", name))
             }
+            Expression::This => {
+                self.current_instance
+                    .clone()
+                    .ok_or("'this' can only be used inside a method".to_string())
+            }
             Expression::UnaryOp { op, operand } => {
                 match op {
                     Operator::Not => {
@@ -402,7 +407,9 @@ impl Interpreter {
                                         let mut method_scope = HashMap::new();
                                         
                                         // Add all instance fields to the scope
+                                        let mut field_names = Vec::new();
                                         for (field_name, field_value) in &fields {
+                                            field_names.push(field_name.clone());
                                             method_scope.insert(field_name.clone(), field_value.clone());
                                         }
                                         
@@ -419,9 +426,17 @@ impl Interpreter {
                                             method_scope.insert(params[i].clone(), arg_value);
                                         }
                                         
-                                        // Save current variables and use method scope
+                                        // Save current variables and instance context
                                         let saved_vars = self.variables.clone();
+                                        let saved_instance = self.current_instance.clone();
                                         self.variables.extend(method_scope);
+                                        
+                                        // Set current instance for 'this' keyword with mutable fields
+                                        let mut updated_fields = fields.clone();
+                                        self.current_instance = Some(Value::Instance {
+                                            class_name: class_name.clone(),
+                                            fields: updated_fields.clone(),
+                                        });
                                         
                                         // Execute method body
                                         let mut return_value = Value::None;
@@ -437,8 +452,26 @@ impl Interpreter {
                                             }
                                         }
                                         
-                                        // Restore variables
+                                        // Collect modified field values from the method scope
+                                        for field_name in &field_names {
+                                            if let Some(modified_value) = self.variables.get(field_name) {
+                                                updated_fields.insert(field_name.clone(), modified_value.clone());
+                                            }
+                                        }
+                                        
+                                        // If return value is 'this', update it with modified fields
+                                        if let Value::Instance { class_name: ret_class, fields: _ } = &return_value {
+                                            if ret_class == &class_name {
+                                                return_value = Value::Instance {
+                                                    class_name: class_name.clone(),
+                                                    fields: updated_fields,
+                                                };
+                                            }
+                                        }
+                                        
+                                        // Restore variables and instance context
                                         self.variables = saved_vars;
+                                        self.current_instance = saved_instance;
                                         
                                         return Ok(return_value);
                                     }

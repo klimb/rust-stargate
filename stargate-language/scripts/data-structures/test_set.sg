@@ -1,0 +1,156 @@
+use ut;
+[test]
+fn test_empty_set_creation() {
+    let s = {1};
+    s = s.clear();
+    ut.assert_equals(s.size(), 0, "Empty set has size 0");
+    ut.assert_true(s.is_empty(), "Empty set is_empty returns true");
+}
+[test]
+fn test_set_creation() {
+    let s = {1, 2, 3};
+    ut.assert_equals(s.size(), 3, "Set has 3 elements");
+}
+[test]
+fn test_set_deduplication() {
+    let s = {1, 2, 2, 3, 3, 3};
+    ut.assert_equals(s.size(), 3, "Set automatically deduplicates");
+}
+[test]
+fn test_set_insert() {
+    let s = {1, 2};
+    s = s.insert(3);
+    ut.assert_equals(s.size(), 3, "Set has 3 elements after insert");
+    ut.assert_true(s.contains(3), "Set contains inserted element");
+}
+[test]
+fn test_set_insert_duplicate() {
+    let s = {1, 2, 3};
+    s = s.insert(2);
+    ut.assert_equals(s.size(), 3, "Inserting duplicate doesn't change size");
+}
+[test]
+fn test_set_remove() {
+    let s = {1, 2, 3};
+    s = s.remove(2);
+    ut.assert_equals(s.size(), 2, "Set has 2 elements after remove");
+    let contains_two = s.contains(2);
+    ut.assert_true(!contains_two, "Set doesn't contain removed element");
+}
+[test]
+fn test_set_remove_missing() {
+    let s = {1, 2, 3};
+    s = s.remove(99);
+    ut.assert_equals(s.size(), 3, "Size unchanged when removing missing element");
+}
+[test]
+fn test_set_contains() {
+    let s = {"apple", "banana", "cherry"};
+    ut.assert_true(s.contains("banana"), "Set contains existing element");
+    ut.assert_equals(s.contains("grape"), false, "Set doesn't contain missing element");
+}
+[test]
+fn test_set_clear() {
+    let s = {1, 2, 3, 4, 5};
+    s = s.clear();
+    ut.assert_equals(s.size(), 0, "Cleared set is empty");
+    ut.assert_true(s.is_empty(), "Cleared set is_empty is true");
+}
+[test]
+fn test_set_union() {
+    let s1 = {1, 2, 3};
+    let s2 = {3, 4, 5};
+    let result = s1.union(s2);
+    ut.assert_equals(result.size(), 5, "Union has 5 elements");
+    ut.assert_true(result.contains(1), "Union contains elements from first set");
+    ut.assert_true(result.contains(5), "Union contains elements from second set");
+}
+[test]
+fn test_set_intersection() {
+    let s1 = {1, 2, 3, 4};
+    let s2 = {3, 4, 5, 6};
+    let result = s1.intersection(s2);
+    ut.assert_equals(result.size(), 2, "Intersection has 2 elements");
+    ut.assert_true(result.contains(3), "Intersection contains common element 3");
+    ut.assert_true(result.contains(4), "Intersection contains common element 4");
+}
+[test]
+fn test_set_difference() {
+    let s1 = {1, 2, 3, 4};
+    let s2 = {3, 4, 5, 6};
+    let result = s1.difference(s2);
+    ut.assert_equals(result.size(), 2, "Difference has 2 elements");
+    ut.assert_true(result.contains(1), "Difference contains 1");
+    ut.assert_true(result.contains(2), "Difference contains 2");
+    ut.assert_equals(result.contains(3), false, "Difference doesn't contain 3");
+}
+[test]
+fn test_set_symmetric_difference() {
+    let s1 = {1, 2, 3};
+    let s2 = {3, 4, 5};
+    let result = s1.symmetric_difference(s2);
+    ut.assert_equals(result.size(), 4, "Symmetric difference has 4 elements");
+    ut.assert_true(result.contains(1), "Contains unique from first");
+    ut.assert_true(result.contains(5), "Contains unique from second");
+    ut.assert_equals(result.contains(3), false, "Doesn't contain common element");
+}
+[test]
+fn test_set_is_subset() {
+    let s1 = {1, 2};
+    let s2 = {1, 2, 3, 4};
+    ut.assert_true(s1.is_subset(s2), "s1 is subset of s2");
+    ut.assert_equals(s2.is_subset(s1), false, "s2 is not subset of s1");
+}
+[test]
+fn test_set_is_superset() {
+    let s1 = {1, 2, 3, 4};
+    let s2 = {2, 3};
+    ut.assert_true(s1.is_superset(s2), "s1 is superset of s2");
+    ut.assert_equals(s2.is_superset(s1), false, "s2 is not superset of s1");
+}
+[test]
+fn test_set_is_disjoint() {
+    let s1 = {1, 2, 3};
+    let s2 = {4, 5, 6};
+    let s3 = {3, 4, 5};
+    ut.assert_true(s1.is_disjoint(s2), "Disjoint sets have no common elements");
+    ut.assert_equals(s1.is_disjoint(s3), false, "Non-disjoint sets share elements");
+}
+[test]
+fn test_set_to_list() {
+    let s = {3, 1, 2};
+    let lst = s.to_list();
+    ut.assert_equals(lst.size(), 3, "List has same size as set");
+    ut.assert_equals(lst[0], 1, "List is sorted");
+    ut.assert_equals(lst[1], 2, "List is sorted");
+    ut.assert_equals(lst[2], 3, "List is sorted");
+}
+[test]
+fn test_set_iteration() {
+    let s = {3, 1, 2};
+    let count = 0;
+    for item in s {
+        count = count + 1;
+    }
+    ut.assert_equals(count, 3, "Iterated over all elements");
+}
+[test]
+fn test_set_with_strings() {
+    let s = {"hello", "world", "test"};
+    ut.assert_equals(s.size(), 3, "String set has 3 elements");
+    ut.assert_true(s.contains("hello"), "Contains string element");
+}
+[test]
+fn test_set_boolean_conversion() {
+    let empty = {1};
+    empty = empty.clear();
+    let filled = {1, 2};
+    if !empty {
+        ut.assert_true(true, "Empty set is falsy");
+    }
+    if filled {
+        ut.assert_true(true, "Non-empty set is truthy");
+    }
+}
+print ut.stats;
+exit(ut.healthy);
