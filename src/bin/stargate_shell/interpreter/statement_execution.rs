@@ -89,6 +89,12 @@ impl Interpreter {
                 iterable,
                 body,
             } => {
+                let source_var = if let Expression::Variable(var) = &iterable {
+                    Some(var.clone())
+                } else {
+                    None
+                };
+                
                 let iter_value = self.eval_expression(iterable)?;
                 
                 match iter_value {
@@ -185,8 +191,12 @@ impl Interpreter {
                             return Err("Cannot use key-value syntax with lists. Use 'for item in list' instead.".to_string());
                         }
                         
-                        for item in items {
-                            self.variables.insert(var_name.clone(), item);
+                        let items_clone = items.clone();
+                        let mut updated_items = Vec::new();
+                        let mut early_break = false;
+                        
+                        for (index, item) in items.into_iter().enumerate() {
+                            self.variables.insert(var_name.clone(), item.clone());
                             
                             // Update completion list
                             if let Some(ref var_names) = self.variable_names {
@@ -199,13 +209,27 @@ impl Interpreter {
                             for stmt in &body {
                                 self.execute_statement(stmt.clone())?;
                                 if self.return_value.is_some() {
+                                    early_break = true;
                                     break;
                                 }
                             }
                             
-                            if self.return_value.is_some() {
+                            // Get the potentially modified value
+                            let final_value = self.variables.get(&var_name).cloned().unwrap_or(item);
+                            updated_items.push(final_value);
+                            
+                            if early_break {
+                                // If we're breaking early, keep the rest of the items unchanged
+                                for remaining_item in items_clone.iter().skip(index + 1) {
+                                    updated_items.push(remaining_item.clone());
+                                }
                                 break;
                             }
+                        }
+                        
+                        // If iterating over a variable, update it with potentially modified items
+                        if let Some(var) = source_var {
+                            self.variables.insert(var, Value::List(updated_items));
                         }
                     }
                     // Set iteration
@@ -307,7 +331,19 @@ impl Interpreter {
                 self.exit_code = Some(code);
             }
             Statement::ExprStmt(expr) => {
-                // Evaluate expression and discard result (for method calls)
+                // For method calls on variables, update the variable with the result
+                if let Expression::MethodCall { ref object, .. } = expr {
+                    if let Expression::Variable(var_name) = object.as_ref() {
+                        let var_name = var_name.clone();
+                        let result = self.eval_expression(expr)?;
+                        // If the result is an instance, update the variable
+                        if matches!(result, Value::Instance { .. }) {
+                            self.variables.insert(var_name, result);
+                        }
+                        return Ok(());
+                    }
+                }
+                // Otherwise just evaluate and discard result
                 self.eval_expression(expr)?;
             }
         }
