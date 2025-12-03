@@ -3230,6 +3230,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_ps"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "procfs",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_ptx"
 version = "0.4.0"
 dependencies = [
@@ -3952,6 +3963,7 @@ dependencies = [
  "sg_pr",
  "sg_printenv",
  "sg_printf",
+ "sg_ps",
  "sg_ptx",
  "sg_pwd",
  "sg_readlink",
