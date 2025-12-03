@@ -173,6 +173,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 
     let format = if let Some(form) = matches.get_one::<String>(OPT_FORMAT) {
         if !form.starts_with('+') {
@@ -425,7 +426,10 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
             json!({ "dates": date_outputs })
         };
         
-        object_output::output(json_output_options, output_json, || Ok(()))?;
+        // Apply field filtering if specified
+        let filtered_output = object_output::filter_fields(output_json, field_filter);
+        
+        object_output::output(json_output_options, filtered_output, || Ok(()))?;
     } else {
         for date in dates {
             match date {
@@ -557,34 +561,38 @@ pub fn uu_app() -> Command {
                 .help(translate!("date-help-universal"))
                 .action(ArgAction::SetTrue)
         )
-        .arg(Arg::new(OPT_FORMAT))
+        .arg(Arg::new(OPT_FORMAT));
+    
+    // Add object output args, but customize to avoid -f conflict with --file
+    let cmd = cmd
         .arg(
-            Arg::new("object_output")
+            Arg::new(object_output::ARG_OBJECT_OUTPUT)
                 .short('o')
                 .long("obj")
-                .help("Output as structured object (JSON)")
+                .help("Output as object (JSON)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("verbose")
+            Arg::new(object_output::ARG_VERBOSE)
                 .short('v')
                 .long("verbose")
-                .help("Include verbose information in output")
+                .help("Include additional details in output")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("pretty")
+            Arg::new(object_output::ARG_PRETTY)
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("field")
+            Arg::new(object_output::ARG_FIELD)
                 .long("field")  // No short flag to avoid conflict with -f/--file
                 .value_name("FIELD")
                 .help("Filter object output to specific field(s) (comma-separated)")
                 .action(ArgAction::Set),
         );
+    
     cmd
 }
 
