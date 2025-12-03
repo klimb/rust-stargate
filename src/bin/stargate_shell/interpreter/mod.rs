@@ -8,6 +8,7 @@ mod methods;
 mod statement_execution;
 mod expression_eval;
 mod function_class_utils;
+mod object_methods;
 
 use methods::*;
 
@@ -15,6 +16,7 @@ pub struct Interpreter {
     variables: HashMap<String, Value>,
     functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>, // params, body, annotations
     classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>, // class name -> (parent, fields, methods)
+    object_methods_cache: HashMap<String, bool>, // class name -> has to_string method
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
@@ -28,6 +30,7 @@ impl Interpreter {
             variables: HashMap::new(),
             functions: HashMap::new(),
             classes: HashMap::new(),
+            object_methods_cache: HashMap::new(),
             return_value: None,
             exit_code: None,
             variable_names: None,
@@ -41,6 +44,7 @@ impl Interpreter {
             variables: HashMap::new(),
             functions: HashMap::new(),
             classes: HashMap::new(),
+            object_methods_cache: HashMap::new(),
             return_value: None,
             exit_code: None,
             variable_names: Some(variable_names),
@@ -162,33 +166,6 @@ impl Interpreter {
         class_names
     }
     
-    pub fn value_to_display_string(&mut self, value: Value) -> Result<String, String> {
-        if let Value::Instance { class_name, fields } = &value {
-            let mut current_class = Some(class_name.clone());
-            
-            // dang, oo is slow .. this needs to be faster, might remove it
-            while let Some(ref cls) = current_class {
-                if let Some((parent, _, methods)) = self.classes.get(cls) {
-                    for (method_name, params, _) in methods {
-                        if method_name == "to_string" && params.is_empty() {
-                            let method_call = Expression::MethodCall {
-                                object: Box::new(Expression::Value(value.clone())),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            };
-                            let result = self.eval_expression(method_call)?;
-                            return Ok(result.to_string());
-                        }
-                    }
-                    current_class = parent.clone();
-                } else {
-                    break;
-                }
-            }
-        }
-        
-        Ok(value.to_string())
-    }
 }
 
 pub fn execute_script(script: &str) -> Result<i32, String> {
