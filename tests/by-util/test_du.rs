@@ -406,6 +406,11 @@ fn du_d_flag(s: &str) {
     assert_eq!(s, "36\t./subdir\n44\t.\n");
 }
 
+#[cfg(target_os = "linux")]
+fn du_d_flag(s: &str) {
+    assert_eq!(s, "16\t./subdir\n24\t.\n");
+}
+
 #[test]
 #[cfg(not(target_os = "openbsd"))]
 fn test_du_dereference() {
@@ -449,6 +454,10 @@ fn du_dereference(s: &str) {
 #[cfg(target_os = "freebsd")]
 fn du_dereference(s: &str) {
     assert_eq!(s, "8\tsubdir/links/deeper_dir\n24\tsubdir/links\n");
+}
+#[cfg(target_os = "linux")]
+fn du_dereference(s: &str) {
+    assert_eq!(s, "8\tsubdir/links/deeper_dir\n16\tsubdir/links\n");
 }
 
 #[test]

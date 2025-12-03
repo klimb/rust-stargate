@@ -10,7 +10,7 @@ use std::process::Command;
 use std::str;
 
 // Use the same binary path as other tests
-pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_coreutils");
+pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_stargate");
 
 /// Get list of all enabled utilities from the build-time generated map.
 /// Uses `include_str!` to read the generated `uutils_map.rs` at compile time,

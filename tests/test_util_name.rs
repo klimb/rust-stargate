@@ -11,7 +11,7 @@ use uutests::util::TestScenario;
 use std::os::unix::fs::symlink as symlink_file;
 
 use std::env;
-pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_coreutils");
+pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_stargate");
 
 // Set the environment variable for any tests
 

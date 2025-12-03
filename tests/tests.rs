@@ -5,7 +5,7 @@
 
 use std::env;
 
-pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_coreutils");
+pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_stargate");
 
 // Use the ctor attribute to run this function before any tests
 #[ctor::ctor]
