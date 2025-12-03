@@ -13,6 +13,8 @@ use sgcore::display::Quotable;
 use sgcore::error::{UResult, UUsageError, set_exit_code};
 use sgcore::format_usage;
 use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 // operating mode
 enum Mode {
@@ -36,6 +38,11 @@ const POSIX_NAME_MAX: usize = 14;
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let mut opts = JsonOutputOptions::from_matches(&matches);
+    // Object output is the default for this command
+    if !matches.contains_id("object_output") {
+        opts.object_output = true;
+    }
 
     // set working mode
     let is_posix = matches.get_flag(options::POSIX);
@@ -64,13 +71,37 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     // free strings are path operands
     // FIXME: TCS, seems inefficient and overly verbose (?)
     let mut res = true;
+    let mut path_results = Vec::new();
+
     for p in paths.unwrap() {
         let path_str = p.to_string_lossy();
         let mut path = Vec::new();
         for path_segment in path_str.split('/') {
             path.push(path_segment.to_string());
         }
-        res &= check_path(&mode, &path);
+        let is_valid = check_path(&mode, &path);
+        res &= is_valid;
+        
+        if opts.object_output {
+            path_results.push(json!({
+                "path": path_str,
+                "valid": is_valid,
+            }));
+        }
+    }
+
+    if opts.object_output {
+        let output = json!({
+            "mode": match mode {
+                Mode::Default => "default",
+                Mode::Basic => "basic",
+                Mode::Extra => "extra",
+                Mode::Both => "both",
+            },
+            "all_valid": res,
+            "paths": path_results,
+        });
+        object_output::output(opts, output, || Ok(()))?;
     }
 
     // determine error code
@@ -81,7 +112,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("pathchk-about"))
@@ -111,7 +142,9 @@ pub fn uu_app() -> Command {
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString))
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 /// check a path, given as a slice of it's components and an operating mode

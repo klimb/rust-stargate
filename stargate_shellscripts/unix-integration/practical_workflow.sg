@@ -33,5 +33,26 @@ fn test_grep_for_keyword() {
     ut.assert_not_equals(result, "", "grep search should work");
 }
 
+[test]
+fn test_mktemp_workflow() {
+    let tmpfile = (mktemp);
+    let path = tmpfile | slice-object path;
+    ut.assert_not_equals(path, "", "mktemp should create temporary file");
+}
+
+[test]
+fn test_users_count_workflow() {
+    let user_data = (users);
+    let count = user_data | slice-object count;
+    ut.assert_true(count >= 0, "users command should return count");
+}
+
+[test]
+fn test_pathchk_system_paths() {
+    let validation = (pathchk /tmp);
+    let paths = validation.paths;
+    ut.assert_true(paths.size() >= 1, "Should validate system paths");
+}
+
 print ut.stats;
 exit(ut.healthy);

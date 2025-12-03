@@ -19,6 +19,8 @@ use sgcore::error::FromIo;
 use sgcore::error::{UResult, USimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
+use sgcore::object_output::{self, JsonOutputOptions};
+use serde_json::json;
 
 pub mod options {
     pub static FILE_SYSTEM: &str = "file-system";
@@ -63,6 +65,11 @@ mod platform {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let mut opts = JsonOutputOptions::from_matches(&matches);
+    // Object output is the default for this command
+    if !matches.contains_id("object_output") {
+        opts.object_output = true;
+    }
     let files: Vec<String> = matches
         .get_many::<String>(ARG_FILES)
         .map(|v| v.map(ToString::to_string).collect())
@@ -99,18 +106,31 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         }
     }
 
+    let file_system_sync = matches.get_flag(options::FILE_SYSTEM);
+    let data_sync = matches.get_flag(options::DATA);
+
     #[allow(clippy::if_same_then_else)]
-    if matches.get_flag(options::FILE_SYSTEM) {
+    if file_system_sync {
         #[cfg(any(target_os = "linux"))]
-        syncfs(files)?;
+        syncfs(files.clone())?;
     } else {
         sync()?;
     }
+
+    if opts.object_output {
+        let output = json!({
+            "operation": if file_system_sync { "file_system" } else if data_sync { "data" } else { "sync" },
+            "files": files,
+            "success": true,
+        });
+        object_output::output(opts, output, || Ok(()))?;
+    }
+
     Ok(())
 }
 
 pub fn uu_app() -> Command {
-    Command::new(sgcore::util_name())
+    let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("sync-about"))
@@ -118,7 +138,6 @@ pub fn uu_app() -> Command {
         .infer_long_args(true)
         .arg(
             Arg::new(options::FILE_SYSTEM)
-                .short('f')
                 .long(options::FILE_SYSTEM)
                 .conflicts_with(options::DATA)
                 .help(translate!("sync-help-file-system"))
@@ -136,7 +155,9 @@ pub fn uu_app() -> Command {
             Arg::new(ARG_FILES)
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
-        )
+        );
+    
+    object_output::add_json_args(cmd)
 }
 
 fn sync() -> UResult<()> {

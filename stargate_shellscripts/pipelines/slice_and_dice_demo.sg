@@ -21,5 +21,26 @@ fn test_dice_name_only() {
     ut.assert_true(true, "Should dice to name only");
 }
 
+[test]
+fn test_users_object_output() {
+    let users_data = (users);
+    let user_count = users_data | slice-object count;
+    ut.assert_true(user_count >= 0, "Should extract user count from users command");
+}
+
+[test]
+fn test_pathchk_object_output() {
+    let result = (pathchk /tmp /home);
+    let is_valid = result | slice-object all_valid;
+    ut.assert_equals(is_valid, true, "System paths should be valid");
+}
+
+[test]
+fn test_mktemp_object_output() {
+    let temp_result = (mktemp);
+    let temp_path = temp_result | slice-object path;
+    ut.assert_not_equals(temp_path, "", "Should create temporary file and return path");
+}
+
 print ut.stats;
 exit(ut.healthy);

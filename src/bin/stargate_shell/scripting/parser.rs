@@ -1,5 +1,6 @@
 use super::ast::*;
 use super::value::Value;
+use crate::stargate_shell::commands;
 
 pub struct Parser {
     tokens: Vec<String>,
@@ -752,6 +753,7 @@ impl Parser {
             let mut lookahead = self.pos;
             let mut looks_like_command = false;
             let mut paren_depth = 1;
+            let mut first_token = None;
             
             while lookahead < self.tokens.len() && paren_depth > 0 {
                 let t = &self.tokens[lookahead];
@@ -762,8 +764,18 @@ impl Parser {
                 } else if t == "|" || (t.contains('-') && !t.starts_with('-') && t.len() > 1) {
                     // Contains pipe or has hyphens (but not negative numbers)
                     looks_like_command = true;
+                } else if first_token.is_none() && t != ")" {
+                    // Capture the first token to check if it's a known command
+                    first_token = Some(t.clone());
                 }
                 lookahead += 1;
+            }
+            
+            // Also check if the first token is a known stargate command
+            if let Some(cmd_name) = &first_token {
+                if commands::is_stargate_command(cmd_name) {
+                    looks_like_command = true;
+                }
             }
             
             if looks_like_command {

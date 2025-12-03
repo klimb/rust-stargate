@@ -21,6 +21,7 @@ path = "src/sync.rs"
 clap = { workspace = true }
 sgcore = { workspace = true, features = ["wide"] }
 fluent = { workspace = true }
+serde_json = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = { workspace = true }
