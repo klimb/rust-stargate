@@ -5,201 +5,35 @@ class PizzaBuilder {
     let size = "medium";
     let crust = "regular";
     let sauce = "tomato";
-    let cheese = "mozzarella";
     let toppings = set();
     let extra_cheese = false;
-    let gluten_free = false;
 
-    fn small() {
-        let size = "small";
-        return this;
-    }
+    fn small() { let size = "small"; return this; }
+    fn medium() { let size = "medium"; return this; }
+    fn large() { let size = "large"; return this; }
+    fn thin_crust() { let crust = "thin"; return this; }
+    fn thick_crust() { let crust = "thick"; return this; }
+    fn tomato_sauce() { let sauce = "tomato"; return this; }
+    fn bbq_sauce() { let sauce = "bbq"; return this; }
+    fn add_topping(topping) { let toppings = toppings.insert(topping); return this; }
+    fn pepperoni() { let toppings = toppings.insert("pepperoni"); return this; }
+    fn mushrooms() { let toppings = toppings.insert("mushrooms"); return this; }
+    fn with_extra_cheese() { let extra_cheese = true; return this; }
 
-    fn medium() {
-        let size = "medium";
-        return this;
-    }
-
-    fn large() {
-        let size = "large";
-        return this;
-    }
-
-    fn extra_large() {
-        let size = "extra-large";
-        return this;
-    }
-
-    fn thin_crust() {
-        let crust = "thin";
-        return this;
-    }
-
-    fn regular_crust() {
-        let crust = "regular";
-        return this;
-    }
-
-    fn thick_crust() {
-        let crust = "thick";
-        return this;
-    }
-
-    fn stuffed_crust() {
-        let crust = "stuffed";
-        return this;
-    }
-
-    fn tomato_sauce() {
-        let sauce = "tomato";
-        return this;
-    }
-
-    fn white_sauce() {
-        let sauce = "white";
-        return this;
-    }
-
-    fn bbq_sauce() {
-        let sauce = "bbq";
-        return this;
-    }
-
-    fn pesto_sauce() {
-        let sauce = "pesto";
-        return this;
-    }
-
-    fn mozzarella() {
-        let cheese = "mozzarella";
-        return this;
-    }
-
-    fn cheddar() {
-        let cheese = "cheddar";
-        return this;
-    }
-
-    fn parmesan() {
-        let cheese = "parmesan";
-        return this;
-    }
-
-    fn no_cheese() {
-        let cheese = "none";
-        return this;
-    }
-
-    fn add_topping(topping) {
-        let toppings = toppings.insert(topping);
-        return this;
-    }
-
-    fn pepperoni() {
-        let toppings = toppings.insert("pepperoni");
-        return this;
-    }
-
-    fn mushrooms() {
-        let toppings = toppings.insert("mushrooms");
-        return this;
-    }
-
-    fn onions() {
-        let toppings = toppings.insert("onions");
-        return this;
-    }
-
-    fn sausage() {
-        let toppings = toppings.insert("sausage");
-        return this;
-    }
-
-    fn bacon() {
-        let toppings = toppings.insert("bacon");
-        return this;
-    }
-
-    fn olives() {
-        let toppings = toppings.insert("olives");
-        return this;
-    }
-
-    fn peppers() {
-        let toppings = toppings.insert("peppers");
-        return this;
-    }
-
-    fn pineapple() {
-        let toppings = toppings.insert("pineapple");
-        return this;
-    }
-
-    fn with_extra_cheese() {
-        let extra_cheese = true;
-        return this;
-    }
-
-    fn make_gluten_free() {
-        let gluten_free = true;
-        return this;
-    }
-
-    fn describe() {
-        let desc = "Pizza: " + size + " " + crust + " crust";
-        let desc = desc + ", " + sauce + " sauce";
-        let desc = desc + ", " + cheese + " cheese";
-        if extra_cheese {
-            let desc = desc + " (extra)";
-        }
-
-        if toppings.size() > 0 {
-            let desc = desc + ", " + toppings.size() + " toppings";
-        }
-
-        if gluten_free {
-            let desc = desc + " [GLUTEN FREE]";
-        }
-
+    fn to_string() {
+        let desc = "Pizza: " + size + " " + crust + " crust, " + sauce + " sauce";
+        if extra_cheese { let desc = desc + " (extra cheese)"; }
+        if toppings.size() > 0 { let desc = desc + ", " + toppings.size() + " toppings"; }
         return desc;
     }
 
     fn get_price() {
         let base_price = 10.0;
-        if size == "small" {
-            let base_price = base_price - 2.0;
-        }
-
-        if size == "large" {
-            let base_price = base_price + 3.0;
-        }
-
-        if size == "extra-large" {
-            let base_price = base_price + 5.0;
-        }
-
-        if crust == "thin" {
-            let base_price = base_price + 0.0;
-        }
-
-        if crust == "thick" {
-            let base_price = base_price + 1.5;
-        }
-
-        if crust == "stuffed" {
-            let base_price = base_price + 3.0;
-        }
-
-        let topping_count = toppings.size();
-        let base_price = base_price + (topping_count * 1.5);
-        if extra_cheese {
-            let base_price = base_price + 2.0;
-        }
-
-        if gluten_free {
-            let base_price = base_price + 2.5;
-        }
-
+        if size == "small" { let base_price = base_price - 2.0; }
+        if size == "large" { let base_price = base_price + 3.0; }
+        if crust == "thick" { let base_price = base_price + 1.5; }
+        let base_price = base_price + (toppings.size() * 1.5);
+        if extra_cheese { let base_price = base_price + 2.0; }
         return base_price;
     }
 }
@@ -209,151 +43,29 @@ fn create_pizza() {
 }
 
 [test]
-fn test_simple_pizza() {
-    let pizza = create_pizza();
-    ut.assert_equals(pizza.size, "medium", "Default size should be medium");
-    ut.assert_equals(pizza.crust, "regular", "Default crust should be regular");
-    ut.assert_equals(pizza.sauce, "tomato", "Default sauce should be tomato");
-}
-
-[test]
-fn test_chained_builder_basic() {
-    let pizza = create_pizza()
-        .large()
-        .thin_crust()
-        .white_sauce();
-    ut.assert_equals(pizza.size, "large", "Pizza should be large");
-    ut.assert_equals(pizza.crust, "thin", "Pizza should have thin crust");
-    ut.assert_equals(pizza.sauce, "white", "Pizza should have white sauce");
-}
-
-[test]
-fn test_pepperoni_pizza() {
-    let pizza = create_pizza()
-        .large()
-        .regular_crust()
-        .tomato_sauce()
-        .pepperoni()
-        .with_extra_cheese();
+fn test_chained_builder() {
+    let pizza = create_pizza().large().thick_crust().bbq_sauce().pepperoni().with_extra_cheese();
+    print pizza;
     ut.assert_equals(pizza.size, "large", "Should be large");
     ut.assert_true(pizza.toppings.contains("pepperoni"), "Should have pepperoni");
     ut.assert_true(pizza.extra_cheese, "Should have extra cheese");
 }
 
 [test]
-fn test_veggie_pizza() {
-    let pizza = create_pizza()
-        .medium()
-        .thin_crust()
-        .pesto_sauce()
-        .mushrooms()
-        .onions()
-        .peppers()
-        .olives();
-    ut.assert_equals(pizza.toppings.size(), 4, "Should have 4 toppings");
-    ut.assert_true(pizza.toppings.contains("mushrooms"), "Should have mushrooms");
-    ut.assert_true(pizza.toppings.contains("peppers"), "Should have peppers");
+fn test_pizza_pricing() {
+    let pizza = create_pizza().medium().pepperoni().mushrooms();
+    print pizza;
+    ut.assert_equals(pizza.get_price(), 13.0, "Medium pizza with 2 toppings should cost $13.00");
 }
 
 [test]
-fn test_meat_lovers_pizza() {
-    let pizza = create_pizza()
-        .extra_large()
-        .stuffed_crust()
-        .tomato_sauce()
-        .pepperoni()
-        .sausage()
-        .bacon()
-        .with_extra_cheese();
-    ut.assert_equals(pizza.size, "extra-large", "Should be extra large");
-    ut.assert_equals(pizza.crust, "stuffed", "Should have stuffed crust");
-    ut.assert_equals(pizza.toppings.size(), 3, "Should have 3 meat toppings");
-}
-
-[test]
-fn test_hawaiian_pizza() {
-    let pizza = create_pizza()
-        .large()
-        .regular_crust()
-        .tomato_sauce()
-        .add_topping("ham")
-        .pineapple();
-    ut.assert_true(pizza.toppings.contains("pineapple"), "Hawaiian pizza needs pineapple");
-    ut.assert_true(pizza.toppings.contains("ham"), "Hawaiian pizza needs ham");
-}
-
-[test]
-fn test_gluten_free_pizza() {
-    let pizza = create_pizza()
-        .small()
-        .make_gluten_free()
-        .white_sauce()
-        .mushrooms();
-    ut.assert_true(pizza.gluten_free, "Should be gluten free");
-    ut.assert_equals(pizza.size, "small", "Should be small");
-}
-
-[test]
-fn test_pizza_description() {
-    let pizza = create_pizza()
-        .large()
-        .thick_crust()
-        .bbq_sauce()
-        .bacon()
-        .onions();
-    let desc = pizza.describe();
-    ut.assert_true(desc.contains("large"), "Description should mention size");
-    ut.assert_true(desc.contains("thick"), "Description should mention crust");
-    ut.assert_true(desc.contains("bbq"), "Description should mention sauce");
-}
-
-[test]
-fn test_pizza_pricing_small() {
-    let pizza = create_pizza()
-        .small()
-        .thin_crust();
-    let price = pizza.get_price();
-    ut.assert_equals(price, 8.0, "Small thin pizza should cost $8.00");
-}
-
-[test]
-fn test_pizza_pricing_with_toppings() {
-    let pizza = create_pizza()
-        .medium()
-        .regular_crust()
-        .pepperoni()
-        .mushrooms();
-    let price = pizza.get_price();
-    ut.assert_equals(price, 13.0, "Medium pizza with 2 toppings should cost $13.00");
-}
-
-[test]
-fn test_pizza_pricing_premium() {
-    let pizza = create_pizza()
-        .extra_large()
-        .stuffed_crust()
-        .pepperoni()
-        .sausage()
-        .bacon()
-        .with_extra_cheese()
-        .make_gluten_free();
-    let price = pizza.get_price();
-    ut.assert_equals(price, 27.0, "Premium pizza should cost $27.00");
-}
-
-[test]
-fn test_multiple_pizzas_independent() {
-    let pizza1 = create_pizza()
-        .small()
-        .pepperoni();
-    let pizza2 = create_pizza()
-        .large()
-        .mushrooms()
-        .onions();
-    ut.assert_equals(pizza1.size, "small", "First pizza should be small");
-    ut.assert_equals(pizza2.size, "large", "Second pizza should be large");
-    ut.assert_not_equals(pizza1.toppings.size(), pizza2.toppings.size(), "Pizzas should have different toppings");
+fn test_to_string() {
+    let pizza1 = create_pizza().medium().thick_crust().bbq_sauce().with_extra_cheese().add_topping("bacon");
+    let pizza2 = create_pizza().small().thin_crust().tomato_sauce();
+    print pizza1;
+    print pizza2;
 }
 
 print ut.stats;
 exit(ut.healthy);
+

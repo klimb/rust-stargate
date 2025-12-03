@@ -278,7 +278,8 @@ impl Interpreter {
             }
             Statement::Print(expr) => {
                 let value = self.eval_expression(expr)?;
-                println!("{}", value.to_string());
+                let output = self.value_to_display_string(value)?;
+                println!("{}", output);
             }
             Statement::Assert { condition, message } => {
                 let result = self.eval_expression(condition.clone())?;
