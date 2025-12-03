@@ -2,8 +2,8 @@ use ut;
 
 [test]
 fn test_apply_extract_property() {
-    let count = (list-directory "/tmp").apply(obj: obj.total_count);
-    ut.assert_true(count > 0, "Should extract total_count property");
+    let count = (list-directory "/tmp").apply(obj: obj.count);
+    ut.assert_true(count > 0, "Should extract count property");
 }
 
 [test]

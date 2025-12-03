@@ -51,8 +51,8 @@ fn test_count_by_type() {
 
 [test]
 fn test_command_object_properties() {
-    let total_count = (list-directory "/tmp").total_count;
-    ut.assert_true(total_count > 0, "Should have total_count property");
+    let count = (list-directory "/tmp").count;
+    ut.assert_true(count > 0, "Should have count property");
 }
 
 [test]

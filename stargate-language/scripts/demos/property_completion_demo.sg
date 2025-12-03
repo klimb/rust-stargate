@@ -2,7 +2,7 @@ use ut;
 
 [test]
 fn test_property_access() {
-    let count = (list-directory).total_count;
+    let count = (list-directory).count;
     ut.assert_true(count > 0, "Directory should have items");
 }
 

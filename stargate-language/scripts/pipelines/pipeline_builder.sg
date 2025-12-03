@@ -10,7 +10,7 @@ fn show_summary(count) {
 
 [test]
 fn test_pipeline_building() {
-    let item_count = (list-directory).total_count;
+    let item_count = (list-directory).count;
     ut.assert_true(item_count >= 0, "Should have non-negative count");
     let stages = show_summary(item_count);
     ut.assert_true(stages == 1 || stages == 2, "Should return 1 or 2 stages");

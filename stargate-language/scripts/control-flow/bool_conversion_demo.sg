@@ -52,7 +52,7 @@ fn test_bool_with_nonzero() {
 
 [test]
 fn test_file_count_bool() {
-    let file_count = (list-directory).total_count;
+    let file_count = (list-directory).count;
     let has_files = bool(file_count);
     ut.assert_equals(has_files, true, "Directory should have files");
 }

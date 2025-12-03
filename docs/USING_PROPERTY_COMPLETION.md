@@ -105,13 +105,13 @@ Properties:
 ### list-directory
 ```
 stargate> list-directory.   ← TAB
-entries       recursive      total_count
+entries       recursive      count
 ```
 
 Properties:
 - `entries` - Array of directory entries
 - `recursive` - Boolean indicating if recursive
-- `total_count` - Number of entries
+- `count` - Number of entries
 
 ### Accessing Array Elements
 ```

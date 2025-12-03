@@ -1,8 +1,8 @@
 use ut;
 
 [test]
-fn test_nested_conditionals() {
-    let total = (list-directory).total_count;
+fn test_nested_conditions() {
+    let total = (list-directory).count;
     let with_toml = list-directory | find-text toml | collect-count;
     ut.assert_true(total >= 0, "Directory count should be non-negative");
     ut.assert_true(with_toml >= 0, "TOML count should be non-negative");
