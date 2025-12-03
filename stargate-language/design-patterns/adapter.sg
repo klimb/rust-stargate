@@ -1,0 +1,94 @@
+#!/usr/bin/env stargate-shell
+
+use ut;
+
+class WeatherDisplay {
+    fn get_status(celsius) {
+        let status = "Hot";
+        if (celsius < 30) { let status = "Warm"; }
+        if (celsius < 20) { let status = "Cool"; }
+        if (celsius < 10) { let status = "Cold"; }
+        if (celsius < 0) { let status = "Freezing"; }
+        return status;
+    }
+}
+
+class FahrenheitSensor {
+    let temperature = 0;
+    fn temp(temp) { let temperature = temp; return this; }
+    fn get_fahrenheit() { return temperature; }
+}
+
+class TemperatureAdapter {
+    let sensor = none;
+    fn sensor(fahrenheit_sensor) { let sensor = fahrenheit_sensor; return this; }
+    fn get_celsius() { return (sensor.get_fahrenheit() - 32) * 5 / 9; }
+}
+
+let sensor = new FahrenheitSensor;
+let adapter = new TemperatureAdapter;
+let display = new WeatherDisplay;
+
+[test]
+fn test_fahrenheit_sensor() {
+    let s = new FahrenheitSensor;
+    ut.assert_equals(s.temp(32).get_fahrenheit(), 32, "Sensor should return 32F");
+}
+
+[test]
+fn test_adapter_converts_freezing() {
+    let s = new FahrenheitSensor;
+    let a = new TemperatureAdapter;
+    ut.assert_equals(a.sensor(s.temp(32)).get_celsius(), 0, "32F should be 0C");
+}
+
+[test]
+fn test_adapter_converts_77f() {
+    let s = new FahrenheitSensor;
+    let a = new TemperatureAdapter;
+    ut.assert_equals(a.sensor(s.temp(77)).get_celsius(), 25, "77F should be 25C");
+}
+
+[test]
+fn test_weather_status_freezing() {
+    let d = new WeatherDisplay;
+    ut.assert_equals(d.get_status(-5), "Freezing", "Should be Freezing");
+}
+
+[test]
+fn test_weather_status_cold() {
+    let d = new WeatherDisplay;
+    ut.assert_equals(d.get_status(5), "Cold", "Should be Cold");
+}
+
+[test]
+fn test_weather_status_cool() {
+    let d = new WeatherDisplay;
+    ut.assert_equals(d.get_status(15), "Cool", "Should be Cool");
+}
+
+[test]
+fn test_weather_status_warm() {
+    let d = new WeatherDisplay;
+    ut.assert_equals(d.get_status(25), "Warm", "Should be Warm");
+}
+
+[test]
+fn test_weather_status_hot() {
+    let d = new WeatherDisplay;
+    ut.assert_equals(d.get_status(35), "Hot", "Should be Hot");
+}
+
+[test]
+fn test_full_integration() {
+    let s = new FahrenheitSensor;
+    let a = new TemperatureAdapter;
+    let celsius = a.sensor(s.temp(77)).get_celsius();
+    let d = new WeatherDisplay;
+    let status = d.get_status(celsius);
+    ut.assert_equals(celsius, 25, "Temperature should be 25C");
+    ut.assert_equals(status, "Warm", "Status should be Warm");
+}
+
+print ut.stats;
+exit(ut.healthy);

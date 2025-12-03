@@ -1,3 +1,4 @@
+#!/usr/bin/env stargate-shell
 use ut;
 
 class PizzaBuilder {
