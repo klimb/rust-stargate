@@ -6,7 +6,7 @@ class PizzaBuilder {
     let crust = "regular";
     let sauce = "tomato";
     let cheese = "mozzarella";
-    let toppings = [];
+    let toppings = {};
     let extra_cheese = false;
     let gluten_free = false;
 
@@ -91,47 +91,47 @@ class PizzaBuilder {
     }
 
     fn add_topping(topping) {
-        let toppings = toppings.append(topping);
+        let toppings = toppings.set(topping, true);
         return this;
     }
 
     fn pepperoni() {
-        let toppings = toppings.append("pepperoni");
+        let toppings = toppings.set("pepperoni", true);
         return this;
     }
 
     fn mushrooms() {
-        let toppings = toppings.append("mushrooms");
+        let toppings = toppings.set("mushrooms", true);
         return this;
     }
 
     fn onions() {
-        let toppings = toppings.append("onions");
+        let toppings = toppings.set("onions", true);
         return this;
     }
 
     fn sausage() {
-        let toppings = toppings.append("sausage");
+        let toppings = toppings.set("sausage", true);
         return this;
     }
 
     fn bacon() {
-        let toppings = toppings.append("bacon");
+        let toppings = toppings.set("bacon", true);
         return this;
     }
 
     fn olives() {
-        let toppings = toppings.append("olives");
+        let toppings = toppings.set("olives", true);
         return this;
     }
 
     fn peppers() {
-        let toppings = toppings.append("peppers");
+        let toppings = toppings.set("peppers", true);
         return this;
     }
 
     fn pineapple() {
-        let toppings = toppings.append("pineapple");
+        let toppings = toppings.set("pineapple", true);
         return this;
     }
 
@@ -154,17 +154,7 @@ class PizzaBuilder {
         }
 
         if toppings.size() > 0 {
-            let desc = desc + ", toppings: ";
-            let first = true;
-            for topping in toppings {
-                if first {
-                    let first = false;
-                } else {
-                    let desc = desc + ", ";
-                }
-
-                let desc = desc + topping;
-            }
+            let desc = desc + ", " + toppings.size() + " toppings";
         }
 
         if gluten_free {
@@ -218,19 +208,9 @@ fn create_pizza() {
     return new PizzaBuilder;
 }
 
-fn contains(list, value) {
-    for item in list {
-        if item == value {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 [test]
 fn test_simple_pizza() {
-    let pizza = new PizzaBuilder;
+    let pizza = create_pizza();
     ut.assert_equals(pizza.size, "medium", "Default size should be medium");
     ut.assert_equals(pizza.crust, "regular", "Default crust should be regular");
     ut.assert_equals(pizza.sauce, "tomato", "Default sauce should be tomato");
@@ -256,7 +236,7 @@ fn test_pepperoni_pizza() {
         .pepperoni()
         .with_extra_cheese();
     ut.assert_equals(pizza.size, "large", "Should be large");
-    ut.assert_true(contains(pizza.toppings, "pepperoni"), "Should have pepperoni");
+    ut.assert_true(pizza.toppings.contains_key("pepperoni"), "Should have pepperoni");
     ut.assert_true(pizza.extra_cheese, "Should have extra cheese");
 }
 
@@ -271,8 +251,8 @@ fn test_veggie_pizza() {
         .peppers()
         .olives();
     ut.assert_equals(pizza.toppings.size(), 4, "Should have 4 toppings");
-    ut.assert_true(contains(pizza.toppings, "mushrooms"), "Should have mushrooms");
-    ut.assert_true(contains(pizza.toppings, "peppers"), "Should have peppers");
+    ut.assert_true(pizza.toppings.contains_key("mushrooms"), "Should have mushrooms");
+    ut.assert_true(pizza.toppings.contains_key("peppers"), "Should have peppers");
 }
 
 [test]
@@ -298,8 +278,8 @@ fn test_hawaiian_pizza() {
         .tomato_sauce()
         .add_topping("ham")
         .pineapple();
-    ut.assert_true(contains(pizza.toppings, "pineapple"), "Hawaiian pizza needs pineapple");
-    ut.assert_true(contains(pizza.toppings, "ham"), "Hawaiian pizza needs ham");
+    ut.assert_true(pizza.toppings.contains_key("pineapple"), "Hawaiian pizza needs pineapple");
+    ut.assert_true(pizza.toppings.contains_key("ham"), "Hawaiian pizza needs ham");
 }
 
 [test]
