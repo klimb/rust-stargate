@@ -136,6 +136,7 @@ command -o | slice-object -f results | dice-object -f name
 - [x] find-text
 - [x] list-directory
 - [x] get_fqdn
+- [x] uptime
 - [ ] cat
 - [ ] cut
 - [ ] date

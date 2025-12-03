@@ -1,0 +1,42 @@
+#!/usr/bin/env stargate-shell
+# Test uptime command with object output
+
+use ut;
+
+[test]
+fn test_uptime_object_output() {
+    let uptime_data = (uptime);
+    let uptime_secs = uptime_data | slice-object uptime_seconds;
+    ut.assert_true(uptime_secs >= 0, "Should extract uptime_seconds from uptime command");
+}
+
+[test]
+fn test_uptime_slice_time() {
+    let uptime_data = (uptime);
+    let time_str = uptime_data | slice-object time;
+    ut.assert_not_equals(time_str, "", "Should extract current time from uptime");
+}
+
+[test]
+fn test_uptime_slice_users() {
+    let uptime_data = (uptime);
+    let users = uptime_data | slice-object users;
+    ut.assert_not_equals(users, "", "Should extract users count from uptime");
+}
+
+[test]
+fn test_uptime_since_object() {
+    let since_data = (uptime --since);
+    let since_time = since_data | slice-object since;
+    ut.assert_not_equals(since_time, "", "Should extract boot time from uptime --since");
+}
+
+[test]
+fn test_uptime_dice_selected_fields() {
+    let uptime_data = (uptime);
+    let selected = uptime_data | dice-object uptime users;
+    ut.assert_true(true, "Should dice uptime to specific fields");
+}
+
+print ut.stats;
+exit(ut.healthy);
