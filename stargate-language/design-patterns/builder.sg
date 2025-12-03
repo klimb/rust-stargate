@@ -1,7 +1,7 @@
 #!/usr/bin/env stargate-shell
 use ut;
 
-class PizzaBuilder {
+class Pizza {
     let size = "medium";
     let crust = "regular";
     let sauce = "tomato";
@@ -41,13 +41,9 @@ class PizzaBuilder {
     }
 }
 
-fn create_pizza() {
-    return new PizzaBuilder;
-}
-
 [test]
 fn test_chained_builder() {
-    let pizza = create_pizza().large().thick_crust().bbq_sauce().pepperoni().with_extra_cheese();
+    let pizza = new Pizza.large().thick_crust().bbq_sauce().pepperoni().with_extra_cheese();
     print pizza;
     ut.assert_equals(pizza.size, "large", "Should be large");
     ut.assert_true(pizza.toppings.contains("pepperoni"), "Should have pepperoni");
@@ -56,15 +52,15 @@ fn test_chained_builder() {
 
 [test]
 fn test_pizza_pricing() {
-    let pizza = create_pizza().medium().pepperoni().mushrooms();
+    let pizza = new Pizza.medium().pepperoni().mushrooms();
     print pizza;
     ut.assert_equals(pizza.get_price(), 13.0, "Medium pizza with 2 toppings should cost $13.00");
 }
 
 [test]
 fn test_to_string() {
-    let pizza1 = create_pizza().medium().thick_crust().bbq_sauce().with_extra_cheese().add_topping("bacon");
-    let pizza2 = create_pizza().small().thin_crust().tomato_sauce();
+    let pizza1 = new Pizza.medium().thick_crust().bbq_sauce().with_extra_cheese().add_topping("bacon");
+    let pizza2 = new Pizza.small().thin_crust().tomato_sauce();
     print pizza1;
     print pizza2;
 }
