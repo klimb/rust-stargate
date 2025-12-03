@@ -21,9 +21,12 @@ class PizzaBuilder {
     fn with_extra_cheese() { let extra_cheese = true; return this; }
 
     fn to_string() {
-        let desc = "Pizza: " + size + " " + crust + " crust, " + sauce + " sauce";
+        let desc = "Pizza: {size} {crust} crust, {sauce} sauce";
         if extra_cheese { let desc = desc + " (extra cheese)"; }
-        if toppings.size() > 0 { let desc = desc + ", " + toppings.size() + " toppings"; }
+        if toppings.size() > 0 {
+            let count = toppings.size();
+            let desc = "{desc}, {count} toppings";
+        }
         return desc;
     }
 

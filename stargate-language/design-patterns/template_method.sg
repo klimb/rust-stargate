@@ -33,7 +33,7 @@ class Tea extends CaffeineBeverage {
     let steep_time = 3;
 
     fn brew() {
-        print "Steeping tea for " + steep_time + " minutes";
+        print "Steeping tea for {steep_time} minutes";
     }
 
     fn add_condiments() {
@@ -41,7 +41,7 @@ class Tea extends CaffeineBeverage {
     }
 
     fn to_string() {
-        return "Tea[steep_time=" + steep_time + "]";
+        return "Tea[steep_time={steep_time}]";
     }
 }
 
@@ -62,7 +62,7 @@ class Coffee extends CaffeineBeverage {
     }
 
     fn to_string() {
-        return "Coffee[strength=" + strength + "]";
+        return "Coffee[strength={strength}]";
     }
 }
 
