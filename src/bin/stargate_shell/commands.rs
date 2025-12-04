@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 // List of built-in shell commands
-pub const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command", "cd", "change-directory", "list-jobs", "foreground-job", "background-job"];
+pub const SHELL_COMMANDS: &[&str] = &["help", "exit", "quit", "describe-command", "cd", "change-directory", "list-jobs", "foreground-job", "background-job", "list-history"];
 
 // Get all command aliases
 pub fn get_command_aliases() -> Vec<String> {
