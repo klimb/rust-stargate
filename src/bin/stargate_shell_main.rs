@@ -6,7 +6,8 @@
 mod stargate_shell;
 
 use rustyline::error::ReadlineError;
-use rustyline::{Editor, Config, CompletionType, ExternalPrinter};
+use rustyline::{Editor, Config, CompletionType, ExternalPrinter, KeyEvent};
+use rustyline::config::EditMode;
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
 use std::io::IsTerminal;
@@ -207,9 +208,24 @@ fn main() {
     let config = Config::builder()
         .completion_type(CompletionType::List)
         .auto_add_history(true)
+        .edit_mode(EditMode::Emacs) // Enable Emacs key bindings for Ctrl+P/N
         .build();
     let mut rl = Editor::with_config(config).expect("Failed to create readline editor");
     rl.set_helper(Some(helper));
+    
+    // Configure history
+    rl.set_max_history_size(10000).expect("Failed to set history size");
+    let history_file = std::env::var("HOME")
+        .map(|home| format!("{}/.stargate_history", home))
+        .unwrap_or_else(|_| ".stargate_history".to_string());
+    let _ = rl.load_history(&history_file); // Don't fail if history doesn't exist yet
+    
+    // Bind Ctrl+S for forward search (Ctrl+R for reverse is already default)
+    use rustyline::{Cmd, KeyCode, Modifiers};
+    rl.bind_sequence(
+        KeyEvent::new(KeyCode::Char('s'), Modifiers::CTRL),
+        rustyline::EventHandler::Simple(Cmd::ForwardSearchHistory)
+    );
 
     let mut printer = rl.create_external_printer().expect("Failed to create external printer");
     let job_monitor_rx = start_job_monitor();
@@ -420,5 +436,7 @@ fn main() {
         }
     }
 
+    // Save history on exit
+    let _ = rl.save_history(&history_file);
     println!("\nGoodbye!");
 }
