@@ -1,4 +1,3 @@
-// Command execution
 use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
 
@@ -6,6 +5,7 @@ use super::parsing::{parse_pipeline, parse_command};
 use super::commands::{get_command_aliases, is_stargate_command};
 use super::path::find_in_path;
 use super::jobs::{add_background_job, add_foreground_job, wait_for_job};
+use super::builtin_commands;
 use std::path::PathBuf;
 
 // Commands that already consume/produce JSON and shouldn't get -o flag
@@ -74,33 +74,7 @@ fn get_all_commands() -> Vec<String> {
     Vec::new()
 }
 
-fn handle_cd(args: &[String]) -> Result<String, String> {
-    let path = if args.is_empty() {
-        // No argument - go to home directory
-        std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
-    } else if args[0] == "-" {
-        // cd - goes to previous directory
-        std::env::var("OLDPWD").unwrap_or_else(|_| ".".to_string())
-    } else {
-        args[0].clone()
-    };
 
-    // Save current directory as OLDPWD before changing
-    if let Ok(current) = std::env::current_dir() {
-        unsafe { std::env::set_var("OLDPWD", current); }
-    }
-
-    // Change directory
-    std::env::set_current_dir(&path)
-        .map_err(|e| format!("cd: {}: {}", path, e))?;
-
-    // Update PWD to reflect the new current directory
-    if let Ok(new_dir) = std::env::current_dir() {
-        unsafe { std::env::set_var("PWD", new_dir); }
-    }
-
-    Ok(String::new())
-}
 
 pub fn execute_single_command(cmd_parts: &[String]) -> Result<String, String> {
     execute_single_command_impl(cmd_parts, false)
@@ -115,12 +89,10 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
         return Err("Empty command".to_string());
     }
 
-    // Resolve alias to actual command name
     let cmd_name = resolve_alias(&cmd_parts[0]);
     
-    // Handle built-in commands
     if cmd_name == "cd" || cmd_name == "change-directory" {
-        return handle_cd(&cmd_parts[1..]);
+        return builtin_commands::execute_cd(&cmd_parts[1..]);
     }
     
     // Handle pwd as built-in to reflect actual shell's current directory
@@ -511,13 +483,13 @@ pub fn execute_pipeline(input: &str) -> Result<(), String> {
     if commands.len() == 1 {
         let cmd = &commands[0][0];
         if cmd == "list-jobs" {
-            return handle_jobs_command();
+            return builtin_commands::execute_list_jobs();
         }
         if cmd == "foreground-job" {
-            return handle_fg_command(&commands[0][1..]);
+            return builtin_commands::execute_foreground_job(&commands[0][1..]);
         }
         if cmd == "background-job" {
-            return handle_bg_command(&commands[0][1..]);
+            return builtin_commands::execute_background_job(&commands[0][1..]);
         }
     }
 
@@ -619,52 +591,7 @@ fn execute_pipeline_background(command_str: &str, commands: Vec<Vec<String>>) ->
     Ok(())
 }
 
-fn handle_jobs_command() -> Result<(), String> {
-    use super::jobs::list_jobs;
-    let jobs = list_jobs();
-    
-    if jobs.is_empty() {
-        return Ok(());
-    }
-    
-    for (id, command, status) in jobs {
-        use super::jobs::JobStatus;
-        let status_str = match status {
-            JobStatus::Running => "Running",
-            JobStatus::Stopped => "Stopped",
-            JobStatus::Done(code) => &format!("Done({})", code),
-        };
-        println!("[{}] {:10} {}", id, status_str, command);
-    }
-    
-    Ok(())
-}
 
-fn handle_fg_command(args: &[String]) -> Result<(), String> {
-    use super::jobs::bring_to_foreground;
-    
-    if args.is_empty() {
-        return Err("foreground-job: no job specified".to_string());
-    }
-    
-    let job_id_str = args[0].trim_start_matches('%');
-    let job_id: usize = job_id_str.parse()
-        .map_err(|_| format!("foreground-job: invalid job id: {}", job_id_str))?;
-    
-    match bring_to_foreground(job_id) {
-        Ok(exit_code) => {
-            if exit_code != 0 {
-                return Err(format!("job exited with code:{}", exit_code));
-            }
-            Ok(())
-        }
-        Err(e) => Err(format!("foreground-job: {}", e))
-    }
-}
-
-fn handle_bg_command(args: &[String]) -> Result<(), String> {
-    Err("background-job: not yet implemented".to_string())
-}
 
 pub fn execute_pipeline_capture(input: &str) -> Result<String, String> {
     let commands = parse_pipeline(input);
