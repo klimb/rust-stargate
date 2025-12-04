@@ -10,7 +10,9 @@ use rustyline::{Editor, Config, CompletionType, ExternalPrinter, KeyEvent};
 use rustyline::config::EditMode;
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
-use std::io::IsTerminal;
+use std::io::{IsTerminal, Write, BufRead, BufReader};
+use std::fs::OpenOptions;
+use std::time::SystemTime;
 
 use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_banner, print_help, Interpreter, check_background_jobs, start_job_monitor};
 
@@ -214,16 +216,22 @@ fn main() {
     rl.set_helper(Some(helper));
     
     // Configure history
-    rl.set_max_history_size(10000).expect("Failed to set history size");
     let history_file = std::env::var("HOME")
         .map(|home| format!("{}/.stargate_history", home))
         .unwrap_or_else(|_| ".stargate_history".to_string());
-    let _ = rl.load_history(&history_file); // Don't fail if history doesn't exist yet
+    
+    // Load timestamped history
+    let history_with_timestamps = load_timestamped_history(&history_file);
+    
+    // Load commands into rustyline (without timestamps for navigation)
+    for (_, cmd) in &history_with_timestamps {
+        let _ = rl.add_history_entry(cmd.as_str());
+    }
     
     // Bind Ctrl+S for forward search (Ctrl+R for reverse is already default)
     use rustyline::{Cmd, KeyCode, Modifiers};
     rl.bind_sequence(
-        KeyEvent::new(KeyCode::Char('s'), Modifiers::CTRL),
+        KeyEvent(KeyCode::Char('s'), Modifiers::CTRL),
         rustyline::EventHandler::Simple(Cmd::ForwardSearchHistory)
     );
 
@@ -251,6 +259,9 @@ fn main() {
 
                 // Add to history
                 let _ = rl.add_history_entry(input);
+                
+                // Save to timestamped history file
+                save_to_history(&history_file, input);
 
                 // Handle && operator (conditional execution like bash/zsh)
                 if input.contains("&&") && !input.starts_with("let ") && !input.starts_with("class ") {
@@ -300,6 +311,34 @@ fn main() {
                 match input {
                     "exit" | "quit" => break,
                     "help" => print_help(),
+                    "list-history" => {
+                        // Display all history entries with timestamps
+                        let history_with_ts = load_timestamped_history(&history_file);
+                        if history_with_ts.is_empty() {
+                            println!("No command history available.");
+                        } else {
+                            for (timestamp, cmd) in &history_with_ts {
+                                println!("{}\t{}", format_timestamp(*timestamp), cmd);
+                            }
+                        }
+                    }
+                    _ if input.starts_with("list-history ") => {
+                        // Search history with optional filter
+                        let filter = input[13..].trim();
+                        let history_with_ts = load_timestamped_history(&history_file);
+                        let mut found = false;
+                        
+                        for (timestamp, cmd) in &history_with_ts {
+                            if cmd.contains(filter) {
+                                println!("{}\t{}", format_timestamp(*timestamp), cmd);
+                                found = true;
+                            }
+                        }
+                        
+                        if !found {
+                            println!("No history entries matching '{}'", filter);
+                        }
+                    }
                     _ if input.starts_with(DESCRIBE_COMMAND_PREFIX) => {
                         let cmd_name = input[DESCRIBE_COMMAND_PREFIX.len()..].trim();
                         if cmd_name.is_empty() {
@@ -436,7 +475,111 @@ fn main() {
         }
     }
 
-    // Save history on exit
-    let _ = rl.save_history(&history_file);
     println!("\nGoodbye!");
+}
+
+// Load history with timestamps from file
+fn load_timestamped_history(history_file: &str) -> Vec<(SystemTime, String)> {
+    let mut history = Vec::new();
+    
+    if let Ok(file) = std::fs::File::open(history_file) {
+        let reader = BufReader::new(file);
+        
+        for line in reader.lines().flatten() {
+            // Format: timestamp|command
+            if let Some(pos) = line.find('|') {
+                let timestamp_str = &line[..pos];
+                let command = &line[pos + 1..];
+                
+                if let Ok(secs) = timestamp_str.parse::<u64>() {
+                    let timestamp = SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+                    history.push((timestamp, command.to_string()));
+                }
+            }
+        }
+    }
+    
+    history
+}
+
+// Save a command with timestamp to history file
+fn save_to_history(history_file: &str, command: &str) {
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(history_file)
+    {
+        let timestamp = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        
+        let _ = writeln!(file, "{}|{}", timestamp, command);
+    }
+}
+
+// Format timestamp as human-readable date (short format with minutes)
+fn format_timestamp(timestamp: SystemTime) -> String {
+    use std::time::Duration;
+    
+    let now = SystemTime::now();
+    let duration = now.duration_since(timestamp).unwrap_or(Duration::from_secs(0));
+    let secs = duration.as_secs();
+    
+    let elapsed_hours = secs / 3600;
+    let elapsed_mins = (secs % 3600) / 60;
+    
+    // Less than 1 hour: show minutes
+    if secs < 3600 {
+        if secs < 60 {
+            return "0m".to_string();
+        }
+        return format!("{}m", elapsed_mins);
+    }
+    
+    // Less than 24 hours: show hours and minutes
+    if secs < 86400 {
+        if elapsed_mins == 0 {
+            return format!("{}h", elapsed_hours);
+        }
+        return format!("{}h{}m", elapsed_hours, elapsed_mins);
+    }
+    
+    // Days but less than a week: show days and hours
+    let days = secs / 86400;
+    if days < 7 {
+        let remaining_hours = (secs % 86400) / 3600;
+        if remaining_hours == 0 {
+            return format!("{}d", days);
+        }
+        return format!("{}d{}h", days, remaining_hours);
+    }
+    
+    // Weeks but less than a month: show weeks and days
+    if days < 30 {
+        let weeks = days / 7;
+        let remaining_days = days % 7;
+        if remaining_days == 0 {
+            return format!("{}w", weeks);
+        }
+        return format!("{}w{}d", weeks, remaining_days);
+    }
+    
+    // Months but less than a year: show months and weeks
+    if days < 365 {
+        let months = days / 30;
+        let remaining_weeks = (days % 30) / 7;
+        if remaining_weeks == 0 {
+            return format!("{}mo", months);
+        }
+        return format!("{}mo{}w", months, remaining_weeks);
+    }
+    
+    // Years: show years and months
+    let years = days / 365;
+    let remaining_months = (days % 365) / 30;
+    if remaining_months == 0 {
+        return format!("{}y", years);
+    }
+    format!("{}y{}mo", years, remaining_months)
 }
