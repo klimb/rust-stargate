@@ -17,6 +17,9 @@ pub mod testing;
 pub mod ui;
 pub mod jobs;
 
+#[path = "builtin-commands/mod.rs"]
+pub mod builtin_commands;
+
 pub use completion::StargateCompletion;
 pub use execution::execute_pipeline;
 pub use interpreter::{execute_script, execute_script_with_interpreter, Interpreter};
