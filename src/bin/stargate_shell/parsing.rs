@@ -1,5 +1,25 @@
 // Pipeline parsing
+
+#[derive(Debug, Clone)]
+pub struct ParsedCommand {
+    pub pipelines: Vec<Vec<String>>,
+    pub is_background: bool,
+}
+
 pub fn parse_pipeline(input: &str) -> Vec<Vec<String>> {
+    parse_command(input).pipelines
+}
+
+pub fn parse_command(input: &str) -> ParsedCommand {
+    let input = input.trim();
+    
+    // Check if command should run in background
+    let (input, is_background) = if input.ends_with('&') {
+        (input[..input.len() - 1].trim(), true)
+    } else {
+        (input, false)
+    };
+
     let mut pipelines = Vec::new();
     let mut current_cmd = Vec::new();
     let mut current_arg = String::new();
@@ -44,5 +64,8 @@ pub fn parse_pipeline(input: &str) -> Vec<Vec<String>> {
         pipelines.push(current_cmd);
     }
 
-    pipelines
+    ParsedCommand {
+        pipelines,
+        is_background,
+    }
 }

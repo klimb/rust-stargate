@@ -2,9 +2,10 @@
 use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
 
-use super::parsing::parse_pipeline;
+use super::parsing::{parse_pipeline, parse_command};
 use super::commands::{get_command_aliases, is_stargate_command};
 use super::path::find_in_path;
+use super::jobs::{add_background_job, add_foreground_job, wait_for_job};
 use std::path::PathBuf;
 
 // Commands that already consume/produce JSON and shouldn't get -o flag
@@ -499,14 +500,32 @@ pub fn execute_with_object_pipe(cmd_parts: &[String], json_input: Option<&str>, 
 }
 
 pub fn execute_pipeline(input: &str) -> Result<(), String> {
-    let commands = parse_pipeline(input);
+    let parsed = parse_command(input);
+    let commands = parsed.pipelines;
+    let is_background = parsed.is_background;
     
     if commands.is_empty() {
         return Ok(());
     }
 
     if commands.len() == 1 {
-        // Single command, no pipe
+        let cmd = &commands[0][0];
+        if cmd == "list-jobs" {
+            return handle_jobs_command();
+        }
+        if cmd == "foreground-job" {
+            return handle_fg_command(&commands[0][1..]);
+        }
+        if cmd == "background-job" {
+            return handle_bg_command(&commands[0][1..]);
+        }
+    }
+
+    if is_background {
+        return execute_pipeline_background(input.trim_end_matches('&').trim(), commands);
+    }
+
+    if commands.len() == 1 {
         match execute_single_command(&commands[0]) {
             Ok(output) => {
                 print!("{}", output);
@@ -515,20 +534,17 @@ pub fn execute_pipeline(input: &str) -> Result<(), String> {
             Err(e) => Err(e)
         }
     } else {
-        // Pipeline
         let mut json_data: Option<String> = None;
 
         for (idx, cmd) in commands.iter().enumerate() {
             let is_last = idx == commands.len() - 1;
-            let should_output_json = !is_last; // Only output JSON if not the last command
+            let should_output_json = !is_last;
             
             match execute_with_object_pipe(cmd, json_data.as_deref(), should_output_json) {
                 Ok(output) => {
                     if is_last {
-                        // Last command, print output
                         print!("{}", output);
                     } else {
-                        // Intermediate command, store JSON for next
                         json_data = Some(output);
                     }
                 }
@@ -538,6 +554,116 @@ pub fn execute_pipeline(input: &str) -> Result<(), String> {
 
         Ok(())
     }
+}
+
+fn execute_pipeline_background(command_str: &str, commands: Vec<Vec<String>>) -> Result<(), String> {
+    if commands.is_empty() {
+        return Ok(());
+    }
+
+    if commands.len() > 1 {
+        return Err("Background pipelines not yet supported".to_string());
+    }
+
+    let cmd_parts = &commands[0];
+    if cmd_parts.is_empty() {
+        return Ok(());
+    }
+
+    let cmd_name = resolve_alias(&cmd_parts[0]);
+    
+    if cmd_name == "cd" || cmd_name == "pwd" || cmd_name == "list-jobs" || cmd_name == "foreground-job" || cmd_name == "background-job" {
+        return Err(format!("{} cannot run in background", cmd_name));
+    }
+
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+
+    let child = if is_stargate_command(&cmd_name) {
+        let mut args = vec![cmd_name.clone()];
+        args.extend_from_slice(&cmd_parts[1..]);
+        
+        Command::new(&stargate_bin)
+            .args(&args)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|e| format!("Failed to spawn background process: {}", e))?
+    } else if cmd_parts[0].contains('/') {
+        let path = PathBuf::from(&cmd_parts[0]);
+        Command::new(path)
+            .args(&cmd_parts[1..])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|e| format!("Failed to spawn background process: {}", e))?
+    } else if let Some(path_cmd) = find_in_path(&cmd_name) {
+        Command::new(path_cmd)
+            .args(&cmd_parts[1..])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|e| format!("Failed to spawn background process: {}", e))?
+    } else {
+        return Err(format!("Command not found: {}", cmd_name));
+    };
+
+    let job_id = add_background_job(command_str.to_string(), child);
+    println!("[{}] {}", job_id, command_str);
+    
+    Ok(())
+}
+
+fn handle_jobs_command() -> Result<(), String> {
+    use super::jobs::list_jobs;
+    let jobs = list_jobs();
+    
+    if jobs.is_empty() {
+        return Ok(());
+    }
+    
+    for (id, command, status) in jobs {
+        use super::jobs::JobStatus;
+        let status_str = match status {
+            JobStatus::Running => "Running",
+            JobStatus::Stopped => "Stopped",
+            JobStatus::Done(code) => &format!("Done({})", code),
+        };
+        println!("[{}] {:10} {}", id, status_str, command);
+    }
+    
+    Ok(())
+}
+
+fn handle_fg_command(args: &[String]) -> Result<(), String> {
+    use super::jobs::bring_to_foreground;
+    
+    if args.is_empty() {
+        return Err("foreground-job: no job specified".to_string());
+    }
+    
+    let job_id_str = args[0].trim_start_matches('%');
+    let job_id: usize = job_id_str.parse()
+        .map_err(|_| format!("foreground-job: invalid job id: {}", job_id_str))?;
+    
+    match bring_to_foreground(job_id) {
+        Ok(exit_code) => {
+            if exit_code != 0 {
+                return Err(format!("job exited with code:{}", exit_code));
+            }
+            Ok(())
+        }
+        Err(e) => Err(format!("foreground-job: {}", e))
+    }
+}
+
+fn handle_bg_command(args: &[String]) -> Result<(), String> {
+    Err("background-job: not yet implemented".to_string())
 }
 
 pub fn execute_pipeline_capture(input: &str) -> Result<String, String> {

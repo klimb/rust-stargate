@@ -271,6 +271,7 @@ jiff = { version = "0.2.10", default-features = false, features = [
   "alloc",
   "tz-system",
 ] }
+lazy_static = "1.5"
 libc = "0.2.172"
 linux-raw-sys = "0.12"
 lscolors = { version = "0.21.0", default-features = false, features = [
@@ -348,6 +349,7 @@ clap.workspace = true
 clap_complete = { workspace = true, optional = true }
 clap_mangen = { workspace = true, optional = true }
 fluent-syntax = { workspace = true, optional = true }
+lazy_static.workspace = true
 phf.workspace = true
 rustyline.workspace = true
 serde_json.workspace = true
