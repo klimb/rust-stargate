@@ -14,7 +14,7 @@ use std::io::{IsTerminal, Write};
 use std::fs::OpenOptions;
 use std::time::SystemTime;
 
-use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_banner, print_help, Interpreter, start_job_monitor, builtin_commands};
+use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_help, Interpreter, start_job_monitor, builtin_commands};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
@@ -198,7 +198,6 @@ fn main() {
     }
     
     // Interactive REPL mode
-    print_banner();
 
     // Shared variable names for completion
     let variable_names = Arc::new(Mutex::new(HashSet::new()));

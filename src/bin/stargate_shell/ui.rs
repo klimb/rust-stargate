@@ -1,12 +1,6 @@
 // UI functions for the shell
 use crate::VERSION;
 
-pub fn print_banner() {
-    println!("Stargate Shell {VERSION}");
-    println!("Type 'help' for usage, 'exit' to quit");
-    println!("Use Tab for command completion\n");
-}
-
 pub fn print_help() {
     println!("Stargate Shell Commands:");
     println!("  help                      - Show this help message");
