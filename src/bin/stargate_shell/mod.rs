@@ -15,8 +15,10 @@ pub mod scripting;
 pub mod interpreter;
 pub mod testing;
 pub mod ui;
+pub mod jobs;
 
 pub use completion::StargateCompletion;
 pub use execution::execute_pipeline;
 pub use interpreter::{execute_script, execute_script_with_interpreter, Interpreter};
 pub use ui::{describe_command, print_banner, print_help};
+pub use jobs::{list_jobs, check_background_jobs, cleanup_done_jobs, bring_to_foreground, start_job_monitor, JobStatus};

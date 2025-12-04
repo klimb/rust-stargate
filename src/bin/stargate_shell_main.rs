@@ -6,12 +6,12 @@
 mod stargate_shell;
 
 use rustyline::error::ReadlineError;
-use rustyline::{Editor, Config, CompletionType};
+use rustyline::{Editor, Config, CompletionType, ExternalPrinter};
 use std::sync::{Arc, Mutex};
 use std::collections::HashSet;
 use std::io::IsTerminal;
 
-use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_banner, print_help, Interpreter};
+use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_interpreter, describe_command, print_banner, print_help, Interpreter, check_background_jobs, start_job_monitor};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
@@ -210,6 +210,19 @@ fn main() {
         .build();
     let mut rl = Editor::with_config(config).expect("Failed to create readline editor");
     rl.set_helper(Some(helper));
+
+    let mut printer = rl.create_external_printer().expect("Failed to create external printer");
+    let job_monitor_rx = start_job_monitor();
+    
+    std::thread::spawn(move || {
+        loop {
+            if let Ok(msg) = job_monitor_rx.recv() {
+                let _ = printer.print(msg);
+            } else {
+                break;
+            }
+        }
+    });
 
     loop {
         match rl.readline("stargate> ") {
