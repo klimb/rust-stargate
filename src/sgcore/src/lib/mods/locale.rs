@@ -113,10 +113,10 @@ fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
         .canonicalize()
         .unwrap_or_else(|_| utility_locales_dir.to_path_buf());
 
-    // Walk up: locales -> printenv -> uu -> src
+    // Walk up: locales -> util_name -> sg -> src, then down to sgcore/locales
     let uucore_locales = normalized_dir
-        .parent()? // printenv
-        .parent()? // uu
+        .parent()? // util_name (e.g., tail)
+        .parent()? // sg (or uu for backwards compatibility)
         .parent()? // src
         .join("sgcore")
         .join("locales");
@@ -330,12 +330,23 @@ pub fn get_message_with_args(id: &str, ftl_args: FluentArgs) -> String {
 
 /// Function to detect system locale from environment variables
 fn detect_system_locale() -> Result<LanguageIdentifier, LocalizationError> {
-    let locale_str = std::env::var("LANG")
+    // Check environment variables in standard priority order: LC_ALL > LC_MESSAGES > LANG
+    let locale_str = std::env::var("LC_ALL")
+        .or_else(|_| std::env::var("LC_MESSAGES"))
+        .or_else(|_| std::env::var("LANG"))
         .unwrap_or_else(|_| DEFAULT_LOCALE.to_string())
         .split('.')
         .next()
         .unwrap_or(DEFAULT_LOCALE)
         .to_string();
+    
+    // Treat "C" and "POSIX" locales as English (en-US)
+    let locale_str = if locale_str == "C" || locale_str == "POSIX" {
+        DEFAULT_LOCALE.to_string()
+    } else {
+        locale_str
+    };
+    
     LanguageIdentifier::from_str(&locale_str).map_err(|_| {
         LocalizationError::ParseLocale(format!("Failed to parse locale: {locale_str}"))
     })
@@ -437,13 +448,24 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         // During development, use the project's locales directory
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         // from sgcore path, load the locales directory from the program directory
+        // Try sg/ first (rust-stargate), then fall back to uu/ (uutils-coreutils compatibility)
         let dev_path = PathBuf::from(manifest_dir)
-            .join("../uu")
+            .join("../sg")
             .join(p)
             .join("locales");
 
         if dev_path.exists() {
             return Ok(dev_path);
+        }
+
+        // Try uu/ for backwards compatibility with uutils-coreutils
+        let uu_path = PathBuf::from(manifest_dir)
+            .join("../uu")
+            .join(p)
+            .join("locales");
+
+        if uu_path.exists() {
+            return Ok(uu_path);
         }
 
         // Fallback for development if the expected path doesn't exist
@@ -453,8 +475,9 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         }
 
         Err(LocalizationError::LocalesDirNotFound(format!(
-            "Development locales directory not found at {} or {}",
+            "Development locales directory not found at {}, {}, or {}",
             dev_path.display(),
+            uu_path.display(),
             fallback_dev_path.display()
         )))
     }

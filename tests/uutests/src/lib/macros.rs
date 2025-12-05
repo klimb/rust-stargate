@@ -22,16 +22,28 @@ macro_rules! path_concat {
 
 /// Deduce the name of the test binary from the test filename.
 ///
+/// Get the utility name from the test module name.
+///
+/// Extracts the utility name from the module path by taking everything after "test_"
+/// and replacing underscores with hyphens to match the actual utility names.
+///
 /// e.g.: `tests/by-util/test_cat.rs` -> `cat`
+///       `tests/by-util/test_get_contents.rs` -> `get-contents`
 #[macro_export]
 macro_rules! util_name {
-    () => {
-        module_path!()
-            .split("_")
-            .nth(1)
-            .and_then(|s| s.split("::").next())
+    () => {{
+        let module_path = module_path!();
+        let parts: Vec<&str> = module_path.split("_").collect();
+        if parts.len() < 2 {
+            panic!("no test name in module path: {}", module_path);
+        }
+        // Skip the first part ("test") and join the rest with hyphens
+        // Leak the string so it has a 'static lifetime
+        Box::leak(parts[1..].join("-").into_boxed_str())
+            .split("::")
+            .next()
             .expect("no test name")
-    };
+    }};
 }
 
 /// Convenience macro for acquiring a [`UCommand`] builder.

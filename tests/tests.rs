@@ -32,8 +32,8 @@ mod test_basename;
 mod test_basenc;
 
 #[cfg(feature = "get_contents")]
-#[path = "by-util/test_cat.rs"]
-mod test_cat;
+#[path = "by-util/test_get_contents.rs"]
+mod test_get_contents;
 
 #[cfg(feature = "change_group")]
 #[path = "by-util/test_chgrp.rs"]
