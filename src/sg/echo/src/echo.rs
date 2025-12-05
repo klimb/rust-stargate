@@ -200,7 +200,7 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
             })
             .collect();
         
-        let (final_args, mut opts) = if is_posixly_correct || json_flag {
+        let (final_args, mut opts) = if json_flag {
             // If object output requested, we need to re-filter flags
             filter_flags(filtered.into_iter())
         } else {

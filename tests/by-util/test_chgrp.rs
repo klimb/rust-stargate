@@ -220,8 +220,11 @@ fn test_reference() {
 #[test]
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn test_reference_multi_no_equal() {
-    new_ucmd!()
-        .arg("-v")
+    let (at, mut ucmd) = at_and_ucmd!();
+    at.touch("ref_file");
+    at.touch("file1");
+    at.touch("file2");
+    ucmd.arg("-v")
         .arg("--reference")
         .arg("ref_file")
         .arg("file1")
@@ -234,8 +237,12 @@ fn test_reference_multi_no_equal() {
 #[test]
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn test_reference_last() {
-    new_ucmd!()
-        .arg("-v")
+    let (at, mut ucmd) = at_and_ucmd!();
+    at.touch("ref_file");
+    at.touch("file1");
+    at.touch("file2");
+    at.touch("file3");
+    ucmd.arg("-v")
         .arg("file1")
         .arg("file2")
         .arg("file3")

@@ -791,7 +791,7 @@ fn test_appending_same_input_output() {
 fn test_uchild_when_no_capture_reading_from_infinite_source() {
     use regex::Regex;
 
-    let ts = TestScenario::new("cat");
+    let ts = TestScenario::new(util_name!());
 
     let expected_stdout = b"\0".repeat(12345);
     let mut child = ts
@@ -815,7 +815,7 @@ fn test_uchild_when_no_capture_reading_from_infinite_source() {
 
 #[test]
 fn test_child_when_pipe_in() {
-    let ts = TestScenario::new("cat");
+    let ts = TestScenario::new(util_name!());
     let mut child = ts.ucmd().set_stdin(Stdio::piped()).run_no_wait();
     child.pipe_in("content");
     child.wait().unwrap().stdout_only("content").success();
