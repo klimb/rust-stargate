@@ -269,27 +269,27 @@ pub fn uu_app() -> Command {
         )
         // Add JSON args manually without -f short flag to avoid conflict with --format
         .arg(
-            Arg::new("object_output")
+            Arg::new(object_output::ARG_OBJECT_OUTPUT)
                 .short('o')
                 .long("obj")
                 .help("Output as object (JSON)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("verbose")
+            Arg::new(object_output::ARG_VERBOSE)
                 .short('v')
-                .long("verbose")
+                .long("verbose-json")
                 .help("Include additional details in output")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("pretty")
+            Arg::new(object_output::ARG_PRETTY)
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new("field")
+            Arg::new(object_output::ARG_FIELD)
                 .long("field")  // No short flag to avoid conflict with -f/--format
                 .value_name("FIELD")
                 .help("Filter object output to specific field(s) (comma-separated)")
