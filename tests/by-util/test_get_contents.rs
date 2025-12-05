@@ -205,7 +205,7 @@ fn test_directory() {
     s.ucmd()
         .args(&["test_directory"])
         .fails()
-        .stderr_is("cat: test_directory: Is a directory\n");
+        .stderr_is("get-contents: test_directory: Is a directory\n");
 }
 
 #[test]
@@ -216,7 +216,7 @@ fn test_directory_and_file() {
         s.ucmd()
             .args(&["test_directory2", fixture])
             .fails()
-            .stderr_is("cat: test_directory2: Is a directory\n")
+            .stderr_is("get-contents: test_directory2: Is a directory\n")
             .stdout_is_fixture(fixture);
     }
 }
@@ -640,7 +640,7 @@ fn test_write_to_self() {
         .arg("first_file")
         .arg("second_file")
         .fails_with_code(2)
-        .stderr_only("cat: first_file: input file is output file\ncat: first_file: input file is output file\n");
+        .stderr_only("get-contents: first_file: input file is output file\nget-contents: first_file: input file is output file\n");
 
     assert_eq!(
         s.fixtures.read("first_file"),
@@ -692,7 +692,7 @@ fn test_failed_write_to_read_write_self() {
     ucmd.args(&["fx", "fx3"])
         .set_stdout(fx3_file)
         .fails_with_code(1)
-        .stderr_only("cat: fx3: input file is output file\n");
+        .stderr_only("get-contents: fx3: input file is output file\n");
 
     // The contents of `fx` should have overwritten the beginning of `fx3`
     let fx3_contents = read_to_string(fx3_file_path).unwrap();
@@ -709,7 +709,7 @@ fn test_error_loop() {
     at.symlink_file("1", "3");
     ucmd.arg("1")
         .fails()
-        .stderr_is("cat: 1: Too many levels of symbolic links\n");
+        .stderr_is("get-contents: 1: Too many levels of symbolic links\n");
 }
 
 #[test]
@@ -745,7 +745,7 @@ fn test_write_fast_read_error() {
 
 #[test]
 #[cfg(target_os = "linux")]
-fn test_cat_non_utf8_paths() {
+fn test_get_contents_non_utf8_paths() {
     use std::ffi::OsStr;
     use std::os::unix::ffi::OsStrExt;
 
@@ -824,7 +824,7 @@ fn test_child_when_pipe_in() {
 }
 
 #[test]
-fn test_cat_eintr_handling() {
+fn test_get_contents_eintr_handling() {
     // Test that cat properly handles EINTR (ErrorKind::Interrupted) during I/O operations
     // This verifies the signal interruption retry logic added in the EINTR handling fix
     use std::io::{Error, ErrorKind, Read};
