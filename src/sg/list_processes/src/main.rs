@@ -1,6 +1,6 @@
 use sgcore::error::{set_exit_code, UResult};
 use std::io::Write;
-use sg_ps::{uu_app, uumain};
+use sg_list_processes::{uu_app, uumain};
 
 #[sgcore::main]
 fn main() -> UResult<()> {
