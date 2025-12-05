@@ -1,6 +1,6 @@
 [package]
-name = "sg_ps"
-description = "ps ~ list running processes"
+name = "sg_list_processes"
+description = "list-processes ~ list running processes"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/ps"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/ps.rs"
+path = "src/list_processes.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -25,5 +25,5 @@ serde_json = { workspace = true }
 procfs = { workspace = true }
 
 [[bin]]
-name = "ps"
+name = "list-processes"
 path = "src/main.rs"

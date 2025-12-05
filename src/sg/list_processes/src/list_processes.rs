@@ -7,6 +7,8 @@ use sgcore::translate;
 use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
 use procfs::process::{Process, all_processes};
+use std::collections::HashMap;
+use std::sync::OnceLock;
 
 static ARG_ALL: &str = "all";
 static ARG_FULL: &str = "full";
@@ -15,6 +17,7 @@ static ARG_FULL: &str = "full";
 struct ProcessInfo {
     pid: i32,
     ppid: i32,
+    uid: u32,
     name: String,
     cmdline: Vec<String>,
     state: String,
@@ -34,9 +37,13 @@ impl ProcessInfo {
         // Get memory usage in KB
         let mem_usage = status.vmrss.unwrap_or(0);
         
+        // Get UID
+        let uid = status.ruid;
+        
         Some(ProcessInfo {
             pid: process.pid(),
             ppid: stat.ppid,
+            uid,
             name: stat.comm.clone(),
             cmdline,
             state: format!("{:?}", stat.state()),
@@ -49,13 +56,7 @@ impl ProcessInfo {
 #[sgcore::main]
 pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
-    let mut opts = JsonOutputOptions::from_matches(&matches);
-    
-    // Object output is the default for this command
-    // Only use default if user didn't explicitly set the flag
-    if matches.value_source("object_output") != Some(clap::parser::ValueSource::CommandLine) {
-        opts.object_output = true;
-    }
+    let opts = JsonOutputOptions::from_matches(&matches);
     
     let show_all = matches.get_flag(ARG_ALL);
     let show_full = matches.get_flag(ARG_FULL);
@@ -103,12 +104,17 @@ fn output_json(processes: Vec<ProcessInfo>, opts: JsonOutputOptions, show_full: 
         let mut obj = json!({
             "pid": p.pid,
             "ppid": p.ppid,
+            "uid": p.uid,
+            "user": get_username(p.uid),
             "name": p.name,
             "state": p.state,
         });
         
-        if show_full {
+        if show_full || !p.cmdline.is_empty() {
             obj["cmdline"] = json!(p.cmdline);
+        }
+        
+        if show_full {
             obj["cpu_time"] = json!(p.cpu_time);
             obj["mem_kb"] = json!(p.mem_usage);
         }
@@ -125,28 +131,40 @@ fn output_json(processes: Vec<ProcessInfo>, opts: JsonOutputOptions, show_full: 
     Ok(())
 }
 
+fn get_username(uid: u32) -> String {
+    static UID_CACHE: OnceLock<HashMap<u32, String>> = OnceLock::new();
+    
+    let cache = UID_CACHE.get_or_init(|| {
+        let mut map = HashMap::new();
+        // Read /etc/passwd to build UID to username mapping
+        if let Ok(contents) = std::fs::read_to_string("/etc/passwd") {
+            for line in contents.lines() {
+                let parts: Vec<&str> = line.split(':').collect();
+                if parts.len() >= 3 {
+                    if let Ok(uid_val) = parts[2].parse::<u32>() {
+                        map.insert(uid_val, parts[0].to_string());
+                    }
+                }
+            }
+        }
+        map
+    });
+    
+    cache.get(&uid).cloned().unwrap_or_else(|| uid.to_string())
+}
+
 fn output_text(processes: &[ProcessInfo], show_full: bool) {
-    if show_full {
-        println!("{:>7} {:>7} {:>10} {:>10} {:<20} {}", 
-                 "PID", "PPID", "CPU(s)", "MEM(KB)", "STATE", "NAME");
-    } else {
-        println!("{:>7} {:>7} {:<20} {}", 
-                 "PID", "PPID", "STATE", "NAME");
-    }
+    println!("PID\tUSER\tCOMMAND");
     
     for p in processes {
-        if show_full {
-            let cmd = if !p.cmdline.is_empty() {
-                p.cmdline.join(" ")
-            } else {
-                format!("[{}]", p.name)
-            };
-            println!("{:>7} {:>7} {:>10} {:>10} {:<20} {}", 
-                     p.pid, p.ppid, p.cpu_time, p.mem_usage, p.state, cmd);
+        let user = get_username(p.uid);
+        let command = if !p.cmdline.is_empty() {
+            p.cmdline.join(" ")
         } else {
-            println!("{:>7} {:>7} {:<20} {}", 
-                     p.pid, p.ppid, p.state, p.name);
-        }
+            format!("[{}]", p.name)
+        };
+        
+        println!("{}\t{}\t{}", p.pid, user, command);
     }
 }
 
@@ -154,20 +172,20 @@ pub fn uu_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
-        .about(translate!("ps-about"))
-        .override_usage(format_usage(&translate!("ps-usage")))
+        .about(translate!("list-processes-about"))
+        .override_usage(format_usage(&translate!("list-processes-usage")))
         .infer_long_args(true)
         .arg(
             Arg::new(ARG_ALL)
                 .short('a')
                 .long("all")
-                .help(translate!("ps-help-all"))
+                .help(translate!("list-processes-help-all"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(ARG_FULL)
                 .long("full")
-                .help(translate!("ps-help-full"))
+                .help(translate!("list-processes-help-full"))
                 .action(ArgAction::SetTrue)
         );
     

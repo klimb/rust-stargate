@@ -3034,6 +3034,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_list_processes"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "procfs",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_ln"
 version = "0.4.0"
 dependencies = [
@@ -3227,17 +3238,6 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
- "sgcore",
-]
-
-[[package]]
-name = "sg_ps"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "procfs",
- "serde_json",
  "sgcore",
 ]
 
@@ -3947,6 +3947,7 @@ dependencies = [
  "sg_kill",
  "sg_link",
  "sg_list_directory",
+ "sg_list_processes",
  "sg_ln",
  "sg_mkfifo",
  "sg_mknod",
@@ -3965,7 +3966,6 @@ dependencies = [
  "sg_pr",
  "sg_printenv",
  "sg_printf",
- "sg_ps",
  "sg_ptx",
  "sg_pwd",
  "sg_readlink",

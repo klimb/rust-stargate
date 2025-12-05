@@ -47,7 +47,7 @@ impl Default for JsonOutputOptions {
 
 /// Argument names for object (JSON) output and verbose flags
 pub const ARG_OBJECT_OUTPUT: &str = "object_output";
-pub const ARG_VERBOSE: &str = "verbose";
+pub const ARG_VERBOSE: &str = "verbose_json";
 pub const ARG_FIELD: &str = "field";
 pub const ARG_PRETTY: &str = "pretty";
 
@@ -55,27 +55,24 @@ pub const ARG_PRETTY: &str = "pretty";
 pub fn add_json_args(cmd: clap::Command) -> clap::Command {
     cmd.arg(
         Arg::new(ARG_OBJECT_OUTPUT)
-            .short('o')
             .long("obj")
             .help("Output as object (JSON)")
             .action(ArgAction::SetTrue),
     )
     .arg(
         Arg::new(ARG_VERBOSE)
-            .short('v')
-            .long("verbose")
-            .help("Include additional details in output")
+            .long("verbose-json")
+            .help("Include additional details in JSON output (use with --obj)")
             .action(ArgAction::SetTrue),
     )
     .arg(
         Arg::new(ARG_PRETTY)
             .long("pretty")
-            .help("Pretty-print object (JSON) output (use with -o)")
+            .help("Pretty-print object (JSON) output (use with --obj)")
             .action(ArgAction::SetTrue),
     )
     .arg(
         Arg::new(ARG_FIELD)
-            .short('f')
             .long("field")
             .value_name("FIELD")
             .help("Filter object output to specific field(s) (comma-separated)")

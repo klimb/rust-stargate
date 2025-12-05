@@ -24,6 +24,7 @@ fn resolve_alias(cmd: &str) -> String {
     // For now, just handle the most common ones inline
     match cmd {
         "ls" => "list-directory".to_string(),
+        "ps" => "list-processes".to_string(),
         _ => {
             // Check auto-generated aliases by trying to find matching command
             let commands = get_all_commands();
