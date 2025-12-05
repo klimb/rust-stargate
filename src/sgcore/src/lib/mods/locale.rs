@@ -443,6 +443,10 @@ fn resolve_locales_dir_from_exe_dir(exe_dir: &Path, p: &str) -> Option<PathBuf> 
 
 /// Helper function to get the locales directory based on the build configuration
 fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
+    // Normalize hyphenated util names to underscores for directory lookup
+    // (e.g., "change-group" -> "change_group" for src/sg/change_group/)
+    let dir_name = p.replace('-', "_");
+    
     #[cfg(debug_assertions)]
     {
         // During development, use the project's locales directory
@@ -451,7 +455,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         // Try sg/ first (rust-stargate), then fall back to uu/ (uutils-coreutils compatibility)
         let dev_path = PathBuf::from(manifest_dir)
             .join("../sg")
-            .join(p)
+            .join(&dir_name)
             .join("locales");
 
         if dev_path.exists() {
@@ -461,7 +465,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         // Try uu/ for backwards compatibility with uutils-coreutils
         let uu_path = PathBuf::from(manifest_dir)
             .join("../uu")
-            .join(p)
+            .join(&dir_name)
             .join("locales");
 
         if uu_path.exists() {
@@ -469,7 +473,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         }
 
         // Fallback for development if the expected path doesn't exist
-        let fallback_dev_path = PathBuf::from(manifest_dir).join(p);
+        let fallback_dev_path = PathBuf::from(manifest_dir).join(&dir_name);
         if fallback_dev_path.exists() {
             return Ok(fallback_dev_path);
         }
