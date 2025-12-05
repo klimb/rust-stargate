@@ -52,7 +52,7 @@ fn test_invalid_group() {
         .arg("__nosuchgroup__")
         .arg("/")
         .fails()
-        .stderr_is("chgrp: invalid group: '__nosuchgroup__'\n");
+        .stderr_is("change-group: invalid group: '__nosuchgroup__'\n");
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn test_error_1() {
             // because of insufficient permissions,
             // android fails with "Permission denied (os error 13)"
             // because it can't resolve /proc (even though it can resolve /proc/self/)
-            "chgrp: changing group of '/dev': ",
+            "change-group: changing group of '/dev': ",
         );
     }
 }
@@ -91,14 +91,14 @@ fn test_preserve_root() {
         .arg("bin")
         .arg("/")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '/'\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '/'\nchange-group: use --no-preserve-root to override this failsafe\n");
     for d in [
         "/////dev///../../../../",
         "../../../../../../../../../../../../../../",
         "./../../../../../../../../../../../../../../",
     ] {
         let expected_error = format!(
-            "chgrp: it is dangerous to operate recursively on '{d}' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n",
+            "change-group: it is dangerous to operate recursively on '{d}' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n",
         );
         new_ucmd!()
             .arg("--preserve-root")
@@ -123,7 +123,7 @@ fn test_preserve_root_symlink() {
     ] {
         let (at, mut ucmd) = at_and_ucmd!();
         at.symlink_file(d, file);
-        let expected_error = "chgrp: it is dangerous to operate recursively on 'test_chgrp_symlink2root' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n";
+        let expected_error = "change-group: it is dangerous to operate recursively on 'test_chgrp_symlink2root' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n";
         ucmd.arg("--preserve-root")
             .arg("-HR")
             .arg("bin")
@@ -138,7 +138,7 @@ fn test_preserve_root_symlink() {
         .arg("-HR")
         .arg("bin").arg(format!(".//{file}/..//..//../../"))
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on './/test_chgrp_symlink2root/..//..//../../' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on './/test_chgrp_symlink2root/..//..//../../' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
 
     let (at, mut ucmd) = at_and_ucmd!();
     at.symlink_file("/", "__root__");
@@ -146,7 +146,7 @@ fn test_preserve_root_symlink() {
         .arg("-R")
         .arg("bin").arg("__root__/.")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '__root__/.' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '__root__/.' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
 }
 
 #[test]
@@ -157,28 +157,28 @@ fn test_preserve_root_symlink_cwd_root() {
         .arg("-R")
         .arg("bin").arg(".")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '.' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '.' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
     new_ucmd!()
         .current_dir("/")
         .arg("--preserve-root")
         .arg("-R")
         .arg("bin").arg("/.")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '/.' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '/.' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
     new_ucmd!()
         .current_dir("/")
         .arg("--preserve-root")
         .arg("-R")
         .arg("bin").arg("..")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '..' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '..' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
     new_ucmd!()
         .current_dir("/")
         .arg("--preserve-root")
         .arg("-R")
         .arg("bin").arg("/..")
         .fails()
-        .stderr_is("chgrp: it is dangerous to operate recursively on '/..' (same as '/')\nchgrp: use --no-preserve-root to override this failsafe\n");
+        .stderr_is("change-group: it is dangerous to operate recursively on '/..' (same as '/')\nchange-group: use --no-preserve-root to override this failsafe\n");
     new_ucmd!()
         .current_dir("/")
         .arg("--preserve-root")
@@ -186,7 +186,7 @@ fn test_preserve_root_symlink_cwd_root() {
         .arg("bin")
         .arg("...")
         .fails()
-        .stderr_is("chgrp: cannot access '...': No such file or directory\n");
+        .stderr_is("change-group: cannot access '...': No such file or directory\n");
 }
 
 #[test]
@@ -201,7 +201,7 @@ fn test_reference() {
             .arg("--reference=/etc/passwd")
             .arg("/etc")
             .fails()
-            .stderr_is("chgrp: changing group of '/etc': Operation not permitted (os error 1)\nfailed to change group of '/etc' from root to root\n");
+            .stderr_is("change-group: changing group of '/etc': Operation not permitted (os error 1)\nfailed to change group of '/etc' from root to root\n");
     }
 }
 
@@ -214,7 +214,7 @@ fn test_reference() {
         .arg("/etc")
         .fails()
         // group name can differ, so just check the first part of the message
-        .stderr_contains("chgrp: changing group of '/etc': Operation not permitted (os error 1)\nfailed to change group of '/etc' from ");
+        .stderr_contains("change-group: changing group of '/etc': Operation not permitted (os error 1)\nfailed to change group of '/etc' from ");
 }
 
 #[test]
@@ -227,8 +227,8 @@ fn test_reference_multi_no_equal() {
         .arg("file1")
         .arg("file2")
         .succeeds()
-        .stderr_contains("chgrp: group of 'file1' retained as ")
-        .stderr_contains("\nchgrp: group of 'file2' retained as ");
+        .stderr_contains("change-group: group of 'file1' retained as ")
+        .stderr_contains("\nchange-group: group of 'file2' retained as ");
 }
 
 #[test]
@@ -242,9 +242,9 @@ fn test_reference_last() {
         .arg("--reference")
         .arg("ref_file")
         .succeeds()
-        .stderr_contains("chgrp: group of 'file1' retained as ")
-        .stderr_contains("\nchgrp: group of 'file2' retained as ")
-        .stderr_contains("\nchgrp: group of 'file3' retained as ");
+        .stderr_contains("change-group: group of 'file1' retained as ")
+        .stderr_contains("\nchange-group: group of 'file2' retained as ")
+        .stderr_contains("\nchange-group: group of 'file3' retained as ");
 }
 
 #[test]
@@ -268,7 +268,7 @@ fn test_big_p() {
             .arg("/proc/self/cwd")
             .fails()
             .stderr_contains(
-                "chgrp: changing group of '/proc/self/cwd': Operation not permitted (os error 1)\n",
+                "change-group: changing group of '/proc/self/cwd': Operation not permitted (os error 1)\n",
             );
     }
 }
@@ -328,7 +328,7 @@ fn test_permission_denied() {
             .arg(group.as_raw().to_string())
             .arg("dir")
             .fails()
-            .stderr_only("chgrp: cannot access 'dir': Permission denied\n");
+            .stderr_only("change-group: cannot access 'dir': Permission denied\n");
     }
 }
 
@@ -347,7 +347,7 @@ fn test_subdir_permission_denied() {
             .arg(group.as_raw().to_string())
             .arg("dir")
             .fails()
-            .stderr_only("chgrp: cannot access 'dir/subdir': Permission denied\n");
+            .stderr_only("change-group: cannot access 'dir/subdir': Permission denied\n");
     }
 }
 
@@ -380,7 +380,7 @@ fn test_traverse_symlinks() {
         at.symlink_dir("dir3", "dir3_ln");
 
         scenario
-            .ccmd("chgrp")
+            .ccmd("change-group")
             .arg(first_group.to_string())
             .arg("dir2/file")
             .arg("dir3/file")
@@ -474,9 +474,9 @@ fn test_from_option() {
 fn test_from_with_invalid_group() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("test_file");
-    let err_msg = "chgrp: invalid user: 'nonexistent_group'\n";
+    let err_msg = "change-group: invalid user: 'nonexistent_group'\n";
     #[cfg(target_os = "android")]
-    let err_msg = "chgrp: invalid user: 'staff'\n";
+    let err_msg = "change-group: invalid user: 'staff'\n";
 
     ucmd.arg("--from")
         .arg("nonexistent_group")

@@ -17,7 +17,7 @@ fn parse_gid_from_str(group: &str) -> Result<u32, String> {
         // Handle :gid format
         gid_str
             .parse::<u32>()
-            .map_err(|_| translate!("chgrp-error-invalid-group-id", "gid_str" => gid_str))
+            .map_err(|_| translate!("change_group-error-invalid-group-id", "gid_str" => gid_str))
     } else {
         // Try as group name first
         match entries::grp2gid(group) {
@@ -25,7 +25,7 @@ fn parse_gid_from_str(group: &str) -> Result<u32, String> {
             // If group name lookup fails, try parsing as raw number
             Err(_) => group
                 .parse::<u32>()
-                .map_err(|_| translate!("chgrp-error-invalid-group", "group" => group)),
+                .map_err(|_| translate!("change_group-error-invalid-group", "group" => group)),
         }
     }
 }
@@ -41,7 +41,7 @@ fn get_dest_gid(matches: &ArgMatches) -> UResult<(Option<u32>, String)> {
                 Some(gid)
             })
             .map_err_context(
-                || translate!("chgrp-error-failed-to-get-attributes", "file" => path.quote())
+                || translate!("change_group-error-failed-to-get-attributes", "file" => path.quote())
             )?
     } else {
         let group = matches
@@ -71,7 +71,7 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
             Err(_) => {
                 return Err(USimpleError::new(
                     1,
-                    translate!("chgrp-error-invalid-user", "from_group" => from_group)
+                    translate!("change_group-error-invalid-user", "from_group" => from_group)
                 ));
             }
         }
@@ -95,22 +95,22 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 pub fn uu_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
-        .about(translate!("chgrp-about"))
-        .override_usage(format_usage(&translate!("chgrp-usage")))
+        .about(translate!("change_group-about"))
+        .override_usage(format_usage(&translate!("change_group-usage")))
         .infer_long_args(true);
     sgcore::clap_localization::configure_localized_command(cmd)
         .disable_help_flag(true)
         .arg(
             Arg::new(options::HELP)
                 .long(options::HELP)
-                .help(translate!("chgrp-help-print-help"))
+                .help(translate!("change_group-help-print-help"))
                 .action(ArgAction::Help)
         )
         .arg(
             Arg::new(options::verbosity::CHANGES)
                 .short('c')
                 .long(options::verbosity::CHANGES)
-                .help(translate!("chgrp-help-changes"))
+                .help(translate!("change_group-help-changes"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
@@ -122,26 +122,26 @@ pub fn uu_app() -> Command {
         .arg(
             Arg::new(options::verbosity::QUIET)
                 .long(options::verbosity::QUIET)
-                .help(translate!("chgrp-help-quiet"))
+                .help(translate!("change_group-help-quiet"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::verbosity::VERBOSE)
                 .short('v')
                 .long(options::verbosity::VERBOSE)
-                .help(translate!("chgrp-help-verbose"))
+                .help(translate!("change_group-help-verbose"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::preserve_root::PRESERVE)
                 .long(options::preserve_root::PRESERVE)
-                .help(translate!("chgrp-help-preserve-root"))
+                .help(translate!("change_group-help-preserve-root"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
             Arg::new(options::preserve_root::NO_PRESERVE)
                 .long(options::preserve_root::NO_PRESERVE)
-                .help(translate!("chgrp-help-no-preserve-root"))
+                .help(translate!("change_group-help-no-preserve-root"))
                 .action(ArgAction::SetTrue)
         )
         .arg(
@@ -150,19 +150,19 @@ pub fn uu_app() -> Command {
                 .value_name("RFILE")
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(clap::value_parser!(std::ffi::OsString))
-                .help(translate!("chgrp-help-reference"))
+                .help(translate!("change_group-help-reference"))
         )
         .arg(
             Arg::new(options::FROM)
                 .long(options::FROM)
                 .value_name("GROUP")
-                .help(translate!("chgrp-help-from"))
+                .help(translate!("change_group-help-from"))
         )
         .arg(
             Arg::new(options::RECURSIVE)
                 .short('R')
                 .long(options::RECURSIVE)
-                .help(translate!("chgrp-help-recursive"))
+                .help(translate!("change_group-help-recursive"))
                 .action(ArgAction::SetTrue)
         )
         // Add common arguments with chgrp, change_owner & chmod

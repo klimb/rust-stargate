@@ -180,7 +180,7 @@ fn test_chown_only_colon() {
     // expected:
     // $ change_owner -v :: file.txt 2>out_err ; echo $? ; cat out_err
     // 1
-    // change_owner: invalid group: '::'
+    // change-owner: invalid group: '::'
     scene
         .ucmd()
         .arg("::")
@@ -207,7 +207,7 @@ fn test_chown_failed_stdout() {
     // $ change_owner -v root file.txt 2>out_err ; echo $? ; cat out_err
     // failed to change ownership of 'file.txt' from jhs to root
     // 1
-    // change_owner: changing ownership of 'file.txt': Operation not permitted
+    // change-owner: changing ownership of 'file.txt': Operation not permitted
 }
 
 #[test]
@@ -242,7 +242,7 @@ fn test_chown_owner_group() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
+    if skipping_test_is_okay(&result, "change-owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -304,7 +304,7 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
+    if skipping_test_is_okay(&result, "change-owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -316,7 +316,7 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
+    if skipping_test_is_okay(&result, "change-owner: invalid group:") {
         return;
     }
     result.stderr_contains("retained as");
@@ -329,7 +329,7 @@ fn test_chown_various_input() {
         .arg("--verbose")
         .arg(file1)
         .fails()
-        .stderr_contains("change_owner: invalid user: 'user.name:groupname'");
+        .stderr_contains("change-owner: invalid user: 'user.name:groupname'");
 }
 
 #[test]
@@ -391,7 +391,7 @@ fn test_chown_only_user_id() {
     let result = scene.ucmd().arg(user_id).arg("--verbose").arg(file1).run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "change_owner: invalid user: '1001'
+        // stderr: "change-owner: invalid user: '1001'
         return;
     }
     result.stderr_contains("retained as");
@@ -484,7 +484,7 @@ fn test_chown_only_group_id() {
         .arg("--verbose")
         .arg(file1)
         .run();
-    if skipping_test_is_okay(&result, "change_owner: invalid group:") {
+    if skipping_test_is_okay(&result, "change-owner: invalid group:") {
         // With mac into the CI, we can get this answer
         return;
     }
@@ -561,7 +561,7 @@ fn test_chown_owner_group_id() {
         .run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "change_owner: invalid user: '1001:116'
+        // stderr: "change-owner: invalid user: '1001:116'
         return;
     }
     result.stderr_contains("retained as");
@@ -574,7 +574,7 @@ fn test_chown_owner_group_id() {
         .run();
     if skipping_test_is_okay(&result, "invalid user") {
         // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-        // stderr: "change_owner: invalid user: '1001.116'
+        // stderr: "change-owner: invalid user: '1001.116'
         return;
     }
     result.stderr_contains("retained as");
@@ -679,7 +679,7 @@ fn test_root_preserve() {
         .arg(user_name)
         .arg("/")
         .fails();
-    result.stderr_contains("change_owner: it is dangerous to operate recursively");
+    result.stderr_contains("change-owner: it is dangerous to operate recursively");
 }
 
 #[test]

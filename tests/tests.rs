@@ -12,8 +12,8 @@ fn init() {
 }
 
 #[cfg(feature = "get_architecture")]
-#[path = "by-util/test_arch.rs"]
-mod test_arch;
+#[path = "by-util/test_get_architecture.rs"]
+mod test_get_architecture;
 
 #[cfg(feature = "base32")]
 #[path = "by-util/test_base32.rs"]
