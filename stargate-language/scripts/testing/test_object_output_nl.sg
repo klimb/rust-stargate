@@ -3,7 +3,7 @@ use ut;
 [test]
 fn test_nl_object_output_simple() {
     echo "line 1\nline 2\nline 3" > /tmp/nl_test_simple.txt;
-    let result = (nl -o /tmp/nl_test_simple.txt);
+    let result = (nl --obj /tmp/nl_test_simple.txt);
     let total = result | slice-object total_lines;
     ut.assert_equals(total, 3, "Should have 3 lines");
     rm /tmp/nl_test_simple.txt;
@@ -21,7 +21,7 @@ fn test_nl_object_output_empty() {
 [test]
 fn test_nl_object_output_with_blanks() {
     echo "line 1\n\nline 3" > /tmp/nl_test_blanks.txt;
-    let result = (nl -o /tmp/nl_test_blanks.txt);
+    let result = (nl --obj /tmp/nl_test_blanks.txt);
     let total = result | slice-object total_lines;
     ut.assert_equals(total, 3, "Should count blank lines");
     rm /tmp/nl_test_blanks.txt;
@@ -30,7 +30,7 @@ fn test_nl_object_output_with_blanks() {
 [test]
 fn test_nl_object_output_number_all() {
     echo "line 1\n\nline 3" > /tmp/nl_test_all.txt;
-    let result = (nl -o -b a /tmp/nl_test_all.txt);
+    let result = (nl --obj -b a /tmp/nl_test_all.txt);
     let lines = result | slice-object lines;
     ut.assert_true(true, "Number all lines mode works");
     rm /tmp/nl_test_all.txt;
@@ -48,7 +48,7 @@ fn test_nl_object_output_starting_line() {
 [test]
 fn test_nl_object_output_increment() {
     echo "a\nb\nc" > /tmp/nl_test_inc.txt;
-    let result = (nl -o -i 10 /tmp/nl_test_inc.txt);
+    let result = (nl --obj -i 10 /tmp/nl_test_inc.txt);
     let total = result | slice-object total_lines;
     ut.assert_equals(total, 3, "Custom increment works");
     rm /tmp/nl_test_inc.txt;
@@ -66,7 +66,7 @@ fn test_nl_object_output_pretty() {
 [test]
 fn test_nl_object_output_format() {
     echo "formatted" > /tmp/nl_test_format.txt;
-    let result = (nl -o -n rz -w 4 /tmp/nl_test_format.txt);
+    let result = (nl --obj -n rz -w 4 /tmp/nl_test_format.txt);
     let total = result | slice-object total_lines;
     ut.assert_equals(total, 1, "Custom format works");
     rm /tmp/nl_test_format.txt;
@@ -75,7 +75,7 @@ fn test_nl_object_output_format() {
 [test]
 fn test_nl_object_output_field_filter() {
     echo "line" > /tmp/nl_test_filter.txt;
-    let total_only = (nl -o -f total_lines /tmp/nl_test_filter.txt);
+    let total_only = (nl --obj -f total_lines /tmp/nl_test_filter.txt);
     ut.assert_equals(total_only, 1, "Field filter extracts total_lines");
     rm /tmp/nl_test_filter.txt;
 }

@@ -36,14 +36,14 @@ fn test_invalid_negative_arg_shows_tip() {
 
 #[test]
 fn test_valid_arg_exponents() {
-    new_ucmd!().arg("-h").succeeds();
+    new_ucmd!().arg("-e").succeeds();
     new_ucmd!().arg("--exponents").succeeds();
 }
 
 #[test]
 fn test_repeated_exponents() {
     new_ucmd!()
-        .args(&["-hh", "1234", "10240"])
+        .args(&["-eh", "1234", "10240"])
         .succeeds()
         .stdout_only("1234: 2 617\n10240: 2^11 5\n")
         .no_stderr();
@@ -138,12 +138,12 @@ fn test_first_1000_integers_with_exponents() {
 
     println!("STDIN='{input_string}'");
     let result = new_ucmd!()
-        .arg("-h")
+        .arg("-e")
         .pipe_in(input_string.as_bytes())
         .succeeds();
 
     // Using factor from GNU Coreutils 9.2
-    // `seq 0 1000 | factor -h | sha1sum` => "45f5f758a9319870770bd1fec2de23d54331944d"
+    // `seq 0 1000 | factor -e | sha1sum` => "45f5f758a9319870770bd1fec2de23d54331944d"
     let mut hasher = Sha1::new();
     hasher.update(result.stdout());
     let hash_check = hasher.finalize();
@@ -180,7 +180,7 @@ fn test_random() {
         let mut product = 1_u64;
         let mut factors = Vec::new();
         while product < min {
-            // log distribution---higher probability for lower numbers
+            // log distribution---eigher probability for lower numbers
             let factor = loop {
                 let next = rng.random_range(0_f64..log_num_primes).exp2().floor() as usize;
                 if next < NUM_PRIMES {
@@ -1618,7 +1618,7 @@ fn succeeds_with_numbers_larger_than_u64() {
 #[test]
 fn succeeds_with_numbers_larger_than_u128() {
     new_ucmd!()
-        .arg("-h")
+        .arg("-e")
         .arg("340282366920938463463374607431768211456")
         .succeeds()
         .stdout_is("340282366920938463463374607431768211456: 2^128\n");
@@ -1634,7 +1634,7 @@ fn succeeds_with_numbers_larger_than_u128() {
 #[test]
 fn succeeds_with_numbers_larger_than_u256() {
     new_ucmd!()
-        .arg("-h")
+        .arg("-e")
         .arg(
             "115792089237316195423570985008687907853\
             269984665640564039457584007913129639936",
