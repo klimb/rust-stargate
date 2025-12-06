@@ -391,107 +391,120 @@ impl Interpreter {
                             return call_ut_method(&method, &args, &mut |expr| self.eval_expression(expr));
                         }
                         
-                        // Find the method in the class hierarchy
-                        let mut current_class = Some(class_name.clone());
+                        // Check cache first
+                        let cache_key = (class_name.clone(), method.clone());
+                        let method_data = if let Some(cached) = self.method_lookup_cache.get(&cache_key) {
+                            cached.clone()
+                        } else {
+                            // Find the method in the class hierarchy
+                            let mut current_class = Some(class_name.clone());
+                            let mut found_method = None;
+                            
+                            while let Some(ref cls) = current_class {
+                                if let Some((parent, _, methods)) = self.classes.get(cls) {
+                                    // Look for the method in this class
+                                    for (method_name, params, body) in methods {
+                                        if method_name == &method {
+                                            found_method = Some((params.clone(), body.clone()));
+                                            break;
+                                        }
+                                    }
+                                    if found_method.is_some() {
+                                        break;
+                                    }
+                                    current_class = parent.clone();
+                                } else {
+                                    break;
+                                }
+                            }
+                            
+                            // Cache the result (even if None)
+                            self.method_lookup_cache.insert(cache_key, found_method.clone());
+                            found_method
+                        };
                         
-                        while let Some(ref cls) = current_class {
-                            if let Some((parent, _, methods)) = self.classes.get(cls) {
-                                // Look for the method in this class
-                                for (method_name, params, body) in methods {
-                                    if method_name == &method {
-                                        // Clone the method data before using it
-                                        let params = params.clone();
-                                        let body = body.clone();
-                                        
-                                        // Create a new scope for the method (only parameters, not fields)
-                                        let mut method_scope = HashMap::new();
-                                        
-                                        // Evaluate and bind arguments to parameters
-                                        if args.len() != params.len() {
-                                            return Err(format!(
-                                                "Method {} expects {} arguments, got {}",
-                                                method, params.len(), args.len()
-                                            ));
+                        if let Some((params, body)) = method_data {
+                            // Create a new scope for the method (only parameters, not fields)
+                            let mut method_scope = HashMap::new();
+                            
+                            // Evaluate and bind arguments to parameters
+                            if args.len() != params.len() {
+                                return Err(format!(
+                                    "Method {} expects {} arguments, got {}",
+                                    method, params.len(), args.len()
+                                ));
+                            }
+                            
+                            for (i, arg_expr) in args.iter().enumerate() {
+                                let arg_value = self.eval_expression(arg_expr.clone())?;
+                                method_scope.insert(params[i].clone(), arg_value);
+                            }
+                            
+                            // Save current variables and instance context
+                            let saved_vars = self.variables.clone();
+                            let saved_instance = self.current_instance.clone();
+                            
+                            // Merge fields into the method scope (so they can be accessed/modified)
+                            for (field_name, field_value) in &fields {
+                                // Don't overwrite parameters with field values
+                                if !method_scope.contains_key(field_name) {
+                                    method_scope.insert(field_name.clone(), field_value.clone());
+                                }
+                            }
+                            
+                            self.variables = method_scope;
+                            
+                            // Set current instance for 'this' keyword
+                            self.current_instance = Some(Value::Instance {
+                                class_name: class_name.clone(),
+                                fields: fields.clone(),
+                            });
+                            
+                            // Execute method body
+                            let mut return_value = Value::None;
+                            for stmt in &body {
+                                match stmt {
+                                    Statement::Return(expr) => {
+                                        return_value = self.eval_expression(expr.clone())?;
+                                        break;
+                                    }
+                                    _ => {
+                                        self.execute_statement(stmt.clone())?;
+                                        // Check if a return was triggered inside the statement (e.g., in an if block)
+                                        if let Some(ret_val) = self.return_value.take() {
+                                            return_value = ret_val;
+                                            break;
                                         }
-                                        
-                                        for (i, arg_expr) in args.iter().enumerate() {
-                                            let arg_value = self.eval_expression(arg_expr.clone())?;
-                                            method_scope.insert(params[i].clone(), arg_value);
-                                        }
-                                        
-                                        // Save current variables and instance context
-                                        let saved_vars = self.variables.clone();
-                                        let saved_instance = self.current_instance.clone();
-                                        
-                                        // Merge fields into the method scope (so they can be accessed/modified)
-                                        for (field_name, field_value) in &fields {
-                                            // Don't overwrite parameters with field values
-                                            if !method_scope.contains_key(field_name) {
-                                                method_scope.insert(field_name.clone(), field_value.clone());
-                                            }
-                                        }
-                                        
-                                        self.variables = method_scope;
-                                        
-                                        // Set current instance for 'this' keyword
-                                        self.current_instance = Some(Value::Instance {
-                                            class_name: class_name.clone(),
-                                            fields: fields.clone(),
-                                        });
-                                        
-                                        // Execute method body
-                                        let mut return_value = Value::None;
-                                        for stmt in &body {
-                                            match stmt {
-                                                Statement::Return(expr) => {
-                                                    return_value = self.eval_expression(expr.clone())?;
-                                                    break;
-                                                }
-                                                _ => {
-                                                    self.execute_statement(stmt.clone())?;
-                                                    // Check if a return was triggered inside the statement (e.g., in an if block)
-                                                    if let Some(ret_val) = self.return_value.take() {
-                                                        return_value = ret_val;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        
-                                        // Collect modified field values from the method scope
-                                        let mut updated_fields = fields.clone();
-                                        for (field_name, _) in &fields {
-                                            if let Some(modified_value) = self.variables.get(field_name) {
-                                                updated_fields.insert(field_name.clone(), modified_value.clone());
-                                            }
-                                        }
-                                        
-                                        // If return value is 'this', update it with modified fields
-                                        if let Value::Instance { class_name: ret_class, fields: _ } = &return_value {
-                                            if ret_class == &class_name {
-                                                return_value = Value::Instance {
-                                                    class_name: class_name.clone(),
-                                                    fields: updated_fields,
-                                                };
-                                            }
-                                        }
-                                        
-                                        // Restore variables and instance context
-                                        self.variables = saved_vars;
-                                        self.current_instance = saved_instance;
-                                        
-                                        return Ok(return_value);
                                     }
                                 }
-                                
-                                // Method not found in this class, check parent
-                                current_class = parent.clone();
-                            } else {
-                                break;
                             }
+                            
+                            // Collect modified field values from the method scope
+                            let mut updated_fields = fields.clone();
+                            for (field_name, _) in &fields {
+                                if let Some(modified_value) = self.variables.get(field_name) {
+                                    updated_fields.insert(field_name.clone(), modified_value.clone());
+                                }
+                            }
+                            
+                            // If return value is 'this', update it with modified fields
+                            if let Value::Instance { class_name: ret_class, fields: _ } = &return_value {
+                                if ret_class == &class_name {
+                                    return_value = Value::Instance {
+                                        class_name: class_name.clone(),
+                                        fields: updated_fields,
+                                    };
+                                }
+                            }
+                            
+                            // Restore variables and instance context
+                            self.variables = saved_vars;
+                            self.current_instance = saved_instance;
+                            
+                            return Ok(return_value);
+                        } else {
+                            return Err(format!("Method '{}' not found in class {}", method, class_name));
                         }
-                        
-                        Err(format!("Method '{}' not found in class {}", method, class_name))
                     }
                     _ => Err(format!("Cannot call method on non-instance/non-list value"))
                 }
@@ -673,6 +686,44 @@ impl Interpreter {
                 result
             }
             _ => Err("Expected a closure".to_string()),
+        }
+    }
+    
+    // Helper to evaluate method calls on an owned value (avoids cloning)
+    pub(super) fn eval_method_call_on_value(
+        &mut self,
+        obj_value: &mut Value,
+        method: &str,
+        arg_values: &[Value],
+    ) -> Result<Value, String> {
+        // Convert arg_values to expressions for the helper functions
+        // This is a workaround - ideally we'd refactor the helpers to take Values
+        let args: Vec<Expression> = arg_values.iter().map(|v| Expression::Value(v.clone())).collect();
+        let mut eval_fn = |expr: Expression| -> Result<Value, String> {
+            if let Expression::Value(v) = expr {
+                Ok(v)
+            } else {
+                self.eval_expression(expr)
+            }
+        };
+        
+        match obj_value {
+            Value::List(list) => {
+                let list_clone = std::mem::take(list); // Take ownership without cloning
+                handle_list_methods(method, list_clone, &args, &mut eval_fn)
+            }
+            Value::String(s) => {
+                handle_string_methods(method, s.clone(), &args, &mut eval_fn)
+            }
+            Value::Dict(map) => {
+                let map_clone = std::mem::take(map);
+                handle_dict_methods(method, map_clone, &args, &mut eval_fn)
+            }
+            Value::Set(set) => {
+                let set_clone = std::mem::take(set);
+                handle_set_methods(method, set_clone, &args, &mut eval_fn)
+            }
+            _ => Err(format!("Method '{}' not supported on this value type", method))
         }
     }
 }

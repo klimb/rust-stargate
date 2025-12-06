@@ -51,7 +51,36 @@ impl Interpreter {
                 }
             }
             Statement::VarDecl(name, expr) => {
-                let value = self.eval_expression(expr)?;
+                // Optimize pattern: let x = x.method(...)
+                // This avoids cloning x when reassigning
+                let value = match expr {
+                    Expression::MethodCall { ref object, ref method, ref args } => {
+                        if let Expression::Variable(var_name) = object.as_ref() {
+                            if var_name.as_str() == name {
+                                // Take ownership, avoiding clone
+                                if let Some(mut obj_value) = self.variables.remove(&name) {
+                                    // Evaluate method on the owned value
+                                    let arg_values: Result<Vec<_>, String> = args
+                                        .iter()
+                                        .map(|arg| self.eval_expression(arg.clone()))
+                                        .collect();
+                                    let arg_values = arg_values?;
+                                    
+                                    self.eval_method_call_on_value(&mut obj_value, &method, &arg_values)?
+                                } else {
+                                    // Variable doesn't exist yet, fall back to normal evaluation
+                                    self.eval_expression(expr.clone())?
+                                }
+                            } else {
+                                self.eval_expression(expr.clone())?
+                            }
+                        } else {
+                            self.eval_expression(expr.clone())?
+                        }
+                    }
+                    _ => self.eval_expression(expr.clone())?
+                };
+                
                 self.variables.insert(name.clone(), value);
                 // Update completion list
                 if let Some(ref var_names) = self.variable_names {
