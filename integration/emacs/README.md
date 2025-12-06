@@ -48,13 +48,13 @@ If you have the stargate source code checked out:
 
 ```elisp
 ;; Add stargate source directory to load path
-(add-to-list 'load-path "/home/dvk/src/rust-stargate/")
+(add-to-list 'load-path "~/src/rust-stargate/")
 
 ;; Load stargate-shell mode
 (require 'stargate-shell)
 
 ;; Set the binary path to your compiled binary
-(setq stargate-shell-program "/home/dvk/src/rust-stargate/target/debug/stargate-shell")
+(setq stargate-shell-program "~/src/rust-stargate/target/debug/stargate-shell")
 
 ;; Optional keybinding
 (global-set-key (kbd "C-c s") 'stargate-shell)
