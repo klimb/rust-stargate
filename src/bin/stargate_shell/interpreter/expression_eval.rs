@@ -403,17 +403,10 @@ impl Interpreter {
                                         let params = params.clone();
                                         let body = body.clone();
                                         
-                                        // Create a new scope for the method
+                                        // Create a new scope for the method (only parameters, not fields)
                                         let mut method_scope = HashMap::new();
                                         
-                                        // Add all instance fields to the scope
-                                        let mut field_names = Vec::new();
-                                        for (field_name, field_value) in &fields {
-                                            field_names.push(field_name.clone());
-                                            method_scope.insert(field_name.clone(), field_value.clone());
-                                        }
-                                        
-                                        // Evaluate and bind arguments
+                                        // Evaluate and bind arguments to parameters
                                         if args.len() != params.len() {
                                             return Err(format!(
                                                 "Method {} expects {} arguments, got {}",
@@ -429,13 +422,21 @@ impl Interpreter {
                                         // Save current variables and instance context
                                         let saved_vars = self.variables.clone();
                                         let saved_instance = self.current_instance.clone();
-                                        self.variables.extend(method_scope);
                                         
-                                        // Set current instance for 'this' keyword with mutable fields
-                                        let mut updated_fields = fields.clone();
+                                        // Merge fields into the method scope (so they can be accessed/modified)
+                                        for (field_name, field_value) in &fields {
+                                            // Don't overwrite parameters with field values
+                                            if !method_scope.contains_key(field_name) {
+                                                method_scope.insert(field_name.clone(), field_value.clone());
+                                            }
+                                        }
+                                        
+                                        self.variables = method_scope;
+                                        
+                                        // Set current instance for 'this' keyword
                                         self.current_instance = Some(Value::Instance {
                                             class_name: class_name.clone(),
-                                            fields: updated_fields.clone(),
+                                            fields: fields.clone(),
                                         });
                                         
                                         // Execute method body
@@ -448,12 +449,18 @@ impl Interpreter {
                                                 }
                                                 _ => {
                                                     self.execute_statement(stmt.clone())?;
+                                                    // Check if a return was triggered inside the statement (e.g., in an if block)
+                                                    if let Some(ret_val) = self.return_value.take() {
+                                                        return_value = ret_val;
+                                                        break;
+                                                    }
                                                 }
                                             }
                                         }
                                         
                                         // Collect modified field values from the method scope
-                                        for field_name in &field_names {
+                                        let mut updated_fields = fields.clone();
+                                        for (field_name, _) in &fields {
                                             if let Some(modified_value) = self.variables.get(field_name) {
                                                 updated_fields.insert(field_name.clone(), modified_value.clone());
                                             }

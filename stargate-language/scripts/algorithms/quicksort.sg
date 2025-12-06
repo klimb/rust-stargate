@@ -1,0 +1,107 @@
+#!/usr/bin/env stargate-shell
+
+use ut;
+
+fn quicksort(arr) {
+    let size = arr.size();
+    
+    if size == 0 {
+        return [];
+    }
+    if size == 1 {
+        return arr;
+    }
+    
+    let pivot = arr[0];
+    let less = [];
+    let equal = [];
+    let greater = [];
+    
+    for i in range(0, size) {
+        let val = arr[i];
+        if val < pivot {
+            let less = less.append(val);
+        } else {
+            if val > pivot {
+                let greater = greater.append(val);
+            } else {
+                let equal = equal.append(val);
+            }
+        }
+    }
+    
+    let sorted_less = quicksort(less);
+    let sorted_greater = quicksort(greater);
+    
+    let result = [];
+    for item in sorted_less {
+        let result = result.append(item);
+    }
+    for item in equal {
+        let result = result.append(item);
+    }
+    for item in sorted_greater {
+        let result = result.append(item);
+    }
+    
+    return result;
+}
+
+[test]
+fn test_empty_array() {
+    let result = quicksort([]);
+    ut.assert_equals(result, [], "Empty array should return empty");
+}
+
+[test]
+fn test_single_element() {
+    let result = quicksort([42]);
+    ut.assert_equals(result, [42], "Single element should return unchanged");
+}
+
+[test]
+fn test_already_sorted() {
+    let result = quicksort([1, 2, 3, 4, 5]);
+    ut.assert_equals(result, [1, 2, 3, 4, 5], "Already sorted array");
+}
+
+[test]
+fn test_reverse_sorted() {
+    let result = quicksort([5, 4, 3, 2, 1]);
+    ut.assert_equals(result, [1, 2, 3, 4, 5], "Reverse sorted array");
+}
+
+[test]
+fn test_random_array() {
+    let result = quicksort([64, 34, 25, 12, 22, 11, 90]);
+    ut.assert_equals(result, [11, 12, 22, 25, 34, 64, 90], "Random array");
+}
+
+[test]
+fn test_duplicates() {
+    let result = quicksort([3, 1, 4, 1, 5, 9, 2, 6, 5, 3]);
+    ut.assert_equals(result, [1, 1, 2, 3, 3, 4, 5, 5, 6, 9], "Array with duplicates");
+}
+
+[test]
+fn test_all_same() {
+    let result = quicksort([7, 7, 7, 7, 7]);
+    ut.assert_equals(result, [7, 7, 7, 7, 7], "All elements the same");
+}
+
+[test]
+fn test_two_elements() {
+    let result1 = quicksort([2, 1]);
+    let result2 = quicksort([1, 2]);
+    ut.assert_equals(result1, [1, 2], "Two elements unsorted");
+    ut.assert_equals(result2, [1, 2], "Two elements sorted");
+}
+
+[test]
+fn test_negative_numbers() {
+    let result = quicksort([-5, 3, -1, 8, -10, 0]);
+    ut.assert_equals(result, [-10, -5, -1, 0, 3, 8], "Array with negative numbers");
+}
+
+print ut.stats;
+exit(ut.healthy);
