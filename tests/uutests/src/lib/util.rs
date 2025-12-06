@@ -3471,6 +3471,7 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
+    #[ignore] // Requires sudo/root access
     fn test_run_ucmd_as_root() {
         if is_ci() {
             println!("TEST SKIPPED (cannot run inside CI)");
