@@ -1,0 +1,26 @@
+[package]
+name = "sg_new_file"
+description = "new-file ~ write text to a file from stdin"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/new_file.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+serde_json = { workspace = true }
+
+[[bin]]
+name = "new-file"
+path = "src/main.rs"

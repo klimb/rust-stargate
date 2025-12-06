@@ -22,6 +22,7 @@ pub struct Interpreter {
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
     test_runner: TestRunner,
     current_instance: Option<Value>,
+    script_path: Option<String>,
 }
 
 impl Interpreter {
@@ -36,6 +37,7 @@ impl Interpreter {
             variable_names: None,
             test_runner: TestRunner::new(),
             current_instance: None,
+            script_path: None,
         }
     }
     
@@ -50,6 +52,7 @@ impl Interpreter {
             variable_names: Some(variable_names),
             test_runner: TestRunner::new(),
             current_instance: None,
+            script_path: None,
         }
     }
 
@@ -103,6 +106,9 @@ impl Interpreter {
                 }
                 Err(e) => {
                     println!("✗ FAILED");
+                    if let Some(ref path) = self.script_path {
+                        eprintln!("  File: {}", path);
+                    }
                     eprintln!("  Error: {}", e);
                     self.test_runner.test_failed += 1;
                 }
@@ -169,9 +175,14 @@ impl Interpreter {
 }
 
 pub fn execute_script(script: &str) -> Result<i32, String> {
+    execute_script_with_path(script, None)
+}
+
+pub fn execute_script_with_path(script: &str, path: Option<&str>) -> Result<i32, String> {
     let mut parser = Parser::new(script);
     let statements = parser.parse()?;
     let mut interpreter = Interpreter::new();
+    interpreter.script_path = path.map(|p| p.to_string());
     let exit_code = interpreter.execute(statements)?;
     Ok(exit_code)
 }

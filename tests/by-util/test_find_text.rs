@@ -137,6 +137,7 @@ fn test_search_partial_match() {
 
     let file_path = file.path().to_string_lossy().to_string();
     new_ucmd!()
+        .arg("--ignore-case")
         .arg("fox")
         .arg(&file_path)
         .succeeds()
@@ -266,7 +267,7 @@ fn test_json_output() {
 
     let file_path = file.path().to_string_lossy().to_string();
     new_ucmd!()
-        .arg("-o")
+        .arg("--obj")
         .arg("Hello")
         .arg(&file_path)
         .succeeds()
@@ -302,7 +303,7 @@ fn test_json_output_no_matches() {
 
     let file_path = file.path().to_string_lossy().to_string();
     new_ucmd!()
-        .arg("-o")
+        .arg("--obj")
         .arg("NotFound")
         .arg(&file_path)
         .succeeds()
