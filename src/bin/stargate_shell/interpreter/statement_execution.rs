@@ -299,6 +299,21 @@ impl Interpreter {
                     }
                 }
             }
+            Statement::While { condition, body } => {
+                loop {
+                    let cond_value = self.eval_expression(condition.clone())?;
+                    if !cond_value.to_bool() {
+                        break;
+                    }
+                    
+                    for stmt in &body {
+                        self.execute_statement(stmt.clone())?;
+                        if self.return_value.is_some() {
+                            return Ok(());
+                        }
+                    }
+                }
+            }
             Statement::Use(module) => {
                 // Handle use statements
                 if module == "ut" {

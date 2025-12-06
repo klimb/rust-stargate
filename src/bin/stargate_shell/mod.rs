@@ -16,6 +16,7 @@ pub mod interpreter;
 pub mod testing;
 pub mod ui;
 pub mod jobs;
+pub mod bytecode;
 
 // Shell main modules
 pub mod command_type;

@@ -166,6 +166,7 @@ impl Parser {
             "let" => self.parse_var_decl(),
             "if" => self.parse_if(),
             "for" => self.parse_for(),
+            "while" => self.parse_while(),
             "fn" => self.parse_function_def_with_annotations(annotations),
             "class" => self.parse_class_def(),
             "return" => self.parse_return(),
@@ -324,6 +325,15 @@ impl Parser {
             iterable,
             body,
         })
+    }
+    
+    fn parse_while(&mut self) -> Result<Statement, String> {
+        self.expect("while")?;
+        let condition = self.parse_expression()?;
+        self.expect("{")?;
+        let body = self.parse_block()?;
+        
+        Ok(Statement::While { condition, body })
     }
 
     fn parse_function_def(&mut self) -> Result<Statement, String> {
