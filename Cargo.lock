@@ -3124,6 +3124,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_new_file"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_nice"
 version = "0.4.0"
 dependencies = [
@@ -3955,6 +3964,7 @@ dependencies = [
  "sg_more",
  "sg_mv",
  "sg_new_directory",
+ "sg_new_file",
  "sg_nice",
  "sg_nl",
  "sg_nohup",

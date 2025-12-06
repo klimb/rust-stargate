@@ -294,10 +294,18 @@ pub fn uu_app() -> Command {
         .override_usage(format_usage(&translate!("factor-usage")))
         .infer_long_args(true)
         .args_override_self(true)
+        .disable_help_flag(true)
+        .arg(
+            Arg::new("help")
+                .long("help")
+                .help("Print help information")
+                .action(ArgAction::Help),
+        )
         .arg(Arg::new(options::NUMBER).action(ArgAction::Append))
         .arg(
             Arg::new(options::EXPONENTS)
-                .short('e')
+                .short('h')
+                .short_alias('e')
                 .long(options::EXPONENTS)
                 .help(translate!("factor-help-exponents"))
                 .action(ArgAction::SetTrue)

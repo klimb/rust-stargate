@@ -16,7 +16,7 @@ fn test_get_hostname_full() {
     assert!(!ls_short_res.stdout_str().trim().is_empty());
 
     new_ucmd!()
-        .arg("-f")
+        .arg("--fqdn")
         .succeeds()
         .stdout_contains(ls_short_res.stdout_str().trim());
 }
@@ -28,7 +28,7 @@ fn test_invalid_arg() {
 
 #[test]
 fn test_get_hostname_domain_empty() {
-    let fqdn = new_ucmd!().arg("-f").succeeds();
+    let fqdn = new_ucmd!().arg("--fqdn").succeeds();
     let short = new_ucmd!().arg("-s").succeeds();
     let domain = new_ucmd!().arg("-d").succeeds();
     let domain_short = new_ucmd!().arg("-sd").succeeds();

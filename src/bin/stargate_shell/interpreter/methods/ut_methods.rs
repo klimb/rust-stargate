@@ -12,13 +12,18 @@ pub fn call_ut_method(
             }
             let a = eval_fn(args[0].clone())?;
             let b = eval_fn(args[1].clone())?;
-            let message = if args.len() == 3 {
-                eval_fn(args[2].clone())?.to_string()
+            let custom_message = if args.len() == 3 {
+                Some(eval_fn(args[2].clone())?.to_string())
             } else {
-                format!("Expected {:?} to equal {:?}", a.to_string(), b.to_string())
+                None
             };
             
             if a.to_string() != b.to_string() {
+                let message = if let Some(msg) = custom_message {
+                    format!("{}\n  Expected: {}\n  Actual:   {}", msg, b.to_string(), a.to_string())
+                } else {
+                    format!("Assertion failed\n  Expected: {}\n  Actual:   {}", b.to_string(), a.to_string())
+                };
                 return Err(format!("Assertion failed: {}", message));
             }
             Ok(Value::Bool(true))
@@ -29,13 +34,18 @@ pub fn call_ut_method(
             }
             let a = eval_fn(args[0].clone())?;
             let b = eval_fn(args[1].clone())?;
-            let message = if args.len() == 3 {
-                eval_fn(args[2].clone())?.to_string()
+            let custom_message = if args.len() == 3 {
+                Some(eval_fn(args[2].clone())?.to_string())
             } else {
-                format!("Expected {:?} to not equal {:?}", a.to_string(), b.to_string())
+                None
             };
             
             if a.to_string() == b.to_string() {
+                let message = if let Some(msg) = custom_message {
+                    format!("{}\n  Both values: {}", msg, a.to_string())
+                } else {
+                    format!("Assertion failed: values should not be equal\n  Both values: {}", a.to_string())
+                };
                 return Err(format!("Assertion failed: {}", message));
             }
             Ok(Value::Bool(true))
@@ -45,13 +55,18 @@ pub fn call_ut_method(
                 return Err("ut.assert_true() expects 1 or 2 arguments (condition, [message])".to_string());
             }
             let condition = eval_fn(args[0].clone())?;
-            let message = if args.len() == 2 {
-                eval_fn(args[1].clone())?.to_string()
+            let custom_message = if args.len() == 2 {
+                Some(eval_fn(args[1].clone())?.to_string())
             } else {
-                "Expected condition to be true".to_string()
+                None
             };
             
             if !condition.to_bool() {
+                let message = if let Some(msg) = custom_message {
+                    format!("{}\n  Expected: true\n  Actual:   {}", msg, condition.to_string())
+                } else {
+                    format!("Assertion failed\n  Expected: true\n  Actual:   {}", condition.to_string())
+                };
                 return Err(format!("Assertion failed: {}", message));
             }
             Ok(Value::Bool(true))

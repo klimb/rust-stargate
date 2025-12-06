@@ -105,6 +105,7 @@ PROGS       := \
 	ln \
 	list_directory \
 	new_directory \
+	new_file \
 	mktemp \
 	more \
 	mv \
@@ -230,6 +231,7 @@ TEST_PROGS  := \
 	ln \
 	list_directory \
 	new_directory \
+	new_file \
 	mktemp \
 	mv \
 	nl \
@@ -317,8 +319,8 @@ test-scripting:
 	@echo "Running stargate-shell scripting tests..."
 	@${CARGO} build --bin stargate-shell --bin stargate --features "${EXES} $(BUILD_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(RUSTC_ARCH)
 	@for script in $(BASEDIR)/stargate-language/scripts/*/*.sg; do \
-		echo "Running $$script..."; \
-		$(BUILDDIR)/stargate-shell "$$script" || exit 1; \
+		echo "Running test: $$script"; \
+		PATH="$(BUILDDIR):$$PATH" $(BUILDDIR)/stargate-shell "$$script" || { echo "FAILED: $$script"; exit 1; }; \
 		echo ""; \
 	done
 	@echo "All scripting tests passed!"
