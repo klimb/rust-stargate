@@ -107,10 +107,12 @@ PROGS       := \
 	list_directory \
 	new_directory \
 	new_file \
+	append_file \
+	prepend_file \
 	mktemp \
 	more \
 	mv \
-	nl \
+	get_linenumber \
 	nproc \
 	od \
 	paste \
@@ -234,9 +236,11 @@ TEST_PROGS  := \
 	list_directory \
 	new_directory \
 	new_file \
+	append_file \
+	prepend_file \
 	mktemp \
 	mv \
-	nl \
+	get_linenumber \
 	od \
 	paste \
 	pathchk \

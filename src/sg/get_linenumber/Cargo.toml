@@ -1,6 +1,6 @@
 [package]
-name = "sg_nl"
-description = "nl ~ (uutils) display input with added line numbers"
+name = "sg_get_linenumber"
+description = "get-linenumber ~ display input with added line numbers"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/nl.rs"
+path = "src/get_linenumber.rs"
 
 [dependencies]
 clap = { workspace = true }
