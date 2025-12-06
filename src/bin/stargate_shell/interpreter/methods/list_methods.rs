@@ -49,7 +49,12 @@ pub fn handle_list_methods(
             if !args.is_empty() {
                 return Err(format!("size() expects 0 arguments, got {}", args.len()));
             }
-            Ok(Value::Number(list.len() as f64))
+            let len = list.len();
+            if len <= i32::MAX as usize {
+                Ok(Value::SmallInt(len as i32))
+            } else {
+                Ok(Value::Number(len as f64))
+            }
         }
         "pop" => {
             if !args.is_empty() {
