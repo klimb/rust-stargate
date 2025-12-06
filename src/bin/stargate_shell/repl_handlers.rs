@@ -40,6 +40,14 @@ where
             }
             return true;
         }
+        _ if input == "list-variables" || input.starts_with("list-variables ") => {
+            let args = if input == "list-variables" { "" } else { &input[15..] };
+            let interpreter_lock = interpreter.lock().unwrap();
+            if let Err(e) = builtin_commands::execute_list_variables(interpreter_lock.get_variables(), args) {
+                eprintln!("Error: {}", e);
+            }
+            return true;
+        }
         _ if input.starts_with(DESCRIBE_COMMAND_PREFIX) => {
             handle_describe_command(input);
             return true;
@@ -137,7 +145,8 @@ pub fn execute_with_interpreter(script: &str, interpreter: &Arc<Mutex<Interprete
 
 /// Handle general input (statements, expressions, pipelines)
 fn handle_general_input(input: &str, interpreter: &Arc<Mutex<Interpreter>>) {
-    let is_builtin_command = input.starts_with("cd ") || input.starts_with("change-directory ");
+    let is_builtin_command = input.starts_with("cd ") || input.starts_with("change-directory ") || 
+                              input == "list-variables" || input.starts_with("list-variables ");
     let is_statement = CommandType::is_script_statement(input) || input.ends_with(';') || is_builtin_command;
     
     // Check for property access (excluding file paths)

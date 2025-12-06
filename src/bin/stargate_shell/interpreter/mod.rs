@@ -184,6 +184,10 @@ impl Interpreter {
         class_names
     }
     
+    pub fn get_variables(&self) -> &HashMap<String, Value> {
+        &self.variables
+    }
+    
     fn execute_bytecode(&mut self, statements: Vec<Statement>) -> Result<i32, String> {
         // Compile statements to bytecode
         let mut compiler = Compiler::new();

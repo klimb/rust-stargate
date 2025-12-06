@@ -81,6 +81,7 @@ fn handle_single_line_piped(input: &str) {
 /// Handle multi-line piped input
 fn handle_multiline_piped(input: &str) {
     let mut exit_code = 0;
+    let mut interp = Interpreter::new();
     
     for line in input.lines() {
         let line = line.trim();
@@ -93,8 +94,8 @@ fn handle_multiline_piped(input: &str) {
         
         let cmd_type = CommandType::detect(line);
         let success = match cmd_type {
-            CommandType::ChainedCommands => execute_chained_commands(line, None, false),
-            _ => execute_command(line, None, false),
+            CommandType::ChainedCommands => execute_chained_commands(line, Some(&mut interp), false),
+            _ => execute_command(line, Some(&mut interp), false),
         };
         
         if !success {
