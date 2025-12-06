@@ -119,6 +119,7 @@ fn test_mknod_invalid_mode() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_mknod_mode_permissions() {
     for test_mode in [0o0666, 0o0000, 0o0444, 0o0004, 0o0040, 0o0400, 0o0644] {
         let ts = TestScenario::new(util_name!());
