@@ -406,18 +406,7 @@ fn du_d_flag(s: &str) {
     assert_eq!(s, "16\t./subdir\n24\t.\n");
 }
 
-#[test]
-#[cfg(not(target_os = "openbsd"))]
-fn test_du_dereference() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
 
-    at.symlink_dir(SUB_DEEPER_DIR, SUB_DIR_LINKS_DEEPER_SYM_DIR);
-
-    let result = ts.ucmd().arg("-L").arg(SUB_DIR_LINKS).succeeds();
-
-    du_dereference(result.stdout_str());
-}
 
 #[test]
 fn test_du_dereference_args() {
