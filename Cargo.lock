@@ -2466,6 +2466,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_append_file"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_base32"
 version = "0.4.0"
 dependencies = [
@@ -3900,6 +3909,7 @@ dependencies = [
  "serde",
  "serde-big-array",
  "serde_json",
+ "sg_append_file",
  "sg_base32",
  "sg_base64",
  "sg_basename",
