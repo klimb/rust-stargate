@@ -20,7 +20,7 @@ static ARG_DIRS: &str = "dirs";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let opts = Opts {
         ignore: matches.get_flag(OPT_IGNORE_FAIL_NON_EMPTY),
@@ -147,7 +147,7 @@ struct Opts {
     verbose: bool,
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(util_name()))

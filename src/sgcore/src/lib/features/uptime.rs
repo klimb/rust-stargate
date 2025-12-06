@@ -2,7 +2,7 @@
 
 //! Provides functions to get system uptime, number of users and load average.
 
-// The code was originally written in uu_uptime
+// The code was originally written in sg_uptime
 // (https://github.com/uutils/coreutils/blob/main/src/uu/uptime/src/uptime.rs)
 // but was eventually moved here.
 // See https://github.com/uutils/coreutils/pull/7289 for discussion.

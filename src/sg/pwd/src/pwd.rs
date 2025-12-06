@@ -87,7 +87,7 @@ fn logical_path() -> io::Result<PathBuf> {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
     
@@ -121,7 +121,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

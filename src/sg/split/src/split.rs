@@ -46,7 +46,7 @@ static ARG_PREFIX: &str = "prefix";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (args, obs_lines) = handle_obsolete(args);
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     match Settings::from(&matches, obs_lines.as_deref()) {
         Ok(settings) => split(&settings),
@@ -219,7 +219,7 @@ fn handle_preceding_options(
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

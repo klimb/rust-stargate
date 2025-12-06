@@ -217,7 +217,7 @@ impl OdOptions {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_ignore();
 
-    let clap_opts = uu_app();
+    let clap_opts = sg_app();
 
     let clap_matches = sgcore::clap_localization::handle_clap_result(clap_opts, &args)?;
 
@@ -258,7 +258,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

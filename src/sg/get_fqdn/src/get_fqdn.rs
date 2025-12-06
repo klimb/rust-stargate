@@ -14,7 +14,7 @@ static OBJ_FLAG: &str = "obj";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     if matches.get_flag(OBJ_FLAG) {
         produce_json(&matches)
@@ -26,14 +26,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 // `CommandResult` is now available in `sgcore::error` for shared use across all commands.
 #[sgcore::to_obj]
 pub fn to_obj(args: impl sgcore::Args) -> CommandResult<()> {
-    let matches = match sgcore::clap_localization::handle_clap_result(uu_app(), args) {
+    let matches = match sgcore::clap_localization::handle_clap_result(sg_app(), args) {
         Ok(m) => m,
         Err(e) => return CommandResult::Error(e),
     };
     produce_object(&matches)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

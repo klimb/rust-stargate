@@ -89,10 +89,10 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    chown_base(uu_app(), args, options::ARG_GROUP, parse_gid_and_uid, true)
+    chown_base(sg_app(), args, options::ARG_GROUP, parse_gid_and_uid, true)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about(translate!("change_group-about"))

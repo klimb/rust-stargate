@@ -38,7 +38,7 @@ fn get_encodings() -> Vec<(&'static str, Format, String)> {
     ]
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let about: &'static str = Box::leak(translate!("basenc-about").into_boxed_str());
     let usage: &'static str = Box::leak(translate!("basenc-usage").into_boxed_str());
 
@@ -59,7 +59,7 @@ pub fn uu_app() -> Command {
 }
 
 fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let encodings = get_encodings();
     let format = encodings

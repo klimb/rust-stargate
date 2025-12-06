@@ -176,28 +176,28 @@ pub fn parse_offset_operand(s: &str) -> Result<u64, &'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::uu_app;
+    use crate::sg_app;
 
     #[test]
     fn test_parse_inputs_normal() {
         assert_eq!(
             CommandLineInputs::FileNames(vec!["-".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["-".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "-"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "-"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["file1".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "file1"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "file1"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["file1".to_string(), "file2".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "file1", "file2"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "file1", "file2"])).unwrap()
         );
 
         assert_eq!(
@@ -206,7 +206,7 @@ mod tests {
                 "file1".to_string(),
                 "file2".to_string(),
             ]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "-", "file1", "file2"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "-", "file1", "file2"])).unwrap()
         );
     }
 
@@ -216,58 +216,58 @@ mod tests {
         // offset is found without filename, so stdin will be used.
         assert_eq!(
             CommandLineInputs::FileAndOffset(("-".to_string(), 8, None)),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "+10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "+10"])).unwrap()
         );
 
         // offset must start with "+" if no input is specified.
         assert_eq!(
             CommandLineInputs::FileNames(vec!["10".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "10"])).unwrap()
         );
 
         // offset is not valid, so it is considered a filename.
         assert_eq!(
             CommandLineInputs::FileNames(vec!["+10a".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "+10a"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "+10a"])).unwrap()
         );
 
         // if -j is included in the command line, there cannot be an offset.
         assert_eq!(
             CommandLineInputs::FileNames(vec!["+10".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "-j10", "+10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "-j10", "+10"])).unwrap()
         );
 
         // if -v is included in the command line, there cannot be an offset.
         assert_eq!(
             CommandLineInputs::FileNames(vec!["+10".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "-o", "-v", "+10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "-o", "-v", "+10"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileAndOffset(("file1".to_string(), 8, None)),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "file1", "+10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "file1", "+10"])).unwrap()
         );
 
         // offset does not need to start with "+" if a filename is included.
         assert_eq!(
             CommandLineInputs::FileAndOffset(("file1".to_string(), 8, None)),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "file1", "10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "file1", "10"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["file1".to_string(), "+10a".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "file1", "+10a"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "file1", "+10a"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["file1".to_string(), "+10".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "-j10", "file1", "+10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "-j10", "file1", "+10"])).unwrap()
         );
 
         // offset must be last on the command line
         assert_eq!(
             CommandLineInputs::FileNames(vec!["+10".to_string(), "file1".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "+10", "file1"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "+10", "file1"])).unwrap()
         );
     }
 
@@ -276,40 +276,40 @@ mod tests {
         // it should not return FileAndOffset to signal no offset was entered on the command line.
         assert_eq!(
             CommandLineInputs::FileNames(vec!["-".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional"])).unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileNames(vec!["file1".to_string()]),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "file1"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "file1"])).unwrap()
         );
 
         // offset does not need to start with a +
         assert_eq!(
             CommandLineInputs::FileAndOffset(("-".to_string(), 8, None)),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "10"])).unwrap()
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "10"])).unwrap()
         );
 
         // valid offset and valid label
         assert_eq!(
             CommandLineInputs::FileAndOffset(("-".to_string(), 8, Some(8))),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "10", "10"]))
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "10", "10"]))
                 .unwrap()
         );
 
         assert_eq!(
             CommandLineInputs::FileAndOffset(("file1".to_string(), 8, None)),
-            parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "file1", "10"]))
+            parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "file1", "10"]))
                 .unwrap()
         );
 
         // only one file is allowed, it must be the first
-        parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "10", "file1"]))
+        parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "10", "file1"]))
             .unwrap_err();
 
         assert_eq!(
             CommandLineInputs::FileAndOffset(("file1".to_string(), 8, Some(8))),
-            parse_inputs(&uu_app().get_matches_from(vec![
+            parse_inputs(&sg_app().get_matches_from(vec![
                 "od",
                 "--traditional",
                 "file1",
@@ -319,13 +319,13 @@ mod tests {
             .unwrap()
         );
 
-        parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "10", "file1", "10"]))
+        parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "10", "file1", "10"]))
             .unwrap_err();
 
-        parse_inputs(&uu_app().get_matches_from(vec!["od", "--traditional", "10", "10", "file1"]))
+        parse_inputs(&sg_app().get_matches_from(vec!["od", "--traditional", "10", "10", "file1"]))
             .unwrap_err();
 
-        parse_inputs(&uu_app().get_matches_from(vec![
+        parse_inputs(&sg_app().get_matches_from(vec![
             "od",
             "--traditional",
             "10",

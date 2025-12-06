@@ -237,7 +237,7 @@ ioctl_write_ptr_bad!(
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let opts = Options::from(&matches)?;
 
@@ -997,7 +997,7 @@ fn get_sane_control_char(cc_index: S) -> u8 {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

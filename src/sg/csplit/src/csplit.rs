@@ -610,7 +610,7 @@ where
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     // get the file to split
     let file_name = matches.get_one::<OsString>(options::FILE).unwrap();
@@ -632,7 +632,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

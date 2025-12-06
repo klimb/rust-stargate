@@ -11,7 +11,7 @@ pub mod options {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = uu_app().try_get_matches_from(args)?;
+    let matches = sg_app().try_get_matches_from(args)?;
 
     // Read JSON from stdin
     let mut input = String::new();
@@ -96,7 +96,7 @@ fn output_json(value: &Value, pretty: bool) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about("Filter JSON object columns/fields")

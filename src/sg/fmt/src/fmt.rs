@@ -335,7 +335,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
     }
 
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), &args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), &args)?;
 
     let files = extract_files(&matches)?;
 
@@ -350,7 +350,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -463,12 +463,12 @@ pub fn uu_app() -> Command {
 
 #[cfg(test)]
 mod tests {
-    use crate::uu_app;
+    use crate::sg_app;
     use crate::{extract_files, extract_width};
 
     #[test]
     fn parse_negative_width() {
-        let matches = uu_app()
+        let matches = sg_app()
             .try_get_matches_from(vec!["fmt", "-3", "some-file"])
             .unwrap();
 
@@ -478,7 +478,7 @@ mod tests {
 
     #[test]
     fn parse_width_as_arg() {
-        let matches = uu_app()
+        let matches = sg_app()
             .try_get_matches_from(vec!["fmt", "-w3", "some-file"])
             .unwrap();
 
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn parse_no_args() {
-        let matches = uu_app().try_get_matches_from(vec!["fmt"]).unwrap();
+        let matches = sg_app().try_get_matches_from(vec!["fmt"]).unwrap();
 
         assert_eq!(extract_files(&matches).unwrap(), vec!["-"]);
         assert_eq!(extract_width(&matches).ok(), Some(None));
@@ -496,7 +496,7 @@ mod tests {
 
     #[test]
     fn parse_just_file_name() {
-        let matches = uu_app()
+        let matches = sg_app()
             .try_get_matches_from(vec!["fmt", "some-file"])
             .unwrap();
 
@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn parse_with_both_widths_positional_first() {
-        let matches = uu_app()
+        let matches = sg_app()
             .try_get_matches_from(vec!["fmt", "-10", "-w3", "some-file"])
             .unwrap();
 

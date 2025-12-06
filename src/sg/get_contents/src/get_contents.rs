@@ -228,7 +228,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)
     let opts = JsonOutputOptions { object_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(object_output::ARG_PRETTY) };
 
@@ -300,7 +300,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     cat_files(&files, &options)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .override_usage(format_usage(&translate!("cat-usage")))

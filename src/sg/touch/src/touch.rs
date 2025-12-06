@@ -182,7 +182,7 @@ fn shr2(s: &str) -> String {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let mut filenames: Vec<&OsString> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -248,7 +248,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -773,19 +773,19 @@ mod tests {
 
     use crate::{
         ChangeTimes, Options, Source, determine_atime_mtime_change, error::TouchError, touch,
-        uu_app,
+        sg_app,
     };
 
     #[test]
     fn test_determine_atime_mtime_change() {
         assert_eq!(
             ChangeTimes::Both,
-            determine_atime_mtime_change(&uu_app().try_get_matches_from(vec!["touch"]).unwrap())
+            determine_atime_mtime_change(&sg_app().try_get_matches_from(vec!["touch"]).unwrap())
         );
         assert_eq!(
             ChangeTimes::Both,
             determine_atime_mtime_change(
-                &uu_app()
+                &sg_app()
                     .try_get_matches_from(vec!["touch", "-a", "-m", "--time", "modify"])
                     .unwrap()
             )
@@ -793,7 +793,7 @@ mod tests {
         assert_eq!(
             ChangeTimes::AtimeOnly,
             determine_atime_mtime_change(
-                &uu_app()
+                &sg_app()
                     .try_get_matches_from(vec!["touch", "--time", "access"])
                     .unwrap()
             )
@@ -801,7 +801,7 @@ mod tests {
         assert_eq!(
             ChangeTimes::MtimeOnly,
             determine_atime_mtime_change(
-                &uu_app().try_get_matches_from(vec!["touch", "-m"]).unwrap()
+                &sg_app().try_get_matches_from(vec!["touch", "-m"]).unwrap()
             )
         );
     }

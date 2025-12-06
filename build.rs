@@ -55,19 +55,19 @@ pub fn main() {
 
     let mut phf_map = phf_codegen::OrderedMap::<&str>::new();
     for (idx, krate) in crates.iter().enumerate() {
-        let map_value = format!("({krate}::uumain, {krate}::uu_app)");
+        let map_value = format!("({krate}::sgmain, {krate}::sg_app)");
         match krate.as_ref() {
-            "uu_test" => {
+            "sg_test" => {
                 phf_map.entry("test", map_value.clone());
                 phf_map.entry("[", map_value.clone());
             }
             "false" | "true" => {
-                phf_map.entry(&util_names[idx], format!("(r#{krate}::uumain, r#{krate}::uu_app)"));
+                phf_map.entry(&util_names[idx], format!("(r#{krate}::sgmain, r#{krate}::sg_app)"));
             }
             "hashsum" => {
-                phf_map.entry(&util_names[idx], format!("({krate}::uumain, {krate}::uu_app_custom)"));
+                phf_map.entry(&util_names[idx], format!("({krate}::sgmain, {krate}::sg_app_custom)"));
 
-                let map_value = format!("({krate}::uumain, {krate}::uu_app_common)");
+                let map_value = format!("({krate}::sgmain, {krate}::sg_app_common)");
                 phf_map.entry("md5sum", map_value.clone());
                 phf_map.entry("sha1sum", map_value.clone());
                 phf_map.entry("sha224sum", map_value.clone());

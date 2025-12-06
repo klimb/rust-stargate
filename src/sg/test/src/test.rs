@@ -24,7 +24,7 @@ use sgcore::translate;
 
 // We use after_help so that this comes after the usage string (it would come before if we used about)
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     // Disable printing of -h and -v as valid alternatives for --help and --version,
     // since we don't recognize -h and -v as help/version flags.
     Command::new(sgcore::util_name())
@@ -45,7 +45,7 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
         // If invoked as [ we should recognize --help and --version (but not -h or -v)
         if args.len() == 1 && (args[0] == "--help" || args[0] == "--version") {
             sgcore::clap_localization::handle_clap_result(
-                uu_app(),
+                sg_app(),
                 std::iter::once(program).chain(args.into_iter())
             )?;
             return Ok(());

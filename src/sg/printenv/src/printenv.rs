@@ -13,7 +13,7 @@ static ARG_VARIABLES: &str = "variables";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
     
@@ -80,7 +80,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     if error_found { Err(1.into()) } else { Ok(()) }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about(translate!("printenv-about"))

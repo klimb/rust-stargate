@@ -1168,7 +1168,7 @@ impl Config {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
 
     let config = Config::from(&matches)?;
 
@@ -1179,7 +1179,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     list(locs, &config)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = sgcore::clap_localization::configure_localized_command(
         Command::new(sgcore::util_name())
             .version(sgcore::crate_version!())

@@ -21,7 +21,7 @@ pub fn create_test_file(data: &[u8], temp_dir: &Path) -> PathBuf {
 }
 
 /// Run a utility function directly with given arguments
-/// This calls the uumain function that returns i32 (like the fuzzing approach)
+/// This calls the sgmain function that returns i32 (like the fuzzing approach)
 pub fn run_util_function<F>(util_func: F, args: &[&str]) -> i32
 where
     F: FnOnce(std::vec::IntoIter<std::ffi::OsString>) -> i32,

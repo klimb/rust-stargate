@@ -503,7 +503,7 @@ const PRESERVE_DEFAULT_VALUES: &str = if cfg!(unix) {
     "mode,timestamp"
 };
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     const MODE_ARGS: &[&str] = &[
         options::LINK,
         options::REFLINK,
@@ -767,7 +767,7 @@ pub fn uu_app() -> Command {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let options = Options::from_matches(&matches)?;
 
@@ -2601,7 +2601,7 @@ pub fn verify_target_type(target: &Path, target_type: &TargetType) -> CopyResult
 /// # Examples
 ///
 /// ```ignore
-/// assert!(uu_cp::localize_to_target(
+/// assert!(sg_cp::localize_to_target(
 ///     &Path::new("a/source/"),
 ///     &Path::new("a/source/c.txt"),
 ///     &Path::new("target/"),

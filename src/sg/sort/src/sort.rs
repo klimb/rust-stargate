@@ -1111,7 +1111,7 @@ fn default_merge_batch_size() -> usize {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut settings = GlobalSettings::default();
 
-    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;
+    let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
 
     // Prevent -o/--output to be specified multiple times
     if matches
@@ -1395,7 +1395,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     result
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     sgcore::clap_localization::configure_localized_command(
         Command::new(sgcore::util_name())
             .version(sgcore::crate_version!())

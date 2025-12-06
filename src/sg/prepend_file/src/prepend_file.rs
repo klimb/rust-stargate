@@ -13,7 +13,7 @@ mod options {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = uu_app().try_get_matches_from(args)?;
+    let matches = sg_app().try_get_matches_from(args)?;
 
     let path = matches.get_one::<String>(options::PATH).unwrap();
     let object_output = matches.get_flag(options::OBJECT_OUTPUT);
@@ -62,7 +62,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(env!("CARGO_PKG_VERSION"))
         .about("Prepend text from stdin to a file")

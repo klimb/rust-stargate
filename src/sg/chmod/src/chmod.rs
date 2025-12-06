@@ -108,7 +108,7 @@ fn extract_negative_modes(mut args: impl sgcore::Args) -> (Option<String>, Vec<O
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (parsed_cmode, args) = extract_negative_modes(args.skip(1)); // skip binary name
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let changes = matches.get_flag(options::CHANGES);
     let quiet = matches.get_flag(options::QUIET);
@@ -169,7 +169,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     chmoder.chmod(&files)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about(translate!("chmod-about"))

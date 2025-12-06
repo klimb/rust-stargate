@@ -22,7 +22,7 @@ static OPT_IGNORE: &str = "ignore";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let object_output = JsonOutputOptions::from_matches(&matches);
 
     let cores = compute_cores(&matches)?;
@@ -106,7 +106,7 @@ fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
     Ok(cores)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

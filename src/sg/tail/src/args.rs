@@ -407,7 +407,7 @@ fn parse_num(src: &str) -> Result<Signum, ParseSizeError> {
 
 pub fn parse_args(args: impl sgcore::Args) -> UResult<Settings> {
     let args_vec: Vec<OsString> = args.collect();
-    let clap_args = uu_app().try_get_matches_from(args_vec.clone());
+    let clap_args = sg_app().try_get_matches_from(args_vec.clone());
     let clap_result = match clap_args {
         Ok(matches) => Ok(Settings::from(&matches)?),
         Err(err) => Err(err.into()),
@@ -446,7 +446,7 @@ pub fn parse_args(args: impl sgcore::Args) -> UResult<Settings> {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     #[cfg(target_os = "linux")]
     let polling_help = translate!("tail-help-polling-linux");
     #[cfg(all(unix, not(target_os = "linux")))]
@@ -648,7 +648,7 @@ mod tests {
         #[case] expected_retry: bool
     ) {
         let settings =
-            Settings::from(&uu_app().no_binary_name(true).get_matches_from(args)).unwrap();
+            Settings::from(&sg_app().no_binary_name(true).get_matches_from(args)).unwrap();
         assert_eq!(settings.follow, expected_follow_mode);
         assert_eq!(settings.retry, expected_retry);
     }

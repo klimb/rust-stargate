@@ -16,7 +16,7 @@ static ARG_HOSTNAME: &str = "hostname";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     
     let host = matches.get_one::<OsString>(ARG_HOSTNAME)
         .ok_or_else(|| sgcore::error::UUsageError::new(1, translate!("set-hostname-error-missing-operand")))?;
@@ -24,7 +24,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     hostname::set(host).map_err_context(|| translate!("set-hostname-error-set-hostname"))
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

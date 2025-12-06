@@ -55,7 +55,7 @@ impl ProcessInfo {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     
     let show_all = matches.get_flag(ARG_ALL);
@@ -168,7 +168,7 @@ fn output_text(processes: &[ProcessInfo], show_full: bool) {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

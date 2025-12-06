@@ -151,7 +151,7 @@ impl Options {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
 
     let default_shell: &'static str = "/bin/sh";
     let default_option: &'static str = "-i";
@@ -229,7 +229,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about(translate!("chroot-about"))

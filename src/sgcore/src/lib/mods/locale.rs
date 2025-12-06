@@ -463,13 +463,13 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         }
 
         // Try uu/ for backwards compatibility with uutils-coreutils
-        let uu_path = PathBuf::from(manifest_dir)
+        let sg_path = PathBuf::from(manifest_dir)
             .join("../uu")
             .join(&dir_name)
             .join("locales");
 
-        if uu_path.exists() {
-            return Ok(uu_path);
+        if sg_path.exists() {
+            return Ok(sg_path);
         }
 
         // Fallback for development if the expected path doesn't exist
@@ -481,7 +481,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         Err(LocalizationError::LocalesDirNotFound(format!(
             "Development locales directory not found at {}, {}, or {}",
             dev_path.display(),
-            uu_path.display(),
+            sg_path.display(),
             fallback_dev_path.display()
         )))
     }

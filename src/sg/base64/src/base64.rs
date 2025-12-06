@@ -12,7 +12,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     base_common::handle_input(&mut input, format, config)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let (about, usage) = get_info();
     base_common::base_app(about, usage)
 }
