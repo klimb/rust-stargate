@@ -125,8 +125,16 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         ));
     }
 
+    let zero_flag = matches.get_flag(options::OPT_ZERO);
+    if zero_flag && default_format {
+        return Err(USimpleError::new(
+            1,
+            "option --zero not permitted in default format"
+        ));
+    }
+
     let delimiter = "";
-    let line_ending = LineEnding::from_zero_flag(false);
+    let line_ending = LineEnding::from_zero_flag(zero_flag);
 
     for i in 0..=users.len() {
         let possible_pw = if state.user_specified {
@@ -287,8 +295,6 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
             } else {
                 id_print(&state, &groups);
             }
-        } else {
-            id_print(&state, &groups);
         }
         print!("{line_ending}");
 
