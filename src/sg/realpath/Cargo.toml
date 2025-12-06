@@ -1,7 +1,7 @@
 [package]
 name = "sg_realpath"
 description = "realpath ~ (uutils) display resolved absolute path of PATHNAME"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/realpath"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

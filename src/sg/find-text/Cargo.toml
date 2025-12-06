@@ -1,7 +1,7 @@
 [package]
 name = "sg_find_text"
 description = "find-text ~ search for text patterns in files"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/find-text"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

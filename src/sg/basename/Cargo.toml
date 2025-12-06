@@ -1,7 +1,7 @@
 [package]
 name = "sg_basename"
 description = "basename ~ (uutils) display PATHNAME with leading directory components removed"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/basename"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

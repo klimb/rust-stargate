@@ -4,7 +4,7 @@
 [package]
 name = "sg_who"
 description = "who ~ (uutils) display information about currently logged-in users"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/who"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,8 +1,8 @@
 [package]
 name = "sgcore-fuzz"
 version = "0.0.0"
-description = "uutils ~ 'core' uutils fuzzers"
-repository = "https://github.com/uutils/coreutils/tree/main/fuzz/"
+description = "Stargate: core fuzzers"
+repository = "https://github.com/klimb/rust-stargate"
 edition.workspace = true
 license.workspace = true
 publish = false

@@ -1,7 +1,7 @@
 [package]
 name = "sg_nice"
 description = "nice ~ (uutils) run PROGRAM with modified scheduling priority"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/nice"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "sg_stty"
 description = "stty ~ (uutils) print or change terminal characteristics"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/stty"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

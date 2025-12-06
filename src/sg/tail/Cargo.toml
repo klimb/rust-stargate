@@ -2,7 +2,7 @@
 [package]
 name = "sg_tail"
 description = "tail ~ (uutils) display the last lines of input"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tail"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

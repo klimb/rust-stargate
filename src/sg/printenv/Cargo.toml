@@ -1,7 +1,7 @@
 [package]
 name = "sg_printenv"
 description = "printenv ~ (uutils) display value of environment VAR"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/printenv"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

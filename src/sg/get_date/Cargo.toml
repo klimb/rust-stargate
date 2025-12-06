@@ -2,7 +2,7 @@
 [package]
 name = "sg_get_date"
 description = "get-date ~ (uutils) display or set the current time"
-repository = "https://github.com/uutils/coreutils/tree/main/src/date"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

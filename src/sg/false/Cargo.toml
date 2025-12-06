@@ -2,7 +2,7 @@
 name = "sg_false"
 
 description = "false ~ (uutils) do nothing and fail"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/false"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "sg_tsort"
 description = "tsort ~ (uutils) topologically sort input (partially ordered) pairs"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tsort"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "sg_true"
 description = "true ~ (uutils) do nothing and succeed"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/true"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

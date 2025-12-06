@@ -1,7 +1,7 @@
 [package]
 name = "sg_comm"
 description = "comm ~ (uutils) compare sorted inputs"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/comm"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
