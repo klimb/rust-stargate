@@ -449,6 +449,7 @@ fn test_chown_fail_id() {
 /// This test must be run as root, because only the root user can
 /// transfer ownership of a file.
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_chown_only_user_id_nonexistent_user() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -517,6 +518,8 @@ fn test_chown_only_group_id() {
 /// This test must be run as root, because only the root user can
 /// transfer ownership of a file.
 #[test]
+#[ignore = "requires root/sudo access"]
+#[cfg(not(target_os = "openbsd"))]
 fn test_chown_only_group_id_nonexistent_group() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;

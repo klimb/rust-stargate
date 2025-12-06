@@ -17,6 +17,12 @@ pub mod testing;
 pub mod ui;
 pub mod jobs;
 
+// Shell main modules
+pub mod command_type;
+pub mod executor;
+pub mod piped_input;
+pub mod repl_handlers;
+
 #[path = "builtin-commands/mod.rs"]
 pub mod builtin_commands;
 

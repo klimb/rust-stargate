@@ -51,6 +51,7 @@ fn test_no_such_directory() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_multiple_group_args() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -67,6 +68,7 @@ fn test_multiple_group_args() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_invalid_user_spec() {
     let ts = TestScenario::new(util_name!());
 
@@ -99,6 +101,7 @@ fn test_invalid_user_spec() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_invalid_user() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -163,6 +166,7 @@ fn test_preference_of_userspec() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_default_shell() {
     // NOTE: This test intends to trigger code which can only be reached with root permissions.
     let ts = TestScenario::new(util_name!());
@@ -182,6 +186,7 @@ fn test_default_shell() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_chroot() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -215,6 +220,7 @@ fn test_chroot_skip_chdir_not_root() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_chroot_skip_chdir() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -235,6 +241,7 @@ fn test_chroot_skip_chdir() {
 }
 
 #[test]
+#[ignore = "requires root/sudo access"]
 fn test_chroot_extra_arg() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
