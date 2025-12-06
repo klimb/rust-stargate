@@ -81,6 +81,7 @@ feat_common_core = [
   "new_directory",
   "new_file",
   "append_file",
+  "prepend_file",
   "mktemp",
   "more",
   "mv",
@@ -413,6 +414,7 @@ get_username = { optional = true, version = "0.4.0", package = "sg_get_username"
 new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "src/sg/new_directory" }
 new_file = { optional = true, version = "0.4.0", package = "sg_new_file", path = "src/sg/new_file" }
 append_file = { optional = true, version = "0.4.0", package = "sg_append_file", path = "src/sg/append_file" }
+prepend_file = { optional = true, version = "0.4.0", package = "sg_prepend_file", path = "src/sg/prepend_file" }
 mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "src/sg/mkfifo" }
 mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "src/sg/mknod" }
 mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "src/sg/mktemp" }

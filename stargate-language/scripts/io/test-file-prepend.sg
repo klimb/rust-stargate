@@ -1,0 +1,41 @@
+#!/usr/bin/env stargate-shell
+
+use ut;
+
+[test]
+fn test_prepend_basic() {
+    echo "line 2" | new-file "/tmp/prepend_test.txt";
+    echo "line 1\n" | prepend-file "/tmp/prepend_test.txt";
+    let content = (get-contents "/tmp/prepend_test.txt");
+    ut.assert_contains(content, "line 1", "Should contain prepended line");
+    ut.assert_contains(content, "line 2", "Should contain original line");
+    rm "/tmp/prepend_test.txt";
+}
+
+[test]
+fn test_prepend_multiple() {
+    echo "c" | new-file "/tmp/prepend_multi.txt";
+    echo "b" | prepend-file "/tmp/prepend_multi.txt";
+    echo "a" | prepend-file "/tmp/prepend_multi.txt";
+    let content = (get-contents "/tmp/prepend_multi.txt");
+    ut.assert_contains(content, "abc", "Should contain all text in reverse order");
+    rm "/tmp/prepend_multi.txt";
+}
+
+[test]
+fn test_prepend_creates_file() {
+    rm -f "/tmp/prepend_new.txt";
+    echo "new content" | prepend-file "/tmp/prepend_new.txt";
+    let content = (get-contents "/tmp/prepend_new.txt");
+    ut.assert_contains(content, "new content", "Should create and write to new file");
+    rm "/tmp/prepend_new.txt";
+}
+
+[test]
+fn test_prepend_object_output() {
+    echo "test" | new-file "/tmp/prepend_obj.txt";
+    let result = (echo "data" | prepend-file --obj "/tmp/prepend_obj.txt");
+    let bytes = result | slice-object bytes_written;
+    ut.assert_equals(bytes, 5, "Should write 5 bytes");
+    rm "/tmp/prepend_obj.txt";
+}

@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use serde_json::json;
 use sgcore::error::UResult;
 use sgcore::format_usage;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Write};
 
 mod options {
@@ -32,11 +32,18 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
         input
     };
 
+    let mut existing_content = String::new();
+    if let Ok(mut file) = File::open(path) {
+        file.read_to_string(&mut existing_content)?;
+    }
+
     let mut file = OpenOptions::new()
+        .write(true)
         .create(true)
-        .append(true)
+        .truncate(true)
         .open(path)?;
     file.write_all(content_to_write.as_bytes())?;
+    file.write_all(existing_content.as_bytes())?;
 
     if object_output {
         let output = json!({
@@ -58,9 +65,9 @@ pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
 pub fn uu_app() -> Command {
     Command::new(sgcore::util_name())
         .version(env!("CARGO_PKG_VERSION"))
-        .about("Append text from stdin to a file")
+        .about("Prepend text from stdin to a file")
         .override_usage(format_usage(
-            "append-file [OPTION]... PATH"
+            "prepend-file [OPTION]... PATH"
         ))
         .infer_long_args(true)
         .disable_help_flag(true)
@@ -72,7 +79,7 @@ pub fn uu_app() -> Command {
         )
         .arg(
             Arg::new(options::PATH)
-                .help("Path to the file to append to")
+                .help("Path to the file to prepend to")
                 .value_name("PATH")
                 .required(true)
                 .index(1),
