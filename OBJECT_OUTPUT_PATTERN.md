@@ -138,10 +138,22 @@ command -o | slice-object -f results | dice-object -f name
 - [x] get_fqdn
 - [x] uptime
 - [x] get-date (date)
+- [x] hostname
+- [x] users
+- [x] groups
+- [x] uname
+- [x] printenv
+- [x] tty
+- [x] sync
+- [ ] who
+- [ ] pinky
+- [ ] df
+- [ ] stat
+- [ ] du
+- [ ] cksum
+- [ ] hashsum
 - [ ] cat
 - [ ] cut
-- [ ] du
-- [ ] df
 - [ ] head
 - [ ] tail
 - [ ] wc
