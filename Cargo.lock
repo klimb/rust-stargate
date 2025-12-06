@@ -3221,6 +3221,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_prepend_file"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_printenv"
 version = "0.4.0"
 dependencies = [
@@ -3974,6 +3983,7 @@ dependencies = [
  "sg_pathchk",
  "sg_pinky",
  "sg_pr",
+ "sg_prepend_file",
  "sg_printenv",
  "sg_printf",
  "sg_ptx",
