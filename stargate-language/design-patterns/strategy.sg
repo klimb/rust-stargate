@@ -76,32 +76,21 @@ class QuickSortStrategy extends SortStrategy {
         let equal = [];
         let greater = [];
         
-        for i in range(0, size) {
-            let val = data[i];
+        for val in data {
             if val < pivot {
-                let less = less.append(val);
+                let less = less.push(val);
             } else {
                 if val > pivot {
-                    let greater = greater.append(val);
+                    let greater = greater.push(val);
                 } else {
-                    let equal = equal.append(val);
+                    let equal = equal.push(val);
                 }
             }
         }
         
-        let sorted_less = this.sort(less);
-        let sorted_greater = this.sort(greater);
-        
-        let result = [];
-        for item in sorted_less {
-            let result = result.append(item);
-        }
-        for item in equal {
-            let result = result.append(item);
-        }
-        for item in sorted_greater {
-            let result = result.append(item);
-        }
+        let result = this.sort(less);
+        let result = result.extend(equal);
+        let result = result.extend(this.sort(greater));
         
         return result;
     }

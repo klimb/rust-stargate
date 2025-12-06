@@ -68,6 +68,29 @@ pub fn handle_list_methods(
             list.clear();
             Ok(Value::List(list))
         }
+        "push" => {
+            // In-place append - more efficient than append
+            if args.len() != 1 {
+                return Err(format!("push() expects 1 argument, got {}", args.len()));
+            }
+            let value = eval_fn(args[0].clone())?;
+            list.push(value);
+            Ok(Value::List(list))
+        }
+        "extend" => {
+            // Batch append - much more efficient for combining lists
+            if args.len() != 1 {
+                return Err(format!("extend() expects 1 argument, got {}", args.len()));
+            }
+            let other = eval_fn(args[0].clone())?;
+            match other {
+                Value::List(mut other_list) => {
+                    list.append(&mut other_list);
+                    Ok(Value::List(list))
+                }
+                _ => Err("extend() requires a list argument".to_string())
+            }
+        }
         _ => Err(format!("Unknown list method: {}", method))
     }
 }
