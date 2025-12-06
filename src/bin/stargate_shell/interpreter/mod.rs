@@ -17,6 +17,7 @@ pub struct Interpreter {
     functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>,
     classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>,
     object_methods_cache: HashMap<String, bool>,
+    method_lookup_cache: HashMap<(String, String), Option<(Vec<String>, Vec<Statement>)>>, // (class, method) -> (params, body)
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
@@ -32,6 +33,7 @@ impl Interpreter {
             functions: HashMap::new(),
             classes: HashMap::new(),
             object_methods_cache: HashMap::new(),
+            method_lookup_cache: HashMap::new(),
             return_value: None,
             exit_code: None,
             variable_names: None,
@@ -40,13 +42,13 @@ impl Interpreter {
             script_path: None,
         }
     }
-    
     pub fn new_with_completion(variable_names: Arc<Mutex<HashSet<String>>>) -> Self {
         Interpreter {
             variables: HashMap::new(),
             functions: HashMap::new(),
             classes: HashMap::new(),
             object_methods_cache: HashMap::new(),
+            method_lookup_cache: HashMap::new(),
             return_value: None,
             exit_code: None,
             variable_names: Some(variable_names),
