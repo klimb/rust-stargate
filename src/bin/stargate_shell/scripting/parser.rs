@@ -5,12 +5,18 @@ use crate::stargate_shell::commands;
 pub struct Parser {
     tokens: Vec<String>,
     pos: usize,
+    is_interactive: bool,
 }
 
 impl Parser {
     pub fn new(input: &str) -> Self {
         let tokens = Self::tokenize(input);
-        Parser { tokens, pos: 0 }
+        Parser { tokens, pos: 0, is_interactive: false }
+    }
+
+    pub fn new_interactive(input: &str) -> Self {
+        let tokens = Self::tokenize(input);
+        Parser { tokens, pos: 0, is_interactive: true }
     }
 
     fn tokenize(input: &str) -> Vec<String> {
@@ -1157,6 +1163,14 @@ impl Parser {
     }
 
     fn expect(&mut self, expected: &str) -> Result<(), String> {
+        // In interactive mode, make semicolons optional
+        if self.is_interactive && expected == ";" {
+            if self.peek() == Some(&";".to_string()) {
+                self.advance();
+            }
+            return Ok(());
+        }
+        
         let token = self.advance().ok_or(format!("Expected '{}', got end of input", expected))?;
         if token == expected {
             Ok(())
