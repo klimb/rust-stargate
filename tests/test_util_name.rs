@@ -219,7 +219,11 @@ fn util_version() {
         assert_eq!(output.stderr, b"");
         let output_str = String::from_utf8(output.stdout).unwrap();
         let ver = std::env::var("CARGO_PKG_VERSION").unwrap();
-        assert_eq!(format!("stargate {ver} (multi-call binary)\n"), output_str);
+        let expected = format!(
+            "This is stargate {}, built on Rust.\n\nCopyright (c) 2025 Dmitry Kalashnikov\n\nDual Licensed: Open-Source (non-commercial) / Commercial (proprietary use)\nCommercial use requires a Commercial License.\nSee LICENSE file or contact author for details.\n",
+            ver
+        );
+        assert_eq!(expected, output_str);
     }
 }
 

@@ -161,35 +161,31 @@ fn test_strategy_pattern() {
     print "Original data: {test_data}";
     print "";
     
-    let sorter = new DataSorter;
-    let sorter = sorter.set_data(test_data);
-    
     print "Using Bubble Sort Strategy:";
     let bubble_strategy = new BubbleSortStrategy;
-    let sorter = sorter.set_data(test_data);
-    let sorter = sorter.set_strategy(bubble_strategy);
+    let sorter = new DataSorter;
+    sorter.set_data(test_data);
+    sorter.set_strategy(bubble_strategy);
     let result = sorter.execute_sort();
     print "Sorted: {result}";
     ut.assert_equals(result, [11, 12, 22, 25, 34, 64, 90], "bubble sort should sort ascending");
     print "";
     
     print "Using Quick Sort Strategy:";
-    let sorter2 = new DataSorter;
     let test_data2 = [64, 34, 25, 12, 22, 11, 90];
-    let sorter2 = sorter2.set_data(test_data2);
-    let sorter2 = sorter2.set_strategy(new QuickSortStrategy);
+    let sorter2 = new DataSorter;
+    sorter2.set_data(test_data2);
+    sorter2.set_strategy(new QuickSortStrategy);
     let result = sorter2.execute_sort();
-    print "Sorted: {result}";
-    ut.assert_equals(result, [11, 12, 22, 25, 34, 64, 90], "quick sort should sort ascending");
     print "Sorted: {result}";
     ut.assert_equals(result, [11, 12, 22, 25, 34, 64, 90], "quick sort should sort ascending");
     print "";
     
     print "Using Reverse Sort Strategy:";
     let test_data = [64, 34, 25, 12, 22, 11, 90];
-    let reverse_strategy = new ReverseSortStrategy;
-    let sorter = sorter.set_data(test_data);
-    let sorter = sorter.set_strategy(new ReverseSortStrategy);
+    let sorter = new DataSorter;
+    sorter.set_data(test_data);
+    sorter.set_strategy(new ReverseSortStrategy);
     let result = sorter.execute_sort();
     print "Sorted: {result}";
     ut.assert_equals(result, [90, 64, 34, 25, 22, 12, 11], "reverse sort should sort descending");
@@ -197,14 +193,15 @@ fn test_strategy_pattern() {
     
     print "Switching strategies dynamically:";
     let small_data = [5, 2, 8, 1];
-    let sorter = sorter.set_data(small_data);
+    let sorter = new DataSorter;
+    sorter.set_data(small_data);
     
     print "Data: {small_data}";
-    let sorter = sorter.set_strategy(new BubbleSortStrategy);
+    sorter.set_strategy(new BubbleSortStrategy);
     let asc = sorter.execute_sort();
     print "Ascending (Bubble): {asc}";
     
-    let sorter = sorter.set_strategy(new ReverseSortStrategy);
+    sorter.set_strategy(new ReverseSortStrategy);
     let desc = sorter.execute_sort();
     print "Descending (Reverse): {desc}";
     print "";

@@ -53,8 +53,12 @@ class StatisticsDisplay extends Observer {
 
     fn update(temp) {
         let update_count = update_count + 1;
-        if temp > max_temp { let max_temp = temp; }
-        if temp < min_temp { let min_temp = temp; }
+        if temp > max_temp {
+            max_temp = temp;
+        }
+        if temp < min_temp {
+            min_temp = temp;
+        }
         return this;
     }
 
@@ -77,7 +81,8 @@ fn test_notify_updates_all() {
     let station = new WeatherStation;
     let current = new CurrentConditionsDisplay;
     let stats = new StatisticsDisplay;
-    let station = station.attach(current).attach(stats);
+    station.attach(current);
+    station.attach(stats);
     station.set_temperature(25);
     let updated_current = station.observers[0];
     let updated_stats = station.observers[1];
@@ -89,7 +94,7 @@ fn test_notify_updates_all() {
 fn test_statistics_tracking() {
     let station = new WeatherStation;
     let stats = new StatisticsDisplay;
-    let station = station.attach(stats);
+    station.attach(stats);
     station.set_temperature(20);
     station.set_temperature(25);
     station.set_temperature(22);
@@ -104,7 +109,8 @@ fn test_multiple_updates() {
     let station = new WeatherStation;
     let current = new CurrentConditionsDisplay;
     let stats = new StatisticsDisplay;
-    let station = station.attach(current).attach(stats);
+    station.attach(current);
+    station.attach(stats);
     station.set_temperature(20);
     station.set_temperature(22);
     station.set_temperature(18);

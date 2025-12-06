@@ -85,7 +85,7 @@ fn test_coffee_preparation() {
 [test]
 fn test_coffee_strong() {
     let coffee = new Coffee;
-    let coffee = coffee.set_strength("strong");
+    coffee.set_strength("strong");
     print coffee;
     ut.assert_equals(coffee.strength, "strong", "Coffee strength should be strong");
 }
