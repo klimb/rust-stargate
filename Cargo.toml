@@ -85,7 +85,7 @@ feat_common_core = [
   "mktemp",
   "more",
   "mv",
-  "nl",
+  "get_linenumber",
   "od",
   "paste",
   "pr",
@@ -421,7 +421,7 @@ mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "sr
 more = { optional = true, version = "0.4.0", package = "sg_more", path = "src/sg/more" }
 mv = { optional = true, version = "0.4.0", package = "sg_mv", path = "src/sg/mv" }
 nice = { optional = true, version = "0.4.0", package = "sg_nice", path = "src/sg/nice" }
-nl = { optional = true, version = "0.4.0", package = "sg_nl", path = "src/sg/nl" }
+get_linenumber = { optional = true, version = "0.4.0", package = "sg_get_linenumber", path = "src/sg/get_linenumber" }
 nohup = { optional = true, version = "0.4.0", package = "sg_nohup", path = "src/sg/nohup" }
 nproc = { optional = true, version = "0.4.0", package = "sg_nproc", path = "src/sg/nproc" }
 od = { optional = true, version = "0.4.0", package = "sg_od", path = "src/sg/od" }

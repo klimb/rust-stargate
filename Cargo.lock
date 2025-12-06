@@ -2887,6 +2887,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_get_linenumber"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "codspeed-divan-compat",
+ "fluent",
+ "regex",
+ "serde_json",
+ "sgcore",
+ "tempfile",
+]
+
+[[package]]
 name = "sg_get_range"
 version = "0.4.0"
 dependencies = [
@@ -3131,19 +3144,6 @@ dependencies = [
  "libc",
  "nix 0.30.1",
  "sgcore",
-]
-
-[[package]]
-name = "sg_nl"
-version = "0.4.0"
-dependencies = [
- "clap",
- "codspeed-divan-compat",
- "fluent",
- "regex",
- "serde_json",
- "sgcore",
- "tempfile",
 ]
 
 [[package]]
@@ -3954,6 +3954,7 @@ dependencies = [
  "sg_get_environment",
  "sg_get_fqdn",
  "sg_get_hostname",
+ "sg_get_linenumber",
  "sg_get_range",
  "sg_get_username",
  "sg_groups",
@@ -3975,7 +3976,6 @@ dependencies = [
  "sg_new_directory",
  "sg_new_file",
  "sg_nice",
- "sg_nl",
  "sg_nohup",
  "sg_nproc",
  "sg_od",

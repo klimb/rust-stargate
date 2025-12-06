@@ -1,5 +1,3 @@
-// spell-checker:ignore (vars) krate mangen
-
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -10,8 +8,6 @@ pub fn main() {
     const FEATURE_PREFIX: &str = "feat_";
     const OVERRIDE_PREFIX: &str = "sg_";
 
-    // Do not rebuild build script unless the script itself or the enabled features are modified
-    // See <https://doc.rust-lang.org/cargo/reference/build-scripts.html#change-detection>
     println!("cargo:rerun-if-changed=build.rs");
 
     if let Ok(profile) = env::var("PROFILE") {
@@ -24,18 +20,17 @@ pub fn main() {
     for (key, val) in env::vars() {
         if val == "1" && key.starts_with(ENV_FEATURE_PREFIX) {
             let krate = key[ENV_FEATURE_PREFIX.len()..].to_lowercase();
-            // Allow this as we have a bunch of info in the comments
             #[allow(clippy::match_same_arms)]
             match krate.as_ref() {
                 "default" | "macos" | "unix"| "zip" | "clap_complete"
-                | "clap_mangen" | "fluent_syntax" => continue, // common/standard feature names
+                | "clap_mangen" | "fluent_syntax" => continue,
                 "nightly" | "test_unimplemented" | "expensive_tests" | "test_risky_names" => {
                     continue;
-                } // crate-local custom features
-                "uudoc" => continue, // is not a utility
-                "test" => continue, // over-ridden with 'uu_test' to avoid collision with rust core crate 'test'
-                s if s.starts_with(FEATURE_PREFIX) => continue, // crate feature sets
-                _ => {}             // util feature name
+                }
+                "uudoc" => continue,
+                "test" => continue,
+                s if s.starts_with(FEATURE_PREFIX) => continue,
+                _ => {}
             }
             crates.push(krate);
         }
@@ -54,18 +49,14 @@ pub fn main() {
     )
     .unwrap();
 
-    // Collect all utility names with hyphens instead of underscores
     let util_names: Vec<String> = crates.iter()
         .map(|name| name.replace('_', "-"))
         .collect();
 
-    // Build the PHF map
     let mut phf_map = phf_codegen::OrderedMap::<&str>::new();
     for (idx, krate) in crates.iter().enumerate() {
         let map_value = format!("({krate}::uumain, {krate}::uu_app)");
         match krate.as_ref() {
-            // 'test' is named uu_test to avoid collision with rust core crate 'test'.
-            // It can also be invoked by name '[' for the '[ expr ] syntax'.
             "uu_test" => {
                 phf_map.entry("test", map_value.clone());
                 phf_map.entry("[", map_value.clone());
@@ -84,6 +75,10 @@ pub fn main() {
                 phf_map.entry("sha384sum", map_value.clone());
                 phf_map.entry("sha512sum", map_value.clone());
                 phf_map.entry("b2sum", map_value.clone());
+            }
+            "get_linenumber" => {
+                phf_map.entry(&util_names[idx], map_value.clone());
+                phf_map.entry("nl", map_value.clone());
             }
             _ => {
                 phf_map.entry(&util_names[idx], map_value.clone());
