@@ -13,29 +13,21 @@ fn quicksort(arr) {
     let equal = [];
     let greater = [];
     
-    for i in range(0, size) {
-        let val = arr[i];
+    for val in arr {
         if val < pivot {
-            let less = less.append(val);
+            let less = less.push(val);
         } else {
             if val > pivot {
-                let greater = greater.append(val);
+                let greater = greater.push(val);
             } else {
-                let equal = equal.append(val);
+                let equal = equal.push(val);
             }
         }
     }
     
-    let sorted_less = quicksort(less);
-    let sorted_greater = quicksort(greater);
-    
-    let result = sorted_less;
-    for item in equal {
-        let result = result.append(item);
-    }
-    for item in sorted_greater {
-        let result = result.append(item);
-    }
+    let result = quicksort(less);
+    let result = result.extend(equal);
+    let result = result.extend(quicksort(greater));
     
     return result;
 }

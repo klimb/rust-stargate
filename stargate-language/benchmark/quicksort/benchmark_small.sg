@@ -1,0 +1,43 @@
+#!/usr/bin/env stargate-shell
+
+fn quicksort(arr) {
+    let size = arr.size();
+    if size <= 1 {
+        return arr;
+    }
+    
+    let pivot = arr[size / 2];
+    let less = [];
+    let equal = [];
+    let greater = [];
+    
+    for i in range(0, size) {
+        let val = arr[i];
+        if val < pivot {
+            let less = less.append(val);
+        } else {
+            if val > pivot {
+                let greater = greater.append(val);
+            } else {
+                let equal = equal.append(val);
+            }
+        }
+    }
+    
+    let sorted_less = quicksort(less);
+    let sorted_greater = quicksort(greater);
+    
+    let result = sorted_less;
+    for item in equal {
+        let result = result.append(item);
+    }
+    for item in sorted_greater {
+        let result = result.append(item);
+    }
+    
+    return result;
+}
+
+let test_data = [64, 34, 25, 12, 22, 11, 90, 88, 45, 50, 33, 17, 19, 82, 72, 95, 3, 7, 29, 41];
+let result = quicksort(test_data);
+print "Sorted: {result}";

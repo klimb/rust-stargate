@@ -325,6 +325,14 @@ test-scripting:
 	done
 	@echo "All scripting tests passed!"
 
+benchmark:
+	@${CARGO} build --bin stargate-shell --features "${EXES} $(BUILD_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(RUSTC_ARCH) 2>&1 | grep -v warning || true
+	@echo ""
+	@echo "Running benchmarks..."
+	@echo ""
+	@python3 $(BASEDIR)/util/benchmark.py $(BUILDDIR)/stargate-shell $(BASEDIR) benchmark_small benchmark_large
+	@echo ""
+
 nextest:
 	${CARGO} nextest run ${CARGOFLAGS} --features "$(TESTS) $(TEST_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(TEST_NO_FAIL_FAST)
 
@@ -479,4 +487,4 @@ endif
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d/$(PROG_PREFIX),$(addsuffix .fish,$(PROGS)))
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/man/man1/$(PROG_PREFIX),$(addsuffix .1,$(PROGS)))
 
-.PHONY: all build build-stargate build-pkgs build-uudoc test distclean clean busytest install uninstall
+.PHONY: all build build-stargate build-pkgs build-uudoc test test-scripting benchmark distclean clean busytest install uninstall
