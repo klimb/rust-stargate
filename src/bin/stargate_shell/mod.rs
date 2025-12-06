@@ -22,6 +22,6 @@ pub mod builtin_commands;
 
 pub use completion::StargateCompletion;
 pub use execution::execute_pipeline;
-pub use interpreter::{execute_script, execute_script_with_path, execute_script_with_interpreter, Interpreter};
+pub use interpreter::{execute_script_with_path, execute_stargate_script, Interpreter};
 pub use ui::{describe_command, print_help};
 pub use jobs::{list_jobs, check_background_jobs, cleanup_done_jobs, bring_to_foreground, start_job_monitor, JobStatus};

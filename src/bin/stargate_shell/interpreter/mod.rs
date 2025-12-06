@@ -174,9 +174,7 @@ impl Interpreter {
     
 }
 
-pub fn execute_script(script: &str) -> Result<i32, String> {
-    execute_script_with_path(script, None)
-}
+
 
 pub fn execute_script_with_path(script: &str, path: Option<&str>) -> Result<i32, String> {
     let mut parser = Parser::new(script);
@@ -187,8 +185,12 @@ pub fn execute_script_with_path(script: &str, path: Option<&str>) -> Result<i32,
     Ok(exit_code)
 }
 
-pub fn execute_script_with_interpreter(script: &str, interpreter: &mut Interpreter) -> Result<i32, String> {
-    let mut parser = Parser::new(script);
+pub fn execute_stargate_script(script: &str, interpreter: &mut Interpreter, is_interactive: bool) -> Result<i32, String> {
+    let mut parser = if is_interactive {
+        Parser::new_interactive(script)
+    } else {
+        Parser::new(script)
+    };
     let statements = parser.parse()?;
     let exit_code = interpreter.execute(statements)?;
     Ok(exit_code)

@@ -14,7 +14,7 @@ use std::io::{IsTerminal, Write};
 use std::fs::OpenOptions;
 use std::time::SystemTime;
 
-use stargate_shell::{StargateCompletion, execute_pipeline, execute_script, execute_script_with_path, execute_script_with_interpreter, describe_command, print_help, Interpreter, start_job_monitor, builtin_commands};
+use stargate_shell::{StargateCompletion, execute_pipeline, execute_script_with_path, execute_stargate_script, describe_command, print_help, Interpreter, start_job_monitor, builtin_commands};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
@@ -70,6 +70,41 @@ fn main() {
             // Multi-line input can either be scripts (with semicolons) or line-by-line commands
             let trimmed = script_code.trim();
             if !trimmed.contains('\n') && !trimmed.contains(';') {
+                // Check if this looks like a property access expression
+                let has_property_access = {
+                    let mut in_quotes = false;
+                    let mut has_dot_access = false;
+                    let chars: Vec<char> = trimmed.chars().collect();
+                    
+                    for i in 0..chars.len() {
+                        if chars[i] == '"' {
+                            in_quotes = !in_quotes;
+                        } else if !in_quotes && chars[i] == '.' && i > 0 && i < chars.len() - 1 {
+                            let before = chars[i-1];
+                            let after = chars[i+1];
+                            let valid_before = before.is_alphanumeric() || before == '_' || before == ')' || before == ']';
+                            let valid_after = after.is_alphanumeric() || after == '_';
+                            if valid_before && valid_after {
+                                has_dot_access = true;
+                                break;
+                            }
+                        }
+                    }
+                    has_dot_access
+                };
+                
+                // If it has property access, execute as script expression
+                if has_property_access {
+                    let mut interp = Interpreter::new();
+                    match execute_stargate_script(&format!("print {};", trimmed), &mut interp, false) {
+                        Ok(code) => std::process::exit(code),
+                        Err(e) => {
+                            eprintln!("Script error: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                
                 // Handle && operator in single-line mode
                 if trimmed.contains("&&") {
                     let commands: Vec<&str> = trimmed.split("&&").map(|s| s.trim()).collect();
@@ -133,7 +168,8 @@ fn main() {
                             
                             let success = if is_statement {
                                 let script = format!("{};", cmd);
-                                match execute_script(&script) {
+                                let mut interp = Interpreter::new();
+                                match execute_stargate_script(&script, &mut interp, false) {
                                     Ok(_) => true,
                                     Err(e) => {
                                         eprintln!("Script error: {}", e);
@@ -165,7 +201,8 @@ fn main() {
                     
                     if is_statement {
                         let script = format!("{};", line);
-                        match execute_script(&script) {
+                        let mut interp = Interpreter::new();
+                        match execute_stargate_script(&script, &mut interp, false) {
                             Ok(code) => exit_code = code,
                             Err(e) => {
                                 eprintln!("Script error: {}", e);
@@ -186,7 +223,8 @@ fn main() {
                 std::process::exit(exit_code);
             } else {
                 // Script with semicolons - execute as script
-                match execute_script(&script_code) {
+                let mut interp = Interpreter::new();
+                match execute_stargate_script(&script_code, &mut interp, false) {
                     Ok(exit_code) => std::process::exit(exit_code),
                     Err(e) => {
                         eprintln!("Script error: {}", e);
@@ -281,7 +319,7 @@ fn main() {
                             // Script statement
                             let script_code = if cmd.ends_with(';') { cmd.to_string() } else { format!("{};", cmd) };
                             if let Ok(mut interp) = interpreter.lock() {
-                                match execute_script_with_interpreter(&script_code, &mut interp) {
+                                match execute_stargate_script(&script_code, &mut interp, true) {
                                     Ok(_) => true,
                                     Err(e) => {
                                         eprintln!("Script error: {}", e);
@@ -334,7 +372,7 @@ fn main() {
                     _ if input.starts_with(SCRIPT_PREFIX) => {
                         let script_code = input[SCRIPT_PREFIX.len()..].trim();
                         if let Ok(mut interp) = interpreter.lock() {
-                            match execute_script_with_interpreter(script_code, &mut interp) {
+                            match execute_stargate_script(script_code, &mut interp, true) {
                                 Ok(_exit_code) => {}, // In REPL mode, don't exit the process
                                 Err(e) => eprintln!("Script error: {}", e),
                             }
@@ -362,7 +400,7 @@ fn main() {
                         
                         let script = script_lines.join("\n");
                         if let Ok(mut interp) = interpreter.lock() {
-                            match execute_script_with_interpreter(&script, &mut interp) {
+                            match execute_stargate_script(&script, &mut interp, true) {
                                 Ok(_exit_code) => {}, // In REPL mode, don't exit the process
                                 Err(e) => eprintln!("Script error: {}", e),
                             }
@@ -390,7 +428,7 @@ fn main() {
                         
                         let class_def = class_lines.join("\n");
                         if let Ok(mut interp) = interpreter.lock() {
-                            match execute_script_with_interpreter(&class_def, &mut interp) {
+                            match execute_stargate_script(&class_def, &mut interp, true) {
                                 Ok(_exit_code) => {}, // In REPL mode, don't exit the process
                                 Err(e) => eprintln!("Script error: {}", e),
                             }
@@ -408,15 +446,39 @@ fn main() {
                             || input.ends_with(';')
                             || is_builtin_command;
                         
-                        // Check for property access, but exclude file paths (./foo, ../bar, /path)
+                        // Check for property access, but exclude file paths and command arguments
+                        // Property access looks like: obj.property, variable.method(), (cmd).property, list[0]
+                        // Not property access: get-contents "/tmp/file.txt", ./script.sh
                         let is_path_like = input.starts_with("./") 
                             || input.starts_with("../")
                             || input.starts_with('/');
                         
-                        let has_property_access = !is_path_like && (
-                            (input.contains('.') && input.chars().filter(|c| *c == '.').count() > 0)
-                            || (input.contains('[') && input.contains(']'))
-                        );
+                        // Check for property access pattern: word.word or ).word (not ".word" inside quotes)
+                        let has_property_access = !is_path_like && {
+                            let mut in_quotes = false;
+                            let mut has_dot_access = false;
+                            let chars: Vec<char> = input.chars().collect();
+                            
+                            for i in 0..chars.len() {
+                                if chars[i] == '"' {
+                                    in_quotes = !in_quotes;
+                                } else if !in_quotes && chars[i] == '.' && i > 0 && i < chars.len() - 1 {
+                                    // Check if it's a property access
+                                    let before = chars[i-1];
+                                    let after = chars[i+1];
+                                    // Valid before dot: alphanumeric, underscore, closing paren/bracket
+                                    // Valid after dot: alphanumeric, underscore
+                                    let valid_before = before.is_alphanumeric() || before == '_' || before == ')' || before == ']';
+                                    let valid_after = after.is_alphanumeric() || after == '_';
+                                    if valid_before && valid_after {
+                                        has_dot_access = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            has_dot_access || (!in_quotes && input.contains('[') && input.contains(']'))
+                        };
                         
                         if is_statement || has_property_access {
                             // Execute as script
@@ -432,7 +494,7 @@ fn main() {
                             };
                             
                             if let Ok(mut interp) = interpreter.lock() {
-                                match execute_script_with_interpreter(&script_code, &mut interp) {
+                                match execute_stargate_script(&script_code, &mut interp, true) {
                                     Ok(_exit_code) => {}, // In REPL mode, don't exit the process
                                     Err(e) => eprintln!("Script error: {}", e),
                                 }
