@@ -81,7 +81,12 @@ pub fn handle_dict_methods(
             if !args.is_empty() {
                 return Err(format!("len() expects 0 arguments, got {}", args.len()));
             }
-            Ok(Value::Number(map.len() as f64))
+            let len = map.len();
+            if len <= i32::MAX as usize {
+                Ok(Value::SmallInt(len as i32))
+            } else {
+                Ok(Value::Number(len as f64))
+            }
         }
         "is_empty" => {
             if !args.is_empty() {

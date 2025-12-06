@@ -529,6 +529,7 @@ impl Interpreter {
                     Value::Object(json_obj) => serde_json::to_string(&json_obj)
                         .map_err(|e| format!("Failed to serialize input to JSON: {}", e))?,
                     Value::String(s) => s.clone(),
+                    Value::SmallInt(i) => i.to_string(),
                     Value::Number(n) => n.to_string(),
                     Value::Bool(b) => b.to_string(),
                     Value::None => "none".to_string(),
@@ -592,6 +593,13 @@ impl Interpreter {
     pub(super) fn apply_operator(&self, left: Value, op: Operator, right: Value) -> Result<Value, String> {
         match op {
             Operator::Add => match (left, right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => {
+                    Ok(a.checked_add(b)
+                        .map(Value::SmallInt)
+                        .unwrap_or_else(|| Value::Number((a as f64) + (b as f64))))
+                }
+                (Value::SmallInt(a), Value::Number(b)) => Ok(Value::Number((a as f64) + b)),
+                (Value::Number(a), Value::SmallInt(b)) => Ok(Value::Number(a + (b as f64))),
                 (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
                 (Value::String(a), Value::String(b)) => Ok(Value::String(format!("{}{}", a, b))),
                 // None concatenation: none + string = string
@@ -615,8 +623,26 @@ impl Interpreter {
                 }
                 _ => Err("Invalid operands for +".to_string()),
             },
-            Operator::Sub => Ok(Value::Number(left.to_number() - right.to_number())),
-            Operator::Mul => Ok(Value::Number(left.to_number() * right.to_number())),
+            Operator::Sub => match (left, right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => {
+                    Ok(a.checked_sub(b)
+                        .map(Value::SmallInt)
+                        .unwrap_or_else(|| Value::Number((a as f64) - (b as f64))))
+                }
+                (Value::SmallInt(a), Value::Number(b)) => Ok(Value::Number((a as f64) - b)),
+                (Value::Number(a), Value::SmallInt(b)) => Ok(Value::Number(a - (b as f64))),
+                (l, r) => Ok(Value::Number(l.to_number() - r.to_number())),
+            },
+            Operator::Mul => match (left, right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => {
+                    Ok(a.checked_mul(b)
+                        .map(Value::SmallInt)
+                        .unwrap_or_else(|| Value::Number((a as f64) * (b as f64))))
+                }
+                (Value::SmallInt(a), Value::Number(b)) => Ok(Value::Number((a as f64) * b)),
+                (Value::Number(a), Value::SmallInt(b)) => Ok(Value::Number(a * (b as f64))),
+                (l, r) => Ok(Value::Number(l.to_number() * r.to_number())),
+            },
             Operator::Div => {
                 let divisor = right.to_number();
                 if divisor == 0.0 {
@@ -625,30 +651,25 @@ impl Interpreter {
                     Ok(Value::Number(left.to_number() / divisor))
                 }
             }
-            Operator::Mod => {
-                let divisor = right.to_number();
-                if divisor == 0.0 {
-                    Err("Modulo by zero".to_string())
-                } else {
-                    Ok(Value::Number(left.to_number() % divisor))
+            Operator::Mod => match (left, right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => {
+                    if b == 0 {
+                        Err("Modulo by zero".to_string())
+                    } else {
+                        Ok(Value::SmallInt(a % b))
+                    }
+                }
+                (l, r) => {
+                    let divisor = r.to_number();
+                    if divisor == 0.0 {
+                        Err("Modulo by zero".to_string())
+                    } else {
+                        Ok(Value::Number(l.to_number() % divisor))
+                    }
                 }
             }
-            Operator::Eq => Ok(Value::Bool(match (left, right) {
-                (Value::Number(a), Value::Number(b)) => a == b,
-                (Value::String(a), Value::String(b)) => a == b,
-                (Value::Bool(a), Value::Bool(b)) => a == b,
-                (Value::None, Value::None) => true,
-                (Value::None, _) | (_, Value::None) => false,
-                _ => false,
-            })),
-            Operator::Ne => Ok(Value::Bool(match (left, right) {
-                (Value::Number(a), Value::Number(b)) => a != b,
-                (Value::String(a), Value::String(b)) => a != b,
-                (Value::Bool(a), Value::Bool(b)) => a != b,
-                (Value::None, Value::None) => false,
-                (Value::None, _) | (_, Value::None) => true,
-                _ => true,
-            })),
+            Operator::Eq => Ok(Value::Bool(left == right)),
+            Operator::Ne => Ok(Value::Bool(left != right)),
             Operator::Lt => Ok(Value::Bool(left.to_number() < right.to_number())),
             Operator::Gt => Ok(Value::Bool(left.to_number() > right.to_number())),
             Operator::Le => Ok(Value::Bool(left.to_number() <= right.to_number())),

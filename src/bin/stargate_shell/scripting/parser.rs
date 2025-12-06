@@ -1004,7 +1004,12 @@ impl Parser {
 
         // Try to parse as number
         if let Ok(num) = token.parse::<f64>() {
-            return Ok(Expression::Value(Value::Number(num)));
+            // Check if it's an integer in i32 range
+            if num.fract() == 0.0 && num >= i32::MIN as f64 && num <= i32::MAX as f64 {
+                return Ok(Expression::Value(Value::SmallInt(num as i32)));
+            } else {
+                return Ok(Expression::Value(Value::Number(num)));
+            }
         }
 
         // Check for boolean literals

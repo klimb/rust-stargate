@@ -36,7 +36,12 @@ pub fn handle_set_methods(
             if !args.is_empty() {
                 return Err(format!("size() expects 0 arguments, got {}", args.len()));
             }
-            Ok(Value::Number(set.len() as f64))
+            let len = set.len();
+            if len <= i32::MAX as usize {
+                Ok(Value::SmallInt(len as i32))
+            } else {
+                Ok(Value::Number(len as f64))
+            }
         }
         "is_empty" => {
             if !args.is_empty() {

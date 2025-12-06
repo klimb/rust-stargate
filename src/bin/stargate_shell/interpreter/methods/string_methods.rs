@@ -41,7 +41,12 @@ pub fn handle_string_methods(
             if !args.is_empty() {
                 return Err(format!("length() takes no arguments, got {}", args.len()));
             }
-            Ok(Value::Number(string_value.len() as f64))
+            let len = string_value.len();
+            if len <= i32::MAX as usize {
+                Ok(Value::SmallInt(len as i32))
+            } else {
+                Ok(Value::Number(len as f64))
+            }
         }
         "contains" => {
             if args.len() != 1 {
