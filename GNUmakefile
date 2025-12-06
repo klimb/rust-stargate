@@ -167,7 +167,6 @@ UNIX_PROGS := \
 	nice \
 	nohup \
 	pathchk \
-	pinky \
 	stat \
 	stdbuf \
 	stty \
@@ -244,7 +243,6 @@ TEST_PROGS  := \
 	od \
 	paste \
 	pathchk \
-	pinky \
 	pr \
 	printf \
 	ptx \

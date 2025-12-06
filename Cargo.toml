@@ -38,7 +38,6 @@ uudoc = ["dep:clap_complete", "dep:clap_mangen", "dep:fluent-syntax", "dep:zip"]
 feat_external_libstdbuf = ["stdbuf/feat_external_libstdbuf"]
 # "feat_systemd_logind" == enable feat_systemd_logind support for utmpx replacement
 feat_systemd_logind = [
-  "pinky/feat_systemd_logind",
   "uptime/feat_systemd_logind",
   "users/feat_systemd_logind",
   "sgcore/feat_systemd_logind",
@@ -204,7 +203,7 @@ feat_require_unix_core = [
 ]
 # "feat_require_unix_utmpx" == set of utilities requiring unix utmp/utmpx support
 # * ref: <https://wiki.musl-libc.org/faq.html#Q:-Why-is-the-utmp/wtmp-functionality-only-implemented-as-stubs?>
-feat_require_unix_utmpx = ["pinky", "uptime", "users", "who"]
+feat_require_unix_utmpx = ["uptime", "users", "who"]
 
 # * bypass/override ~ translate 'test' feature name to avoid dependency collision with rust core 'test' crate (o/w surfaces as compiler errors during testing)
 test = ["sg_test"]
@@ -426,7 +425,6 @@ nproc = { optional = true, version = "0.4.0", package = "sg_nproc", path = "src/
 od = { optional = true, version = "0.4.0", package = "sg_od", path = "src/sg/od" }
 paste = { optional = true, version = "0.4.0", package = "sg_paste", path = "src/sg/paste" }
 pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "src/sg/pathchk" }
-pinky = { optional = true, version = "0.4.0", package = "sg_pinky", path = "src/sg/pinky" }
 pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "src/sg/pr" }
 printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "src/sg/printenv" }
 list-processes = { optional = true, version = "0.4.0", package = "sg_list_processes", path = "src/sg/list_processes" }

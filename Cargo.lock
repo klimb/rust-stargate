@@ -3200,15 +3200,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sg_pinky"
-version = "0.4.0"
-dependencies = [
- "clap",
- "fluent",
- "sgcore",
-]
-
-[[package]]
 name = "sg_pr"
 version = "0.4.0"
 dependencies = [
@@ -3981,7 +3972,6 @@ dependencies = [
  "sg_od",
  "sg_paste",
  "sg_pathchk",
- "sg_pinky",
  "sg_pr",
  "sg_prepend_file",
  "sg_printenv",

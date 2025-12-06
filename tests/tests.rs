@@ -234,10 +234,6 @@ mod test_paste;
 #[path = "by-util/test_pathchk.rs"]
 mod test_pathchk;
 
-#[cfg(feature = "pinky")]
-#[path = "by-util/test_pinky.rs"]
-mod test_pinky;
-
 #[cfg(feature = "pr")]
 #[path = "by-util/test_pr.rs"]
 mod test_pr;
