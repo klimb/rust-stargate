@@ -7,9 +7,6 @@ pub mod foreground_job;
 pub mod background_job;
 pub mod list_history;
 
-pub use help::execute as execute_help;
-pub use exit::is_exit_command;
-pub use describe_command::execute as execute_describe_command;
 pub use cd::execute as execute_cd;
 pub use list_jobs::execute as execute_list_jobs;
 pub use foreground_job::execute as execute_foreground_job;

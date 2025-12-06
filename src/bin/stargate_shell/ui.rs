@@ -1,5 +1,4 @@
 // UI functions for the shell
-use crate::VERSION;
 
 pub fn print_help() {
     println!("Stargate Shell Commands:");

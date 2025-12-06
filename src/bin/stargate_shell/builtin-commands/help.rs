@@ -1,5 +1,3 @@
-use crate::VERSION;
-
 pub fn execute() {
     println!("Stargate Shell Commands:");
     println!("  help                      - Show this help message");
