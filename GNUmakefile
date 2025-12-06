@@ -100,7 +100,7 @@ PROGS       := \
 	head \
 	get_hostname \
 	get_domainname \
-	hostname \
+	set-hostname \
 	join \
 	link \
 	ln \
@@ -227,6 +227,7 @@ TEST_PROGS  := \
 	head \
 	get_hostname \
 	get_domainname \
+	set_hostname \
 	install \
 	link \
 	ln \
@@ -300,9 +301,9 @@ all: build
 build-pkgs:
 ifneq (${MULTICALL}, y)
 ifdef BUILD_SPEC_FEATURE
-	${CARGO} build ${CARGOFLAGS} --features "$(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(pkg)) $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} --features "$(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(subst -,_,$(pkg))) $(RUSTC_ARCH)
 else
-	${CARGO} build ${CARGOFLAGS} ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(pkg)) $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} ${PROFILE_CMD} $(foreach pkg,$(EXES),-p sg_$(subst -,_,$(pkg))) $(RUSTC_ARCH)
 endif
 endif
 
