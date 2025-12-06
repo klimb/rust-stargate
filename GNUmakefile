@@ -10,6 +10,7 @@ COMPLETIONS     ?= y
 MANPAGES        ?= y
 LOCALES         ?= y
 INSTALL         ?= install
+BYTECODE        ?= y
 
 # Needed for the foreach loops to split each loop into a separate command
 define newline
@@ -325,12 +326,18 @@ test-scripting:
 	done
 	@echo "All scripting tests passed!"
 
+ifeq ($(BYTECODE),y)
+BYTECODE_ENV = STARGATE_BYTECODE=1
+else
+BYTECODE_ENV =
+endif
+
 benchmark:
 	@${CARGO} build --bin stargate-shell --features "${EXES} $(BUILD_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(RUSTC_ARCH) 2>&1 | grep -v warning || true
 	@echo ""
 	@echo "Running benchmarks..."
 	@echo ""
-	@python3 $(BASEDIR)/util/benchmark.py $(BUILDDIR)/stargate-shell $(BASEDIR) benchmark_small benchmark_large
+	@$(BYTECODE_ENV) python3 $(BASEDIR)/util/benchmark.py $(BUILDDIR)/stargate-shell $(BASEDIR) benchmark_small benchmark_large
 	@echo ""
 
 nextest:
