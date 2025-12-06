@@ -1,5 +1,4 @@
 use super::scripting::*;
-use super::execution::execute_pipeline;
 use super::testing::TestRunner;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -9,8 +8,6 @@ mod statement_execution;
 mod expression_eval;
 mod function_class_utils;
 mod object_methods;
-
-use methods::*;
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,

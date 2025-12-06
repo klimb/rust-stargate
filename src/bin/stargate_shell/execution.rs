@@ -2,9 +2,9 @@ use std::io::{Write, BufRead, BufReader};
 use std::process::{Command, Stdio};
 
 use super::parsing::{parse_pipeline, parse_command};
-use super::commands::{get_command_aliases, is_stargate_command};
+use super::commands::is_stargate_command;
 use super::path::find_in_path;
-use super::jobs::{add_background_job, add_foreground_job, wait_for_job};
+use super::jobs::add_background_job;
 use super::builtin_commands;
 use std::path::PathBuf;
 
