@@ -766,8 +766,7 @@ See [LICENSE](LICENSE) for full terms.
 
 ## Non-Goals
 - supporting UNIX POSIX compatibility .. using legacy ways of interacting with UNIX through a command-line interface and operating on unstructured streams of text.
-- supporting Windows compatibility (just use Windows Powershell instead). Its kind of ridiculous that every command in (rust) coreutils was handling how Windows works (and Android, and SE Linux, and a, and b, etc). No one that runs Windows cares about coreutils. 
-- supporting SELinux and Android.
+- supporting Windows, SELinux and Android.
 
 ## Goals
 - reduce it to OpenBSD-style crystalized essentials. The BSD userland (compared to GNU/CoreUtils, including rust rewrite) is much much smaller (by 10x if its OpenBSD). And much cleaner, and significantly easier to read, find bugs and security problems. Smaller is better (do one thing).

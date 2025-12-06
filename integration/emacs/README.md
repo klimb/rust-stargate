@@ -84,6 +84,8 @@ If you have the stargate source code checked out:
 | `M-n`       | `comint-next-input`          | Next command in history        |
 | `C-c C-r`   | `comint-history-isearch-backward-regexp` | Search history |
 
+**Note:** The variables panel is always visible on the right side and updates automatically.
+
 ### Example Workflow
 
 1. Launch stargate-shell:
@@ -109,9 +111,36 @@ If you have the stargate source code checked out:
 - **Syntax Highlighting**: Keywords, strings, numbers, and flags are highlighted
 - **ANSI Color Support**: Colors and formatting from stargate-shell are properly displayed
 - **Command History**: Navigate through command history with `M-p`/`M-n`
+- **Variables Panel**: Toggle a split-screen view showing all variables in real-time (`C-c v`)
+- **List Variables**: Quick variable inspection in minibuffer (`C-c C-v`)
 - **Multiple Sessions**: Run multiple stargate-shell instances with `stargate-shell-new`
 - **Integration**: Send code from other buffers to the shell
 - **Standard Comint Features**: All standard Emacs comint features work (history search, etc.)
+
+## Variables Panel
+
+The variables panel displays all stargate-shell variables in a split-screen view and is **always visible** on the right side.
+
+### Features:
+
+1. **Always visible**: When you run `M-x stargate-shell`, the variables panel automatically opens on the right side and stays visible
+2. **Auto-updates**: The panel automatically refreshes after each command
+3. **Persistent**: The panel remains visible throughout your session
+4. **Disable**: Set `(setq stargate-shell-show-variables-panel nil)` in your init file to disable
+
+Example workflow:
+```
+M-x stargate-shell            # Opens shell with variables panel on right
+stargate > let x = 42;        # Panel shows: x (int) = 42
+stargate > let name = "Alice"; # Panel updates: x, name
+stargate > let items = [1, 2, 3]; # Panel updates: x, name, items
+```
+
+The panel shows:
+- Variable names
+- Variable types (int, string, bool, list, dict, class instances, etc.)
+- Variable values
+- For class instances, shows instance fields (e.g., `person.name`, `person.age`)
 
 ## Customization
 
@@ -129,6 +158,9 @@ If you have the stargate source code checked out:
 
 ;; Buffer name
 (setq stargate-shell-buffer-name "*Stargate Shell*")
+
+;; Auto-show variables panel on startup (default: t)
+(setq stargate-shell-show-variables-panel t)
 ```
 
 ### Example Custom Configuration
