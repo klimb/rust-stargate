@@ -95,7 +95,7 @@ fn standardize_nice_args(mut args: impl sgcore::Args) -> impl sgcore::Args {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = standardize_nice_args(args);
 
     let matches =

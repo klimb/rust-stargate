@@ -34,7 +34,7 @@ use sgcore::translate;
 use sgcore::{show, show_error};
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // When we receive a SIGPIPE signal, we want to terminate the process so
     // that we don't print any error messages to stderr. Rust ignores SIGPIPE
     // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's

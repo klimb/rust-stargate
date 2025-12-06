@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
-use sg_rm::uumain;
+use sg_rm::sgmain;
 use sgcore::benchmark::{fs_tree, run_util_function};
 
 /// Benchmark removing a single file (repeated to reach 100ms)
@@ -24,7 +24,7 @@ fn rm_single_file(bencher: Bencher) {
         })
         .bench_values(|(temp_dir, paths)| {
             for path in &paths {
-                black_box(run_util_function(uumain, &[path]));
+                black_box(run_util_function(sgmain, &[path]));
             }
             drop(temp_dir);
         });
@@ -51,7 +51,7 @@ fn rm_multiple_files(bencher: Bencher) {
         })
         .bench_values(|(temp_dir, paths)| {
             let args: Vec<&str> = paths.iter().map(|s| s.as_str()).collect();
-            black_box(run_util_function(uumain, &args));
+            black_box(run_util_function(sgmain, &args));
             drop(temp_dir);
         });
 }
@@ -69,7 +69,7 @@ fn rm_recursive_tree(bencher: Bencher) {
             (temp_dir, test_dir.to_str().unwrap().to_string())
         })
         .bench_values(|(temp_dir, path)| {
-            black_box(run_util_function(uumain, &["-r", &path]));
+            black_box(run_util_function(sgmain, &["-r", &path]));
             drop(temp_dir);
         });
 }
@@ -97,7 +97,7 @@ fn rm_force_files(bencher: Bencher) {
             let mut args = vec!["-f"];
             let path_refs: Vec<&str> = paths.iter().map(|s| s.as_str()).collect();
             args.extend(path_refs);
-            black_box(run_util_function(uumain, &args));
+            black_box(run_util_function(sgmain, &args));
             drop(temp_dir);
         });
 }

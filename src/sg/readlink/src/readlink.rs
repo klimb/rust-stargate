@@ -25,7 +25,7 @@ const OPT_ZERO: &str = "zero";
 const ARG_FILES: &str = "files";
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
     let object_output = JsonOutputOptions::from_matches(&matches);
 

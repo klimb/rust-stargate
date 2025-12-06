@@ -106,7 +106,7 @@ fn extract_negative_modes(mut args: impl sgcore::Args) -> (Option<String>, Vec<O
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (parsed_cmode, args) = extract_negative_modes(args.skip(1)); // skip binary name
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 

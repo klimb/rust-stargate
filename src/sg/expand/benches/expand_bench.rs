@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use std::fmt::Write;
-use sg_expand::uumain;
+use sg_expand::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function};
 
 /// Helper function to run expand benchmark with generated data
@@ -14,7 +14,7 @@ fn bench_expand(bencher: Bencher, data: impl AsRef<[u8]>, args: &[&str]) {
     all_args.push(file_path_str);
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &all_args));
+        black_box(run_util_function(sgmain, &all_args));
     });
 }
 

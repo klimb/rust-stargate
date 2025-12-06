@@ -54,7 +54,7 @@ pub fn main(_args: TokenStream, stream: TokenStream) -> TokenStream {
             // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)
             #[cfg(unix)]
             sgcore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
-            let result = uumain(args);
+            let result = sgmain(args);
             match result {
                 Ok(()) => sgcore::error::get_exit_code(),
                 Err(e) => {

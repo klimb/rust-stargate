@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use tempfile::NamedTempFile;
-use sg_sort::uumain;
+use sg_sort::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark sorting ASCII-only data
@@ -13,7 +13,7 @@ fn sort_ascii_only(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -29,7 +29,7 @@ fn sort_accented_data(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -45,7 +45,7 @@ fn sort_mixed_data(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -61,7 +61,7 @@ fn sort_case_sensitive(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -77,7 +77,7 @@ fn sort_case_insensitive(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-f", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -93,7 +93,7 @@ fn sort_dictionary_order(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-d", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -117,7 +117,7 @@ fn sort_numeric(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-n", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -133,7 +133,7 @@ fn sort_reverse_locale(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-r", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -161,7 +161,7 @@ fn sort_key_field(bencher: Bencher, num_lines: usize) {
     bencher.bench(|| {
         // Sort by second field
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-k", "2", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -177,7 +177,7 @@ fn sort_unique_locale(bencher: Bencher, num_lines: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-u", "-o", output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -200,7 +200,7 @@ fn sort_long_line(bencher: Bencher, line_size: usize) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &[
                 file_a.to_str().unwrap(),
                 file_b.to_str().unwrap(),

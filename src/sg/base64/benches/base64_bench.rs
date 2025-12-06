@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use std::ffi::OsString;
-use uu_base64::uumain;
+use uu_base64::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 fn create_tmp_file(size_mb: usize) -> String {
@@ -16,7 +16,7 @@ fn b64_encode_synthetic(bencher: Bencher) {
     let file_path_str = &create_tmp_file(5_000);
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -27,7 +27,7 @@ fn b64_decode_synthetic(bencher: Bencher) {
     let file_path_str = &create_tmp_file(5_000);
     let in_file = create_test_file(b"", temp_dir.path());
     let in_file_str = in_file.to_str().unwrap();
-    uumain(
+    sgmain(
         [
             OsString::from(file_path_str),
             OsString::from(format!(">{in_file_str}")),
@@ -37,7 +37,7 @@ fn b64_decode_synthetic(bencher: Bencher) {
     );
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-d", in_file_str]));
+        black_box(run_util_function(sgmain, &["-d", in_file_str]));
     });
 }
 
@@ -48,7 +48,7 @@ fn b64_decode_ignore_garbage_synthetic(bencher: Bencher) {
     let file_path_str = &create_tmp_file(5_000);
     let in_file = create_test_file(b"", temp_dir.path());
     let in_file_str = in_file.to_str().unwrap();
-    uumain(
+    sgmain(
         [
             OsString::from(file_path_str),
             OsString::from(format!(">{in_file_str}")),
@@ -58,7 +58,7 @@ fn b64_decode_ignore_garbage_synthetic(bencher: Bencher) {
     );
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-d", "-i", in_file_str]));
+        black_box(run_util_function(sgmain, &["-d", "-i", in_file_str]));
     });
 }
 

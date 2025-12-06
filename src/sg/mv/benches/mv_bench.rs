@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
-use sg_mv::uumain;
+use sg_mv::sgmain;
 use sgcore::benchmark::{fs_tree, run_util_function};
 
 /// Benchmark moving a single file (repeated to reach 100ms)
@@ -24,7 +24,7 @@ fn mv_single_file(bencher: Bencher) {
         })
         .bench_values(|(temp_dir, files)| {
             for (src, dst) in &files {
-                black_box(run_util_function(uumain, &[src, dst]));
+                black_box(run_util_function(sgmain, &[src, dst]));
             }
             drop(temp_dir);
         });
@@ -55,7 +55,7 @@ fn mv_multiple_to_dir(bencher: Bencher) {
         })
         .bench_values(|(temp_dir, args)| {
             let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-            black_box(run_util_function(uumain, &arg_refs));
+            black_box(run_util_function(sgmain, &arg_refs));
             drop(temp_dir);
         });
 }
@@ -78,7 +78,7 @@ fn mv_directory(bencher: Bencher) {
             )
         })
         .bench_values(|(temp_dir, src, dst)| {
-            black_box(run_util_function(uumain, &[&src, &dst]));
+            black_box(run_util_function(sgmain, &[&src, &dst]));
             drop(temp_dir);
         });
 }
@@ -104,7 +104,7 @@ fn mv_force_overwrite(bencher: Bencher) {
         })
         .bench_values(|(temp_dir, files)| {
             for (src, dst) in &files {
-                black_box(run_util_function(uumain, &["-f", src, dst]));
+                black_box(run_util_function(sgmain, &["-f", src, dst]));
             }
             drop(temp_dir);
         });

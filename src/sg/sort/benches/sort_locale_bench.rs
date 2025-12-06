@@ -1,7 +1,7 @@
 use divan::{Bencher, black_box};
 use std::env;
 use tempfile::NamedTempFile;
-use sg_sort::uumain;
+use sg_sort::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark ASCII-only data sorting with C locale (byte comparison)
@@ -18,7 +18,7 @@ fn sort_ascii_c_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "C");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -38,7 +38,7 @@ fn sort_ascii_utf8_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "en_US.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -58,7 +58,7 @@ fn sort_mixed_c_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "C");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -78,7 +78,7 @@ fn sort_mixed_utf8_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "en_US.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -98,7 +98,7 @@ fn sort_german_c_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "C");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -118,7 +118,7 @@ fn sort_german_locale(bencher: Bencher) {
             env::set_var("LC_ALL", "de_DE.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-o", &output_path, file_path.to_str().unwrap()]
         ));
     });
@@ -139,7 +139,7 @@ fn sort_numeric(bencher: Bencher) {
             env::set_var("LC_ALL", "en_US.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-n", file_path.to_str().unwrap()]
         ));
     });
@@ -156,7 +156,7 @@ fn sort_reverse_mixed(bencher: Bencher) {
             env::set_var("LC_ALL", "en_US.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-r", file_path.to_str().unwrap()]
         ));
     });
@@ -173,7 +173,7 @@ fn sort_unique_mixed(bencher: Bencher) {
             env::set_var("LC_ALL", "en_US.UTF-8");
         }
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-u", file_path.to_str().unwrap()]
         ));
     });

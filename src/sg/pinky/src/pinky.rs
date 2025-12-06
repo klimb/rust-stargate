@@ -22,7 +22,7 @@ mod options {
 }
 
 #[sgcore::main]
-use platform::uumain;
+use platform::sgmain;
 
 pub fn uu_app() -> Command {
     #[cfg(not(target_env = "musl"))]

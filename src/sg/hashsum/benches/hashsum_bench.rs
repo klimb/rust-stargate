@@ -1,7 +1,7 @@
 use divan::{Bencher, black_box};
 use std::io::Write;
 use tempfile::NamedTempFile;
-use sg_hashsum::uumain;
+use sg_hashsum::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark MD5 hashing
@@ -12,7 +12,7 @@ fn hashsum_md5(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["--md5", file_path.to_str().unwrap()]
         ));
     });
@@ -26,7 +26,7 @@ fn hashsum_sha1(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["--sha1", file_path.to_str().unwrap()]
         ));
     });
@@ -40,7 +40,7 @@ fn hashsum_sha256(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["--sha256", file_path.to_str().unwrap()]
         ));
     });
@@ -54,7 +54,7 @@ fn hashsum_sha512(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["--sha512", file_path.to_str().unwrap()]
         ));
     });
@@ -88,7 +88,7 @@ fn hashsum_md5_check(bencher: Bencher) {
         })
         .bench_values(|(_checksum_file, checksum_path)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["--md5", "--check", &checksum_path]
             ));
         });
@@ -122,7 +122,7 @@ fn hashsum_sha256_check(bencher: Bencher) {
         })
         .bench_values(|(_checksum_file, checksum_path)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["--sha256", "--check", &checksum_path]
             ));
         });

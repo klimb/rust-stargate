@@ -76,7 +76,7 @@ Use common functions from `src/sgcore/src/lib/features/benchmark.rs`:
 
 ```rust
 use divan::{Bencher, black_box};
-use sg_expand::uumain;
+use sg_expand::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 #[divan::bench(args = [10_000, 100_000])]
@@ -86,7 +86,7 @@ fn bench_expand(bencher: Bencher, num_lines: usize) {
     let file_path = create_test_file(&data, temp_dir.path());
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path.to_str().unwrap()]));
+        black_box(run_util_function(sgmain, &[file_path.to_str().unwrap()]));
     });
 }
 

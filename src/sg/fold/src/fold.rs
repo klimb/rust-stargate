@@ -40,7 +40,7 @@ struct FoldContext<'a, W: Write> {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_lossy();
 
     let (args, obs_width) = handle_obsolete(&args[..]);

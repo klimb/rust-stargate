@@ -78,7 +78,7 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let app = uu_app();
     let matches = sgcore::clap_localization::handle_clap_result(app, args)?;
 

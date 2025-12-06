@@ -214,7 +214,7 @@ impl OdOptions {
 /// parses and validates command line parameters, prepares data structures,
 /// opens the input and calls `odfunc` to process the input.
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_ignore();
 
     let clap_opts = uu_app();

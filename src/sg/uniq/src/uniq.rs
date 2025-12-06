@@ -653,7 +653,7 @@ fn map_clap_errors(clap_error: Error) -> Box<dyn UError> {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (args, skip_fields_old, skip_chars_old) = handle_obsolete(args);
 
     let matches = match uu_app().try_get_matches_from(args) {

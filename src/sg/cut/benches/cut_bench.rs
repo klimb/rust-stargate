@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_cut::uumain;
+use sg_cut::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark cutting specific byte ranges
@@ -10,7 +10,7 @@ fn cut_bytes(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-b", "1-20", file_path.to_str().unwrap()]
         ));
     });
@@ -24,7 +24,7 @@ fn cut_characters(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-c", "5-30", file_path.to_str().unwrap()]
         ));
     });
@@ -42,7 +42,7 @@ fn cut_fields_tab(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-f", "2,4", file_path.to_str().unwrap()]
         ));
     });
@@ -60,7 +60,7 @@ fn cut_fields_custom_delim(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-d", ",", "-f", "1,3,5", file_path.to_str().unwrap()]
         ));
     });

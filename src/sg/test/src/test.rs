@@ -36,7 +36,7 @@ pub fn uu_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn uumain(mut args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
     let program = args.next().unwrap_or_else(|| OsString::from("test"));
     let binary_name = sgcore::util_name();
     let mut args: Vec<_> = args.collect();

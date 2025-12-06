@@ -4,7 +4,7 @@ use clap::Command;
 use sgcore::{encoding::Format, error::UResult, translate};
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let format = Format::Base32;
     let (about, usage) = get_info();
     let config = base_common::parse_base_cmd_args(args, about, usage)?;

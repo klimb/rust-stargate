@@ -142,7 +142,7 @@ impl Options {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     set_hook(Box::new(|panic_info| {
         print!("\r");
         println!("{panic_info}");

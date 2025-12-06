@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_cksum::uumain;
+use sg_cksum::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 // Macro to generate benchmarks for each algorithm
@@ -12,7 +12,7 @@ macro_rules! bench_algorithm {
 
             bencher.bench(|| {
                 black_box(run_util_function(
-                    uumain,
+                    sgmain,
                     &["--algorithm", $algo_str, file_path.to_str().unwrap()]
                 ));
             });
@@ -26,7 +26,7 @@ macro_rules! bench_algorithm {
 
             bencher.bench(|| {
                 black_box(run_util_function(
-                    uumain,
+                    sgmain,
                     &[
                         "--algorithm",
                         $algo_str,
@@ -110,7 +110,7 @@ fn cksum_default(bencher: Bencher) {
     let file_path = setup_test_file(&data);
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path.to_str().unwrap()]));
+        black_box(run_util_function(sgmain, &[file_path.to_str().unwrap()]));
     });
 }
 
@@ -122,7 +122,7 @@ fn cksum_raw_output(bencher: Bencher) {
 
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["--raw", file_path.to_str().unwrap()]
         ));
     });
@@ -145,7 +145,7 @@ fn cksum_multiple_files(bencher: Bencher) {
         })
         .bench_values(|(file1, file2, file3)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &[
                     file1.to_str().unwrap(),
                     file2.to_str().unwrap(),

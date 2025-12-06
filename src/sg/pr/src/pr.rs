@@ -306,7 +306,7 @@ pub fn uu_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = args.collect_ignore();
 
     let opt_args = recreate_arguments(&args);
