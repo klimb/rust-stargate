@@ -880,7 +880,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let summarize = matches.get_flag(options::SUMMARIZE);

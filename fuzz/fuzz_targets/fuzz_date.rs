@@ -2,7 +2,7 @@
 use libfuzzer_sys::fuzz_target;
 
 use std::ffi::OsString;
-use sg_date::uumain;
+use sg_date::sgmain;
 
 fuzz_target!(|data: &[u8]| {
     let delim: u8 = 0; // Null byte

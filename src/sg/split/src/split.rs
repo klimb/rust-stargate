@@ -44,7 +44,7 @@ static ARG_INPUT: &str = "input";
 static ARG_PREFIX: &str = "prefix";
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (args, obs_lines) = handle_obsolete(args);
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 

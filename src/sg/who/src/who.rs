@@ -32,7 +32,7 @@ fn get_runlevel_help() -> String {
 }
 
 #[sgcore::main]
-use platform::uumain;
+use platform::sgmain;
 
 pub fn uu_app() -> Command {
     #[cfg(not(target_env = "musl"))]

@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use tempfile::TempDir;
-use sg_split::uumain;
+use sg_split::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file, text_data};
 
 /// Benchmark splitting by line count
@@ -17,7 +17,7 @@ fn split_lines(bencher: Bencher) {
         })
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["-l", "1000", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
@@ -38,7 +38,7 @@ fn split_bytes(bencher: Bencher) {
         })
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["-b", "100K", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
@@ -59,7 +59,7 @@ fn split_number_chunks(bencher: Bencher) {
         })
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["-n", "10", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);
@@ -80,7 +80,7 @@ fn split_numeric_suffix(bencher: Bencher) {
         })
         .bench_values(|(output_dir, prefix)| {
             black_box(run_util_function(
-                uumain,
+                sgmain,
                 &["-d", "-l", "500", file_path.to_str().unwrap(), &prefix]
             ));
             drop(output_dir);

@@ -2,7 +2,7 @@
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use sg_test::uumain;
+use sg_test::sgmain;
 
 use rand::Rng;
 use rand::prelude::IndexedRandom;

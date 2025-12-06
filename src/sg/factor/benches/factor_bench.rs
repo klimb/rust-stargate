@@ -1,7 +1,7 @@
 // spell-checker:ignore funcs
 
 use divan::{Bencher, black_box};
-use sg_factor::uumain;
+use sg_factor::sgmain;
 use sgcore::benchmark::run_util_function;
 
 /// Benchmark multiple u64 digits
@@ -12,7 +12,7 @@ fn factor_multiple_u64s(bencher: Bencher, start_num: u64) {
         .with_inputs(|| (start_num, start_num + 2500))
         .bench_values(|(start_u64, end_u64)| {
             for u64_digit in start_u64..=end_u64 {
-                black_box(run_util_function(uumain, &[&u64_digit.to_string()]));
+                black_box(run_util_function(sgmain, &[&u64_digit.to_string()]));
             }
         });
 }
@@ -28,7 +28,7 @@ fn factor_multiple_u128s(bencher: Bencher, start_num: u128) {
         })
         .bench_values(|(start_u128, end_u128)| {
             for u128_digit in start_u128..=end_u128 {
-                black_box(run_util_function(uumain, &[&u128_digit.to_string()]));
+                black_box(run_util_function(sgmain, &[&u128_digit.to_string()]));
             }
         });
 }
@@ -46,7 +46,7 @@ fn factor_multiple_big_uint(bencher: Bencher) {
         .bench_values(|(start_big_uint, end_big_uint)| {
             for digit in start_big_uint..=end_big_uint {
                 let big_uint_str = format!("340282366920938463463374607431768211456{digit}");
-                black_box(run_util_function(uumain, &[&big_uint_str]));
+                black_box(run_util_function(sgmain, &[&big_uint_str]));
             }
         });
 }

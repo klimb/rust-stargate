@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_fold::uumain;
+use sg_fold::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function};
 
 /// Benchmark folding many short lines
@@ -16,7 +16,7 @@ fn fold_many_lines(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -34,7 +34,7 @@ fn fold_custom_width(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-w", "40", file_path_str]));
+        black_box(run_util_function(sgmain, &["-w", "40", file_path_str]));
     });
 }
 

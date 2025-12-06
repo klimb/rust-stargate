@@ -161,7 +161,7 @@ fn parse_bit_num(arg: &str) -> Result<usize, ParseIntError> {
 }
 
 #[sgcore::main]
-pub fn uumain(mut args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
     // if there is no program name for some reason, default to "hashsum"
     let program = args.next().unwrap_or_else(|| OsString::from(NAME));
     let binary_name = Path::new(&program)

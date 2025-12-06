@@ -164,7 +164,7 @@ fn parse_military_timezone_with_offset(s: &str) -> Option<i32> {
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);

@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_collect_count::uumain;
+use sg_collect_count::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark different file sizes for byte counting
@@ -11,7 +11,7 @@ fn wc_bytes_synthetic(bencher: Bencher, size_mb: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-c", file_path_str]));
+        black_box(run_util_function(sgmain, &["-c", file_path_str]));
     });
 }
 
@@ -23,7 +23,7 @@ fn wc_words_synthetic(bencher: Bencher, size_mb: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-w", file_path_str]));
+        black_box(run_util_function(sgmain, &["-w", file_path_str]));
     });
 }
 
@@ -36,7 +36,7 @@ fn wc_bytes_lines_synthetic(bencher: Bencher, size_mb: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-cl", file_path_str]));
+        black_box(run_util_function(sgmain, &["-cl", file_path_str]));
     });
 }
 
@@ -49,7 +49,7 @@ fn wc_lines_variable_length(bencher: Bencher, (size_mb, avg_line_len): (usize, u
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-l", file_path_str]));
+        black_box(run_util_function(sgmain, &["-l", file_path_str]));
     });
 }
 
@@ -62,7 +62,7 @@ fn wc_lines_large_line_count(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-l", file_path_str]));
+        black_box(run_util_function(sgmain, &["-l", file_path_str]));
     });
 }
 
@@ -75,7 +75,7 @@ fn wc_chars_large_line_count(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-m", file_path_str]));
+        black_box(run_util_function(sgmain, &["-m", file_path_str]));
     });
 }
 
@@ -88,7 +88,7 @@ fn wc_words_large_line_count(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-w", file_path_str]));
+        black_box(run_util_function(sgmain, &["-w", file_path_str]));
     });
 }
 
@@ -101,7 +101,7 @@ fn wc_default_large_line_count(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-lwc", file_path_str]));
+        black_box(run_util_function(sgmain, &["-lwc", file_path_str]));
     });
 }
 
@@ -114,7 +114,7 @@ fn wc_lines_extreme_line_lengths(bencher: Bencher, (num_lines, line_len): (usize
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-l", file_path_str]));
+        black_box(run_util_function(sgmain, &["-l", file_path_str]));
     });
 }
 

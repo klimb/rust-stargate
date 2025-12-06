@@ -33,7 +33,7 @@ pub enum Mode {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut args = args.collect_ignore();
     let obs_signal = handle_obsolete(&mut args);
 

@@ -330,7 +330,7 @@ impl ValueParserFactory for OptionalPathBufParser {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = args.collect();
     let matches = match uu_app().try_get_matches_from(&args) {
         Ok(m) => m,

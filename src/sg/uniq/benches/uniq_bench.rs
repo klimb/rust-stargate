@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_uniq::uumain;
+use sg_uniq::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file};
 
 /// Generate data with many consecutive duplicate lines
@@ -35,7 +35,7 @@ fn uniq_heavy_duplicates(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -50,7 +50,7 @@ fn uniq_with_count(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-c", file_path_str]));
+        black_box(run_util_function(sgmain, &["-c", file_path_str]));
     });
 }
 
@@ -99,7 +99,7 @@ fn uniq_case_insensitive(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-i", file_path_str]));
+        black_box(run_util_function(sgmain, &["-i", file_path_str]));
     });
 }
 

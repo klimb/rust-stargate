@@ -1,12 +1,12 @@
 use divan::{Bencher, black_box};
-use sg_seq::uumain;
+use sg_seq::sgmain;
 use sgcore::benchmark::run_util_function;
 
 /// Benchmark simple integer sequence
 #[divan::bench]
 fn seq_integers(bencher: Bencher) {
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["1", "1000000"]));
+        black_box(run_util_function(sgmain, &["1", "1000000"]));
     });
 }
 
@@ -14,7 +14,7 @@ fn seq_integers(bencher: Bencher) {
 #[divan::bench]
 fn seq_custom_separator(bencher: Bencher) {
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-s", ",", "1", "1000000"]));
+        black_box(run_util_function(sgmain, &["-s", ",", "1", "1000000"]));
     });
 }
 
@@ -22,7 +22,7 @@ fn seq_custom_separator(bencher: Bencher) {
 #[divan::bench]
 fn seq_with_step(bencher: Bencher) {
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["1", "2", "1000000"]));
+        black_box(run_util_function(sgmain, &["1", "2", "1000000"]));
     });
 }
 
@@ -31,7 +31,7 @@ fn seq_with_step(bencher: Bencher) {
 fn seq_formatted(bencher: Bencher) {
     bencher.bench(|| {
         black_box(run_util_function(
-            uumain,
+            sgmain,
             &["-f", "%.3f", "1", "0.1", "10000"]
         ));
     });

@@ -5,7 +5,7 @@ use sgcore::error::{UResult, set_exit_code};
 use sgcore::translate;
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut command = uu_app();
 
     let args: Vec<OsString> = args.collect();

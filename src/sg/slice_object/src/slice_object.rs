@@ -11,7 +11,7 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = uu_app().try_get_matches_from(args)?;
 
     // Read JSON from stdin

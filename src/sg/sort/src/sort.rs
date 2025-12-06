@@ -1108,7 +1108,7 @@ fn default_merge_batch_size() -> usize {
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut settings = GlobalSettings::default();
 
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 2)?;

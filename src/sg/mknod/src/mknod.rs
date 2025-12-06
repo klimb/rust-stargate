@@ -83,7 +83,7 @@ fn mknod(file_name: &str, config: Config) -> i32 {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let file_type = matches.get_one::<FileType>("type").unwrap();

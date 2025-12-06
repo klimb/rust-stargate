@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_nl::uumain;
+use sg_nl::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 /// Benchmark numbering many lines (default mode - most common use case)
@@ -11,7 +11,7 @@ fn nl_many_lines(bencher: Bencher, num_lines: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -24,7 +24,7 @@ fn nl_large_file(bencher: Bencher, size_mb: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &["-ba", file_path_str]));
+        black_box(run_util_function(sgmain, &["-ba", file_path_str]));
     });
 }
 

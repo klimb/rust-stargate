@@ -1,5 +1,5 @@
 use divan::{Bencher, black_box};
-use sg_tsort::uumain;
+use sg_tsort::sgmain;
 use sgcore::benchmark::{run_util_function, setup_test_file};
 
 /// Generate topological sort test data - linear chain
@@ -138,7 +138,7 @@ fn tsort_linear_chain(bencher: Bencher, num_nodes: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -150,7 +150,7 @@ fn tsort_tree_dag(bencher: Bencher, (depth, branching): (usize, usize)) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -162,7 +162,7 @@ fn tsort_complex_dag(bencher: Bencher, num_nodes: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -175,7 +175,7 @@ fn tsort_wide_dag(bencher: Bencher, num_nodes: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 
@@ -187,7 +187,7 @@ fn tsort_input_parsing_heavy(bencher: Bencher, num_edges: usize) {
     let file_path_str = file_path.to_str().unwrap();
 
     bencher.bench(|| {
-        black_box(run_util_function(uumain, &[file_path_str]));
+        black_box(run_util_function(sgmain, &[file_path_str]));
     });
 }
 

@@ -2,7 +2,7 @@
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use sg_sort::uumain;
+use sg_sort::sgmain;
 
 use rand::Rng;
 use std::env;

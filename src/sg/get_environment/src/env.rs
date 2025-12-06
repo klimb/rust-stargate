@@ -777,7 +777,7 @@ fn ignore_signal(sig: Signal) -> UResult<()> {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // Rust ignores SIGPIPE (see https://github.com/rust-lang/rust/issues/62569).
     // We restore its default action here.
     #[cfg(unix)]

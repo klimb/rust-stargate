@@ -3,7 +3,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
-use sg_cp::uumain;
+use sg_cp::sgmain;
 use sgcore::benchmark::{fs_tree, run_util_function};
 
 fn remove_path(path: &Path) {
@@ -40,7 +40,7 @@ where
         full_args.push(source_str);
         full_args.push(dest_str);
 
-        black_box(run_util_function(uumain, &full_args));
+        black_box(run_util_function(sgmain, &full_args));
     });
 }
 
@@ -105,7 +105,7 @@ fn cp_large_file(bencher: Bencher, size_mb: usize) {
     bencher.bench(|| {
         remove_path(&dest);
 
-        black_box(run_util_function(uumain, &[source_str, dest_str]));
+        black_box(run_util_function(sgmain, &[source_str, dest_str]));
     });
 }
 

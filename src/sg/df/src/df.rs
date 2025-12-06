@@ -383,7 +383,7 @@ impl UError for DfError {
 }
 
 #[sgcore::main]
-pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
 
     let opt = Options::from(&matches).map_err(DfError::OptionsError)?;
