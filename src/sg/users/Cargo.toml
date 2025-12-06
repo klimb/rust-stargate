@@ -3,7 +3,7 @@
 [package]
 name = "sg_users"
 description = "users ~ (uutils) display names of currently logged-in users"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/users"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

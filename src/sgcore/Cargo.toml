@@ -2,8 +2,8 @@
 
 [package]
 name = "sgcore"
-description = "stargate ~ 'core' stargate code library (cross-platform)"
-repository = "https://github.com/uutils/coreutils/tree/main/src/sgcore"
+description = "Stargate: core code library (cross-platform)"
+repository = "https://github.com/klimb/rust-stargate"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true

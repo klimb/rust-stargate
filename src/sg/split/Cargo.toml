@@ -1,7 +1,7 @@
 [package]
 name = "sg_split"
 description = "split ~ (uutils) split input into output files"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/split"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "sg_fmt"
 description = "fmt ~ (uutils) reformat each paragraph of input"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/fmt"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

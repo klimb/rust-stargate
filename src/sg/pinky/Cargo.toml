@@ -3,7 +3,7 @@
 [package]
 name = "sg_pinky"
 description = "pinky ~ (uutils) display user information"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/pinky"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

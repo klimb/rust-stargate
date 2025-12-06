@@ -5,9 +5,9 @@
 
 [package]
 name = "stargate"
-description = "Stargate: UNIX userland written in Rust"
+description = "Stargate: UNIX userland + shell + language"
 default-run = "stargate"
-repository = "https://github.com/uutils/coreutils"
+repository = "https://github.com/klimb/rust-stargate"
 rust-version = "1.85.0"
 version.workspace = true
 authors.workspace = true

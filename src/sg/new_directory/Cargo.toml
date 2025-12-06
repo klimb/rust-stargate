@@ -1,7 +1,7 @@
 [package]
 name = "sg_new_directory"
 description = "new-directory ~ (uutils) create DIRECTORY"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/new_directory"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

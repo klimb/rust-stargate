@@ -1,7 +1,7 @@
 [package]
 name = "sg_timeout"
 description = "timeout ~ (uutils) run COMMAND with a DURATION time limit"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/timeout"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

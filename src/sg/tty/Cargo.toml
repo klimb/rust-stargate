@@ -1,7 +1,7 @@
 [package]
 name = "sg_tty"
 description = "tty ~ (uutils) display the name of the terminal connected to standard input"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/tty"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

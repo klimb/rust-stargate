@@ -1,7 +1,7 @@
 [package]
 name = "sg_get_architecture"
 description = "get-architecture ~ display machine architecture"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/arch"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "sg_whoami"
 description = "whoami ~ (uutils) display user name of current effective user ID"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/whoami"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

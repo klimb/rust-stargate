@@ -1,7 +1,7 @@
 [package]
 name = "sg_stdbuf_libstdbuf"
 description = "stdbuf/libstdbuf ~ (uutils); dynamic library required for stdbuf"
-repository = "https://github.com/uutils/coreutils/tree/main/src/uu/stdbuf"
+repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
