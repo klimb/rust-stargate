@@ -9,6 +9,13 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 include!(concat!(env!("OUT_DIR"), "/uutils_map.rs"));
 
+fn print_version_with_copyright(binary_name: &str) {
+    println!(
+        "This is {} {}, built on Rust.\n\nCopyright (c) 2025 Dmitry Kalashnikov\n\nDual Licensed: Open-Source (non-commercial) / Commercial (proprietary use)\nCommercial use requires a Commercial License.\nSee LICENSE file or contact author for details.",
+        binary_name, VERSION
+    );
+}
+
 fn usage<T>(utils: &UtilityMap<T>, name: &str) {
     println!("{name} {VERSION} (multi-call binary)\n");
     println!("Usage: {name} [function [arguments...]]");
@@ -82,7 +89,7 @@ fn main() {
                 process::exit(0);
             }
             "--version" | "-V" => {
-                println!("{binary_as_util} {VERSION} (multi-call binary)");
+                print_version_with_copyright(binary_as_util);
                 process::exit(0);
             }
             // Not a special command: fallthrough to calling a util

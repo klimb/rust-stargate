@@ -25,8 +25,21 @@ use stargate_shell::repl_handlers::handle_repl_command;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+fn print_version_with_copyright() {
+    println!(
+        "This is stargate-shell {}, built on Rust.\n\nCopyright (c) 2025 Dmitry Kalashnikov\n\nDual Licensed: Open-Source (non-commercial) / Commercial (proprietary use)\nCommercial use requires a Commercial License.\nSee LICENSE file or contact author for details.",
+        VERSION
+    );
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    
+    // Handle version flag
+    if args.len() > 1 && (args[1] == "--version" || args[1] == "-V") {
+        print_version_with_copyright();
+        std::process::exit(0);
+    }
     
     // If a script file is provided, execute it and exit
     if args.len() > 1 {

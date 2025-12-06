@@ -1,3 +1,7 @@
+// Copyright (c) 2025 Dmitry Kalashnikov
+// Dual Licensed: Open-Source (see LICENSE) / Commercial (proprietary use)
+// Commercial use requires a Commercial License. See LICENSE file.
+
 use super::super::scripting::{Expression, Statement, Value, Operator};
 use super::{OpCode, BytecodeChunk};
 use std::collections::HashMap;

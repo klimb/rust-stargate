@@ -741,6 +741,19 @@ Best for tight loops, recursive functions, and computational scripts.
 
 ---
 
+## 📜 License
+
+Stargate is available under **dual licensing**:
+
+- **Open-Source License** - Free for non-commercial, open-source projects (see [LICENSE](LICENSE))
+- **Commercial License** - Required for commercial/proprietary use
+
+**Commercial use requires a Commercial License.** Contact: dvk@klimb.com
+
+See [LICENSE](LICENSE) for full terms.
+
+---
+
 # Stargate Manifesto
 
 - [UNIX userland was always as mess, you're just used to it](https://www.linkedin.com/pulse/unix-userland-always-mess-youre-just-used-dmitry-kalashnikov-2k6sc)
