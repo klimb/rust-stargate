@@ -91,7 +91,7 @@ fn select_precision(
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        sgcore::clap_localization::handle_clap_result(uu_app(), split_short_args_with_value(args))?;
+        sgcore::clap_localization::handle_clap_result(sg_app(), split_short_args_with_value(args))?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
 
@@ -142,7 +142,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let last: PreciseNumber = {
         // We are guaranteed that `numbers.len()` is greater than zero
         // and at most three because of the argument specification in
-        // `uu_app()`.
+        // `sg_app()`.
         let n: usize = numbers.len();
         match numbers[n - 1].parse() {
             Ok(num) => num,
@@ -224,7 +224,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .trailing_var_arg(true)
         .infer_long_args(true)

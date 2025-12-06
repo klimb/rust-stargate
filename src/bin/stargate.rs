@@ -48,14 +48,14 @@ fn main() {
     });
 
     // binary name equals util name?
-    if let Some(&(uumain, _)) = utils.get(binary_as_util) {
+    if let Some(&(sgmain, _)) = utils.get(binary_as_util) {
         validation::setup_localization_or_exit(binary_as_util);
-        process::exit(uumain(vec![binary.into()].into_iter().chain(args)));
+        process::exit(sgmain(vec![binary.into()].into_iter().chain(args)));
     }
 
     // binary name equals prefixed util name?
     // * prefix/stem may be any string ending in a non-alphanumeric character
-    // For example, if the binary is named `uu_test`, it will match `test` as a utility.
+    // For example, if the binary is named `sg_test`, it will match `test` as a utility.
     let util_name =
         if let Some(util) = validation::find_prefixed_util(binary_as_util, utils.keys().copied()) {
             // prefixed util => replace 0th (aka, executable name) argument
@@ -90,14 +90,14 @@ fn main() {
         }
 
         match utils.get(util) {
-            Some(&(uumain, _)) => {
+            Some(&(sgmain, _)) => {
                 // TODO: plug the deactivation of the translation
                 // and load the English strings directly at compilation time in the
                 // binary to avoid the load of the flt
                 // Could be something like:
                 // #[cfg(not(feature = "only_english"))]
                 validation::setup_localization_or_exit(util);
-                process::exit(uumain(vec![util_os].into_iter().chain(args)));
+                process::exit(sgmain(vec![util_os].into_iter().chain(args)));
             }
             None => {
                 if util == "--help" || util == "-h" {
@@ -108,8 +108,8 @@ fn main() {
                         };
 
                         match utils.get(util) {
-                            Some(&(uumain, _)) => {
-                                let code = uumain(
+                            Some(&(sgmain, _)) => {
+                                let code = sgmain(
                                     vec![util_os, OsString::from("--help")]
                                         .into_iter()
                                         .chain(args)

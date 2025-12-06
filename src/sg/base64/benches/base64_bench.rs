@@ -1,6 +1,6 @@
 use divan::{Bencher, black_box};
 use std::ffi::OsString;
-use uu_base64::sgmain;
+use sg_base64::sgmain;
 use sgcore::benchmark::{create_test_file, run_util_function, text_data};
 
 fn create_tmp_file(size_mb: usize) -> String {

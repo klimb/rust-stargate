@@ -61,7 +61,7 @@ fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     chown_base(
-        uu_app(),
+        sg_app(),
         args,
         options::ARG_OWNER,
         parse_gid_uid_and_filter,
@@ -69,7 +69,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     )
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

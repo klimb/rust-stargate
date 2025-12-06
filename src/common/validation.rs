@@ -42,7 +42,7 @@ pub fn setup_localization_or_exit(util_name: &str) {
 /// Gets the canonical utility name, resolving aliases
 fn get_canonical_util_name(util_name: &str) -> &str {
     match util_name {
-        // uu_test aliases - '[' is an alias for test
+        // sg_test aliases - '[' is an alias for test
         "[" => "test",
 
         // hashsum aliases - all these hash commands are aliases for hashsum
@@ -57,7 +57,7 @@ fn get_canonical_util_name(util_name: &str) -> &str {
     }
 }
 
-/// Finds a utility with a prefix (e.g., "uu_test" -> "test")
+/// Finds a utility with a prefix (e.g., "sg_test" -> "test")
 pub fn find_prefixed_util<'a>(
     binary_name: &str,
     mut util_keys: impl Iterator<Item = &'a str>
@@ -125,7 +125,7 @@ mod tests {
 
         // Test exact prefixed matches
         assert_eq!(
-            find_prefixed_util("uu_test", utils.iter().copied()),
+            find_prefixed_util("sg_test", utils.iter().copied()),
             Some("test")
         );
         assert_eq!(

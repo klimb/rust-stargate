@@ -233,7 +233,7 @@ fn load_config_file(opts: &mut Options) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(crate_name!())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -428,7 +428,7 @@ impl EnvAppData {
     ) -> Result<(Vec<OsString>, clap::ArgMatches), Box<dyn UError>> {
         let original_args: Vec<OsString> = original_args.collect();
         let args = self.process_all_string_arguments(&original_args)?;
-        let app = uu_app();
+        let app = sg_app();
         let matches = match app.try_get_matches_from(args) {
             Ok(matches) => matches,
             Err(e) => {

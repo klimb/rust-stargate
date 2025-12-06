@@ -15,7 +15,7 @@ fn get_all_enabled_utilities() -> Vec<String> {
     // Read the generated utility map file at compile time
     const UUTILS_MAP: &str = include_str!(concat!(env!("OUT_DIR"), "/uutils_map.rs"));
 
-    // Extract utility names from lines like: ("arch", (arch::uumain, arch::uu_app)),
+    // Extract utility names from lines like: ("arch", (arch::sgmain, arch::sg_app)),
     UUTILS_MAP
         .lines()
         .filter_map(|line| {
@@ -63,8 +63,8 @@ fn get_utilities_to_skip() -> HashSet<&'static str> {
 /// Helper function to create a Command for a utility.
 /// Uses the multicall binary (`TESTS_BINARY`) and passes the utility name as an argument.
 fn create_utility_command(utility_name: &str) -> Command {
-    let uu_name = format!("uu_{utility_name}");
-    let canonical_name = sgcore::get_canonical_util_name(&uu_name);
+    let sg_name = format!("sg_{utility_name}");
+    let canonical_name = sgcore::get_canonical_util_name(&sg_name);
     let mut cmd = Command::new(TESTS_BINARY);
     cmd.arg(canonical_name);
     cmd
@@ -125,8 +125,8 @@ fn test_error_messages_have_colors() {
         println!("Testing error colors for {utility}");
 
         let mut cmd = create_utility_command(utility);
-        let uu_name = format!("uu_{utility}");
-        let binary_name = sgcore::get_canonical_util_name(&uu_name);
+        let sg_name = format!("sg_{utility}");
+        let binary_name = sgcore::get_canonical_util_name(&sg_name);
 
         // For hashsum aliases, we need to pass the hash algorithm as a subcommand
         if binary_name == "hashsum" && utility != "hashsum" {

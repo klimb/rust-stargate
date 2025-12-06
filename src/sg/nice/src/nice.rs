@@ -99,7 +99,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args = standardize_nice_args(args);
 
     let matches =
-        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
 
     nix::errno::Errno::clear();
     let mut niceness = unsafe { libc::getpriority(PRIO_PROCESS, 0) };
@@ -174,7 +174,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .about(translate!("nice-about"))
         .override_usage(format_usage(&translate!("nice-usage")))

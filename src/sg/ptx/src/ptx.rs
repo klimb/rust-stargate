@@ -777,7 +777,7 @@ mod options {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let mut config = get_config(&matches)?;
 
     let input_files;
@@ -815,7 +815,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     write_traditional_output(&mut config, &file_map, &word_set, &output_file)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .about(translate!("ptx-about"))
         .version(sgcore::crate_version!())

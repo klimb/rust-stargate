@@ -65,7 +65,7 @@ impl UError for ExprError {
     }
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -104,7 +104,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .collect::<Result<Vec<_>, _>>()?;
 
     if args.len() == 1 && args[0] == b"--help" {
-        let _ = uu_app().print_help();
+        let _ = sg_app().print_help();
     } else if args.len() == 1 && args[0] == b"--version" {
         println!("{} {}", sgcore::util_name(), sgcore::crate_version!());
     } else {

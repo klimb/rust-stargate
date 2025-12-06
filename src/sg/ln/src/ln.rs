@@ -82,7 +82,7 @@ static ARG_FILES: &str = "files";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     /* the list of files */
 
@@ -126,7 +126,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     exec(&paths[..], &settings)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let after_help = format!(
         "{}\n\n{}",
         translate!("ln-after-help"),

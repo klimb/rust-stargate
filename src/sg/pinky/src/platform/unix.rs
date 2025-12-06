@@ -2,7 +2,7 @@
 
 use crate::Capitalize;
 use crate::options;
-use crate::uu_app;
+use crate::sg_app;
 
 use sgcore::entries::{Locate, Passwd};
 use sgcore::error::{FromIo, UResult};
@@ -28,7 +28,7 @@ fn get_long_usage() -> String {
 
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        sgcore::clap_localization::handle_clap_result(uu_app().after_help(get_long_usage()), args)?;
+        sgcore::clap_localization::handle_clap_result(sg_app().after_help(get_long_usage()), args)?;
 
     let users: Vec<String> = matches
         .get_many::<String>(options::USER)

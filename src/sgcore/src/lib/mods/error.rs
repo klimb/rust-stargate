@@ -5,7 +5,7 @@
 //!
 //! This module provides types to reconcile these exit codes with idiomatic Rust error
 //! handling. This has a couple advantages over manually using [`std::process::exit`]:
-//! 1. It enables the use of `?`, `map_err`, `unwrap_or`, etc. in `uumain`.
+//! 1. It enables the use of `?`, `map_err`, `unwrap_or`, etc. in `sgmain`.
 //! 1. It encourages the use of [`UResult`]/[`Result`] in functions in the utils.
 //! 1. The error messages are largely standardized across utils.
 //! 1. Standardized error messages can be created from external result types
@@ -15,13 +15,13 @@
 //! # Usage
 //! The signature of a typical util should be:
 //! ```ignore
-//! fn uumain(args: impl sgcore::Args) -> UResult<()> {
+//! fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 //!     ...
 //! }
 //! ```
 //! [`UResult`] is a simple wrapper around [`Result`] with a custom error trait: [`UError`]. The
 //! most important difference with types implementing [`std::error::Error`] is that [`UError`]s
-//! can specify the exit code of the program when they are returned from `uumain`:
+//! can specify the exit code of the program when they are returned from `sgmain`:
 //! * When `Ok` is returned, the code set with [`set_exit_code`] is used as exit code. If
 //!   [`set_exit_code`] was not used, then `0` is used.
 //! * When `Err` is returned, the code corresponding with the error is used as exit code and the
@@ -64,14 +64,14 @@ pub fn get_exit_code() -> i32 {
     EXIT_CODE.load(Ordering::SeqCst)
 }
 
-/// Set the exit code for the program if `uumain` returns `Ok(())`.
+/// Set the exit code for the program if `sgmain` returns `Ok(())`.
 ///
 /// This function is most useful for non-fatal errors, for example when applying an operation to
 /// multiple files:
 /// ```ignore
 /// use sgcore::error::{UResult, set_exit_code};
 ///
-/// fn uumain(args: impl sgcore::Args) -> UResult<()> {
+/// fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 ///     ...
 ///     for file in files {
 ///         let res = some_operation_that_might_fail(file);
@@ -94,7 +94,7 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 ///
 /// All errors should implement [`std::error::Error`], [`std::fmt::Display`] and
 /// [`std::fmt::Debug`] and have an additional `code` method that specifies the
-/// exit code of the program if the error is returned from `uumain`.
+/// exit code of the program if the error is returned from `sgmain`.
 ///
 /// An example of a custom error from `ls`:
 ///
@@ -140,7 +140,7 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 ///
 /// ```ignore
 /// #[sgcore::main]
-/// pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+/// pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 ///     // Perform computations here ...
 ///     return Err(LsError::InvalidLineWidth(String::from("test")).into())
 /// }
@@ -629,7 +629,7 @@ macro_rules! uio_error(
 );
 
 /// A special error type that does not print any message when returned from
-/// `uumain`. Especially useful for porting utilities to using [`UResult`].
+/// `sgmain`. Especially useful for porting utilities to using [`UResult`].
 ///
 /// There are two ways to construct an [`ExitCode`]:
 /// ```
@@ -700,7 +700,7 @@ pub struct ClapErrorWrapper {
 
 /// Extension trait for `clap::Error` to adjust the exit code.
 pub trait UClapError<T> {
-    /// Set the exit code for the program if `uumain` returns `Ok(())`.
+    /// Set the exit code for the program if `sgmain` returns `Ok(())`.
     fn with_exit_code(self, code: i32) -> T;
 }
 

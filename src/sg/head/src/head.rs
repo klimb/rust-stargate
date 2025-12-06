@@ -60,7 +60,7 @@ impl UError for HeadError {
 
 type HeadResult<T> = Result<T, HeadError>;
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -459,7 +459,7 @@ fn head_file(input: &mut File, options: &HeadOptions) -> io::Result<u64> {
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn uu_head(options: &HeadOptions) -> UResult<()> {
+fn sg_head(options: &HeadOptions) -> UResult<()> {
     let mut first = true;
     for file in &options.files {
         let res = if file == "-" {
@@ -545,9 +545,9 @@ fn uu_head(options: &HeadOptions) -> UResult<()> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = arg_iterate(args)?.collect();
-    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let options = HeadOptions::get_from(&matches).map_err(HeadError::MatchOption)?;
-    uu_head(&options)
+    sg_head(&options)
 }
 
 #[cfg(test)]
@@ -560,7 +560,7 @@ mod tests {
     fn options(args: &str) -> Result<HeadOptions, String> {
         let combined = "head ".to_owned() + args;
         let args = combined.split_whitespace().map(OsString::from);
-        let matches = uu_app()
+        let matches = sg_app()
             .get_matches_from(arg_iterate(args).map_err(|_| String::from("Arg iterate failed"))?);
         HeadOptions::get_from(&matches)
     }

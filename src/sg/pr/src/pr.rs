@@ -150,7 +150,7 @@ enum PrError {
     NotExists { file: String },
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -311,7 +311,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let opt_args = recreate_arguments(&args);
 
-    let command = uu_app();
+    let command = sg_app();
     let matches = sgcore::clap_localization::handle_clap_result(command, opt_args)?;
 
     let mut files = matches

@@ -6,7 +6,7 @@ use sgcore::translate;
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    let mut command = uu_app();
+    let mut command = sg_app();
 
     // Mirror GNU options, always return `1`. In particular even the 'successful' cases of no-op,
     // and the interrupted display of help and version should return `1`. Also, we return Ok in all
@@ -40,7 +40,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

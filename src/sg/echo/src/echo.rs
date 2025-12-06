@@ -171,10 +171,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         //
         //   POSIXLY_CORRECT=1 echo --help
         //                     echo --help
-        uu_app().print_help()?;
+        sg_app().print_help()?;
         return Ok(());
     } else if args.len() == 1 && args[0] == "--version" {
-        print!("{}", uu_app().render_version());
+        print!("{}", sg_app().render_version());
         return Ok(());
     } else {
         // if POSIXLY_CORRECT is not set we filter the flags normally
@@ -217,7 +217,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     // Note: echo is different from the other utils in that it should **not**
     // have `infer_long_args(true)`, because, for example, `--ver` should be
     // printed as `--ver` and not show the version text.

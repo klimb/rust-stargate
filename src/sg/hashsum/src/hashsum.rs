@@ -174,7 +174,7 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
     // Default binary in Windows, text mode otherwise
     let binary_flag_default = cfg!(windows);
 
-    let (command, is_hashsum_bin) = uu_app(&binary_name);
+    let (command, is_hashsum_bin) = sg_app(&binary_name);
 
     // FIXME: this should use try_get_matches_from() and crash!(), but at the moment that just
     //        causes "error: " to be printed twice (once from crash!() and once from clap).  With
@@ -306,7 +306,7 @@ mod options {
     pub const QUIET: &str = "quiet";
 }
 
-pub fn uu_app_common() -> Command {
+pub fn sg_app_common() -> Command {
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -401,11 +401,11 @@ pub fn uu_app_common() -> Command {
         )
 }
 
-pub fn uu_app_length() -> Command {
-    uu_app_opt_length(uu_app_common())
+pub fn sg_app_length() -> Command {
+    sg_app_opt_length(sg_app_common())
 }
 
-fn uu_app_opt_length(command: Command) -> Command {
+fn sg_app_opt_length(command: Command) -> Command {
     command.arg(
         Arg::new(options::LENGTH)
             .long(options::LENGTH)
@@ -417,11 +417,11 @@ fn uu_app_opt_length(command: Command) -> Command {
     )
 }
 
-pub fn uu_app_b3sum() -> Command {
-    uu_app_b3sum_opts(uu_app_common())
+pub fn sg_app_b3sum() -> Command {
+    sg_app_b3sum_opts(sg_app_common())
 }
 
-fn uu_app_b3sum_opts(command: Command) -> Command {
+fn sg_app_b3sum_opts(command: Command) -> Command {
     command.arg(
         Arg::new("no-names")
             .long("no-names")
@@ -430,11 +430,11 @@ fn uu_app_b3sum_opts(command: Command) -> Command {
     )
 }
 
-pub fn uu_app_bits() -> Command {
-    uu_app_opt_bits(uu_app_common())
+pub fn sg_app_bits() -> Command {
+    sg_app_opt_bits(sg_app_common())
 }
 
-fn uu_app_opt_bits(command: Command) -> Command {
+fn sg_app_opt_bits(command: Command) -> Command {
     // Needed for variable-length output sums (e.g. SHAKE)
     command.arg(
         Arg::new("bits")
@@ -446,8 +446,8 @@ fn uu_app_opt_bits(command: Command) -> Command {
     )
 }
 
-pub fn uu_app_custom() -> Command {
-    let mut command = uu_app_b3sum_opts(uu_app_opt_bits(uu_app_common()));
+pub fn sg_app_custom() -> Command {
+    let mut command = sg_app_b3sum_opts(sg_app_opt_bits(sg_app_common()));
     let algorithms = &[
         ("md5", translate!("hashsum-help-md5")),
         ("sha1", translate!("hashsum-help-sha1")),
@@ -479,16 +479,16 @@ pub fn uu_app_custom() -> Command {
 
 /// hashsum is handled differently in build.rs
 /// therefore, this is different from other utilities.
-fn uu_app(binary_name: &str) -> (Command, bool) {
+fn sg_app(binary_name: &str) -> (Command, bool) {
     let (command, is_hashsum_bin) = match binary_name {
         // These all support the same options.
         "md5sum" | "sha1sum" | "sha224sum" | "sha256sum" | "sha384sum" | "sha512sum" => {
-            (uu_app_common(), false)
+            (sg_app_common(), false)
         }
         // b2sum supports the md5sum options plus -l/--length.
-        "b2sum" => (uu_app_length(), false),
+        "b2sum" => (sg_app_length(), false),
         // We're probably just being called as `hashsum`, so give them everything.
-        _ => (uu_app_custom(), true),
+        _ => (sg_app_custom(), true),
     };
 
     // If not called as generic hashsum, override the command name and usage

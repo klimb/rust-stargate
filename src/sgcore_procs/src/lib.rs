@@ -48,7 +48,7 @@ pub fn main(_args: TokenStream, stream: TokenStream) -> TokenStream {
     let stream = proc_macro2::TokenStream::from(stream);
 
     let new = quote!(
-        pub fn uumain(args: impl sgcore::Args) -> i32 {
+        pub fn sgmain(args: impl sgcore::Args) -> i32 {
             #stream
 
             // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)

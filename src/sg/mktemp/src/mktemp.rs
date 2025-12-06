@@ -332,7 +332,7 @@ impl ValueParserFactory for OptionalPathBufParser {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = args.collect();
-    let matches = match uu_app().try_get_matches_from(&args) {
+    let matches = match sg_app().try_get_matches_from(&args) {
         Ok(m) => m,
         Err(e) => {
             use sgcore::clap_localization::handle_clap_error_with_exit_code;
@@ -418,7 +418,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

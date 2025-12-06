@@ -146,10 +146,10 @@ pub fn disable_rust_signal_handlers() -> Result<(), Errno> {
 }
 
 pub fn get_canonical_util_name(util_name: &str) -> &str {
-    // remove the "uu_" prefix
+    // remove the "sg_" prefix
     let util_name = &util_name[3..];
     match util_name {
-        // uu_test aliases - '[' is an alias for test
+        // sg_test aliases - '[' is an alias for test
         "[" => "test",
 
         // hashsum aliases - all these hash commands are aliases for hashsum
@@ -166,8 +166,8 @@ pub fn get_canonical_util_name(util_name: &str) -> &str {
 
 /// Execute utility code for `util`.
 ///
-/// This macro expands to a main function that invokes the `uumain` function in `util`
-/// Exits with code returned by `uumain`.
+/// This macro expands to a main function that invokes the `sgmain` function in `util`
+/// Exits with code returned by `sgmain`.
 #[macro_export]
 macro_rules! bin {
     ($util:ident) => {
@@ -189,7 +189,7 @@ macro_rules! bin {
                 });
 
             // execute utility code
-            let code = $util::uumain(sgcore::args_os());
+            let code = $util::sgmain(sgcore::args_os());
             // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");
@@ -202,8 +202,8 @@ macro_rules! bin {
 
 /// Execute utility code for `util`.
 ///
-/// This macro expands to a main function that invokes the `uumain` function in `util`
-/// Exits with code returned by `uumain`.
+/// This macro expands to a main function that invokes the `sgmain` function in `util`
+/// Exits with code returned by `sgmain`.
 #[macro_export]
 macro_rules! obj {
     ($util:ident) => {
@@ -225,7 +225,7 @@ macro_rules! obj {
                 });
 
             // execute utility code
-            let code = $util::uumain(sgcore::args_os());
+            let code = $util::sgmain(sgcore::args_os());
             // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");

@@ -239,12 +239,12 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        sgcore::clap_localization::handle_clap_result(uu_app(), expand_shortcuts(args.collect()))?;
+        sgcore::clap_localization::handle_clap_result(sg_app(), expand_shortcuts(args.collect()))?;
 
     expand(&Options::new(&matches)?)
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     sgcore::clap_localization::configure_localized_command(
         Command::new(sgcore::util_name())
             .version(sgcore::crate_version!())

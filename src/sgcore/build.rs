@@ -80,9 +80,9 @@ fn detect_target_utility() -> Option<String> {
         }
     }
 
-    // Auto-detect utility name from CARGO_PKG_NAME if it's a uu_* package
+    // Auto-detect utility name from CARGO_PKG_NAME if it's a sg_* package
     if let Ok(pkg_name) = env::var("CARGO_PKG_NAME") {
-        if let Some(util_name) = pkg_name.strip_prefix("uu_") {
+        if let Some(util_name) = pkg_name.strip_prefix("sg_") {
             println!("cargo:warning=Auto-detected utility name: {util_name}");
             return Some(util_name.to_string());
         }
@@ -145,7 +145,7 @@ fn embed_all_utility_locales(
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
 
-    // Discover all uu_* directories
+    // Discover all sg_* directories
     let src_uu_dir = project_root.join("src/uu");
     if !src_uu_dir.exists() {
         // When src/uu doesn't exist (e.g., standalone sgcore from crates.io),
@@ -213,9 +213,9 @@ fn embed_static_utility_locales(
     for entry in entries {
         let file_name = entry.file_name();
         if let Some(dir_name) = file_name.to_str() {
-            // Match uu_<util>-<version>
+            // Match sg_<util>-<version>
             if let Some((util_part, _)) = dir_name.split_once('-') {
-                if let Some(util_name) = util_part.strip_prefix("uu_") {
+                if let Some(util_name) = util_part.strip_prefix("sg_") {
                     embed_component_locales(
                         embedded_file,
                         locales_to_embed,

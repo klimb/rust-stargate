@@ -16,7 +16,7 @@ mod paths;
 mod platform;
 pub mod text;
 
-pub use args::uu_app;
+pub use args::sg_app;
 use args::{FilterMode, Settings, Signum, parse_args};
 use chunks::ReverseChunks;
 use follow::Observer;
@@ -60,10 +60,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         args::VerificationResult::Ok => {}
     }
 
-    uu_tail(&settings)
+    sg_tail(&settings)
 }
 
-fn uu_tail(settings: &Settings) -> UResult<()> {
+fn sg_tail(settings: &Settings) -> UResult<()> {
     let mut printer = HeaderPrinter::new(settings.verbose, true);
     let mut observer = Observer::from(settings);
 

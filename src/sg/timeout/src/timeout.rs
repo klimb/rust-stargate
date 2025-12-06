@@ -100,7 +100,7 @@ impl Config {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
-        sgcore::clap_localization::handle_clap_result_with_exit_code(uu_app(), args, 125)?;
+        sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
 
     let config = Config::from(&matches)?;
     timeout(
@@ -114,7 +114,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     )
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     Command::new("timeout")
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))

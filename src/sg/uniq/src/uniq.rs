@@ -656,7 +656,7 @@ fn map_clap_errors(clap_error: Error) -> Box<dyn UError> {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (args, skip_fields_old, skip_chars_old) = handle_obsolete(args);
 
-    let matches = match uu_app().try_get_matches_from(args) {
+    let matches = match sg_app().try_get_matches_from(args) {
         Ok(matches) => matches,
         Err(clap_error) => {
             if clap_error.exit_code() == 0 {
@@ -707,7 +707,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     )
 }
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .about(translate!("uniq-about"))

@@ -24,7 +24,7 @@ mod options {
 #[sgcore::main]
 use platform::sgmain;
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     #[cfg(not(target_env = "musl"))]
     let about = translate!("pinky-about");
     #[cfg(target_env = "musl")]

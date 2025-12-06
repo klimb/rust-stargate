@@ -34,7 +34,7 @@ fn get_runlevel_help() -> String {
 #[sgcore::main]
 use platform::sgmain;
 
-pub fn uu_app() -> Command {
+pub fn sg_app() -> Command {
     #[cfg(not(target_env = "musl"))]
     let about = translate!("who-about");
     #[cfg(target_env = "musl")]
