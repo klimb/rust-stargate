@@ -1,0 +1,41 @@
+// spell-checker:ignore hostname
+
+use std::ffi::OsString;
+
+use clap::builder::ValueParser;
+use clap::{Arg, Command};
+
+use sgcore::translate;
+
+use sgcore::{
+    error::{FromIo, UResult},
+    format_usage,
+};
+
+static ARG_HOSTNAME: &str = "hostname";
+
+#[sgcore::main]
+pub fn uumain(args: impl sgcore::Args) -> UResult<()> {
+    let matches = sgcore::clap_localization::handle_clap_result(uu_app(), args)?;
+    
+    let host = matches.get_one::<OsString>(ARG_HOSTNAME)
+        .ok_or_else(|| sgcore::error::UUsageError::new(1, translate!("set-hostname-error-missing-operand")))?;
+    
+    hostname::set(host).map_err_context(|| translate!("set-hostname-error-set-hostname"))
+}
+
+pub fn uu_app() -> Command {
+    Command::new(sgcore::util_name())
+        .version(sgcore::crate_version!())
+        .help_template(sgcore::localized_help_template(sgcore::util_name()))
+        .about(translate!("set-hostname-about"))
+        .override_usage(format_usage(&translate!("set-hostname-usage")))
+        .infer_long_args(true)
+        .arg(
+            Arg::new(ARG_HOSTNAME)
+                .required(true)
+                .value_parser(ValueParser::os_string())
+                .value_hint(clap::ValueHint::Hostname)
+                .help(translate!("set-hostname-help-hostname"))
+        )
+}

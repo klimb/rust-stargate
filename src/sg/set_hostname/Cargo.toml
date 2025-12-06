@@ -1,6 +1,6 @@
 [package]
-name = "sg_hostname"
-description = "hostname ~ (uutils) display or set the host name of the current host"
+name = "sg_set_hostname"
+description = "set-hostname ~ (stargate) set the host name of the current host"
 repository = "https://github.com/uutils/coreutils/tree/main/src/uu/hostname"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/hostname.rs"
+path = "src/set_hostname.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -23,11 +23,8 @@ hostname = { workspace = true, features = ["set"] }
 sgcore = { workspace = true, features = ["wide"] }
 fluent = { workspace = true }
 
-[target.'cfg(any(target_os = "freebsd", target_os = "openbsd"))'.dependencies]
-dns-lookup = { workspace = true }
-
 [[bin]]
-name = "hostname"
+name = "set-hostname"
 path = "src/main.rs"
 
 [package.metadata.cargo-udeps.ignore]
