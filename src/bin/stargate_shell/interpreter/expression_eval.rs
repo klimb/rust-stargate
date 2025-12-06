@@ -554,7 +554,8 @@ impl Interpreter {
             }
             Expression::ListLiteral(elements) => {
                 // Evaluate each element expression and collect into a list
-                let mut list = Vec::new();
+                // Pre-allocate capacity to reduce reallocation overhead
+                let mut list = Vec::with_capacity(elements.len().max(16));
                 for elem_expr in elements {
                     let elem_value = self.eval_expression(elem_expr)?;
                     list.push(elem_value);
@@ -643,12 +644,24 @@ impl Interpreter {
                 (Value::Number(a), Value::SmallInt(b)) => Ok(Value::Number(a * (b as f64))),
                 (l, r) => Ok(Value::Number(l.to_number() * r.to_number())),
             },
-            Operator::Div => {
-                let divisor = right.to_number();
-                if divisor == 0.0 {
-                    Err("Division by zero".to_string())
-                } else {
-                    Ok(Value::Number(left.to_number() / divisor))
+            Operator::Div => match (left, right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => {
+                    if b == 0 {
+                        Err("Division by zero".to_string())
+                    } else if a % b == 0 {
+                        // Integer division with no remainder - keep as SmallInt
+                        Ok(Value::SmallInt(a / b))
+                    } else {
+                        Ok(Value::Number((a as f64) / (b as f64)))
+                    }
+                }
+                (l, r) => {
+                    let divisor = r.to_number();
+                    if divisor == 0.0 {
+                        Err("Division by zero".to_string())
+                    } else {
+                        Ok(Value::Number(l.to_number() / divisor))
+                    }
                 }
             }
             Operator::Mod => match (left, right) {
@@ -670,10 +683,22 @@ impl Interpreter {
             }
             Operator::Eq => Ok(Value::Bool(left == right)),
             Operator::Ne => Ok(Value::Bool(left != right)),
-            Operator::Lt => Ok(Value::Bool(left.to_number() < right.to_number())),
-            Operator::Gt => Ok(Value::Bool(left.to_number() > right.to_number())),
-            Operator::Le => Ok(Value::Bool(left.to_number() <= right.to_number())),
-            Operator::Ge => Ok(Value::Bool(left.to_number() >= right.to_number())),
+            Operator::Lt => match (&left, &right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => Ok(Value::Bool(a < b)),
+                _ => Ok(Value::Bool(left.to_number() < right.to_number())),
+            },
+            Operator::Gt => match (&left, &right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => Ok(Value::Bool(a > b)),
+                _ => Ok(Value::Bool(left.to_number() > right.to_number())),
+            },
+            Operator::Le => match (&left, &right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => Ok(Value::Bool(a <= b)),
+                _ => Ok(Value::Bool(left.to_number() <= right.to_number())),
+            },
+            Operator::Ge => match (&left, &right) {
+                (Value::SmallInt(a), Value::SmallInt(b)) => Ok(Value::Bool(a >= b)),
+                _ => Ok(Value::Bool(left.to_number() >= right.to_number())),
+            },
             Operator::And => Ok(Value::Bool(left.to_bool() && right.to_bool())),
             Operator::Or => Ok(Value::Bool(left.to_bool() || right.to_bool())),
             Operator::Not => Err("NOT is a unary operator and should not be used in apply_operator".to_string()),

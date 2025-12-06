@@ -1,7 +1,9 @@
 use super::scripting::*;
 use super::testing::TestRunner;
+use super::bytecode::{Compiler, VM};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
+use std::env;
 
 mod methods;
 mod statement_execution;
@@ -56,6 +58,13 @@ impl Interpreter {
     }
 
     pub fn execute(&mut self, statements: Vec<Statement>) -> Result<i32, String> {
+        // Check if bytecode mode is enabled via environment variable
+        let use_bytecode = env::var("STARGATE_BYTECODE").is_ok();
+        
+        if use_bytecode {
+            return self.execute_bytecode(statements);
+        }
+        
         // Store print/exit statements that might reference ut for later
         let mut deferred_stmts = Vec::new();
         
@@ -171,6 +180,18 @@ impl Interpreter {
         class_names
     }
     
+    fn execute_bytecode(&mut self, statements: Vec<Statement>) -> Result<i32, String> {
+        // Compile statements to bytecode
+        let mut compiler = Compiler::new();
+        let chunk = compiler.compile(statements)?;
+        
+        // Execute bytecode
+        let mut vm = VM::new();
+        let _result = vm.execute(&chunk)?;
+        
+        // Return exit code (default 0)
+        Ok(self.exit_code.unwrap_or(0))
+    }
 }
 
 

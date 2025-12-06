@@ -16,8 +16,12 @@ pub enum Statement {
     },
     For {
         var_name: String,
-        value_name: Option<String>, // For dict iteration: for k, v in dict
+        value_name: Option<String>,
         iterable: Expression,
+        body: Vec<Statement>,
+    },
+    While {
+        condition: Expression,
         body: Vec<Statement>,
     },
     FunctionDef {
