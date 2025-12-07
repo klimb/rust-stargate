@@ -52,10 +52,6 @@ BUILDDIR      := $(BASEDIR)/target/${PROFILE}
 endif
 PKG_BUILDDIR  := $(BUILDDIR)/deps
 
-BUSYBOX_ROOT := $(BASEDIR)/tmp
-BUSYBOX_VER  := 1.36.1
-BUSYBOX_SRC  := $(BUSYBOX_ROOT)/busybox-$(BUSYBOX_VER)
-
 TOYBOX_ROOT := $(BASEDIR)/tmp
 TOYBOX_VER  := 0.8.12
 TOYBOX_SRC  := $(TOYBOX_ROOT)/toybox-$(TOYBOX_VER)
@@ -283,11 +279,6 @@ TEST_NO_FAIL_FAST :=--no-fail-fast
 TEST_SPEC_FEATURE := test_unimplemented
 endif
 
-define TEST_BUSYBOX
-test_busybox_$(1):
-	-(cd $(BUSYBOX_SRC)/testsuite && bindir=$(BUILDDIR) ./runtest $(RUNTEST_ARGS) $(1))
-endef
-
 # Output names
 EXES        := \
 	$(sort $(UTILS))
@@ -312,8 +303,6 @@ build-stargate:
 	${CARGO} build ${CARGOFLAGS} --features "${EXES} $(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
 
 build: build-stargate build-pkgs locales
-
-$(foreach test,$(UTILS),$(eval $(call TEST_BUSYBOX,$(test))))
 
 test:
 	${CARGO} test ${CARGOFLAGS} --features "$(TESTS) $(TEST_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(TEST_NO_FAIL_FAST)
@@ -356,31 +345,6 @@ toybox-src:
 		sed -i -e "s|TESTDIR=\".*\"|TESTDIR=\"$(BUILDDIR)\"|g" $(TOYBOX_SRC)/scripts/test.sh; \
 		sed -i -e "s/ || exit 1//g" $(TOYBOX_SRC)/scripts/test.sh; \
 	fi ;
-
-busybox-src:
-	if [ ! -e "$(BUSYBOX_SRC)" ] ; then \
-		mkdir -p "$(BUSYBOX_ROOT)" ; \
-		curl -Ls "https://github.com/mirror/busybox/archive/refs/tags/$(subst .,_,$(BUSYBOX_VER)).tar.gz" -o "$(BUSYBOX_ROOT)/busybox-$(BUSYBOX_VER).tar.gz" ; \
-		tar -C "$(BUSYBOX_ROOT)" -xf "$(BUSYBOX_ROOT)/busybox-$(BUSYBOX_VER).tar.gz" ; \
-	fi ;
-
-# This is a busybox-specific config file their test suite wants to parse.
-$(BUILDDIR)/.config: $(BASEDIR)/.busybox-config
-	$(INSTALL) -m 644 $< $@
-
-# Test under the busybox test suite
-$(BUILDDIR)/busybox: busybox-src build-stargate $(BUILDDIR)/.config
-	$(INSTALL) -m 755 "$(BUILDDIR)/stargate" "$(BUILDDIR)/busybox"
-
-prepare-busytest: $(BUILDDIR)/busybox
-	# disable inapplicable tests
-	-( cd "$(BUSYBOX_SRC)/testsuite" ; if [ -e "busybox.tests" ] ; then mv busybox.tests busybox.tests- ; fi ; )
-
-ifeq ($(EXES),)
-busytest:
-else
-busytest: $(BUILDDIR)/busybox $(addprefix test_busybox_,$(filter-out $(SKIP_UTILS),$(EXES)))
-endif
 
 clean:
 	cargo clean $(RUSTC_ARCH)

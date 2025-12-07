@@ -5,7 +5,6 @@ coverage/
 /src/*/gen_table
 /build/
 /tmp/
-/busybox/
 /.vscode/
 /.vs/
 /public/
