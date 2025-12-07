@@ -25,43 +25,74 @@
   :group 'stargate-shell)
 
 (defvar stargate-shell--variables-buffer-name "*Stargate Variables*")
-(defvar stargate-shell--capturing nil
-  "Whether we're currently capturing list-variables output.")
-(defvar stargate-shell--capture-buffer ""
-  "Buffer for capturing output.")
+(defvar stargate-shell--last-output ""
+  "Buffer for accumulating terminal output.")
 
 (defun stargate-shell--output-filter (proc string)
-  "Filter function to capture list-variables output.
+  "Filter function to capture all command output.
 PROC is the process, STRING is the output."
-  (let ((vars-buf (get-buffer stargate-shell--variables-buffer-name)))
-    (when (and vars-buf (buffer-live-p vars-buf))
-      ;; Check if we see "Name Type Value" header - start capturing
-      (when (string-match "Name[ \t]+Type[ \t]+Value" string)
-        (setq stargate-shell--capturing t)
-        (setq stargate-shell--capture-buffer ""))
-      
-      ;; If we're capturing, accumulate output
-      (when stargate-shell--capturing
-        (setq stargate-shell--capture-buffer 
-              (concat stargate-shell--capture-buffer string))
-        
-        ;; Check for prompt to end capture
-        (when (string-match "stargate>" stargate-shell--capture-buffer)
-          (setq stargate-shell--capturing nil)
-          ;; Extract everything from "Name" to "stargate>"
-          (when (string-match "Name[ \t]+Type[ \t]+Value\\(.*?\\)stargate>" 
-                             stargate-shell--capture-buffer)
-            (let ((full-match (match-string 0 stargate-shell--capture-buffer)))
-              ;; Remove the trailing "stargate>" prompt
-              (when (string-match "\\(.*\\)stargate>" full-match)
-                (let ((table (match-string 1 full-match)))
-                  (with-current-buffer vars-buf
-                    (let ((inhibit-read-only t))
-                      (erase-buffer)
-                      (insert table)
-                      (goto-char (point-min))
-                      (read-only-mode 1)))))))
-          (setq stargate-shell--capture-buffer ""))))))
+  (condition-case err
+      (let ((vars-buf (get-buffer stargate-shell--variables-buffer-name)))
+        (when (and vars-buf (buffer-live-p vars-buf))
+          ;; Accumulate all output
+          (setq stargate-shell--last-output 
+                (concat stargate-shell--last-output string))
+          
+          ;; When we see a prompt, we have complete command output
+          (when (string-match "stargate>" string)
+            ;; Extract recent output (simple approach: last 5000 chars before this prompt)
+            (let* ((recent-output (if (> (length stargate-shell--last-output) 5000)
+                                     (substring stargate-shell--last-output -5000)
+                                   stargate-shell--last-output))
+                   ;; Find where the last command started (after previous prompt)
+                   (last-newline (or (string-match "\n[^\n]*stargate>" recent-output)
+                                    0))
+                   (output-start (if last-newline (match-end 0) 0))
+                   ;; Get everything from after that prompt until now
+                   (output (substring recent-output output-start)))
+              
+              ;; Update variables panel
+              (with-current-buffer vars-buf
+                (let* ((inhibit-read-only t)
+                       ;; Clean up escape sequences and control characters
+                       (clean-output output))
+                  ;; Remove carriage returns
+                  (setq clean-output (replace-regexp-in-string "\r" "" clean-output))
+                  ;; Remove ANSI escape sequences (ESC[...m, ESC[...K, etc)
+                  (setq clean-output (replace-regexp-in-string "\033\\[[0-9;]*[a-zA-Z]" "" clean-output))
+                  ;; Remove CSI sequences
+                  (setq clean-output (replace-regexp-in-string "\\[\\?[0-9]+[lh]" "" clean-output))
+                  ;; Remove other control sequences
+                  (setq clean-output (replace-regexp-in-string "\\[[0-9]*[A-Z]" "" clean-output))
+                  ;; Remove bare [ at start of lines (leftover from escape sequences)
+                  (setq clean-output (replace-regexp-in-string "^\\[ *" "" clean-output))
+                  (setq clean-output (replace-regexp-in-string "\n\\[ *" "\n" clean-output))
+                  ;; Trim leading whitespace
+                  (setq clean-output (replace-regexp-in-string "\\`[ \t\n]+" "" clean-output))
+                  ;; Trim trailing whitespace
+                  (setq clean-output (replace-regexp-in-string "[ \t\n]+\\'" "" clean-output))
+                  
+                  (erase-buffer)
+                  (insert "=== Last Command Output ===\n")
+                  (insert (format "[%d chars]\n" (length clean-output)))
+                  (insert "===========================\n\n")
+                  (insert clean-output)
+                  (insert "\n")
+                  ;; Scroll to bottom
+                  (goto-char (point-max))
+                  (read-only-mode 1)
+                  ;; Scroll window to bottom if visible
+                  (let ((win (get-buffer-window vars-buf)))
+                    (when win
+                      (with-selected-window win
+                        (goto-char (point-max))))))))
+            
+            ;; Keep buffer manageable
+            (when (> (length stargate-shell--last-output) 10000)
+              (setq stargate-shell--last-output 
+                    (substring stargate-shell--last-output -5000))))))
+    (error
+     (message "Error in stargate-shell filter: %S" err))))
 
 ;;;###autoload
 (defun stargate-shell ()
