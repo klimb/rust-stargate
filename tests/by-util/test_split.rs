@@ -1714,27 +1714,6 @@ fn test_split_non_utf8_argument_unix() {
     ucmd.args(&[opt, opt_value, name]).succeeds();
 }
 
-/// Test if there are invalid (non UTF-8) in the arguments - windows
-/// clap is expected to fail/panic
-#[test]
-#[cfg(windows)]
-fn test_split_non_utf8_argument_windows() {
-    use std::ffi::OsString;
-    use std::os::windows::ffi::OsStringExt;
-
-    let (at, mut ucmd) = at_and_ucmd!();
-    let name = "test_split_non_utf8_argument";
-    let opt = OsString::from("--additional-suffix");
-    RandomFile::new(&at, name).add_lines(2000);
-    // Here the values 0x0066 and 0x006f correspond to 'f' and 'o'
-    // respectively. The value 0xD800 is a lone surrogate half, invalid
-    // in a UTF-16 sequence.
-    let opt_value = [0x0066, 0x006f, 0xD800, 0x006f];
-    let opt_value = OsString::from_wide(&opt_value[..]);
-    let name = OsString::from(name);
-    ucmd.args(&[opt, opt_value, name]).succeeds();
-}
-
 // Test '--separator' / '-t' option following GNU tests example
 // test separators: '\n' , '\0' , ';'
 // test with '--lines=2' , '--line-bytes=4' , '--number=l/3' , '--number=r/3' , '--number=l/1/3' , '--number=r/1/3'

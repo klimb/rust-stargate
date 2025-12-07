@@ -16,7 +16,6 @@ use pretty_assertions::assert_eq;
 use rlimit::setrlimit;
 use std::borrow::Cow;
 use std::collections::VecDeque;
-#[cfg(not(windows))]
 use std::ffi::CString;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, OpenOptions, hard_link, remove_file};
@@ -26,10 +25,6 @@ use std::os::unix::fs::{PermissionsExt, symlink as symlink_dir, symlink as symli
 use std::os::unix::net::UnixListener;
 use std::os::unix::process::CommandExt;
 use std::os::unix::process::ExitStatusExt;
-#[cfg(windows)]
-use std::os::windows::fs::{symlink_dir, symlink_file};
-#[cfg(windows)]
-use std::path::MAIN_SEPARATOR_STR;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Output, Stdio};
 use std::rc::Rc;
@@ -1111,7 +1106,6 @@ impl AtPath {
         File::create(self.plus(file)).unwrap();
     }
 
-    #[cfg(not(windows))]
     pub fn mkfifo(&self, fifo: &str) {
         let full_path = self.plus_as_string(fifo);
         log_info("mkfifo", &full_path);
@@ -1128,7 +1122,6 @@ impl AtPath {
         UnixListener::bind(full_path).expect("Socket file creation failed.");
     }
 
-    #[cfg(not(windows))]
     pub fn is_fifo(&self, fifo: &str) -> bool {
         unsafe {
             let name = CString::new(self.plus_as_string(fifo)).unwrap();
@@ -1141,7 +1134,6 @@ impl AtPath {
         }
     }
 
-    #[cfg(not(windows))]
     pub fn is_char_device(&self, char_dev: &str) -> bool {
         unsafe {
             let name = CString::new(self.plus_as_string(char_dev)).unwrap();
@@ -1179,8 +1171,6 @@ impl AtPath {
     }
 
     pub fn relative_symlink_file(&self, original: &str, link: &str) {
-        #[cfg(windows)]
-        let original = original.replace('/', MAIN_SEPARATOR_STR);
         log_info(
             "symlink",
             format!("{original},{}", self.plus_as_string(link)),
@@ -1201,8 +1191,6 @@ impl AtPath {
     }
 
     pub fn relative_symlink_dir(&self, original: &str, link: &str) {
-        #[cfg(windows)]
-        let original = original.replace('/', MAIN_SEPARATOR_STR);
         log_info(
             "symlink",
             format!("{original},{}", self.plus_as_string(link)),
@@ -1303,7 +1291,6 @@ impl AtPath {
     ///
     /// This function panics if there is an error loading the metadata
     /// or setting the permissions of the file.
-    #[cfg(not(windows))]
     pub fn set_mode(&self, filename: &str, mode: u32) {
         let path = self.plus(filename);
         let mut perms = std::fs::metadata(&path).unwrap().permissions();
@@ -3230,13 +3217,6 @@ mod tests {
 
     #[test]
     fn test_command_result_when_stdout_with_exit_0() {
-        #[cfg(windows)]
-        let (result, vector, string) = (
-            run_cmd("echo hello& exit 0"),
-            vec![b'h', b'e', b'l', b'l', b'o', b'\r', b'\n'],
-            "hello\r\n",
-        );
-        #[cfg(not(windows))]
         let (result, vector, string) = (
             run_cmd("echo hello; exit 0"),
             vec![b'h', b'e', b'l', b'l', b'o', b'\n'],
@@ -3259,13 +3239,6 @@ mod tests {
 
     #[test]
     fn test_command_result_when_stderr_with_exit_0() {
-        #[cfg(windows)]
-        let (result, vector, string) = (
-            run_cmd("echo hello>&2& exit 0"),
-            vec![b'h', b'e', b'l', b'l', b'o', b'\r', b'\n'],
-            "hello\r\n",
-        );
-        #[cfg(not(windows))]
         let (result, vector, string) = (
             run_cmd("echo hello >&2; exit 0"),
             vec![b'h', b'e', b'l', b'l', b'o', b'\n'],
@@ -3288,11 +3261,6 @@ mod tests {
 
     #[test]
     fn test_std_does_not_contain() {
-        #[cfg(windows)]
-        let res = run_cmd(
-            "(echo This is a likely error message& echo This is a likely error message>&2) & exit 0",
-        );
-        #[cfg(not(windows))]
         let res = run_cmd(
             "echo This is a likely error message; echo This is a likely error message >&2; exit 0",
         );
@@ -3303,9 +3271,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_stdout_does_not_contain_fail() {
-        #[cfg(windows)]
-        let res = run_cmd("echo This is a likely error message& exit 0");
-        #[cfg(not(windows))]
         let res = run_cmd("echo This is a likely error message; exit 0");
 
         res.stdout_does_not_contain("likely");
@@ -3314,9 +3279,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_stderr_does_not_contain_fail() {
-        #[cfg(windows)]
-        let res = run_cmd("echo This is a likely error message>&2 & exit 0");
-        #[cfg(not(windows))]
         let res = run_cmd("echo This is a likely error message >&2; exit 0");
 
         res.stderr_does_not_contain("likely");
@@ -3324,11 +3286,6 @@ mod tests {
 
     #[test]
     fn test_stdout_matches() {
-        #[cfg(windows)]
-        let res = run_cmd(
-            "(echo This is a likely error message& echo This is a likely error message>&2 ) & exit 0",
-        );
-        #[cfg(not(windows))]
         let res = run_cmd(
             "echo This is a likely error message; echo This is a likely error message >&2; exit 0",
         );
@@ -3342,11 +3299,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_stdout_matches_fail() {
-        #[cfg(windows)]
-        let res = run_cmd(
-            "(echo This is a likely error message& echo This is a likely error message>&2) & exit 0",
-        );
-        #[cfg(not(windows))]
         let res = run_cmd(
             "echo This is a likely error message; echo This is a likely error message >&2; exit 0",
         );
@@ -3358,11 +3310,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_stdout_not_matches_fail() {
-        #[cfg(windows)]
-        let res = run_cmd(
-            "(echo This is a likely error message& echo This is a likely error message>&2) & exit 0",
-        );
-        #[cfg(not(windows))]
         let res = run_cmd(
             "echo This is a likely error message; echo This is a likely error message >&2; exit 0",
         );

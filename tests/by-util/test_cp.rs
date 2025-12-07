@@ -5,20 +5,15 @@ use sgcore::display::Quotable;
 use sgtests::util::TestScenario;
 use sgtests::{at_and_ucmd, new_ucmd, path_concat, util_name};
 
-#[cfg(not(windows))]
 use std::fs::set_permissions;
 
 use std::io::Write;
-#[cfg(not(windows))]
 use std::os::unix::fs;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
-#[cfg(windows)]
-use std::os::windows::fs::symlink_file;
-#[cfg(not(windows))]
 use std::path::Path;
 #[cfg(target_os = "linux")]
 use std::path::PathBuf;
@@ -220,9 +215,6 @@ fn test_cp_multiple_files() {
 
 #[test]
 fn test_cp_multiple_files_with_nonexistent_file() {
-    #[cfg(windows)]
-    let error_msg = "The system cannot find the file specified";
-    #[cfg(not(windows))]
     let error_msg = format!("'{TEST_NONEXISTENT_FILE}': No such file or directory");
     let (at, mut ucmd) = at_and_ucmd!();
     ucmd.arg(TEST_HELLO_WORLD_SOURCE)
@@ -238,9 +230,6 @@ fn test_cp_multiple_files_with_nonexistent_file() {
 
 #[test]
 fn test_cp_multiple_files_with_empty_file_name() {
-    #[cfg(windows)]
-    let error_msg = "The system cannot find the path specified";
-    #[cfg(not(windows))]
     let error_msg = "'': No such file or directory";
     let (at, mut ucmd) = at_and_ucmd!();
     ucmd.arg(TEST_HELLO_WORLD_SOURCE)
@@ -925,7 +914,6 @@ fn test_cp_arg_no_clobber_twice() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_cp_arg_force() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -951,7 +939,6 @@ fn test_cp_arg_force() {
 /// Windows. This test originally checked file timestamps, which
 /// proved to be unreliable per target / CI platform
 #[test]
-#[cfg(not(windows))]
 fn test_cp_arg_remove_destination() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -1326,13 +1313,7 @@ fn test_cp_deref_conflicting_options() {
 fn test_cp_deref() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    #[cfg(not(windows))]
     let _r = fs::symlink(
-        TEST_HELLO_WORLD_SOURCE,
-        at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
-    );
-    #[cfg(windows)]
-    let _r = symlink_file(
         TEST_HELLO_WORLD_SOURCE,
         at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
     );
@@ -1366,13 +1347,7 @@ fn test_cp_deref() {
 fn test_cp_no_deref() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    #[cfg(not(windows))]
     let _r = fs::symlink(
-        TEST_HELLO_WORLD_SOURCE,
-        at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
-    );
-    #[cfg(windows)]
-    let _r = symlink_file(
         TEST_HELLO_WORLD_SOURCE,
         at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
     );
@@ -1408,24 +1383,12 @@ fn test_cp_no_deref_link_onto_link() {
 
     at.copy(TEST_HELLO_WORLD_SOURCE, TEST_HELLO_WORLD_DEST);
 
-    #[cfg(not(windows))]
     let _r = fs::symlink(
-        TEST_HELLO_WORLD_SOURCE,
-        at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
-    );
-    #[cfg(windows)]
-    let _r = symlink_file(
         TEST_HELLO_WORLD_SOURCE,
         at.subdir.join(TEST_HELLO_WORLD_SOURCE_SYMLINK),
     );
 
-    #[cfg(not(windows))]
     let _r = fs::symlink(
-        TEST_HELLO_WORLD_DEST,
-        at.subdir.join(TEST_HELLO_WORLD_DEST_SYMLINK),
-    );
-    #[cfg(windows)]
-    let _r = symlink_file(
         TEST_HELLO_WORLD_DEST,
         at.subdir.join(TEST_HELLO_WORLD_DEST_SYMLINK),
     );
@@ -1969,7 +1932,6 @@ fn test_cp_no_preserve_mode() {
 #[test]
 // For now, disable the test on Windows. Symlinks aren't well support on Windows.
 // It works on Unix for now and it works locally when run from a powershell
-#[cfg(not(windows))]
 fn test_cp_deref_folder_to_folder() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -1995,7 +1957,6 @@ fn test_cp_deref_folder_to_folder() {
         .arg(TEST_COPY_TO_FOLDER_NEW)
         .succeeds();
 
-    #[cfg(not(windows))]
     {
         let scene2 = TestScenario::new("ls");
         let result = scene2.cmd("ls").arg("-al").arg(path_to_new_symlink).run();
@@ -2007,37 +1968,6 @@ fn test_cp_deref_folder_to_folder() {
         println!("ls dest {}", result.stdout_str());
     }
 
-    #[cfg(windows)]
-    {
-        // No action as this test is disabled but kept in case we want to
-        // try to make it work in the future.
-        let a = Command::new("cmd").args(&["/C", "dir"]).output();
-        println!("output {a:#?}");
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", &at.as_string()])
-            .output();
-        println!("output {a:#?}");
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-
-        let path_to_new_symlink = at.subdir.join(TEST_COPY_FROM_FOLDER);
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-
-        let path_to_new_symlink = at.subdir.join(TEST_COPY_TO_FOLDER_NEW);
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-    }
 
     let path_to_new_symlink = at
         .subdir
@@ -2067,7 +1997,6 @@ fn test_cp_deref_folder_to_folder() {
 #[test]
 // For now, disable the test on Windows. Symlinks aren't well support on Windows.
 // It works on Unix for now and it works locally when run from a powershell
-#[cfg(not(windows))]
 fn test_cp_no_deref_folder_to_folder() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -2093,7 +2022,6 @@ fn test_cp_no_deref_folder_to_folder() {
         .arg(TEST_COPY_TO_FOLDER_NEW)
         .succeeds();
 
-    #[cfg(not(windows))]
     {
         let scene2 = TestScenario::new("ls");
         let result = scene2.cmd("ls").arg("-al").arg(path_to_new_symlink).run();
@@ -2105,37 +2033,6 @@ fn test_cp_no_deref_folder_to_folder() {
         println!("ls dest {}", result.stdout_str());
     }
 
-    #[cfg(windows)]
-    {
-        // No action as this test is disabled but kept in case we want to
-        // try to make it work in the future.
-        let a = Command::new("cmd").args(&["/C", "dir"]).output();
-        println!("output {a:#?}");
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", &at.as_string()])
-            .output();
-        println!("output {a:#?}");
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-
-        let path_to_new_symlink = at.subdir.join(TEST_COPY_FROM_FOLDER);
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-
-        let path_to_new_symlink = at.subdir.join(TEST_COPY_TO_FOLDER_NEW);
-
-        let a = Command::new("cmd")
-            .args(&["/C", "dir", path_to_new_symlink.to_str().unwrap()])
-            .output();
-        println!("output {a:#?}");
-    }
 
     let path_to_new_symlink = at
         .subdir
@@ -2758,7 +2655,6 @@ fn test_copy_dir_with_symlinks() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_copy_symlink_force() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("file");
@@ -3002,7 +2898,6 @@ fn test_copy_through_dangling_symlink_no_dereference_2() {
 
 /// Test that copy through a dangling symbolic link fails, even with --force.
 #[test]
-#[cfg(not(windows))]
 fn test_copy_through_dangling_symlink_force() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("src");
@@ -3207,9 +3102,7 @@ fn test_cp_overriding_arguments() {
     let s = TestScenario::new(util_name!());
     s.fixtures.touch("file1");
     for (arg1, arg2) in [
-        #[cfg(not(windows))]
         ("--remove-destination", "--force"),
-        #[cfg(not(windows))]
         ("--force", "--remove-destination"),
         ("--interactive", "--no-clobber"),
         ("--link", "--symbolic-link"),
@@ -3293,10 +3186,7 @@ fn test_cp_parents_2() {
     at.mkdir_all("a/b");
     at.touch("a/b/c");
     at.mkdir("d");
-    #[cfg(not(windows))]
     let expected_stdout = "a -> d/a\na/b -> d/a/b\n'a/b/c' -> 'd/a/b/c'\n";
-    #[cfg(windows)]
-    let expected_stdout = "a -> d\\a\na/b -> d\\a/b\n'a/b/c' -> 'd\\a/b/c'\n";
     ucmd.args(&["--verbose", "--parents", "a/b/c", "d"])
         .succeeds()
         .stdout_only(expected_stdout);
@@ -3310,10 +3200,7 @@ fn test_cp_parents_2_link() {
     at.touch("a/b/c");
     at.mkdir("d");
     at.relative_symlink_file("b", "a/link");
-    #[cfg(not(windows))]
     let expected_stdout = "a -> d/a\na/link -> d/a/link\n'a/link/c' -> 'd/a/link/c'\n";
-    #[cfg(windows)]
-    let expected_stdout = "a -> d\\a\na/link -> d\\a/link\n'a/link/c' -> 'd\\a/link/c'\n";
     ucmd.args(&["--verbose", "--parents", "a/link/c", "d"])
         .succeeds()
         .stdout_only(expected_stdout);
@@ -3327,10 +3214,7 @@ fn test_cp_parents_2_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir_all("a/b/c");
     at.mkdir("d");
-    #[cfg(not(windows))]
     let expected_stdout = "a -> d/a\na/b -> d/a/b\n'a/b/c' -> 'd/a/b/c'\n";
-    #[cfg(windows)]
-    let expected_stdout = "a -> d\\a\na/b -> d\\a/b\n'a/b/c' -> 'd\\a/b\\c'\n";
     ucmd.args(&["--verbose", "-r", "--parents", "a/b/c", "d"])
         .succeeds()
         .stdout_only(expected_stdout);
@@ -3342,10 +3226,7 @@ fn test_cp_parents_2_deep_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir_all("a/b/c");
     at.mkdir_all("d/e");
-    #[cfg(not(windows))]
     let expected_stdout = "a -> d/e/a\na/b -> d/e/a/b\n'a/b/c' -> 'd/e/a/b/c'\n";
-    #[cfg(windows)]
-    let expected_stdout = "a -> d/e\\a\na/b -> d/e\\a/b\n'a/b/c' -> 'd/e\\a/b\\c'\n";
     ucmd.args(&["--verbose", "-r", "--parents", "a/b/c", "d/e"])
         .succeeds()
         .stdout_only(expected_stdout);
@@ -3460,7 +3341,6 @@ fn test_remove_destination_symbolic_link_loop() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_cp_symbolic_link_loop() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.symlink_file("loop", "loop");
@@ -3478,10 +3358,7 @@ fn test_cp_symbolic_link_loop() {
 fn test_copy_directory_to_itself_disallowed() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("d");
-    #[cfg(not(windows))]
     let expected = "cp: cannot copy a directory, 'd', into itself, 'd/d'\n";
-    #[cfg(windows)]
-    let expected = "cp: cannot copy a directory, 'd', into itself, 'd\\d'\n";
     ucmd.args(&["-R", "d", "d"]).fails().stderr_only(expected);
 }
 
@@ -3492,10 +3369,7 @@ fn test_copy_nested_directory_to_itself_disallowed() {
     at.mkdir("a");
     at.mkdir("a/b");
     at.mkdir("a/b/c");
-    #[cfg(not(windows))]
     let expected = "cp: cannot copy a directory, 'a/b', into itself, 'a/b/c/b'\n";
-    #[cfg(windows)]
-    let expected = "cp: cannot copy a directory, 'a/b', into itself, 'a/b/c\\b'\n";
     ucmd.args(&["-R", "a/b", "a/b/c"])
         .fails()
         .stderr_only(expected);
@@ -3599,7 +3473,6 @@ fn test_same_file_backup() {
 }
 
 /// Test that copying file to itself with forced backup succeeds.
-#[cfg(not(windows))]
 #[test]
 fn test_same_file_force() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -3611,7 +3484,6 @@ fn test_same_file_force() {
 }
 
 /// Test that copying file to itself with forced backup succeeds.
-#[cfg(not(windows))]
 #[test]
 fn test_same_file_force_backup() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -3720,7 +3592,6 @@ fn test_hard_link_file() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_symbolic_link_file() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.touch("src");
@@ -3798,7 +3669,6 @@ fn test_non_utf8_target() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_cp_archive_on_directory_ending_dot() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("dir1");
@@ -3815,8 +3685,6 @@ fn test_cp_debug_default() {
     let expected = "copy offload: unknown, reflink: unsupported, sparse detection: unsupported";
     #[cfg(target_os = "linux")]
     let expected = "copy offload: unknown, reflink: unsupported, sparse detection: no";
-    #[cfg(windows)]
-    let expected = "copy offload: unsupported, reflink: unsupported, sparse detection: unsupported";
 
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -3852,8 +3720,6 @@ fn test_cp_debug_multiple_default() {
     let expected = "copy offload: unknown, reflink: unsupported, sparse detection: unsupported";
     #[cfg(target_os = "linux")]
     let expected = "copy offload: unknown, reflink: unsupported, sparse detection: no";
-    #[cfg(windows)]
-    let expected = "copy offload: unsupported, reflink: unsupported, sparse detection: unsupported";
 
     // two files, two occurrences
     assert_eq!(result.stdout_str().matches(expected).count(), 2);
@@ -6619,7 +6485,6 @@ fn test_cp_current_directory_with_symlinks() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_cp_no_dereference_symlink_with_parents() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -6700,13 +6565,8 @@ fn test_cp_recurse_verbose_output() {
     let source_dir = "source_dir";
     let target_dir = "target_dir";
     let file = "file";
-    #[cfg(not(windows))]
     let output = format!(
         "'{source_dir}' -> '{target_dir}/'\n'{source_dir}/{file}' -> '{target_dir}/{file}'\n"
-    );
-    #[cfg(windows)]
-    let output = format!(
-        "'{source_dir}' -> '{target_dir}\\'\n'{source_dir}\\{file}' -> '{target_dir}\\{file}'\n"
     );
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -6728,7 +6588,6 @@ fn test_cp_recurse_verbose_output_with_symlink() {
     let target_dir = "target_dir";
     let file = "file";
     let symlink = "symlink";
-    #[cfg(not(windows))]
     let output = format!(
         "'{source_dir}' -> '{target_dir}/'\n'{source_dir}/{symlink}' -> '{target_dir}/{symlink}'\n"
     );
@@ -6754,13 +6613,8 @@ fn test_cp_recurse_verbose_output_with_symlink_already_exists() {
     let target_dir = "target_dir";
     let file = "file";
     let symlink = "symlink";
-    #[cfg(not(windows))]
     let output = format!(
         "removed '{target_dir}/{symlink}'\n'{source_dir}/{symlink}' -> '{target_dir}/{symlink}'\n"
-    );
-    #[cfg(windows)]
-    let output = format!(
-        "removed '{target_dir}\\{symlink}'\n'{source_dir}\\{symlink}' -> '{target_dir}\\{symlink}'\n"
     );
     let (at, mut ucmd) = at_and_ucmd!();
 

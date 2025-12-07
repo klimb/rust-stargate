@@ -3,7 +3,6 @@ use std::fs::File;
 use sgtests::new_ucmd;
 
 #[test]
-#[cfg(not(windows))]
 fn test_dev_null() {
     new_ucmd!()
         .set_stdin(File::open("/dev/null").unwrap())
@@ -12,7 +11,6 @@ fn test_dev_null() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_dev_null_silent() {
     new_ucmd!()
         .args(&["-s"])

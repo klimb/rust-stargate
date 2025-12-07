@@ -15,12 +15,6 @@ use nix::sys::stat;
 use std::io::{Seek, SeekFrom};
 #[cfg(unix)]
 use std::os::fd::{AsFd, AsRawFd};
-#[cfg(windows)]
-use std::os::windows::fs::MetadataExt;
-#[cfg(windows)]
-const FILE_ATTRIBUTE_ARCHIVE: u32 = 32;
-#[cfg(windows)]
-const FILE_ATTRIBUTE_NORMAL: u32 = 128;
 
 #[cfg(any(target_os = "linux"))]
 use libc::S_IFIFO;

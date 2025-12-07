@@ -1101,7 +1101,6 @@ fn test_du_exclude_invalid_syntax() {
         .stderr_contains("du: Invalid exclude syntax");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_du_symlink_fail() {
     let ts = TestScenario::new(util_name!());
@@ -1112,7 +1111,6 @@ fn test_du_symlink_fail() {
     ts.ucmd().arg("-L").arg("target.txt").fails_with_code(1);
 }
 
-#[cfg(not(windows))]
 #[cfg(not(target_os = "openbsd"))]
 #[test]
 fn test_du_symlink_multiple_fail() {
@@ -1306,9 +1304,6 @@ fn test_du_deduplicated_input_args() {
         .lines()
         .map(|x| x.parse().unwrap())
         .collect();
-    #[cfg(windows)]
-    assert_eq!(result_seq, ["1\td\\d", "3\td"]);
-    #[cfg(not(windows))]
     assert_eq!(result_seq, ["1\td/d", "3\td"]);
 }
 

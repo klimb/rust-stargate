@@ -7,7 +7,6 @@ use sgtests::util_name;
 
 use sgcore::display::Quotable;
 
-#[cfg(not(windows))]
 use std::path::MAIN_SEPARATOR;
 use std::path::PathBuf;
 use tempfile::tempdir;
@@ -22,13 +21,8 @@ static TEST_TEMPLATE5: &str = "tempXXX";
 static TEST_TEMPLATE6: &str = "tempXXXlate";
 static TEST_TEMPLATE7: &str = "XXXtemplate";
 static TEST_TEMPLATE8: &str = "tempXXXl/ate";
-#[cfg(windows)]
-static TEST_TEMPLATE8: &str = "tempXXXl\\ate";
 
-#[cfg(not(windows))]
 const TMPDIR: &str = "TMPDIR";
-#[cfg(windows)]
-const TMPDIR: &str = "TMP";
 
 /// An assertion that uses [`matches_template`] and adds a helpful error message.
 macro_rules! assert_matches_template {
@@ -38,21 +32,6 @@ macro_rules! assert_matches_template {
             "\"{}\" != \"{}\"",
             $template,
             $s
-        );
-    }};
-}
-
-/// Like [`assert_matches_template`] but for the suffix of a string.
-#[cfg(windows)]
-macro_rules! assert_suffix_matches_template {
-    ($template:expr, $s:expr) => {{
-        let n = ($s).len();
-        let m = ($template).len();
-        let suffix = &$s[n - m..n];
-        assert!(
-            matches_template($template, suffix),
-            "\"{}\" does not end with \"{suffix}\"",
-            $template,
         );
     }};
 }
@@ -472,10 +451,7 @@ fn test_mktemp_directory_tmpdir() {
 fn test_tmpdir_template_has_subdirectory() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("a");
-    #[cfg(not(windows))]
     let (template, joined) = ("a/bXXXX", "./a/bXXXX");
-    #[cfg(windows)]
-    let (template, joined) = (r"a\bXXXX", r".\a\bXXXX");
     let result = ucmd.args(&["--tmpdir=.", template]).succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
     assert_matches_template!(joined, filename);
@@ -485,9 +461,6 @@ fn test_tmpdir_template_has_subdirectory() {
 /// Test that an absolute path is disallowed when --tmpdir is provided.
 #[test]
 fn test_tmpdir_absolute_path() {
-    #[cfg(windows)]
-    let path = r"C:\XXX";
-    #[cfg(not(windows))]
     let path = "/XXX";
     new_ucmd!()
         .args(&["--tmpdir=a", path])
@@ -546,10 +519,7 @@ fn test_respect_template() {
 fn test_respect_template_directory() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("d");
-    #[cfg(not(windows))]
     let template = "d/XXX";
-    #[cfg(windows)]
-    let template = r"d\XXX";
     let result = ucmd.arg(template).succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
     assert_matches_template!(template, filename);
@@ -571,21 +541,12 @@ fn test_directory_permissions() {
 /// Test that a template with a path separator is invalid.
 #[test]
 fn test_template_path_separator() {
-    #[cfg(not(windows))]
     new_ucmd!()
         .args(&["-t", "a/bXXX"])
         .fails()
         .stderr_only(format!(
             "mktemp: invalid template, {}, contains directory separator\n",
             "a/bXXX".quote()
-        ));
-    #[cfg(windows)]
-    new_ucmd!()
-        .args(&["-t", r"a\bXXX"])
-        .fails()
-        .stderr_only(format!(
-            "mktemp: invalid template, {}, contains directory separator\n",
-            r"a\bXXX".quote()
         ));
 }
 
@@ -597,7 +558,6 @@ fn test_prefix_template_separator() {
 
 #[test]
 fn test_prefix_template_with_path_separator() {
-    #[cfg(not(windows))]
     new_ucmd!()
         .args(&["-t", "a/XXX"])
         .fails()
@@ -605,39 +565,19 @@ fn test_prefix_template_with_path_separator() {
             "mktemp: invalid template, {}, contains directory separator\n",
             "a/XXX".quote()
         ));
-    #[cfg(windows)]
-    new_ucmd!()
-        .args(&["-t", r"a\XXX"])
-        .fails()
-        .stderr_only(format!(
-            "mktemp: invalid template, {}, contains directory separator\n",
-            r"a\XXX".quote()
-        ));
 }
 
 /// Test that a suffix with a path separator is invalid.
 #[test]
 fn test_suffix_path_separator() {
-    #[cfg(not(windows))]
     new_ucmd!()
         .arg("aXXX/b")
         .fails()
         .stderr_only("mktemp: invalid suffix '/b', contains directory separator\n");
-    #[cfg(windows)]
-    new_ucmd!()
-        .arg(r"aXXX\b")
-        .fails()
-        .stderr_only("mktemp: invalid suffix '\\b', contains directory separator\n");
-    #[cfg(not(windows))]
     new_ucmd!()
         .arg("XXX/..")
         .fails()
         .stderr_only("mktemp: invalid suffix '/..', contains directory separator\n");
-    #[cfg(windows)]
-    new_ucmd!()
-        .arg(r"XXX\..")
-        .fails()
-        .stderr_only("mktemp: invalid suffix '\\..', contains directory separator\n");
 }
 
 #[test]
@@ -733,7 +673,6 @@ fn test_tmpdir_env_var() {
     let (at, mut ucmd) = at_and_ucmd!();
     let result = ucmd.env(TMPDIR, ".").succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
-    #[cfg(not(windows))]
     {
         let template = format!(".{MAIN_SEPARATOR}tmp.XXXXXXXXXX");
         assert_matches_template!(&template, filename);
@@ -743,34 +682,26 @@ fn test_tmpdir_env_var() {
     // * https://github.com/uutils/coreutils/pull/3552#issuecomment-1211804981
     // * https://doc.rust-lang.org/std/env/fn.temp_dir.html
     // * https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppath2w
-    #[cfg(windows)]
-    assert_suffix_matches_template!("tmp.XXXXXXXXXX", filename);
     assert!(at.file_exists(filename));
 
     // `TMPDIR=. mktemp --tmpdir`
     let (at, mut ucmd) = at_and_ucmd!();
     let result = ucmd.env(TMPDIR, ".").arg("--tmpdir").succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
-    #[cfg(not(windows))]
     {
         let template = format!(".{MAIN_SEPARATOR}tmp.XXXXXXXXXX");
         assert_matches_template!(&template, filename);
     }
-    #[cfg(windows)]
-    assert_suffix_matches_template!("tmp.XXXXXXXXXX", filename);
     assert!(at.file_exists(filename));
 
     // `TMPDIR=. mktemp --tmpdir XXX`
     let (at, mut ucmd) = at_and_ucmd!();
     let result = ucmd.env(TMPDIR, ".").args(&["--tmpdir", "XXX"]).succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
-    #[cfg(not(windows))]
     {
         let template = format!(".{MAIN_SEPARATOR}XXX");
         assert_matches_template!(&template, filename);
     }
-    #[cfg(windows)]
-    assert_suffix_matches_template!("XXX", filename);
     assert!(at.file_exists(filename));
 
     // `TMPDIR=. mktemp XXX` - in this case `TMPDIR` is ignored.
@@ -784,80 +715,20 @@ fn test_tmpdir_env_var() {
 
 #[test]
 fn test_nonexistent_tmpdir_env_var() {
-    #[cfg(not(windows))]
     new_ucmd!().env(TMPDIR, "no/such/dir").fails().stderr_only("mktemp: failed to create file via template 'no/such/dir/tmp.XXXXXXXXXX': No such file or directory\n");
-    #[cfg(windows)]
-    {
-        let result = new_ucmd!().env(TMPDIR, r"no\such\dir").fails();
-        result.no_stdout();
-        let stderr = result.stderr_str();
-        assert!(
-            stderr.starts_with("mktemp: failed to create file via template"),
-            "{stderr}",
-        );
-        assert!(
-            stderr.ends_with("no\\such\\dir\\tmp.XXXXXXXXXX': No such file or directory\n"),
-            "{stderr}",
-        );
-    }
 
-    #[cfg(not(windows))]
     new_ucmd!().env(TMPDIR, "no/such/dir").arg("-d").fails().stderr_only("mktemp: failed to create directory via template 'no/such/dir/tmp.XXXXXXXXXX': No such file or directory\n");
-    #[cfg(windows)]
-    {
-        let result = new_ucmd!().env(TMPDIR, r"no\such\dir").arg("-d").fails();
-        result.no_stdout();
-        let stderr = result.stderr_str();
-        assert!(
-            stderr.starts_with("mktemp: failed to create directory via template"),
-            "{stderr}",
-        );
-        assert!(
-            stderr.ends_with("no\\such\\dir\\tmp.XXXXXXXXXX': No such file or directory\n"),
-            "{stderr}",
-        );
-    }
 }
 
 #[test]
 fn test_nonexistent_dir_prefix() {
-    #[cfg(not(windows))]
     new_ucmd!().arg("d/XXX").fails().stderr_only(
         "mktemp: failed to create file via template 'd/XXX': No such file or directory\n",
     );
-    #[cfg(windows)]
-    {
-        let result = new_ucmd!().arg(r"d\XXX").fails();
-        result.no_stdout();
-        let stderr = result.stderr_str();
-        assert!(
-            stderr.starts_with("mktemp: failed to create file via template"),
-            "{stderr}",
-        );
-        assert!(
-            stderr.ends_with("d\\XXX': No such file or directory\n"),
-            "{stderr}",
-        );
-    }
 
-    #[cfg(not(windows))]
     new_ucmd!().arg("-d").arg("d/XXX").fails().stderr_only(
         "mktemp: failed to create directory via template 'd/XXX': No such file or directory\n",
     );
-    #[cfg(windows)]
-    {
-        let result = new_ucmd!().arg("-d").arg(r"d\XXX").fails();
-        result.no_stdout();
-        let stderr = result.stderr_str();
-        assert!(
-            stderr.starts_with("mktemp: failed to create directory via template"),
-            "{stderr}",
-        );
-        assert!(
-            stderr.ends_with("d\\XXX': No such file or directory\n"),
-            "{stderr}",
-        );
-    }
 }
 
 #[test]
@@ -935,7 +806,6 @@ fn test_missing_xs_tmpdir_template() {
 fn test_both_tmpdir_flags_present() {
     let scene = TestScenario::new(util_name!());
 
-    #[cfg(not(windows))]
     let template = format!(".{MAIN_SEPARATOR}foobarXXXX");
 
     let (at, mut ucmd) = at_and_ucmd!();
@@ -948,10 +818,7 @@ fn test_both_tmpdir_flags_present() {
         .succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
 
-    #[cfg(not(windows))]
     assert_matches_template!(&template, filename);
-    #[cfg(windows)]
-    assert_suffix_matches_template!("foobarXXXX", filename);
 
     assert!(at.file_exists(filename));
 
@@ -973,10 +840,7 @@ fn test_both_tmpdir_flags_present() {
         .succeeds();
     let filename = result.no_stderr().stdout_str().trim_end();
 
-    #[cfg(not(windows))]
     assert_matches_template!(&template, filename);
-    #[cfg(windows)]
-    assert_suffix_matches_template!("foobarXXXX", filename);
 
     assert!(at.file_exists(filename));
 }

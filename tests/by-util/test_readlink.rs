@@ -6,10 +6,7 @@ use sgtests::{at_and_ucmd, new_ucmd, path_concat, util_name};
 
 static GIBBERISH: &str = "supercalifragilisticexpialidocious";
 
-#[cfg(not(windows))]
 static NOT_A_DIRECTORY: &str = "Not a directory";
-#[cfg(windows)]
-static NOT_A_DIRECTORY: &str = "The directory name is invalid.";
 
 #[test]
 fn test_no_args() {
@@ -107,7 +104,6 @@ fn test_symlink_to_itself_verbose() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_posixly_correct_regular_file() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -363,7 +359,6 @@ fn test_canonicalize_trailing_slash_symlink_loop() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_delimiters() {
     new_ucmd!()
         .args(&["--zero", "-n", "-m", "/a"])

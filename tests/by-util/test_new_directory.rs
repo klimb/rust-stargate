@@ -2,12 +2,9 @@
 
 #![allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 
-#[cfg(not(windows))]
 use libc::mode_t;
-#[cfg(not(windows))]
 use std::os::unix::fs::PermissionsExt;
 
-#[cfg(not(windows))]
 use sgtests::at_and_ucmd;
 use sgtests::new_ucmd;
 use sgtests::util::TestScenario;
@@ -139,7 +136,6 @@ fn test_mkdir_dup_dir_parent() {
     scene.ucmd().arg("-p").arg(test_dir).succeeds();
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_mkdir_parent_mode() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -167,7 +163,6 @@ fn test_mkdir_parent_mode() {
     );
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_mkdir_parent_mode_check_existing_parent() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -199,7 +194,6 @@ fn test_mkdir_parent_mode_check_existing_parent() {
     );
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_mkdir_parent_mode_skip_existing_last_component_chmod() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -234,7 +228,6 @@ fn test_mkdir_dup_file() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_symbolic_mode() {
     let (at, mut ucmd) = at_and_ucmd!();
     let test_dir = "test_dir";
@@ -245,7 +238,6 @@ fn test_symbolic_mode() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_symbolic_alteration() {
     let (at, mut ucmd) = at_and_ucmd!();
     let test_dir = "test_dir";
@@ -262,7 +254,6 @@ fn test_symbolic_alteration() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_multi_symbolic() {
     let (at, mut ucmd) = at_and_ucmd!();
     let test_dir = "test_dir";
@@ -417,7 +408,6 @@ fn test_mkdir_trailing_spaces_and_dots() {
     assert!(at.dir_exists("...test"));
 }
 #[test]
-#[cfg(not(windows))]
 fn test_umask_compliance() {
     fn test_single_case(umask_set: mode_t) {
         let test_dir = "test_dir";
@@ -577,16 +567,6 @@ fn test_mkdir_control_characters() {
     {
         scene.ucmd().arg("-pv").arg("a/\"\"/b/c").succeeds();
         assert!(at.dir_exists("a/\"\"/b/c"));
-    }
-    #[cfg(windows)]
-    {
-        let result = scene.ucmd().arg("-pv").arg("a/\"\"/b/c").run();
-        // Should fail after creating 'a' directory
-        assert!(at.dir_exists("a"));
-        assert!(!at.dir_exists("a/\"\""));
-        assert!(!result.succeeded());
-        // Windows should reject directory names with quotes
-        // We don't assert on specific error message as it varies by Windows version
     }
 
     // Test single quotes in path - should work on both Unix and Windows

@@ -699,7 +699,6 @@ fn test_remove_inaccessible_dir() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_current_or_parent_dir_rm4() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -730,38 +729,6 @@ fn test_current_or_parent_dir_rm4() {
 }
 
 #[test]
-#[cfg(windows)]
-fn test_current_or_parent_dir_rm4_windows() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    at.mkdir("d");
-
-    let answers = [
-        "rm: refusing to remove '.' or '..' directory: skipping 'd\\.'",
-        "rm: refusing to remove '.' or '..' directory: skipping 'd\\.\\'",
-        "rm: refusing to remove '.' or '..' directory: skipping 'd\\.\\'",
-        "rm: refusing to remove '.' or '..' directory: skipping 'd\\..'",
-        "rm: refusing to remove '.' or '..' directory: skipping 'd\\..\\'",
-    ];
-    let std_err_str = ts
-        .ucmd()
-        .arg("-rf")
-        .arg("d\\.")
-        .arg("d\\.\\")
-        .arg("d\\.\\\\\\\\")
-        .arg("d\\..")
-        .arg("d\\..\\")
-        .fails()
-        .stderr_move_str();
-
-    for (idx, line) in std_err_str.lines().enumerate() {
-        assert_eq!(line, answers[idx]);
-    }
-}
-
-#[test]
-#[cfg(not(windows))]
 fn test_fifo_removal() {
     use std::time::Duration;
 
@@ -803,9 +770,6 @@ fn test_uchild_when_run_no_wait_with_a_blocking_command() {
         .with_current_output()
         .stdout_is("rm: descend into directory 'a'? ");
 
-    #[cfg(windows)]
-    let expected = "rm: descend into directory 'a'? \
-                    rm: remove regular empty file 'a\\empty'? ";
     let expected = "rm: descend into directory 'a'? \
                     rm: remove regular empty file 'a/empty'? ";
     child.write_in(yes);
@@ -815,8 +779,6 @@ fn test_uchild_when_run_no_wait_with_a_blocking_command() {
         .with_all_output()
         .stdout_is(expected);
 
-    #[cfg(windows)]
-    let expected = "removed 'a\\empty'\nrm: remove directory 'a'? ";
     let expected = "removed 'a/empty'\nrm: remove directory 'a'? ";
 
     child
@@ -837,10 +799,7 @@ fn test_recursive_interactive() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("a");
     at.mkdir("a/b");
-    #[cfg(windows)]
-    let expected =
         "rm: descend into directory 'a'? rm: remove directory 'a\\b'? rm: remove directory 'a'? ";
-    #[cfg(not(windows))]
     let expected =
         "rm: descend into directory 'a'? rm: remove directory 'a/b'? rm: remove directory 'a'? ";
     ucmd.args(&["-i", "-r", "a"])
@@ -857,9 +816,6 @@ fn test_recursive_symlink_loop() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("d");
     at.relative_symlink_file(".", "d/link");
-    #[cfg(windows)]
-    let expected = "rm: descend into directory 'd'? rm: remove symbolic link 'd\\link'? rm: remove directory 'd'? ";
-    #[cfg(not(windows))]
     let expected = "rm: descend into directory 'd'? rm: remove symbolic link 'd/link'? rm: remove directory 'd'? ";
     ucmd.args(&["-i", "-r", "d"])
         .pipe_in("y\ny\ny\n")
@@ -869,7 +825,6 @@ fn test_recursive_symlink_loop() {
     assert!(!at.dir_exists("d"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_only_first_error_recursive() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -891,7 +846,6 @@ fn test_only_first_error_recursive() {
     assert!(at.dir_exists("a"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_unreadable_and_nonempty_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -905,7 +859,6 @@ fn test_unreadable_and_nonempty_dir() {
     assert!(at.dir_exists("a"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_inaccessible_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -915,7 +868,6 @@ fn test_inaccessible_dir() {
     assert!(!at.dir_exists("dir"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_inaccessible_dir_nonempty() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -929,7 +881,6 @@ fn test_inaccessible_dir_nonempty() {
     assert!(at.dir_exists("dir"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_inaccessible_dir_interactive() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -942,7 +893,6 @@ fn test_inaccessible_dir_interactive() {
     assert!(!at.dir_exists("dir"));
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_inaccessible_dir_recursive() {
     let (at, mut ucmd) = at_and_ucmd!();

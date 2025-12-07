@@ -1809,33 +1809,6 @@ fn test_acl() {
 }
 
 #[test]
-#[cfg(windows)]
-fn test_move_should_not_fallback_to_copy() {
-    use std::os::windows::fs::OpenOptionsExt;
-
-    let (at, mut ucmd) = at_and_ucmd!();
-
-    let locked_file = "a_file_is_locked";
-    let locked_file_path = at.plus(locked_file);
-    let file = std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .share_mode(
-            sgcore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ
-                | sgcore::windows_sys::Win32::Storage::FileSystem::FILE_SHARE_WRITE,
-        )
-        .open(locked_file_path);
-
-    let target_file = "target_file";
-    ucmd.arg(locked_file).arg(target_file).fails();
-
-    assert!(at.file_exists(locked_file));
-    assert!(!at.file_exists(target_file));
-
-    drop(file);
-}
-
-#[test]
 #[cfg(unix)]
 fn test_move_should_not_fallback_to_copy() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -2514,7 +2487,6 @@ fn test_mv_mixed_hardlinks_and_regular_files() {
     assert_ne!(r1_meta.ino(), r2_meta.ino());
 }
 
-#[cfg(not(windows))]
 /// Test cross-device move with permission denied error
 /// This test mimics the scenario from the GNU part-fail test where
 /// a cross-device move fails due to permission errors when removing the target file

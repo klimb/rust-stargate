@@ -1699,7 +1699,6 @@ fn test_simulation_of_terminal_pty_pipes_into_data_and_sends_eot_automatically()
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_emoji_env_vars() {
     new_ucmd!()
         .arg("🎯_VAR=Hello 🌍")

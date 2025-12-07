@@ -57,13 +57,10 @@ fn test_long_odd_output() {
 /// Test with an input that doesn't fit in the standard buffer.
 #[test]
 fn test_long_input() {
-    #[cfg(not(windows))]
     const TIMES: usize = 14000;
     // On Windows the command line is limited to 8191 bytes.
     // This is not actually enough to fill the buffer, but it's still nice to
     // try something long.
-    #[cfg(windows)]
-    const TIMES: usize = 500;
     let arg = "abcdef".repeat(TIMES) + "\n";
     let expected_out = arg.repeat(30);
     run(&[&arg[..arg.len() - 1]], expected_out.as_bytes());

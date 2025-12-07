@@ -926,10 +926,7 @@ fn test_nonexistent_file() {
         .arg("nonexistent.txt")
         .fails_with_code(2)
         .stderr_only(
-            #[cfg(not(windows))]
             "sort: cannot read: nonexistent.txt: No such file or directory\n",
-            #[cfg(windows)]
-            "sort: cannot read: nonexistent.txt: The system cannot find the file specified.\n",
         );
 }
 
@@ -1007,13 +1004,9 @@ fn test_compress_fail() {
         ])
         .succeeds();
 
-    #[cfg(not(windows))]
     result.stderr_contains(
         "sort: could not run compress program 'nonexistent-program': No such file or directory",
     );
-
-    #[cfg(windows)]
-    result.stderr_contains("could not run compress program");
 
     // Check that it still produces correct sorted output to stdout
     let expected = new_ucmd!()
@@ -1148,10 +1141,7 @@ fn test_verifies_out_file() {
             .ignore_stdin_write_error()
             .fails_with_code(2)
             .stderr_only(
-                #[cfg(not(windows))]
                 "sort: open failed: nonexistent_dir/nonexistent_file: No such file or directory\n",
-                #[cfg(windows)]
-                "sort: open failed: nonexistent_dir/nonexistent_file: The system cannot find the path specified.\n",
             );
     }
 }
@@ -1380,10 +1370,7 @@ fn test_files0_from_missing() {
         .args(&["--files0-from", "missing_file"])
         .fails_with_code(2)
         .stderr_only(
-            #[cfg(not(windows))]
             "sort: open failed: missing_file: No such file or directory\n",
-            #[cfg(windows)]
-            "sort: open failed: missing_file: The system cannot find the file specified.\n",
         );
 }
 

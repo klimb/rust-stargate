@@ -5,12 +5,10 @@ use clap::parser::ValuesRef;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-#[cfg(not(windows))]
 use sgcore::error::FromIo;
 use sgcore::error::{UResult, USimpleError};
 use sgcore::translate;
 
-#[cfg(not(windows))]
 use sgcore::mode;
 use sgcore::{display::Quotable, fs::dir_strip_dot_for_creation};
 use sgcore::{format_usage, show_if_err};
@@ -170,12 +168,6 @@ fn chmod(path: &Path, mode: u32) -> UResult<()> {
     )
 }
 
-#[cfg(windows)]
-fn chmod(_path: &Path, _mode: u32) -> UResult<()> {
-    // chmod on Windows only sets the readonly flag, which isn't even honored on directories
-    Ok(())
-}
-
 // Create a directory at the given path.
 // Uses iterative approach instead of recursion to avoid stack overflow with deep nesting.
 fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
@@ -254,8 +246,6 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             } else {
                 config.mode
             };
-            #[cfg(windows)]
-            let new_mode = config.mode;
 
             chmod(path, new_mode)?;
             

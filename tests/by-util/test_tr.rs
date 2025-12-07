@@ -1557,7 +1557,6 @@ fn test_broken_pipe_no_error() {
         .fails_silently();
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_stdin_is_socket() {
     use nix::sys::socket::{AddressFamily, SockFlag, SockType, socketpair};

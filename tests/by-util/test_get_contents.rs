@@ -9,7 +9,6 @@ use std::process::Stdio;
 use sgtests::at_and_ucmd;
 use sgtests::new_ucmd;
 use sgtests::util::TestScenario;
-#[cfg(not(windows))]
 use sgtests::util::vec_of_size;
 use sgtests::util_name;
 

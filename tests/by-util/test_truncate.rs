@@ -392,7 +392,6 @@ fn test_negative_size_with_space() {
     assert!(at.read_bytes(FILE1).is_empty());
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_fifo_error_size_only() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -403,7 +402,6 @@ fn test_fifo_error_size_only() {
         .stderr_contains("cannot open 'fifo' for writing: No such device or address");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_fifo_error_reference_file_only() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -415,7 +413,6 @@ fn test_fifo_error_reference_file_only() {
         .stderr_contains("cannot open 'fifo' for writing: No such device or address");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn test_fifo_error_reference_and_size() {
     let (at, mut ucmd) = at_and_ucmd!();

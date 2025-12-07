@@ -3,8 +3,6 @@
 #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
 use std::fs::OpenOptions;
 use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
-#[cfg(windows)]
-use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 use sgtests::new_ucmd;
 use sgtests::util::TestScenario;
 use sgtests::util_name;
@@ -470,19 +468,6 @@ fn non_unicode() {
             .stderr_is("join: non-UTF-8 multi-byte tab\n");
     }
 
-    #[cfg(windows)]
-    {
-        let invalid_utf16: OsString = OsStringExt::from_wide(&[0xD800]);
-        new_ucmd!()
-            .arg("-t")
-            .arg(&invalid_utf16)
-            .arg("non-unicode_1.bin")
-            .arg("non-unicode_2.bin")
-            .fails()
-            .stderr_is(
-                "join: unprintable field separators are only supported on unix-like platforms\n",
-            );
-    }
 }
 
 #[test]

@@ -57,7 +57,6 @@ use sgtests::util::TestScenario;
 #[cfg(unix)]
 use sgtests::util::expected_result;
 #[cfg(unix)]
-#[cfg(not(windows))]
 use sgtests::util::is_ci;
 use sgtests::util_name;
 
@@ -77,8 +76,6 @@ const DEFAULT_SLEEP_INTERVAL_MILLIS: u64 = 1000;
 // of a character: https://en.wikipedia.org/wiki/UTF-8#Encoding
 #[cfg(unix)]
 const INVALID_UTF8: u8 = 0x80;
-#[cfg(windows)]
-const INVALID_UTF16: u16 = 0xD800;
 
 #[test]
 fn test_invalid_arg() {
@@ -2584,7 +2581,6 @@ fn test_presume_input_pipe_default() {
 }
 
 #[test]
-#[cfg(not(windows))]
 fn test_fifo() {
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -3765,27 +3761,12 @@ fn test_when_argument_files_are_triple_combinations_of_fifo_pipe_and_regular_fil
     // (See test above). Note that for example a zsh shell prints the pipe data and has therefore
     // different output from the sh shell (or cmd shell on windows).
 
-    // windows: tail returns with success although there is an error message present (on some
-    // windows systems). This error message comes from `echo` (the line ending `\r\n` indicates that
-    // too) which cannot write to the pipe because tail finished before echo was able to write to
-    // the pipe. Seems that windows `cmd` (like posix shells) ignores pipes when a fifo is present.
-    // This is actually the wished behavior and the test therefore succeeds.
-    #[cfg(windows)]
-    let expected = "==> standard input <==\n\
-        fifo data\n\
-        ==> data <==\n\
-        file data\n\
-        ==> standard input <==\n\
-        (The process tried to write to a nonexistent pipe.\r\n)?";
-    #[cfg(unix)]
     let expected = "==> standard input <==\n\
         fifo data\n\
         ==> data <==\n\
         file data\n\
         ==> standard input <==\n";
 
-    #[cfg(windows)]
-    let cmd = ["cmd", "/C"];
     #[cfg(unix)]
     let cmd = ["sh", "-c"];
 
@@ -4686,38 +4667,14 @@ fn test_obsolete_encoding_unix() {
 }
 
 #[test]
-#[cfg(windows)]
-fn test_obsolete_encoding_windows() {
-    use std::ffi::OsString;
-    use std::os::windows::ffi::OsStringExt;
-
-    let scene = TestScenario::new(util_name!());
-    let invalid_utf16_arg = OsString::from_wide(&['-' as u16, INVALID_UTF16, 'b' as u16]);
-
-    scene
-        .ucmd()
-        .arg(&invalid_utf16_arg)
-        .fails_with_code(1)
-        .no_stdout()
-        .stderr_is("tail: bad argument encoding: '-�b'\n");
-}
-
-#[test]
 #[cfg(not(target_vendor = "apple"))] // FIXME: for currently not working platforms
 fn test_following_with_pid() {
     use std::process::Command;
 
     let ts = TestScenario::new(util_name!());
 
-    #[cfg(not(windows))]
     let mut sleep_command = Command::new("sleep")
         .arg("999d")
-        .spawn()
-        .expect("failed to start sleep command");
-    #[cfg(windows)]
-    let mut sleep_command = Command::new("powershell")
-        .arg("-Command")
-        .arg("Start-Sleep -Seconds 999")
         .spawn()
         .expect("failed to start sleep command");
 
@@ -4739,17 +4696,9 @@ fn test_following_with_pid() {
         .run_no_wait();
     child.make_assertion_with_delay(2000).is_alive();
 
-    #[cfg(not(windows))]
     Command::new("kill")
         .arg("-9")
         .arg(sleep_pid.to_string())
-        .output()
-        .expect("failed to kill sleep command");
-    #[cfg(windows)]
-    Command::new("taskkill")
-        .arg("/PID")
-        .arg(sleep_pid.to_string())
-        .arg("/F")
         .output()
         .expect("failed to kill sleep command");
 
