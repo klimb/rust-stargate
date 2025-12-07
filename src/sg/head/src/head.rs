@@ -6,7 +6,6 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::io::{self, BufWriter, Read, Seek, SeekFrom, Write};
 use std::num::TryFromIntError;
-#[cfg(unix)]
 use std::os::fd::{AsRawFd, FromRawFd};
 use thiserror::Error;
 use sgcore::display::Quotable;
@@ -470,8 +469,6 @@ fn sg_head(options: &HeadOptions) -> UResult<()> {
                 println!("{}", translate!("head-header-stdin"));
             }
             let stdin = io::stdin();
-
-            #[cfg(unix)]
             {
                 let stdin_raw_fd = stdin.as_raw_fd();
                 let mut stdin_file = unsafe { File::from_raw_fd(stdin_raw_fd) };

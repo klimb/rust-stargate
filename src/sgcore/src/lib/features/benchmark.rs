@@ -380,7 +380,6 @@ pub mod fs_tree {
                 }
 
                 // Set permissions only on Unix platforms
-                #[cfg(unix)]
                 {
                     use std::os::unix::fs::PermissionsExt;
                     let perms = fs::Permissions::from_mode(match (i + j) % 4 {

@@ -190,7 +190,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
     fn test_parse_ref_with_invalid_utf8() {
         use std::os::unix::prelude::OsStrExt;
 

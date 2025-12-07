@@ -68,7 +68,6 @@ pub fn find_in_path(cmd: &str) -> Option<PathBuf> {
         let full_path = PathBuf::from(dir).join(cmd);
         if full_path.exists() && full_path.is_file() {
             // Check if executable
-            #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
                 if let Ok(metadata) = std::fs::metadata(&full_path) {

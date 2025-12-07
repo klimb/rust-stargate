@@ -1,5 +1,6 @@
+//! A collection of procedural macros for uutils.
 
-mmod object_converter;
+mod object_converter;
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -24,7 +25,6 @@ pub fn main(_args: TokenStream, stream: TokenStream) -> TokenStream {
             #stream
 
             // disable rust signal handlers (otherwise processes don't dump core after e.g. one SIGSEGV)
-            #[cfg(unix)]
             sgcore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
             let result = sgmain(args);
             match result {

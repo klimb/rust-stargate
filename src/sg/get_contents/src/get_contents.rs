@@ -9,13 +9,9 @@ use std::ffi::OsString;
 use std::fs::{File, metadata};
 use std::io::{self, BufWriter, ErrorKind, IsTerminal, Read, Write};
 /// Unix domain socket support
-#[cfg(unix)]
 use std::net::Shutdown;
-#[cfg(unix)]
 use std::os::fd::AsFd;
-#[cfg(unix)]
 use std::os::unix::fs::FileTypeExt;
-#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use thiserror::Error;
 use sgcore::display::Quotable;
@@ -168,13 +164,9 @@ struct OutputState {
     /// Whether we have already printed a blank line
     one_blank_kept: bool,
 }
-
-#[cfg(unix)]
 trait FdReadable: Read + AsFd {}
 #[cfg(not(unix))]
 trait FdReadable: Read {}
-
-#[cfg(unix)]
 impl<T> FdReadable for T where T: Read + AsFd {}
 #[cfg(not(unix))]
 impl<T> FdReadable for T where T: Read {}
@@ -194,13 +186,9 @@ enum InputType {
     File,
     StdIn,
     SymLink,
-    #[cfg(unix)]
     BlockDevice,
-    #[cfg(unix)]
     CharacterDevice,
-    #[cfg(unix)]
     Fifo,
-    #[cfg(unix)]
     Socket,
 }
 
@@ -534,7 +522,6 @@ fn cat_path(path: &OsString, options: &OutputOptions, state: &mut OutputState) -
             cat_handle(&mut handle, options, state)
         }
         InputType::Directory => Err(CatError::IsDirectory),
-        #[cfg(unix)]
         InputType::Socket => {
             let socket = UnixStream::connect(path)?;
             socket.shutdown(Shutdown::Write)?;
@@ -616,13 +603,9 @@ fn get_input_type(path: &OsString) -> CatResult<InputType> {
         }
     };
     match ft {
-        #[cfg(unix)]
         ft if ft.is_block_device() => Ok(InputType::BlockDevice),
-        #[cfg(unix)]
         ft if ft.is_char_device() => Ok(InputType::CharacterDevice),
-        #[cfg(unix)]
         ft if ft.is_fifo() => Ok(InputType::Fifo),
-        #[cfg(unix)]
         ft if ft.is_socket() => Ok(InputType::Socket),
         ft if ft.is_dir() => Ok(InputType::Directory),
         ft if ft.is_file() => Ok(InputType::File),

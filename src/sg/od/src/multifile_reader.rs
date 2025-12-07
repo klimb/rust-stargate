@@ -2,7 +2,6 @@
 
 use std::fs::File;
 use std::io;
-#[cfg(unix)]
 use std::os::fd::{AsRawFd, FromRawFd};
 
 use sgcore::display::Quotable;
@@ -53,7 +52,6 @@ impl MultifileReader<'_> {
                     // the buffering is done elsewhere and in a way that is aware of the `-N`
                     // limit.
                     let stdin = io::stdin();
-                    #[cfg(unix)]
                     {
                         let stdin_raw_fd = stdin.as_raw_fd();
                         let stdin_file = unsafe { File::from_raw_fd(stdin_raw_fd) };

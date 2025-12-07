@@ -5,11 +5,7 @@
 //! method to get an iterator over lines of a file-like object.
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, StdinLock};
-
-#[cfg(unix)]
 use std::os::fd::{AsFd, AsRawFd};
-
-#[cfg(unix)]
 pub trait WordCountable: AsFd + AsRawFd + Read {
     type Buffered: BufRead;
     fn buffered(self) -> Self::Buffered;

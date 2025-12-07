@@ -23,8 +23,6 @@
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{self, BufWriter, Stdout, StdoutLock, Write as IoWrite};
-
-#[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 #[cfg(target_os = "wasi")]
 use std::os::wasi::ffi::OsStrExt;

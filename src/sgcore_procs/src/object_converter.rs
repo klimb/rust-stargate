@@ -7,8 +7,6 @@ pub fn to_object(stream: TokenStream) -> TokenStream {
     let new = quote!(
         pub fn to_obj(args: impl sgcore::CommonArgs) -> i32 {
             #stream
-
-            #[cfg(unix)]
             sgcore::disable_rust_signal_handlers().expect("Disabling rust signal handlers failed");
             let result = to_obj(args);
             match result {

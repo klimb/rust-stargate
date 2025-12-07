@@ -6,7 +6,6 @@ use jiff::tz::{TimeZone, TimeZoneDatabase};
 use jiff::{Timestamp, Zoned};
 #[cfg(all(unix, not(target_os = "macos")))]
 use libc::clock_settime;
-#[cfg(unix)]
 use libc::{CLOCK_REALTIME, clock_getres, timespec};
 use serde_json::json;
 use std::collections::HashMap;
@@ -761,8 +760,6 @@ fn parse_date<S: AsRef<str> + Clone>(
         Err(e) => Err((s.as_ref().into(), e)),
     }
 }
-
-#[cfg(unix)]
 fn get_clock_resolution() -> Timestamp {
     let mut timespec = timespec {
         tv_sec: 0,

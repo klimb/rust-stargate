@@ -1,8 +1,6 @@
 //! Set of functions to manage file systems
 
 // spell-checker:ignore DATETIME getmntinfo subsecond (fs) cifs smbfs
-
-#[cfg(unix)]
 static MOUNT_OPT_BIND: &str = "bind";
 
 #[cfg(any(
@@ -15,24 +13,18 @@ use crate::os_str_from_bytes;
 
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
-
-#[cfg(unix)]
 use libc::{
     S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK, mode_t, strerror,
 };
-#[cfg(unix)]
 use std::ffi::{CStr, CString};
 use std::io::Error as IOError;
-#[cfg(unix)]
 use std::mem;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 use std::{borrow::Cow, ffi::OsString};
 
 use std::fs::Metadata;
-#[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
-#[cfg(unix)]
 use std::time::Duration;
 
 #[cfg(any(
@@ -78,8 +70,6 @@ impl From<&str> for MetadataTimeField {
         }
     }
 }
-
-#[cfg(unix)]
 fn metadata_get_change_time(md: &Metadata) -> Option<SystemTime> {
     let mut st = UNIX_EPOCH;
     let (secs, nsecs) = (md.ctime(), md.ctime_nsec());
@@ -247,8 +237,6 @@ impl From<StatFs> for MountInfo {
         }
     }
 }
-
-#[cfg(unix)]
 fn is_dummy_filesystem(fs_type: &str, mount_option: &str) -> bool {
     // spell-checker:disable
     match fs_type {
@@ -266,15 +254,11 @@ fn is_dummy_filesystem(fs_type: &str, mount_option: &str) -> bool {
     }
     // spell-checker:enable
 }
-
-#[cfg(unix)]
 fn is_remote_filesystem(dev_name: &str, fs_type: &str) -> bool {
     dev_name.find(':').is_some()
         || (dev_name.starts_with("//") && fs_type == "smbfs" || fs_type == "cifs")
         || dev_name == "-hosts"
 }
-
-#[cfg(unix)]
 fn mount_dev_id(mount_dir: &OsStr) -> String {
     use std::os::unix::fs::MetadataExt;
 
@@ -398,7 +382,6 @@ pub struct FsUsage {
 }
 
 impl FsUsage {
-    #[cfg(unix)]
     pub fn new(statvfs: StatFs) -> Self {
         {
             #[cfg(all(
@@ -456,8 +439,6 @@ impl FsUsage {
         }
     }
 }
-
-#[cfg(unix)]
 pub trait FsMeta {
     fn fs_type(&self) -> i64;
     fn io_size(&self) -> u64;
@@ -470,8 +451,6 @@ pub trait FsMeta {
     fn fsid(&self) -> u64;
     fn namelen(&self) -> u64;
 }
-
-#[cfg(unix)]
 impl FsMeta for StatFs {
     fn block_size(&self) -> i64 {
         #[cfg(all(
@@ -655,10 +634,7 @@ impl FsMeta for StatFs {
         self.f_namemax as u64 // spell-checker:disable-line
     }
 }
-
-#[cfg(unix)]
 pub fn statfs(path: &OsStr) -> Result<StatFs, String> {
-    #[cfg(unix)]
     let p = path.as_bytes();
     #[cfg(not(unix))]
     let p = path.into_string().unwrap();
@@ -682,8 +658,6 @@ pub fn statfs(path: &OsStr) -> Result<StatFs, String> {
         Err(e) => Err(e.to_string()),
     }
 }
-
-#[cfg(unix)]
 pub fn pretty_filetype(mode: mode_t, size: u64) -> String {
     match mode & S_IFMT {
         S_IFREG => {
@@ -834,7 +808,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(unix)]
     fn test_file_type() {
         assert_eq!("block special file", pretty_filetype(S_IFBLK, 0));
         assert_eq!("character special file", pretty_filetype(S_IFCHR, 0));

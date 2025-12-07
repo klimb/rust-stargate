@@ -24,10 +24,7 @@ use sgcore::process::{getegid, geteuid};
 
 use sgcore::translate;
 use sgcore::{format_usage, show, show_error, show_if_err};
-
-#[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
-#[cfg(unix)]
 use std::os::unix::prelude::OsStrExt;
 
 const DEFAULT_MODE: u32 = 0o755;
@@ -499,7 +496,6 @@ fn is_new_file_path(path: &Path) -> bool {
 ///
 /// Returns true, if one of the conditions above is met; else false.
 ///
-#[cfg(unix)]
 fn is_potential_directory_path(path: &Path) -> bool {
     let separator = MAIN_SEPARATOR as u8;
     path.as_os_str().as_bytes().last() == Some(&separator) || path.is_dir()
@@ -815,7 +811,6 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
     };
 
     // Stream-based copying to get around the limitations of std::fs::copy
-    #[cfg(unix)]
     if ft.is_char_device() || ft.is_block_device() || ft.is_fifo() {
         let mut handle = File::open(from)?;
         let mut dest = File::create(to)?;

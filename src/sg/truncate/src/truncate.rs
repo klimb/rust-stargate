@@ -3,7 +3,6 @@ use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::fs::{OpenOptions, metadata};
 use std::io::ErrorKind;
-#[cfg(unix)]
 use std::os::unix::fs::FileTypeExt;
 use std::path::Path;
 use sgcore::display::Quotable;
@@ -167,8 +166,6 @@ pub fn sg_app() -> Command {
 /// size of the file.
 fn file_truncate(filename: &OsString, create: bool, size: u64) -> UResult<()> {
     let path = Path::new(filename);
-
-    #[cfg(unix)]
     if let Ok(metadata) = metadata(path) {
         if metadata.file_type().is_fifo() {
             return Err(USimpleError::new(
@@ -319,7 +316,6 @@ fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -
         let path = Path::new(filename);
         let fsize = match metadata(path) {
             Ok(m) => {
-                #[cfg(unix)]
                 if m.file_type().is_fifo() {
                     return Err(USimpleError::new(
                         1,

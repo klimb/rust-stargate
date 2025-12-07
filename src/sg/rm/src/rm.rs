@@ -7,9 +7,7 @@ use std::ffi::{OsStr, OsString};
 use std::fs::{self, Metadata};
 use std::io::{self, IsTerminal, stdin};
 use std::ops::BitOr;
-#[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
-#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::MAIN_SEPARATOR;
 use std::path::{Path, PathBuf};
@@ -525,15 +523,12 @@ pub fn remove(files: &[&OsStr], options: &Options) -> bool {
 fn is_dir_empty(path: &Path) -> bool {
     fs::read_dir(path).is_ok_and(|mut iter| iter.next().is_none())
 }
-
-#[cfg(unix)]
 fn is_readable_metadata(metadata: &Metadata) -> bool {
     let mode = metadata.permissions().mode();
     (mode & 0o400) > 0
 }
 
 /// Whether the given file or directory is readable.
-#[cfg(unix)]
 #[cfg(not(target_os = "linux"))]
 fn is_readable(path: &Path) -> bool {
     match fs::metadata(path) {
@@ -547,15 +542,12 @@ fn is_readable(path: &Path) -> bool {
 fn is_readable(_path: &Path) -> bool {
     true
 }
-
-#[cfg(unix)]
 fn is_writable_metadata(metadata: &Metadata) -> bool {
     let mode = metadata.permissions().mode();
     (mode & 0o200) > 0
 }
 
 /// Whether the given file or directory is writable.
-#[cfg(unix)]
 fn is_writable(path: &Path) -> bool {
     match fs::metadata(path) {
         Err(_) => false,
@@ -857,7 +849,6 @@ fn path_is_current_or_parent_directory(path: &Path) -> bool {
 
 // For directories finding if they are writable or not is a hassle. In Unix we can use the built-in rust crate to check mode bits. But other os don't have something similar afaik
 // Most cases are covered by keep eye out for edge cases
-#[cfg(unix)]
 fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata) -> bool {
     let stdin_ok = options.__presume_input_tty.unwrap_or(false) || stdin().is_terminal();
     match (
@@ -904,7 +895,6 @@ fn clean_trailing_slashes(path: &Path) -> &Path {
                     break;
                 }
             }
-            #[cfg(unix)]
             return Path::new(OsStr::from_bytes(&path_bytes[0..=idx]));
 
             #[cfg(not(unix))]

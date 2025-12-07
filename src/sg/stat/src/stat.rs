@@ -410,7 +410,6 @@ fn print_str(s: &str, flags: &Flags, width: usize, precision: Precision) {
 /// * `width` - The width of the field for the printed string.
 /// * `precision` - How many digits of precision, if any.
 fn print_os_str(s: &OsString, flags: &Flags, width: usize, precision: Precision) {
-    #[cfg(unix)]
     {
         use std::os::unix::ffi::OsStrExt;
 

@@ -12,8 +12,6 @@ use sgcore::translate;
 use sgcore::{format_usage, show_error};
 
 // spell-checker:ignore nopipe
-
-#[cfg(unix)]
 use sgcore::signals::{enable_pipe_errors, ignore_interrupts};
 
 mod options {
@@ -149,7 +147,6 @@ pub fn sg_app() -> Command {
 }
 
 fn tee(options: &Options) -> Result<()> {
-    #[cfg(unix)]
     {
         // ErrorKind::Other is raised by MultiWriter when all writers have exited.
         // This is therefore just a clever way to stop all writers

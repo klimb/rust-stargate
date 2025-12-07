@@ -12,25 +12,19 @@ use ini::Ini;
 use native_int_str::{
     Convert, NCvt, NativeIntStr, NativeIntString, NativeStr, from_native_int_representation_owned,
 };
-#[cfg(unix)]
 use nix::libc;
-#[cfg(unix)]
 use nix::sys::signal::{SigHandler::SigIgn, Signal, signal};
-#[cfg(unix)]
 use nix::unistd::execvp;
 use std::borrow::Cow;
 use std::env;
-#[cfg(unix)]
 use std::ffi::CString;
 use std::ffi::{OsStr, OsString};
 use std::io::{self, Write};
-#[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
 
 use sgcore::display::Quotable;
 use sgcore::error::{ExitCode, UError, UResult, USimpleError, UUsageError};
 use sgcore::line_ending::LineEnding;
-#[cfg(unix)]
 use sgcore::signals::signal_by_name_or_value;
 use sgcore::translate;
 use sgcore::{format_usage, show_warning};
@@ -93,7 +87,6 @@ struct Options<'a> {
     sets: Vec<(Cow<'a, OsStr>, Cow<'a, OsStr>)>,
     program: Vec<&'a OsStr>,
     argv0: Option<&'a OsStr>,
-    #[cfg(unix)]
     ignore_signal: Vec<usize>,
 }
 
@@ -147,8 +140,6 @@ fn parse_program_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> 
         Ok(())
     }
 }
-
-#[cfg(unix)]
 fn parse_signal_value(signal_name: &str) -> UResult<usize> {
     let signal_name_upcase = signal_name.to_uppercase();
     let optional_signal_value = signal_by_name_or_value(&signal_name_upcase);
@@ -167,8 +158,6 @@ fn parse_signal_value(signal_name: &str) -> UResult<usize> {
         None => Err(error),
     }
 }
-
-#[cfg(unix)]
 fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
     if opt.is_empty() {
         return Ok(());
@@ -483,14 +472,12 @@ impl EnvAppData {
         do_debug_printing: bool
     ) -> Result<(), Box<dyn UError>> {
         let prog = Cow::from(opts.program[0]);
-        #[cfg(unix)]
         let mut arg0 = prog.clone();
         #[cfg(not(unix))]
         let arg0 = prog.clone();
         let args = &opts.program[1..];
 
         if let Some(_argv0) = opts.argv0 {
-            #[cfg(unix)]
             {
                 arg0 = Cow::Borrowed(_argv0);
                 if do_debug_printing {
@@ -513,8 +500,6 @@ impl EnvAppData {
                 eprintln!("{arg_prefix}[{}]= {}", i + 1, arg.quote());
             }
         }
-
-        #[cfg(unix)]
         {
             // Convert program name to CString.
             let Ok(prog_cstring) = CString::new(prog.as_bytes()) else {
@@ -636,11 +621,8 @@ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
         sets: vec![],
         program: vec![],
         argv0,
-        #[cfg(unix)]
         ignore_signal: vec![],
     };
-
-    #[cfg(unix)]
     if let Some(iter) = matches.get_many::<OsString>("ignore-signal") {
         for opt in iter {
             parse_signal_opt(&mut opts, opt)?;
@@ -750,8 +732,6 @@ fn apply_specified_env_vars(opts: &Options<'_>) {
         }
     }
 }
-
-#[cfg(unix)]
 fn apply_ignore_signal(opts: &Options<'_>) -> UResult<()> {
     for &sig_value in &opts.ignore_signal {
         let sig: Signal = (sig_value as i32)
@@ -762,8 +742,6 @@ fn apply_ignore_signal(opts: &Options<'_>) -> UResult<()> {
     }
     Ok(())
 }
-
-#[cfg(unix)]
 fn ignore_signal(sig: Signal) -> UResult<()> {
     // SAFETY: This is safe because we write the handler for each signal only once, and therefore "the current handler is the default", as the documentation requires it.
     let result = unsafe { signal(sig, SigIgn) };
@@ -780,7 +758,6 @@ fn ignore_signal(sig: Signal) -> UResult<()> {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // Rust ignores SIGPIPE (see https://github.com/rust-lang/rust/issues/62569).
     // We restore its default action here.
-    #[cfg(unix)]
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }

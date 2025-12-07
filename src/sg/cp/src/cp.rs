@@ -5,13 +5,10 @@ use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;
 use std::fmt::Display;
 use std::fs::{self, Metadata, OpenOptions, Permissions};
-#[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
-#[cfg(unix)]
 use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf, StripPrefixError};
 use std::{fmt, io};
-#[cfg(unix)]
 use sgcore::fsxattr::copy_xattrs;
 use sgcore::translate;
 
@@ -23,7 +20,6 @@ use thiserror::Error;
 use platform::copy_on_write;
 use sgcore::display::Quotable;
 use sgcore::error::{UError, UResult, UUsageError, set_exit_code};
-#[cfg(unix)]
 use sgcore::fs::make_fifo;
 use sgcore::fs::{
     FileInformation, MissingHandling, ResolveMode, are_hardlinks_to_same_file, canonicalize,
@@ -222,7 +218,6 @@ pub enum CopyMode {
 /// difficult to achieve in clap, especially with `--no-preserve`.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Attributes {
-    #[cfg(unix)]
     pub ownership: Preserve,
     pub mode: Preserve,
     pub timestamps: Preserve,
@@ -481,8 +476,6 @@ mod options {
     pub const DEBUG: &str = "debug";
     pub const VERBOSE: &str = "verbose";
 }
-
-#[cfg(unix)]
 static PRESERVABLE_ATTRIBUTES: &[&str] = &[
     "mode",
     "ownership",
@@ -849,7 +842,6 @@ impl CopyMode {
 
 impl Attributes {
     pub const ALL: Self = Self {
-        #[cfg(unix)]
         ownership: Preserve::Yes { required: true },
         mode: Preserve::Yes { required: true },
         timestamps: Preserve::Yes { required: true },
@@ -863,7 +855,6 @@ impl Attributes {
     };
 
     pub const NONE: Self = Self {
-        #[cfg(unix)]
         ownership: Preserve::No { explicit: false },
         mode: Preserve::No { explicit: false },
         timestamps: Preserve::No { explicit: false },
@@ -874,7 +865,6 @@ impl Attributes {
 
     // TODO: ownership is required if the user is root, for non-root users it's not required.
     pub const DEFAULT: Self = Self {
-        #[cfg(unix)]
         ownership: Preserve::Yes { required: true },
         mode: Preserve::Yes { required: true },
         timestamps: Preserve::Yes { required: true },
@@ -889,7 +879,6 @@ impl Attributes {
 
     pub fn union(self, other: &Self) -> Self {
         Self {
-            #[cfg(unix)]
             ownership: self.ownership.max(other.ownership),
             context: self.context.max(other.context),
             timestamps: self.timestamps.max(other.timestamps),
@@ -910,7 +899,6 @@ impl Attributes {
             }
         }
         Self {
-            #[cfg(unix)]
             ownership: update_preserve_field(self.ownership, other.ownership),
             mode: update_preserve_field(self.mode, other.mode),
             timestamps: update_preserve_field(self.timestamps, other.timestamps),
@@ -943,7 +931,6 @@ impl Attributes {
         let mut new = Self::NONE;
         let attribute = match value.as_ref() {
             "mode" => &mut new.mode,
-            #[cfg(unix)]
             "ownership" => &mut new.ownership,
             "timestamps" => &mut new.timestamps,
             "context" => &mut new.context,
@@ -1173,8 +1160,6 @@ impl Options {
             Preserve::Yes { .. } => true,
         }
     }
-
-    #[cfg(unix)]
     fn preserve_mode(&self) -> (bool, bool) {
         match self.attributes.mode {
             Preserve::No { explicit } => {
@@ -1489,7 +1474,6 @@ fn file_mode_for_interactive_overwrite(
 ) -> Option<(String, String)> {
     // Retain outer braces to ensure only one branch is included
     {
-        #[cfg(unix)]
         {
             use libc::{S_IWUSR, mode_t};
             use std::os::unix::prelude::MetadataExt;
@@ -1579,7 +1563,6 @@ fn handle_preserve<F: Fn() -> CopyResult<()>>(p: &Preserve, f: F) -> CopyResult<
 /// user-writable if needed and restoring its original permissions afterward. This avoids "Operation
 /// not permitted" errors on read-only files. Returns an error if permission or metadata operations fail,
 /// or if xattr copying fails.
-#[cfg(unix)]
 fn copy_extended_attrs(source: &Path, dest: &Path) -> CopyResult<()> {
     let metadata = fs::symlink_metadata(dest)?;
 
@@ -1622,7 +1605,6 @@ pub(crate) fn copy_attributes(
         fs::symlink_metadata(source).map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
 
     // Ownership must be changed first to avoid interfering with mode change.
-    #[cfg(unix)]
     handle_preserve(&attributes.ownership, || -> CopyResult<()> {
         use std::os::unix::prelude::MetadataExt;
         use sgcore::perms::Verbosity;
@@ -2011,7 +1993,7 @@ fn handle_copy_mode(
     source_is_fifo: bool,
     source_is_socket: bool,
     created_parent_dirs: &mut HashSet<PathBuf>,
-    #[cfg(unix)] source_is_stream: bool
+    source_is_stream: bool
 ) -> CopyResult<PerformedAction> {
     let source_is_symlink = source_metadata.is_symlink();
 
@@ -2053,7 +2035,6 @@ fn handle_copy_mode(
                 source_is_socket,
                 symlinked_files,
                 created_parent_dirs,
-                #[cfg(unix)]
                 source_is_stream
             )?;
         }
@@ -2077,7 +2058,6 @@ fn handle_copy_mode(
                             source_is_socket,
                             symlinked_files,
                             created_parent_dirs,
-                            #[cfg(unix)]
                             source_is_stream
                         )?;
                     }
@@ -2114,7 +2094,6 @@ fn handle_copy_mode(
                             source_is_socket,
                             symlinked_files,
                             created_parent_dirs,
-                            #[cfg(unix)]
                             source_is_stream
                         )?;
                     }
@@ -2130,7 +2109,6 @@ fn handle_copy_mode(
                     source_is_socket,
                     symlinked_files,
                     created_parent_dirs,
-                    #[cfg(unix)]
                     source_is_stream
                 )?;
             }
@@ -2170,7 +2148,6 @@ fn calculate_dest_permissions(
     if let Some(metadata) = dest_metadata {
         Ok(metadata.permissions())
     } else {
-        #[cfg(unix)]
         {
             let mut permissions = source_metadata.permissions();
             let mode = handle_no_preserve_mode(options, permissions.mode());
@@ -2364,10 +2341,7 @@ fn copy_file(
         options,
         context
     )?;
-
-    #[cfg(unix)]
     let source_is_fifo = source_metadata.file_type().is_fifo();
-    #[cfg(unix)]
     let source_is_socket = source_metadata.file_type().is_socket();
     #[cfg(not(unix))]
     let source_is_fifo = false;
@@ -2387,7 +2361,6 @@ fn copy_file(
         source_is_fifo,
         source_is_socket,
         created_parent_dirs,
-        #[cfg(unix)]
         source_is_stream
     )?;
 
@@ -2434,7 +2407,6 @@ fn copy_file(
 }
 
 fn is_stream(metadata: &Metadata) -> bool {
-    #[cfg(unix)]
     {
         let file_type = metadata.file_type();
         file_type.is_fifo() || file_type.is_char_device() || file_type.is_block_device()
@@ -2445,8 +2417,6 @@ fn is_stream(metadata: &Metadata) -> bool {
         false
     }
 }
-
-#[cfg(unix)]
 fn handle_no_preserve_mode(options: &Options, org_mode: u32) -> u32 {
     let (is_preserve_mode, is_explicit_no_preserve_mode) = options.preserve_mode();
     if !is_preserve_mode {
@@ -2494,7 +2464,7 @@ fn copy_helper(
     source_is_socket: bool,
     symlinked_files: &mut HashSet<FileInformation>,
     created_parent_dirs: &mut HashSet<PathBuf>,
-    #[cfg(unix)] source_is_stream: bool
+    source_is_stream: bool
 ) -> CopyResult<()> {
     if options.parents {
         let parent = dest.parent().unwrap_or(dest);
@@ -2508,10 +2478,8 @@ fn copy_helper(
     }
 
     if source_is_socket && options.recursive && !options.copy_contents {
-        #[cfg(unix)]
         copy_socket(dest, options.overwrite, options.debug)?;
     } else if source_is_fifo && options.recursive && !options.copy_contents {
-        #[cfg(unix)]
         copy_fifo(dest, options.overwrite, options.debug)?;
     } else if source_is_symlink {
         copy_link(source, dest, symlinked_files, options)?;
@@ -2522,7 +2490,6 @@ fn copy_helper(
             options.reflink_mode,
             options.sparse_mode,
             context,
-            #[cfg(unix)]
             source_is_stream
         )?;
 
@@ -2536,7 +2503,6 @@ fn copy_helper(
 
 // "Copies" a FIFO by creating a new one. This workaround is because Rust's
 // built-in fs::copy does not handle FIFOs (see rust-lang/rust/issues/79390).
-#[cfg(unix)]
 fn copy_fifo(dest: &Path, overwrite: OverwriteMode, debug: bool) -> CopyResult<()> {
     if dest.exists() {
         overwrite.verify(dest, debug)?;
@@ -2546,8 +2512,6 @@ fn copy_fifo(dest: &Path, overwrite: OverwriteMode, debug: bool) -> CopyResult<(
     make_fifo(dest)
         .map_err(|_| translate!("cp-error-cannot-create-fifo", "path" => dest.quote()).into())
 }
-
-#[cfg(unix)]
 fn copy_socket(dest: &Path, overwrite: OverwriteMode, debug: bool) -> CopyResult<()> {
     if dest.exists() {
         overwrite.verify(dest, debug)?;
@@ -2672,7 +2636,6 @@ mod tests {
                 ..Attributes::ALL
             }),
             Attributes {
-                #[cfg(unix)]
                 ownership: Preserve::No { explicit: true },
                 mode: Preserve::No { explicit: true },
                 timestamps: Preserve::No { explicit: true },
@@ -2701,7 +2664,6 @@ mod tests {
                 ..Attributes::ALL
             }),
             Attributes {
-                #[cfg(unix)]
                 ownership: Preserve::No { explicit: true },
                 mode: Preserve::No { explicit: true },
                 timestamps: Preserve::No { explicit: true },

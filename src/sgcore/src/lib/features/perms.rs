@@ -977,10 +977,8 @@ pub fn common_args() -> Vec<Arg> {
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    #[cfg(unix)]
     use std::os::unix;
     use std::path::{Component, PathBuf};
-    #[cfg(unix)]
     use tempfile::tempdir;
 
     #[test]
@@ -994,7 +992,6 @@ mod tests {
     }
 
     #[allow(clippy::needless_borrow)]
-    #[cfg(unix)]
     #[test]
     fn test_literal_root() {
         let component = Component::RootDir;
@@ -1008,8 +1005,6 @@ mod tests {
         assert!(is_root(&path, false));
         assert!(is_root(&path, true));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_symlink_slash() {
         let temp_dir = tempdir().unwrap();
@@ -1030,8 +1025,6 @@ mod tests {
         assert!(is_root(&symlink_path_slash, false));
         assert!(is_root(&symlink_path_slash, true));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_symlink_no_slash() {
         // This covers both the commandline-argument case and the recursion case.

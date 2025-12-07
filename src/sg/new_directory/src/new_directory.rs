@@ -157,8 +157,6 @@ pub fn mkdir(path: &Path, config: &Config) -> UResult<()> {
     let path = path_buf.as_path();
     create_dir(path, false, config)
 }
-
-#[cfg(unix)]
 fn chmod(path: &Path, mode: u32) -> UResult<()> {
     use std::fs::{Permissions, set_permissions};
     use std::os::unix::fs::PermissionsExt;

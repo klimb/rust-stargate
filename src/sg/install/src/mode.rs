@@ -16,7 +16,6 @@ pub fn parse(mode_string: &str, considering_dir: bool, umask: u32) -> Result<u32
 ///
 /// Adapted from mkdir.rs.  Handles own error printing.
 ///
-#[cfg(unix)]
 pub fn chmod(path: &Path, mode: u32) -> Result<(), ()> {
     use std::os::unix::fs::PermissionsExt;
     use sgcore::{display::Quotable, show_error};

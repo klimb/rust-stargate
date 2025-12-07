@@ -30,7 +30,6 @@ use std::io::{self, Read, Seek, SeekFrom, Stdout, Write};
 use std::os::fd::AsFd;
 #[cfg(any(target_os = "linux"))]
 use std::os::unix::fs::OpenOptionsExt;
-#[cfg(unix)]
 use std::os::unix::{
     fs::FileTypeExt,
     io::{AsRawFd, FromRawFd},
@@ -51,7 +50,6 @@ use nix::{
 };
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult};
-#[cfg(unix)]
 use sgcore::error::{USimpleError, set_exit_code};
 #[cfg(target_os = "linux")]
 use sgcore::show_if_err;
@@ -190,11 +188,9 @@ enum Source {
     File(File),
 
     /// Input from stdin, opened from its file descriptor.
-    #[cfg(unix)]
     StdinFile(File),
 
     /// Input from a named pipe, also known as a FIFO.
-    #[cfg(unix)]
     Fifo(File),
 }
 
@@ -206,7 +202,6 @@ impl Source {
     /// the [`std::fs::File`] parameter. You can use this instead of
     /// `Source::Stdin` to allow reading from stdin without consuming
     /// the entire contents of stdin when this process terminates.
-    #[cfg(unix)]
     fn stdin_as_file() -> Self {
         let fd = io::stdin().as_raw_fd();
         let f = unsafe { File::from_raw_fd(fd) };
@@ -238,7 +233,6 @@ impl Source {
                 Ok(m) => Ok(m),
                 Err(e) => Err(e),
             },
-            #[cfg(unix)]
             Self::StdinFile(f) => {
                 if let Ok(Some(len)) = try_get_len_of_block_device(f) {
                     if len < n {
@@ -265,7 +259,6 @@ impl Source {
                 }
             }
             Self::File(f) => f.seek(SeekFrom::Current(n.try_into().unwrap())),
-            #[cfg(unix)]
             Self::Fifo(f) => io::copy(&mut f.take(n), &mut io::sink()),
         }
     }
@@ -295,9 +288,7 @@ impl Read for Source {
             #[cfg(not(unix))]
             Self::Stdin(stdin) => stdin.read(buf),
             Self::File(f) => f.read(buf),
-            #[cfg(unix)]
             Self::StdinFile(f) => f.read(buf),
-            #[cfg(unix)]
             Self::Fifo(f) => f.read(buf),
         }
     }
@@ -320,9 +311,7 @@ struct Input<'a> {
 impl<'a> Input<'a> {
     /// Instantiate this struct with stdin as a source.
     fn new_stdin(settings: &'a Settings) -> UResult<Self> {
-        #[cfg(unix)]
         let mut src = Source::stdin_as_file();
-        #[cfg(unix)]
         if let Source::StdinFile(f) = &src {
             if settings.iflags.directory && !f.metadata()?.is_dir() {
                 return Err(USimpleError::new(
@@ -361,7 +350,6 @@ impl<'a> Input<'a> {
     }
 
     /// Instantiate this struct with the named pipe as a source.
-    #[cfg(unix)]
     fn new_fifo(filename: &Path, settings: &'a Settings) -> UResult<Self> {
         let mut opts = OpenOptions::new();
         opts.read(true);
@@ -543,11 +531,9 @@ enum Dest {
     File(File, Density),
 
     /// Output to a named pipe, also known as a FIFO.
-    #[cfg(unix)]
     Fifo(File),
 
     /// Output to nothing, dropping each byte written to the output.
-    #[cfg(unix)]
     Sink,
 }
 
@@ -559,12 +545,10 @@ impl Dest {
                 f.flush()?;
                 f.sync_all()
             }
-            #[cfg(unix)]
             Self::Fifo(f) => {
                 f.flush()?;
                 f.sync_all()
             }
-            #[cfg(unix)]
             Self::Sink => Ok(()),
         }
     }
@@ -576,12 +560,10 @@ impl Dest {
                 f.flush()?;
                 f.sync_data()
             }
-            #[cfg(unix)]
             Self::Fifo(f) => {
                 f.flush()?;
                 f.sync_data()
             }
-            #[cfg(unix)]
             Self::Sink => Ok(()),
         }
     }
@@ -590,7 +572,6 @@ impl Dest {
         match self {
             Self::Stdout(stdout) => io::copy(&mut io::repeat(0).take(n), stdout),
             Self::File(f, _) => {
-                #[cfg(unix)]
                 if let Ok(Some(len)) = try_get_len_of_block_device(f) {
                     if len < n {
                         // GNU compatibility:
@@ -605,12 +586,10 @@ impl Dest {
                 }
                 f.seek(SeekFrom::Current(n.try_into().unwrap()))
             }
-            #[cfg(unix)]
             Self::Fifo(f) => {
                 // Seeking in a named pipe means *reading* from the pipe.
                 io::copy(&mut f.take(n), &mut io::sink())
             }
-            #[cfg(unix)]
             Self::Sink => Ok(0),
         }
     }
@@ -736,9 +715,7 @@ impl Write for Dest {
                 }
             }
             Self::Stdout(stdout) => stdout.write(buf),
-            #[cfg(unix)]
             Self::Fifo(f) => f.write(buf),
-            #[cfg(unix)]
             Self::Sink => Ok(buf.len()),
         }
     }
@@ -747,9 +724,7 @@ impl Write for Dest {
         match self {
             Self::Stdout(stdout) => stdout.flush(),
             Self::File(f, _) => f.flush(),
-            #[cfg(unix)]
             Self::Fifo(f) => f.flush(),
-            #[cfg(unix)]
             Self::Sink => Ok(()),
         }
     }
@@ -845,7 +820,6 @@ impl<'a> Output<'a> {
     }
 
     /// Instantiate this struct with the given named pipe as a destination.
-    #[cfg(unix)]
     fn new_fifo(filename: &Path, settings: &'a Settings) -> UResult<Self> {
         // We simulate seeking in a FIFO by *reading*, so we open the
         // file for reading. But then we need to close the file and
@@ -1426,7 +1400,6 @@ fn is_stdout_redirected_to_seekable_file() -> bool {
 }
 
 /// Try to get the len if it is a block device
-#[cfg(unix)]
 fn try_get_len_of_block_device(file: &mut File) -> io::Result<Option<u64>> {
     let ftype = file.metadata()?.file_type();
     if !ftype.is_block_device() {
@@ -1440,7 +1413,6 @@ fn try_get_len_of_block_device(file: &mut File) -> io::Result<Option<u64>> {
 }
 
 /// Decide whether the named file is a named pipe, also known as a FIFO.
-#[cfg(unix)]
 fn is_fifo(filename: &str) -> bool {
     if let Ok(metadata) = std::fs::metadata(filename) {
         if metadata.file_type().is_fifo() {
@@ -1461,13 +1433,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     )?;
 
     let i = match settings.infile {
-        #[cfg(unix)]
         Some(ref infile) if is_fifo(infile) => Input::new_fifo(Path::new(&infile), &settings)?,
         Some(ref infile) => Input::new_file(Path::new(&infile), &settings)?,
         None => Input::new_stdin(&settings)?,
     };
     let o = match settings.outfile {
-        #[cfg(unix)]
         Some(ref outfile) if is_fifo(outfile) => Output::new_fifo(Path::new(&outfile), &settings)?,
         Some(ref outfile) => Output::new_file(Path::new(&outfile), &settings)?,
         None if is_stdout_redirected_to_seekable_file() => Output::new_file_from_stdout(&settings)?,

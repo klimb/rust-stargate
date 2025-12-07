@@ -6,14 +6,9 @@ use super::WordCountable;
 #[cfg(target_os = "linux")]
 use std::fs::OpenOptions;
 use std::io::{self, ErrorKind, Read};
-
-#[cfg(unix)]
 use libc::{_SC_PAGESIZE, S_IFREG, sysconf};
-#[cfg(unix)]
 use nix::sys::stat;
-#[cfg(unix)]
 use std::io::{Seek, SeekFrom};
-#[cfg(unix)]
 use std::os::fd::{AsFd, AsRawFd};
 
 #[cfg(any(target_os = "linux"))]
@@ -76,8 +71,6 @@ fn count_bytes_using_splice(fd: &impl AsFd) -> Result<usize, usize> {
 #[inline]
 pub(crate) fn count_bytes_fast<T: WordCountable>(handle: &mut T) -> (usize, Option<io::Error>) {
     let mut byte_count = 0;
-
-    #[cfg(unix)]
     {
         let fd = handle.as_fd();
         if let Ok(stat) = stat::fstat(fd) {

@@ -13,8 +13,6 @@ use sgcore::error::{UResult, USimpleError, UUsageError};
 use sgcore::parser::parse_time;
 use sgcore::process::ChildExt;
 use sgcore::translate;
-
-#[cfg(unix)]
 use sgcore::signals::enable_pipe_errors;
 
 use sgcore::{
@@ -273,8 +271,6 @@ fn wait_or_kill_process(
         Err(_) => Ok(ExitStatus::WaitingFailed.into()),
     }
 }
-
-#[cfg(unix)]
 fn preserve_signal_info(signal: libc::c_int) -> libc::c_int {
     // This is needed because timeout is expected to preserve the exit
     // status of its child. It is not the case that utilities have a
@@ -313,7 +309,6 @@ fn timeout(
     if !foreground {
         unsafe { libc::setpgid(0, 0) };
     }
-    #[cfg(unix)]
     enable_pipe_errors()?;
 
     let process = &mut process::Command::new(&cmd[0])

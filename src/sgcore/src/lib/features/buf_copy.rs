@@ -21,8 +21,6 @@ mod tests {
     use super::*;
     use std::fs::File;
     use tempfile::tempdir;
-
-    #[cfg(unix)]
     use {
         crate::pipes,
         std::fs::OpenOptions,
@@ -33,8 +31,6 @@ mod tests {
     };
 
     use std::io::{Read, Write};
-
-    #[cfg(unix)]
     fn new_temp_file() -> File {
         let temp_dir = tempdir().unwrap();
         OpenOptions::new()
@@ -61,7 +57,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
     fn test_copy_stream() {
         let mut dest_file = new_temp_file();
 

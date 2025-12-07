@@ -12,8 +12,6 @@ use std::collections::HashSet;
 use std::ffi::OsString;
 use std::fs;
 use thiserror::Error;
-
-#[cfg(unix)]
 use std::os::unix::fs::symlink;
 
 use std::path::{Path, PathBuf};

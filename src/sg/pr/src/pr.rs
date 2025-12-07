@@ -7,7 +7,6 @@ use itertools::Itertools;
 use regex::Regex;
 use std::fs::{File, metadata};
 use std::io::{BufRead, BufReader, Lines, Read, Write, stdin, stdout};
-#[cfg(unix)]
 use std::os::unix::fs::FileTypeExt;
 use std::time::SystemTime;
 use thiserror::Error;
@@ -752,13 +751,9 @@ fn open(path: &str) -> Result<Box<dyn Read>, PrError> {
         |i| {
             let path_string = path.to_string();
             match i.file_type() {
-                #[cfg(unix)]
                 ft if ft.is_block_device() => Err(PrError::UnknownFiletype { file: path_string }),
-                #[cfg(unix)]
                 ft if ft.is_char_device() => Err(PrError::UnknownFiletype { file: path_string }),
-                #[cfg(unix)]
                 ft if ft.is_fifo() => Err(PrError::UnknownFiletype { file: path_string }),
-                #[cfg(unix)]
                 ft if ft.is_socket() => Err(PrError::IsSocket { file: path_string }),
                 ft if ft.is_dir() => Err(PrError::IsDirectory { file: path_string }),
                 ft if ft.is_file() || ft.is_symlink() => {

@@ -97,8 +97,6 @@ impl<'a> BufferedOutput<'a> {
         Ok(wstat)
     }
 }
-
-#[cfg(unix)]
 #[cfg(test)]
 mod tests {
     use crate::bufferedoutput::BufferedOutput;

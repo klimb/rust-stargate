@@ -1,8 +1,6 @@
 //! Set of functions to manage regular files, special files, and links.
 
 // spell-checker:ignore backport
-
-#[cfg(unix)]
 use libc::{
     S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK, S_IRGRP, S_IROTH,
     S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR,
@@ -11,7 +9,6 @@ use libc::{
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::env;
-#[cfg(unix)]
 use std::ffi::CString;
 use std::ffi::{OsStr, OsString};
 use std::fs;
@@ -19,16 +16,13 @@ use std::fs::read_dir;
 use std::hash::Hash;
 use std::io::Stdin;
 use std::io::{Error, ErrorKind, Result as IOResult};
-#[cfg(unix)]
 use std::os::fd::AsFd;
-#[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 
 /// Used to check if the `mode` has its `perm` bit set.
 ///
 /// This macro expands to `mode & perm != 0`.
-#[cfg(unix)]
 #[macro_export]
 macro_rules! has {
     ($mode:expr, $perm:expr) => {
@@ -43,7 +37,6 @@ pub struct FileInformation(
 
 impl FileInformation {
     /// Get information from a currently open file
-    #[cfg(unix)]
     pub fn from_file(file: &impl AsFd) -> IOResult<Self> {
         let stat = nix::sys::stat::fstat(file)?;
         Ok(Self(stat))
@@ -99,8 +92,6 @@ impl FileInformation {
         ))]
         return self.0.st_nlink.into();
     }
-
-    #[cfg(unix)]
     pub fn inode(&self) -> u64 {
         #[cfg(all(not(target_os = "freebsd"), target_pointer_width = "64"))]
         return self.0.st_ino;
@@ -108,8 +99,6 @@ impl FileInformation {
         return self.0.st_ino.into();
     }
 }
-
-#[cfg(unix)]
 impl PartialEq for FileInformation {
     fn eq(&self, other: &Self) -> bool {
         self.0.st_dev == other.0.st_dev && self.0.st_ino == other.0.st_ino
@@ -373,8 +362,6 @@ pub fn display_permissions(metadata: &fs::Metadata, display_file_type: bool) -> 
         format!("r{write}xr{write}xr{write}x")
     }
 }
-
-#[cfg(unix)]
 /// Display the permissions of a file
 pub fn display_permissions(metadata: &fs::Metadata, display_file_type: bool) -> String {
     let mode: mode_t = metadata.mode() as mode_t;
@@ -395,7 +382,6 @@ pub fn display_permissions(metadata: &fs::Metadata, display_file_type: bool) -> 
 /// - 'l' for symbolic links
 /// - 's' for sockets
 /// - '?' for any other unrecognized file types
-#[cfg(unix)]
 fn get_file_display(mode: mode_t) -> char {
     match mode & S_IFMT {
         S_IFDIR => 'd',
@@ -413,7 +399,6 @@ fn get_file_display(mode: mode_t) -> char {
 // The logic below is more readable written this way.
 #[allow(clippy::if_not_else)]
 #[allow(clippy::cognitive_complexity)]
-#[cfg(unix)]
 /// Display the permissions of a file on a unix like system
 pub fn display_permissions_unix(mode: mode_t, display_file_type: bool) -> String {
     let mut result;
@@ -567,7 +552,6 @@ pub fn are_hardlinks_to_same_file(_source: &Path, _target: &Path) -> bool {
 /// # Returns
 ///
 /// * `bool` - Returns `true` if the paths are hard links to the same file, and `false` otherwise.
-#[cfg(unix)]
 pub fn are_hardlinks_to_same_file(source: &Path, target: &Path) -> bool {
     let (Ok(source_metadata), Ok(target_metadata)) =
         (fs::symlink_metadata(source), fs::symlink_metadata(target))
@@ -593,7 +577,6 @@ pub fn are_hardlinks_or_one_way_symlink_to_same_file(_source: &Path, _target: &P
 /// # Returns
 ///
 /// * `bool` - Returns `true` if either of above conditions are true, and `false` otherwise.
-#[cfg(unix)]
 pub fn are_hardlinks_or_one_way_symlink_to_same_file(source: &Path, target: &Path) -> bool {
     let (Ok(source_metadata), Ok(target_metadata)) =
         (fs::metadata(source), fs::symlink_metadata(target))
@@ -613,7 +596,6 @@ pub fn are_hardlinks_or_one_way_symlink_to_same_file(source: &Path, target: &Pat
 /// # Arguments
 ///
 /// * `path` - A reference to the path to be checked.
-#[cfg(unix)]
 pub fn path_ends_with_terminator(path: &Path) -> bool {
     use std::os::unix::prelude::OsStrExt;
     path.as_os_str()
@@ -632,7 +614,6 @@ pub fn path_ends_with_terminator(path: &Path) -> bool {
 ///
 /// * `bool` - Returns `true` if stdin is a directory, `false` otherwise.
 pub fn is_stdin_directory(stdin: &Stdin) -> bool {
-    #[cfg(unix)]
     {
         use nix::sys::stat::fstat;
         let mode = fstat(stdin.as_fd()).unwrap().st_mode as mode_t;
@@ -720,7 +701,6 @@ pub fn get_filename(file: &Path) -> Option<&str> {
 /// std::thread::spawn(|| { std::fs::write("my-pipe", b"hello").unwrap(); });
 /// assert_eq!(std::fs::read("my-pipe").unwrap(), b"hello");
 /// ```
-#[cfg(unix)]
 pub fn make_fifo(path: &Path) -> std::io::Result<()> {
     let name = CString::new(path.to_str().unwrap()).unwrap();
     let err = unsafe { mkfifo(name.as_ptr(), 0o666) };
@@ -735,13 +715,9 @@ pub fn make_fifo(path: &Path) -> std::io::Result<()> {
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    #[cfg(unix)]
     use std::io::Write;
-    #[cfg(unix)]
     use std::os::unix;
-    #[cfg(unix)]
     use std::os::unix::fs::FileTypeExt;
-    #[cfg(unix)]
     use tempfile::{NamedTempFile, tempdir};
 
     struct NormalizePathTestCase<'a> {
@@ -796,8 +772,6 @@ mod tests {
             );
         }
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_display_permissions() {
         // spell-checker:ignore (perms) brwsr drwxr rwxr
@@ -850,8 +824,6 @@ mod tests {
             display_permissions_unix(S_IFCHR | S_ISVTX as mode_t | 0o054, true)
         );
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_is_symlink_loop_no_loop() {
         let temp_dir = tempdir().unwrap();
@@ -863,8 +835,6 @@ mod tests {
 
         assert!(!is_symlink_loop(&symlink_path));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_is_symlink_loop_direct_loop() {
         let temp_dir = tempdir().unwrap();
@@ -874,8 +844,6 @@ mod tests {
 
         assert!(is_symlink_loop(&symlink_path));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_is_symlink_loop_indirect_loop() {
         let temp_dir = tempdir().unwrap();
@@ -887,8 +855,6 @@ mod tests {
 
         assert!(is_symlink_loop(&symlink1_path));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_are_hardlinks_to_same_file_same_file() {
         let mut temp_file = NamedTempFile::new().unwrap();
@@ -899,8 +865,6 @@ mod tests {
 
         assert!(are_hardlinks_to_same_file(path1, path2));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_are_hardlinks_to_same_file_different_files() {
         let mut temp_file1 = NamedTempFile::new().unwrap();
@@ -914,8 +878,6 @@ mod tests {
 
         assert!(!are_hardlinks_to_same_file(path1, path2));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_are_hardlinks_to_same_file_hard_link() {
         let mut temp_file = NamedTempFile::new().unwrap();
@@ -927,8 +889,6 @@ mod tests {
 
         assert!(are_hardlinks_to_same_file(path1, &path2));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_get_file_display() {
         assert_eq!(get_file_display(S_IFDIR | 0o755), 'd');
@@ -969,8 +929,6 @@ mod tests {
         let file_path = PathBuf::from("~/foo.txt");
         assert!(matches!(get_filename(&file_path), Some("foo.txt")));
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_make_fifo() {
         // Create the FIFO in a temporary directory.

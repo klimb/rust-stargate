@@ -6,7 +6,6 @@ use std::ffi::OsString;
 use std::io::{self, Write};
 use sgcore::error::{UResult, USimpleError};
 use sgcore::format_usage;
-#[cfg(unix)]
 use sgcore::signals::enable_pipe_errors;
 use sgcore::translate;
 
@@ -59,7 +58,6 @@ fn args_into_buffer<'a>(
     // On Unix (and wasi), OsStrs are just &[u8]'s underneath...
     #[cfg(any(unix, target_os = "wasi"))]
     {
-        #[cfg(unix)]
         use std::os::unix::ffi::OsStrExt;
         #[cfg(target_os = "wasi")]
         use std::os::wasi::ffi::OsStrExt;
@@ -96,7 +94,6 @@ fn prepare_buffer(buf: &mut Vec<u8>) {
 pub fn exec(bytes: &[u8]) -> io::Result<()> {
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
-    #[cfg(unix)]
     enable_pipe_errors()?;
 
     loop {

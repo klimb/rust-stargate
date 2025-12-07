@@ -1,13 +1,11 @@
 // spell-checker:ignore (words) wipesync prefill couldnt
 
 use clap::{Arg, ArgAction, Command};
-#[cfg(unix)]
 use libc::S_IWUSR;
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
 use std::ffi::OsString;
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, Write};
-#[cfg(unix)]
 use std::os::unix::prelude::PermissionsExt;
 use std::path::{Path, PathBuf};
 use sgcore::display::Quotable;
@@ -454,7 +452,6 @@ fn wipe_file(
     // If force is true, set file permissions to not-readonly.
     if force {
         let mut perms = metadata.permissions();
-        #[cfg(unix)]
         #[allow(clippy::useless_conversion, clippy::unnecessary_cast)]
         {
             // NOTE: set_readonly(false) makes the file world-writable on Unix.

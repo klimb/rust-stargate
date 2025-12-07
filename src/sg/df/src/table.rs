@@ -1029,8 +1029,6 @@ mod tests {
              none           99999999999 99999000000 999999\n"
         );
     }
-
-    #[cfg(unix)]
     #[test]
     fn test_table_column_width_non_unicode() {
         init();

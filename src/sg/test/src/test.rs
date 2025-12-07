@@ -8,7 +8,6 @@ use error::{ParseError, ParseResult};
 use parser::{Operator, Symbol, UnaryOperator, parse};
 use std::ffi::{OsStr, OsString};
 use std::fs;
-#[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
 use sgcore::display::Quotable;
 use sgcore::error::{UResult, USimpleError};
@@ -206,7 +205,6 @@ fn files(a: &OsStr, b: &OsStr, op: &OsStr) -> ParseResult<bool> {
     let f_b = fs::metadata(b);
 
     let result = match (op.to_str(), f_a, f_b) {
-        #[cfg(unix)]
         (Some("-ef"), Ok(f_a), Ok(f_b)) => f_a.ino() == f_b.ino() && f_a.dev() == f_b.dev(),
         #[cfg(not(unix))]
         (Some("-ef"), Ok(_), Ok(_)) => unimplemented!(),
@@ -328,7 +326,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
     fn test_files_with_ef_op() {
         let a = NamedTempFile::new().unwrap();
         let b = NamedTempFile::new().unwrap();

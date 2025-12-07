@@ -548,7 +548,6 @@ fn build_dir(
     // To prevent unauthorized access before the folder is ready,
     // exclude certain permissions if ownership or special mode bits
     // could potentially change.
-    #[cfg(unix)]
     {
         use crate::Preserve;
         use std::os::unix::fs::PermissionsExt;

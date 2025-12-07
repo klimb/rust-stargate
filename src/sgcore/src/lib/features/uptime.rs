@@ -83,7 +83,6 @@ pub fn get_uptime(_boot_time: Option<time_t>) -> UResult<i64> {
 /// # Returns
 ///
 /// Returns a UResult with the uptime in seconds if successful, otherwise an UptimeError.
-#[cfg(unix)]
 #[cfg(not(target_os = "openbsd"))]
 pub fn get_uptime(boot_time: Option<time_t>) -> UResult<i64> {
     use crate::utmpx::Utmpx;
@@ -166,7 +165,6 @@ pub fn get_formatted_uptime(boot_time: Option<time_t>) -> UResult<String> {
 /// # Returns
 ///
 /// Returns the number of users currently logged in if successful, otherwise 0.
-#[cfg(unix)]
 #[cfg(not(target_os = "openbsd"))]
 // see: https://gitlab.com/procps-ng/procps/-/blob/4740a0efa79cade867cfc7b32955fe0f75bf5173/library/uptime.c#L63-L115
 pub fn get_nusers() -> usize {
@@ -243,7 +241,6 @@ pub fn get_formatted_nusers() -> String {
 ///
 /// Returns a UResult with the load average if successful, otherwise an UptimeError.
 /// The load average is a tuple of three floating point numbers representing the 1-minute, 5-minute, and 15-minute load averages.
-#[cfg(unix)]
 pub fn get_loadavg() -> UResult<(f64, f64, f64)> {
     use crate::libc::c_double;
     use libc::getloadavg;

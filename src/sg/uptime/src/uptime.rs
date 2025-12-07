@@ -1,7 +1,6 @@
 // spell-checker:ignore getloadavg behaviour loadavg uptime upsecs updays upmins uphours boottime nusers utmpxname gettime clockid couldnt
 
 use chrono::{Local, TimeZone, Utc};
-#[cfg(unix)]
 use std::ffi::OsString;
 use std::io;
 use thiserror::Error;
@@ -15,8 +14,6 @@ use sgcore::uptime::*;
 use clap::{Arg, ArgAction, Command, ValueHint, builder::ValueParser};
 
 use sgcore::format_usage;
-
-#[cfg(unix)]
 #[cfg(not(target_os = "openbsd"))]
 use sgcore::utmpx::*;
 
@@ -76,7 +73,6 @@ pub fn sg_app() -> Command {
                 .help(translate!("uptime-help-since"))
                 .action(ArgAction::SetTrue)
         );
-    #[cfg(unix)]
     let cmd = cmd.arg(
         Arg::new(options::PATH)
             .help(translate!("uptime-help-path"))
@@ -88,8 +84,6 @@ pub fn sg_app() -> Command {
     
     object_output::add_json_args(cmd)
 }
-
-#[cfg(unix)]
 fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions) -> UResult<()> {
     use std::fs;
     use std::os::unix::fs::FileTypeExt;
@@ -232,7 +226,6 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
 }
 
 fn uptime_since(json_output_options: JsonOutputOptions) -> UResult<()> {
-    #[cfg(unix)]
     #[cfg(not(target_os = "openbsd"))]
     let uptime = {
         let (boot_time, _) = process_utmpx(None);
@@ -293,8 +286,6 @@ fn print_loadavg() {
         Ok(s) => println!("{s}"),
     }
 }
-
-#[cfg(unix)]
 #[cfg(not(target_os = "openbsd"))]
 fn process_utmpx(file: Option<&OsString>) -> (Option<time_t>, usize) {
     let mut nusers = 0;

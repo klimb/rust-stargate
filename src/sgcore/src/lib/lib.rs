@@ -102,10 +102,7 @@ pub use crate::features::fsext;
 pub use crate::features::fsxattr;
 
 //## core functions
-
-#[cfg(unix)]
 use nix::errno::Errno;
-#[cfg(unix)]
 use nix::sys::signal::{
     SaFlags, SigAction, SigHandler::SigDfl, SigSet, Signal::SIGBUS, Signal::SIGSEGV, sigaction,
 };
@@ -113,7 +110,6 @@ use std::borrow::Cow;
 use std::ffi::{OsStr, OsString};
 use std::io::{BufRead, BufReader};
 use std::iter;
-#[cfg(unix)]
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 use std::str;
 use std::str::Utf8Chunk;
@@ -121,7 +117,6 @@ use std::sync::{LazyLock, atomic::Ordering};
 
 /// Disables the custom signal handlers installed by Rust for stack-overflow handling. With those custom signal handlers processes ignore the first SIGBUS and SIGSEGV signal they receive.
 /// See <https://github.com/rust-lang/rust/blob/8ac1525e091d3db28e67adcbbd6db1e1deaa37fb/src/libstd/sys/unix/stack_overflow.rs#L71-L92> for details.
-#[cfg(unix)]
 pub fn disable_rust_signal_handlers() -> Result<(), Errno> {
     unsafe {
         sigaction(
@@ -455,7 +450,6 @@ impl error::UError for NonUtf8OsStrError {}
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the string can't be coerced to UTF-8.
 pub fn os_str_as_bytes(os_string: &OsStr) -> Result<&[u8], NonUtf8OsStrError> {
-    #[cfg(unix)]
     return Ok(os_string.as_bytes());
 
     #[cfg(not(unix))]
@@ -472,7 +466,6 @@ pub fn os_str_as_bytes(os_string: &OsStr) -> Result<&[u8], NonUtf8OsStrError> {
 /// This is always lossless on unix platforms,
 /// and wraps [`OsStr::to_string_lossy`] on non-unix platforms.
 pub fn os_str_as_bytes_lossy(os_string: &OsStr) -> Cow<'_, [u8]> {
-    #[cfg(unix)]
     return Cow::from(os_string.as_bytes());
 
     #[cfg(not(unix))]
@@ -488,7 +481,6 @@ pub fn os_str_as_bytes_lossy(os_string: &OsStr) -> Cow<'_, [u8]> {
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
 pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::UResult<Cow<'_, OsStr>> {
-    #[cfg(unix)]
     return Ok(Cow::Borrowed(OsStr::from_bytes(bytes)));
 
     #[cfg(not(unix))]
@@ -502,7 +494,6 @@ pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::UResult<Cow<'_, OsStr>> {
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
 pub fn os_string_from_vec(vec: Vec<u8>) -> mods::error::UResult<OsString> {
-    #[cfg(unix)]
     return Ok(OsString::from_vec(vec));
 
     #[cfg(not(unix))]
@@ -516,7 +507,6 @@ pub fn os_string_from_vec(vec: Vec<u8>) -> mods::error::UResult<OsString> {
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
 pub fn os_string_to_vec(s: OsString) -> mods::error::UResult<Vec<u8>> {
-    #[cfg(unix)]
     let v = s.into_vec();
     #[cfg(not(unix))]
     let v = s
@@ -692,8 +682,6 @@ mod tests {
             os_str.to_os_string(),
         ]
     }
-
-    #[cfg(unix)]
     fn test_invalid_utf8_args_lossy(os_str: &OsStr) {
         // assert our string is invalid utf8
         assert!(os_str.to_os_string().into_string().is_err());
@@ -711,8 +699,6 @@ mod tests {
             os_str.to_os_string().to_string_lossy()
         );
     }
-
-    #[cfg(unix)]
     fn test_invalid_utf8_args_ignore(os_str: &OsStr) {
         // assert our string is invalid utf8
         assert!(os_str.to_os_string().into_string().is_err());
@@ -736,8 +722,6 @@ mod tests {
         // expect complete conversion without losses, even when lossy conversion is accepted
         let _ = test_vec.into_iter().collect_lossy();
     }
-
-    #[cfg(unix)]
     #[test]
     fn invalid_utf8_args_unix() {
         use std::os::unix::ffi::OsStrExt;

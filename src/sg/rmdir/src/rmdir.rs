@@ -50,7 +50,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             // - It has a trailing slash
             // - It's a symlink
             // - It either points to a directory or dangles
-            #[cfg(unix)]
             {
                 use std::ffi::OsStr;
                 use std::os::unix::ffi::OsStrExt;

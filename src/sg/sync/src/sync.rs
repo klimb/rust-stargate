@@ -23,8 +23,6 @@ pub mod options {
 }
 
 static ARG_FILES: &str = "files";
-
-#[cfg(unix)]
 mod platform {
     use nix::unistd::sync;
     #[cfg(any(target_os = "linux"))]

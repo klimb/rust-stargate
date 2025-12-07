@@ -42,7 +42,6 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
     } else {
         // General case: "/home/dos/." -> "/home/dos"
         let stripped = &path_bytes[..path_bytes.len() - 2];
-        #[cfg(unix)]
         {
             use std::os::unix::ffi::OsStrExt;
             let result = std::ffi::OsStr::from_bytes(stripped);
@@ -92,7 +91,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     "/".to_string()
                 } else {
                     let stripped = &path_bytes[..path_bytes.len() - 2];
-                    #[cfg(unix)]
                     {
                         use std::os::unix::ffi::OsStrExt;
                         std::ffi::OsStr::from_bytes(stripped).to_string_lossy().to_string()

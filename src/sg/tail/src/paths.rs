@@ -4,7 +4,6 @@ use crate::text;
 use std::ffi::OsStr;
 use std::fs::{File, Metadata};
 use std::io::{Seek, SeekFrom};
-#[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::{Path, PathBuf};
 use sgcore::error::UResult;
@@ -15,8 +14,6 @@ pub enum InputKind {
     File(PathBuf),
     Stdin,
 }
-
-#[cfg(unix)]
 impl From<&OsStr> for InputKind {
     fn from(value: &OsStr) -> Self {
         if value == OsStr::new("-") {
@@ -159,7 +156,6 @@ pub trait MetadataExtTail {
 impl MetadataExtTail for Metadata {
     fn is_tailable(&self) -> bool {
         let ft = self.file_type();
-        #[cfg(unix)]
         {
             ft.is_file() || ft.is_char_device() || ft.is_fifo()
         }
@@ -212,10 +208,9 @@ pub fn stdin_is_bad_fd() -> bool {
     // FIXME : Rust's stdlib is reopening fds as /dev/null
     // see also: https://github.com/uutils/coreutils/issues/2873
     // (gnu/tests/tail-2/follow-stdin.sh fails because of this)
-    //#[cfg(unix)]
-    {
+    //{
         //platform::stdin_is_bad_fd()
-    }
+    //}
     //#[cfg(not(unix))]
     false
 }

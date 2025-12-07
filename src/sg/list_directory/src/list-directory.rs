@@ -2,8 +2,6 @@
 
 use std::collections::HashSet;
 use std::collections::HashMap;
-
-#[cfg(unix)]
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
@@ -335,7 +333,6 @@ pub struct Config {
     size_format: SizeFormat,
     directory: bool,
     time: MetadataTimeField,
-    #[cfg(unix)]
     inode: bool,
     color: Option<LsColors>,
     long: LongFormat,
@@ -363,20 +360,16 @@ struct LongFormat {
     author: bool,
     group: bool,
     owner: bool,
-    #[cfg(unix)]
     numeric_uid_gid: bool,
 }
 
 struct PaddingCollection {
-    #[cfg(unix)]
     inode: usize,
     link_count: usize,
     uname: usize,
     group: usize,
     size: usize,
-    #[cfg(unix)]
     major: usize,
-    #[cfg(unix)]
     minor: usize,
     block_size: usize,
 }
@@ -939,13 +932,11 @@ impl Config {
             let group = !options.get_flag(options::NO_GROUP)
                 && !options.get_flag(options::format::LONG_NO_GROUP);
             let owner = !options.get_flag(options::format::LONG_NO_OWNER);
-            #[cfg(unix)]
             let numeric_uid_gid = options.get_flag(options::format::LONG_NUMERIC_UID_GID);
             LongFormat {
                 author,
                 group,
                 owner,
-                #[cfg(unix)]
                 numeric_uid_gid,
             }
         };
@@ -1138,7 +1129,6 @@ impl Config {
             directory: options.get_flag(options::DIRECTORY),
             time,
             color,
-            #[cfg(unix)]
             inode: options.get_flag(options::INODE),
             long,
             alloc_size: options.get_flag(options::size::ALLOCATION_SIZE),
@@ -2076,9 +2066,7 @@ struct ListState<'a> {
     // number of users/groups is very limited. It seems like nohash::IntMap
     // performance was equivalent to BTreeMap.
     // It's possible a simple vector linear(binary?) search implementation would be even faster.
-    #[cfg(unix)]
     uid_cache: HashMap<u32, String>,
-    #[cfg(unix)]
     gid_cache: HashMap<u32, String>,
     recent_time_range: RangeInclusive<SystemTime>,
 }
@@ -2134,8 +2122,6 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
                            else { "other" },
                     "size": entry_metadata.len(),
                 });
-                
-                #[cfg(unix)]
                 {
                     file_info["permissions"] = json!(format!("{:o}", entry_metadata.mode() & 0o777));
                     file_info["inode"] = json!(entry_metadata.ino());
@@ -2179,8 +2165,6 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
                        else { "other" },
                 "size": metadata.len(),
             });
-            
-            #[cfg(unix)]
             {
                 file_info["permissions"] = json!(format!("{:o}", metadata.mode() & 0o777));
                 file_info["inode"] = json!(metadata.ino());
@@ -2267,9 +2251,7 @@ pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
     let mut state = ListState {
         out: BufWriter::new(stdout()),
         style_manager: config.color.as_ref().map(StyleManager::new),
-        #[cfg(unix)]
         uid_cache: HashMap::default(),
-        #[cfg(unix)]
         gid_cache: HashMap::default(),
         // Time range for which to use the "recent" format. Anything from 0.5 year in the past to now
         // (files with modification time in the future use "old" format).
@@ -2686,7 +2668,6 @@ fn display_additional_leading_info(
     config: &Config
 ) -> UResult<String> {
     let mut result = String::new();
-    #[cfg(unix)]
     {
         if config.inode {
             let i = if let Some(md) = item.metadata() {
@@ -2731,7 +2712,6 @@ fn display_items(
         let padding_collection = calculate_padding_collection(items, config, state);
 
         for item in items {
-            #[cfg(unix)]
             let should_display_leading_info = config.inode || config.alloc_size;
             #[cfg(not(unix))]
             let should_display_leading_info = config.alloc_size;
@@ -2753,8 +2733,6 @@ fn display_items(
         }
 
         let mut names_vec = Vec::new();
-
-        #[cfg(unix)]
         let should_display_leading_info = config.inode || config.alloc_size;
         #[cfg(not(unix))]
         let should_display_leading_info = config.alloc_size;
@@ -2844,7 +2822,6 @@ fn get_block_size(md: &Metadata, config: &Config) -> u64 {
     /* GNU ls will display sizes in terms of block size
        md.len() will differ from this value when the file has some holes
     */
-    #[cfg(unix)]
     {
         let raw_blocks = if md.file_type().is_char_device() || md.file_type().is_block_device() {
             0u64
@@ -3022,7 +2999,6 @@ fn display_item_long(
                     &major,
                     #[cfg(not(unix))]
                     0usize,
-                    #[cfg(unix)]
                     padding.major.max(
                         padding
                             .size
@@ -3034,7 +3010,6 @@ fn display_item_long(
                     &minor,
                     #[cfg(not(unix))]
                     0usize,
-                    #[cfg(unix)]
                     padding.minor
                 );
             }
@@ -3143,15 +3118,12 @@ fn display_item_long(
 
     Ok(())
 }
-
-#[cfg(unix)]
 fn get_inode(metadata: &Metadata) -> String {
     format!("{}", metadata.ino())
 }
 
 // Currently getpwuid is `linux` target only. If it's broken state.out into
 // a posix-compliant attribute this can be updated...
-#[cfg(unix)]
 fn display_uname<'a>(metadata: &Metadata, config: &Config, state: &'a mut ListState) -> &'a String {
     let uid = metadata.uid();
 
@@ -3163,8 +3135,6 @@ fn display_uname<'a>(metadata: &Metadata, config: &Config, state: &'a mut ListSt
         }
     })
 }
-
-#[cfg(unix)]
 fn display_group<'a>(metadata: &Metadata, config: &Config, state: &'a mut ListState) -> &'a String {
     let gid = metadata.gid();
     state.gid_cache.entry(gid).or_insert_with(|| {
@@ -3231,8 +3201,6 @@ fn display_len_or_rdev(metadata: &Metadata, config: &Config) -> SizeOrDeviceId {
 fn display_size(size: u64, config: &Config) -> String {
     human_readable(size, config.size_format)
 }
-
-#[cfg(unix)]
 fn file_is_executable(md: &Metadata) -> bool {
     // Mode always returns u32, but the flags might not be, based on the platform
     // e.g. linux has u32, mac has u16.
@@ -3251,7 +3219,6 @@ fn classify_file(path: &PathData) -> Option<char> {
     } else if file_type.is_symlink() {
         Some('@')
     } else {
-        #[cfg(unix)]
         {
             if file_type.is_socket() {
                 Some('=')
@@ -3435,18 +3402,12 @@ fn display_symlink_count(_metadata: &Metadata) -> String {
     // Git Bash looks like it may do the same thing.
     String::from("1")
 }
-
-#[cfg(unix)]
 fn display_symlink_count(metadata: &Metadata) -> String {
     metadata.nlink().to_string()
 }
-
-#[cfg(unix)]
 fn display_inode(metadata: &Metadata) -> String {
     get_inode(metadata)
 }
-
-#[cfg(unix)]
 fn calculate_padding_collection(
     items: &[PathData],
     config: &Config,
@@ -3464,7 +3425,6 @@ fn calculate_padding_collection(
     };
 
     for item in items {
-        #[cfg(unix)]
         if config.inode {
             let inode_len = if let Some(md) = item.metadata() {
                 display_inode(md).len()

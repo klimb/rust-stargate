@@ -271,7 +271,6 @@ impl HardlinkGroupScanner {
     }
 
     /// Get statistics about scanned hardlinks
-    #[cfg(unix)]
     pub fn stats(&self) -> ScannerStats {
         let total_groups = self.hardlink_groups.len();
         let total_files = self.hardlink_groups.values().map(|group| group.len()).sum();

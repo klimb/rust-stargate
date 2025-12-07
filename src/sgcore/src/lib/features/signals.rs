@@ -4,10 +4,7 @@
 //! This module provides a way to handle signals in a platform-independent way.
 //! It provides a way to convert signal names to their corresponding values and vice versa.
 //! It also provides a way to ignore the SIGINT signal and enable pipe errors.
-
-#[cfg(unix)]
 use nix::errno::Errno;
-#[cfg(unix)]
 use nix::sys::signal::{
     SigHandler::SigDfl, SigHandler::SigIgn, Signal::SIGINT, Signal::SIGPIPE, signal,
 };
@@ -292,7 +289,6 @@ pub fn signal_name_by_value(signal_value: usize) -> Option<&'static str> {
 }
 
 /// Returns the default signal value.
-#[cfg(unix)]
 pub fn enable_pipe_errors() -> Result<(), Errno> {
     // We pass the error as is, the return value would just be Ok(SigDfl), so we can safely ignore it.
     // SAFETY: this function is safe as long as we do not use a custom SigHandler -- we use the default one.
@@ -300,7 +296,6 @@ pub fn enable_pipe_errors() -> Result<(), Errno> {
 }
 
 /// Ignores the SIGINT signal.
-#[cfg(unix)]
 pub fn ignore_interrupts() -> Result<(), Errno> {
     // We pass the error as is, the return value would just be Ok(SigIgn), so we can safely ignore it.
     // SAFETY: this function is safe as long as we do not use a custom SigHandler -- we use the default one.

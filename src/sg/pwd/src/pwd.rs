@@ -20,7 +20,6 @@ fn physical_path() -> io::Result<PathBuf> {
 
     // On Unix, getcwd() must return the physical path:
     // https://pubs.opengroup.org/onlinepubs/9699919799/functions/getcwd.html
-    #[cfg(unix)]
     {
         Ok(path)
     }
@@ -56,7 +55,6 @@ fn logical_path() -> io::Result<PathBuf> {
             }
 
             // Finally, check if it matches the directory we're in.
-            #[cfg(unix)]
             {
                 use std::fs::metadata;
                 use std::os::unix::fs::MetadataExt;

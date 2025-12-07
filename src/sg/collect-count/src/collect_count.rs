@@ -311,8 +311,6 @@ impl<'a> Input<'a> {
         }
     }
 }
-
-#[cfg(unix)]
 fn is_stdin_small_file() -> bool {
     use std::os::unix::io::{AsRawFd, FromRawFd};
     // Safety: we'll rely on Rust to give us a valid RawFd for stdin with which we can attempt to
@@ -790,7 +788,6 @@ fn files0_iter<'a>(
                 Ok(p) if p == STDIN_REPR.as_bytes() => Ok(Input::Stdin(StdinKind::Explicit)),
                 Ok(p) => {
                     // On Unix systems, OsStrings are just strings of bytes, not necessarily UTF-8.
-                    #[cfg(unix)]
                     {
                         use std::os::unix::ffi::OsStringExt;
                         Ok(Input::Path(PathBuf::from(OsString::from_vec(p)).into()))

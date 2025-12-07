@@ -5,8 +5,6 @@
 //! information on amount of space available and amount of space used.
 // spell-checker:ignore canonicalized
 use std::{ffi::OsString, path::Path};
-
-#[cfg(unix)]
 use sgcore::fsext::statfs;
 use sgcore::fsext::{FsUsage, MountInfo};
 
@@ -117,14 +115,12 @@ impl Filesystem {
     // TODO: resolve uuid in `mount_info.dev_name` if exists
     pub(crate) fn new(mount_info: MountInfo, file: Option<OsString>) -> Option<Self> {
         let _stat_path = if mount_info.mount_dir.is_empty() {
-            #[cfg(unix)]
             {
                 mount_info.dev_name.clone().into()
             }
         } else {
             mount_info.mount_dir.clone()
         };
-        #[cfg(unix)]
         let usage = FsUsage::new(statfs(&_stat_path).ok()?);
 
         Some(Self {
