@@ -13,12 +13,6 @@ use sgcore::io::OwnedFileDescriptorOrHandle;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Write};
 use std::path::PathBuf;
-#[cfg(all(
-    unix,
-    not(target_os = "macos"),
-    not(target_os = "freebsd"),
-    feature = "printf"
-))]
 use std::process::{Command, Stdio};
 
 use std::thread::sleep;
@@ -1544,12 +1538,6 @@ fn test_nocache_file() {
 }
 
 #[test]
-#[cfg(all(
-    unix,
-    not(target_os = "macos"),
-    not(target_os = "freebsd"),
-    feature = "printf"
-))]
 fn test_reading_partial_blocks_from_fifo() {
     // Create the FIFO.
     let ts = TestScenario::new(util_name!());
@@ -1587,12 +1575,6 @@ fn test_reading_partial_blocks_from_fifo() {
 }
 
 #[test]
-#[cfg(all(
-    unix,
-    not(target_os = "macos"),
-    not(target_os = "freebsd"),
-    feature = "printf"
-))]
 fn test_reading_partial_blocks_from_fifo_unbuffered() {
     // Create the FIFO.
     let ts = TestScenario::new(util_name!());

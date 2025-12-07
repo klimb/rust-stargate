@@ -274,23 +274,6 @@ fn test_random_source_regular_file() {
 }
 
 #[test]
-#[ignore = "known issue #7947"]
-fn test_random_source_dir() {
-    let (at, mut ucmd) = at_and_ucmd!();
-
-    at.mkdir("source");
-    let file = "foo.txt";
-    at.write(file, "a");
-
-    ucmd
-        .arg("-v")
-        .arg("--random-source=source")
-        .arg(file)
-        .fails()
-        .stderr_only("shred: foo.txt: pass 1/3 (random)...\nshred: foo.txt: File write pass failed: Is a directory\n");
-}
-
-#[test]
 fn test_shred_rename_exhaustion() {
     // GNU: tests/shred/shred-remove.sh
     let scene = TestScenario::new(util_name!());

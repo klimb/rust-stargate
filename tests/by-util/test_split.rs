@@ -262,7 +262,6 @@ fn test_split_additional_suffix() {
 
 #[test]
 fn test_additional_suffix_dir_separator() {
-    #[cfg(unix)]
     new_ucmd!()
         .args(&["--additional-suffix", "a/b"])
         .fails()
@@ -940,7 +939,6 @@ fn test_number_n() {
     assert_eq!(at.read("xac"), "mnopq");
     assert_eq!(at.read("xad"), "rstuv");
     assert_eq!(at.read("xae"), "wxyz\n");
-    #[cfg(unix)]
     new_ucmd!()
         .args(&["--number=100", "/dev/null"])
         .succeeds()
@@ -961,7 +959,6 @@ fn test_number_kth_of_n() {
         .args(&["-e", "--number=99/100", "asciilowercase.txt"])
         .succeeds()
         .stdout_only("");
-    #[cfg(unix)]
     new_ucmd!()
         .args(&["--number=3/10", "/dev/null"])
         .succeeds()
@@ -1653,7 +1650,6 @@ fn test_round_robin() {
     assert_eq!(at.read("xab"), "2\n4\n");
 }
 
-#[test]
 // TODO(#7542): Re-enable on Android once we figure out why rlimit is broken.
 // #[cfg(any(target_os = "linux"))]
 #[cfg(target_os = "linux")]

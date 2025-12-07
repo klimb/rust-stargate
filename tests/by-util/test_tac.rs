@@ -24,7 +24,6 @@ fn test_invalid_arg() {
     new_ucmd!().arg("--definitely-invalid").fails_with_code(1);
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_stdin_default() {
     new_ucmd!()
@@ -33,7 +32,6 @@ fn test_stdin_default() {
         .stdout_is("500400\n300\n200\n100\n");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_stdin_non_newline_separator() {
     new_ucmd!()
@@ -43,7 +41,6 @@ fn test_stdin_non_newline_separator() {
         .stdout_is("500400:300:200:100:");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_stdin_non_newline_separator_before() {
     new_ucmd!()
@@ -101,7 +98,6 @@ fn test_no_line_separators() {
     new_ucmd!().pipe_in("a").succeeds().stdout_is("a");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_before_trailing_separator_no_leading_separator() {
     new_ucmd!()
@@ -111,7 +107,6 @@ fn test_before_trailing_separator_no_leading_separator() {
         .stdout_is("\n\nba");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_before_trailing_separator_and_leading_separator() {
     new_ucmd!()
@@ -121,7 +116,6 @@ fn test_before_trailing_separator_and_leading_separator() {
         .stdout_is("\n\nb\na");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_before_leading_separator_no_trailing_separator() {
     new_ucmd!()
@@ -131,7 +125,6 @@ fn test_before_leading_separator_no_trailing_separator() {
         .stdout_is("\nb\na");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_before_no_separator() {
     new_ucmd!()
@@ -141,13 +134,11 @@ fn test_before_no_separator() {
         .stdout_is("ab");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_before_empty_file() {
     new_ucmd!().arg("-b").pipe_in("").succeeds().stdout_is("");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_multi_char_separator() {
     new_ucmd!()
@@ -157,7 +148,6 @@ fn test_multi_char_separator() {
         .stdout_is("bxxaxx");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_multi_char_separator_overlap() {
     // The right-most pair of "x" characters in the input is treated as
@@ -188,7 +178,6 @@ fn test_multi_char_separator_overlap() {
         .stdout_is("xxaxx");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_multi_char_separator_overlap_before() {
     // With the "-b" option, the line separator is assumed to be at the
@@ -231,7 +220,6 @@ fn test_multi_char_separator_overlap_before() {
         .stdout_is("xxxxa");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_null_separator() {
     new_ucmd!()
@@ -241,7 +229,6 @@ fn test_null_separator() {
         .stdout_is("b\0a\0");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_regex() {
     new_ucmd!()
@@ -270,7 +257,6 @@ fn test_regex() {
         .stdout_is("c+d-e+---+b++--++a+-+");
 }
 
-#[test]
 // FIXME: See https://github.com/uutils/coreutils/issues/4204
 fn test_regex_before() {
     new_ucmd!()

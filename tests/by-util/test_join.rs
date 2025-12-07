@@ -2,7 +2,6 @@
 
 #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
 use std::fs::OpenOptions;
-#[cfg(unix)]
 use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
 #[cfg(windows)]
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
@@ -452,7 +451,6 @@ fn non_unicode() {
         .succeeds()
         .stdout_only_fixture("non-unicode.expected");
 
-    #[cfg(unix)]
     {
         let non_utf8_byte: u8 = 167;
         new_ucmd!()
@@ -543,7 +541,6 @@ fn test_join_non_utf8_paths() {
     let file1_bytes = b"test_\xFF\xFE_1.txt";
     let file2_bytes = b"test_\xFF\xFE_2.txt";
 
-    #[cfg(unix)]
     {
         use std::os::unix::ffi::OsStrExt;
         let file1_name = std::ffi::OsStr::from_bytes(file1_bytes);

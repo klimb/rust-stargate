@@ -120,21 +120,6 @@ fn test_fmt_width_not_valid_number() {
         .stderr_contains("fmt: invalid width: '25x'");
 }
 
-#[ignore = "our 'goal' algorithm is very different from GNU; fix this!"]
-#[test]
-fn test_fmt_goal() {
-    for param in ["-g", "--goal"] {
-        new_ucmd!()
-            .args(&["one-word-per-line.txt", param, "7"])
-            .succeeds()
-            .stdout_is("this is a\nfile with one\nword per line\n");
-    }
-    new_ucmd!()
-        .args(&["one-word-per-line.txt", "-g40", "-g7"])
-        .succeeds()
-        .stdout_is("this is a\nfile with one\nword per line\n");
-}
-
 #[test]
 fn test_fmt_goal_too_big() {
     for param in ["-g", "--goal"] {
@@ -153,19 +138,6 @@ fn test_fmt_goal_bigger_than_default_width_of_75() {
             .fails_with_code(1)
             .stderr_is("fmt: GOAL cannot be greater than WIDTH.\n");
     }
-}
-
-#[ignore = "our 'goal' algorithm is very different from GNU; fix this!"]
-#[test]
-fn test_fmt_too_big_goal_sometimes_okay() {
-    new_ucmd!()
-        .args(&["one-word-per-line.txt", "--width=75", "-g76", "-g10"])
-        .succeeds()
-        .stdout_is("this is a\nfile with one\nword per line\n");
-    new_ucmd!()
-        .args(&["one-word-per-line.txt", "-g76", "-g10"])
-        .succeeds()
-        .stdout_is("this is a\nfile with one\nword per line\n");
 }
 
 #[test]

@@ -1517,7 +1517,6 @@ fn test_directory_input_file() {
     let (at, mut ucmd) = at_and_ucmd!();
     at.mkdir("test_directory");
 
-    #[cfg(unix)]
     ucmd.args(&["test_directory", "1"])
         .fails_with_code(1)
         .stderr_only("csplit: read error: Is a directory\n");

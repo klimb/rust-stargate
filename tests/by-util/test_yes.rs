@@ -1,7 +1,6 @@
 use std::ffi::OsStr;
 use std::process::ExitStatus;
 
-#[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 
 use sgtests::new_ucmd;
@@ -94,7 +93,6 @@ fn test_piped_to_dev_full() {
 #[test]
 #[cfg(any(unix, target_os = "wasi"))]
 fn test_non_utf8() {
-    #[cfg(unix)]
     use std::os::unix::ffi::OsStrExt;
     #[cfg(target_os = "wasi")]
     use std::os::wasi::ffi::OsStrExt;

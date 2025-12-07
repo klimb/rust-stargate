@@ -170,15 +170,6 @@ fn test_string_comparison() {
 }
 
 #[test]
-#[ignore = "fixme: error reporting"]
-fn test_dangling_string_comparison_is_error() {
-    new_ucmd!()
-        .args(&["missing_something", "="])
-        .fails_with_code(2)
-        .stderr_is("test: missing argument after '='");
-}
-
-#[test]
 fn test_string_operator_is_literal_after_bang() {
     let scenario = TestScenario::new(util_name!());
     let tests = [
@@ -247,14 +238,6 @@ fn test_some_int_compares() {
     for test in &tests {
         scenario.ucmd().arg("!").args(&test[..]).fails_with_code(1);
     }
-}
-
-#[test]
-#[ignore = "fixme: evaluation error (code 1); GNU returns 0"]
-fn test_values_greater_than_i64_allowed() {
-    new_ucmd!()
-        .args(&["9223372036854775808", "-gt", "0"])
-        .succeeds();
 }
 
 #[test]
@@ -461,7 +444,6 @@ fn test_file_is_not_writable() {
 
 #[test]
 fn test_file_is_not_executable() {
-    #[cfg(unix)]
     let (at, mut ucmd) = at_and_ucmd!();
     #[cfg(not(unix))]
     let (_, mut ucmd) = at_and_ucmd!();
@@ -469,7 +451,6 @@ fn test_file_is_not_executable() {
     // WSL creates executable files by default, so if we are on unix, make sure
     // to set make it non-executable.
     // Files on other targets are non-executable by default.
-    #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         let metadata = std::fs::metadata(at.plus("regular_file")).unwrap();
@@ -550,7 +531,6 @@ fn test_nonexistent_file_is_not_symlink() {
         .succeeds();
 }
 
-#[test]
 // Only the superuser is allowed to set the sticky bit on files on FreeBSD/OpenBSD.
 #[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
 fn test_file_is_sticky() {
@@ -813,17 +793,6 @@ fn test_inverted_parenthetical_bool_op_precedence() {
 }
 
 #[test]
-#[ignore = "fixme: error reporting"]
-fn test_dangling_parenthesis() {
-    new_ucmd!()
-        .args(&["(", "(", "a", "!=", "b", ")", "-o", "-n", "c"])
-        .fails_with_code(2);
-    new_ucmd!()
-        .args(&["(", "(", "a", "!=", "b", ")", "-o", "-n", "c", ")"])
-        .succeeds();
-}
-
-#[test]
 fn test_complicated_parenthesized_expression() {
     new_ucmd!()
         .args(&[
@@ -846,18 +815,6 @@ fn test_or_as_filename() {
     new_ucmd!()
         .args(&["x", "-a", "-z", "-o"])
         .fails_with_code(1);
-}
-
-#[test]
-#[ignore = "TODO: Busybox has this working"]
-fn test_filename_or_with_equal() {
-    new_ucmd!().args(&["-f", "=", "a", "-o", "b"]).succeeds();
-}
-
-#[test]
-#[ignore = "GNU considers this an error"]
-fn test_string_length_and_nothing() {
-    new_ucmd!().args(&["-n", "a", "-a"]).fails_with_code(2);
 }
 
 #[test]

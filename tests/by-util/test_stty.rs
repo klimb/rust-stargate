@@ -8,36 +8,6 @@ fn test_invalid_arg() {
 }
 
 #[test]
-#[ignore = "Fails because cargo test does not run in a tty"]
-fn runs() {
-    new_ucmd!().succeeds();
-}
-
-#[test]
-#[ignore = "Fails because cargo test does not run in a tty"]
-fn print_all() {
-    let res = new_ucmd!().args(&["--all"]).succeeds();
-
-    // Random selection of flags to check for
-    for flag in [
-        "parenb", "parmrk", "ixany", "onlcr", "ofdel", "icanon", "noflsh",
-    ] {
-        res.stdout_contains(flag);
-    }
-}
-
-#[test]
-#[ignore = "Fails because cargo test does not run in a tty"]
-fn sane_settings() {
-    new_ucmd!().args(&["intr", "^A"]).succeeds();
-    new_ucmd!().succeeds().stdout_contains("intr = ^A");
-    new_ucmd!()
-        .args(&["sane"])
-        .succeeds()
-        .stdout_str_check(|s| !s.contains("intr = ^A"));
-}
-
-#[test]
 fn save_and_setting() {
     new_ucmd!()
         .args(&["--save", "nl0"])
@@ -179,40 +149,6 @@ fn invalid_baud_setting() {
         .args(&["ospeed", "995"])
         .fails()
         .stderr_contains("invalid ospeed '995'");
-}
-
-#[test]
-#[ignore = "Fails because cargo test does not run in a tty"]
-fn set_mapping() {
-    new_ucmd!().args(&["intr", "'"]).succeeds();
-    new_ucmd!()
-        .args(&["--all"])
-        .succeeds()
-        .stdout_contains("intr = '");
-
-    new_ucmd!().args(&["intr", "undef"]).succeeds();
-    new_ucmd!()
-        .args(&["--all"])
-        .succeeds()
-        .stdout_contains("intr = <undef>");
-
-    new_ucmd!().args(&["intr", "^-"]).succeeds();
-    new_ucmd!()
-        .args(&["--all"])
-        .succeeds()
-        .stdout_contains("intr = <undef>");
-
-    new_ucmd!().args(&["intr", ""]).succeeds();
-    new_ucmd!()
-        .args(&["--all"])
-        .succeeds()
-        .stdout_contains("intr = <undef>");
-
-    new_ucmd!().args(&["intr", "^C"]).succeeds();
-    new_ucmd!()
-        .args(&["--all"])
-        .succeeds()
-        .stdout_contains("intr = ^C");
 }
 
 #[test]

@@ -825,7 +825,6 @@ fn test_force_ln_existing_hard_link_entry() {
     assert_eq!(at.read("file"), "hardlink\n");
     assert_eq!(at.read("dir/file"), "hardlink\n");
 
-    #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
         let source_inode = at.metadata("file").ino();
@@ -853,7 +852,6 @@ fn test_ln_seen_file() {
             .stderr_str()
             .contains("will not overwrite just-created 'c\\f' with 'b/f'")
     );
-    #[cfg(unix)]
     assert!(
         result
             .stderr_str()
@@ -865,7 +863,6 @@ fn test_ln_seen_file() {
     assert!(at.plus("b").join("f").exists());
     // a/f still exists
     assert!(at.plus("a").join("f").exists());
-    #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
         // Check inode numbers

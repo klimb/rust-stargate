@@ -1,7 +1,5 @@
 use sgtests::new_ucmd;
-#[cfg(unix)]
 use sgtests::unwrap_or_return;
-#[cfg(unix)]
 use sgtests::util::{TestScenario, expected_result};
 use sgtests::util::{is_ci, whoami};
 

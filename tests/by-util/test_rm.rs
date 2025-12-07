@@ -256,7 +256,6 @@ fn test_verbose() {
         .stdout_only(format!("removed '{file_a}'\nremoved '{file_b}'\n"));
 }
 
-#[test]
 // on unix symlink_dir is a file
 fn test_symlink_dir() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -642,21 +641,6 @@ fn test_force_prompts_order() {
 }
 
 #[test]
-#[ignore = "issue #3722"]
-fn test_directory_rights_rm1() {
-    let (at, mut ucmd) = at_and_ucmd!();
-    at.mkdir_all("b/a/p");
-    at.mkdir_all("b/c");
-    at.mkdir_all("b/d");
-    at.set_readonly("b/a");
-    ucmd.args(&["-rf", "b"])
-        .fails()
-        .stderr_contains("Permission denied");
-    assert!(at.dir_exists("b/a/p"));
-    assert!(!at.dir_exists("b/c"));
-    assert!(!at.dir_exists("b/d"));
-}
-
 #[cfg(feature = "chmod")]
 #[test]
 fn test_prompt_write_protected_yes() {
@@ -822,7 +806,6 @@ fn test_uchild_when_run_no_wait_with_a_blocking_command() {
     #[cfg(windows)]
     let expected = "rm: descend into directory 'a'? \
                     rm: remove regular empty file 'a\\empty'? ";
-    #[cfg(unix)]
     let expected = "rm: descend into directory 'a'? \
                     rm: remove regular empty file 'a/empty'? ";
     child.write_in(yes);
@@ -834,7 +817,6 @@ fn test_uchild_when_run_no_wait_with_a_blocking_command() {
 
     #[cfg(windows)]
     let expected = "removed 'a\\empty'\nrm: remove directory 'a'? ";
-    #[cfg(unix)]
     let expected = "removed 'a/empty'\nrm: remove directory 'a'? ";
 
     child

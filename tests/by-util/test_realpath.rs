@@ -225,7 +225,6 @@ fn test_realpath_when_symlink_is_absolute_and_enoent() {
     at.symlink_file("/dir2/bar", "dir1/foo2");
     at.relative_symlink_file("../dir2/baz", "dir1/foo3");
 
-    #[cfg(unix)]
     ucmd.arg("dir1/foo1")
         .arg("dir1/foo2")
         .arg("dir1/foo3")

@@ -1,6 +1,5 @@
 // spell-checker:ignore abcdefghijklmnopqrstuvwxyz Anone fdbb littl
 
-#[cfg(unix)]
 use std::io::Read;
 
 use unindent::unindent;
@@ -683,7 +682,6 @@ fn test_read_bytes() {
 
     fixtures.write("f1", input);
     let file = fixtures.open("f1");
-    #[cfg(unix)]
     let mut file_shadow = file.try_clone().unwrap();
 
     scene
@@ -696,7 +694,6 @@ fn test_read_bytes() {
 
     // On unix platforms, confirm that only 27 bytes and strictly no more were read from stdin.
     // Leaving stdin in the correct state is required for GNU compatibility.
-    #[cfg(unix)]
     {
         // skip(27) to skip the 27 bytes that should have been consumed with the
         // --read-bytes flag.

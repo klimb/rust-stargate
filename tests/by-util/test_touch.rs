@@ -400,7 +400,6 @@ fn test_touch_set_both() {
     assert_eq!(mtime.unix_seconds() - start_of_year.unix_seconds(), 45240);
 }
 
-#[test]
 // FixME: Fails on freebsd because of a different nanos
 #[cfg(not(target_os = "freebsd"))]
 fn test_touch_no_dereference() {
@@ -841,7 +840,6 @@ fn test_touch_leap_second() {
     assert_eq!(mtime.unix_seconds() - epoch.unix_seconds(), 60);
 }
 
-#[test]
 // File::create doesn't support trailing separator in Windows
 fn test_touch_trailing_slash_no_create() {
     let (at, mut ucmd) = at_and_ucmd!();

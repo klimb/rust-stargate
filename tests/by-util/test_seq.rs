@@ -983,34 +983,6 @@ fn test_parse_out_of_bounds_exponents() {
         .stdout_only("-0\n1\n");
 }
 
-#[ignore = ""]
-#[test]
-fn test_parse_valid_hexadecimal_float_format_issues() {
-    // These tests detect differences in the representation of floating-point values with GNU seq.
-    // There are two key areas to investigate:
-    //
-    // 1. GNU seq uses long double (80-bit) types for values, while the current implementation
-    // relies on f64 (64-bit). This can lead to differences due to varying precision. However, it's
-    // likely not the primary cause, as even double (64-bit) values can differ when compared to
-    // f64.
-    //
-    // 2. GNU seq uses the %Lg format specifier for printing (see the "get_default_format" function
-    // ). It appears that Rust lacks a direct equivalent for this format. Additionally, %Lg
-    // can use %f (floating) or %e (scientific) depending on the precision. There also seem to be
-    // some differences in the behavior of C and Rust when displaying floating-point or scientific
-    // notation, at least without additional configuration.
-    //
-    // It makes sense to begin by experimenting with formats and attempting to replicate
-    // the printf("%Lg",...) behavior. Another area worth investigating is glibc, as reviewing its
-    // code may help uncover additional corner cases or test data that could reveal more issues.
-
-    //Test output: 0.00000000992804416455328464508056640625
-    new_ucmd!()
-        .args(&["0xa.a9p-30", "1"])
-        .succeeds()
-        .stdout_only("9.92804e-09\n1\n");
-}
-
 // GNU `seq` manual states that, when the parameters "all use a fixed point
 // decimal representation", the format should be `%.pf`, where the precision
 // is inferred from parameters. Else, `%g` is used.

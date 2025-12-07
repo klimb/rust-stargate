@@ -323,15 +323,6 @@ fn test_pipe_fifo() {
 
 // TODO(#7583): Re-enable on Mac OS X (and possibly other Unix platforms)
 #[test]
-#[cfg(all(
-    unix,
-    not(any(
-        target_os = "android",
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "macos"
-    ))
-))]
 fn test_stdin_pipe_fifo1() {
     // $ echo | stat -
     // File: -
@@ -381,15 +372,6 @@ fn test_stdin_with_fs_option() {
 }
 
 #[test]
-#[cfg(all(
-    unix,
-    not(any(
-        target_os = "android",
-        target_os = "macos",
-        target_os = "freebsd",
-        target_os = "openbsd"
-    ))
-))]
 fn test_stdin_redirect() {
     // $ touch f && stat - < f
     // File: -

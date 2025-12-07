@@ -9,14 +9,10 @@
 )]
 
 use core::str;
-#[cfg(unix)]
 use libc::mode_t;
-#[cfg(unix)]
 use nix::pty::OpenptyResult;
-#[cfg(unix)]
 use nix::sys;
 use pretty_assertions::assert_eq;
-#[cfg(unix)]
 use rlimit::setrlimit;
 use std::borrow::Cow;
 use std::collections::VecDeque;
@@ -25,15 +21,10 @@ use std::ffi::CString;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, OpenOptions, hard_link, remove_file};
 use std::io::{self, BufWriter, Read, Result, Write};
-#[cfg(unix)]
 use std::os::fd::OwnedFd;
-#[cfg(unix)]
 use std::os::unix::fs::{PermissionsExt, symlink as symlink_dir, symlink as symlink_file};
-#[cfg(unix)]
 use std::os::unix::net::UnixListener;
-#[cfg(unix)]
 use std::os::unix::process::CommandExt;
-#[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 #[cfg(windows)]
 use std::os::windows::fs::{symlink_dir, symlink_file};
@@ -1434,7 +1425,6 @@ impl Drop for TestScenario {
     }
 }
 
-#[cfg(unix)]
 #[derive(Debug, Default)]
 pub struct TerminalSimulation {
     pub size: Option<libc::winsize>,
@@ -1473,14 +1463,11 @@ pub struct UCommand {
     stdout: Option<Stdio>,
     stderr: Option<Stdio>,
     bytes_into_stdin: Option<Vec<u8>>,
-    #[cfg(unix)]
     limits: Vec<(rlimit::Resource, u64, u64)>,
     stderr_to_stdout: bool,
     timeout: Option<Duration>,
-    #[cfg(unix)]
     terminal_simulation: Option<TerminalSimulation>,
     tmpd: Option<Rc<TempDir>>, // drop last
-    #[cfg(unix)]
     umask: Option<mode_t>,
 }
 
@@ -1647,7 +1634,6 @@ impl UCommand {
         self
     }
 
-    #[cfg(unix)]
     /// The umask is a value that restricts the permissions of newly created files and directories.
     pub fn umask(&mut self, umask: mode_t) -> &mut Self {
         self.umask = Some(umask);
@@ -1847,7 +1833,6 @@ impl UCommand {
 
         let mut captured_stdout = None;
         let mut captured_stderr = None;
-        #[cfg(unix)]
         let mut stdin_pty: Option<File> = None;
         #[cfg(not(unix))]
         let stdin_pty: Option<File> = None;
@@ -1884,7 +1869,6 @@ impl UCommand {
                 .stderr(stderr);
         };
 
-        #[cfg(unix)]
         if let Some(simulated_terminal) = &self.terminal_simulation {
             let terminal_size = simulated_terminal.size.unwrap_or(libc::winsize {
                 ws_col: 80,
@@ -1929,7 +1913,6 @@ impl UCommand {
             }
         }
 
-        #[cfg(unix)]
         if !self.limits.is_empty() {
             // just to be safe: move a copy of the limits list into the closure.
             // this way the closure is fully self-contained.
@@ -1948,7 +1931,6 @@ impl UCommand {
             }
         }
 
-        #[cfg(unix)]
         if let Some(umask) = self.umask {
             unsafe {
                 command.pre_exec(move || {
@@ -3471,32 +3453,6 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
-    #[ignore] // Requires sudo/root access
-    fn test_run_ucmd_as_root() {
-        if is_ci() {
-            println!("TEST SKIPPED (cannot run inside CI)");
-        } else {
-            // Skip test if we can't guarantee non-interactive `sudo`, or if we're not "root"
-            if let Ok(output) = Command::new("sudo")
-                .env("LC_ALL", "C")
-                .args(["-E", "--non-interactive", "whoami"])
-                .output()
-            {
-                if output.status.success() && String::from_utf8_lossy(&output.stdout).eq("root\n") {
-                    let ts = TestScenario::new("whoami");
-                    std::assert_eq!(
-                        run_ucmd_as_root(&ts, &[]).unwrap().stdout_str().trim(),
-                        "root"
-                    );
-                } else {
-                    println!("TEST SKIPPED (we're not root)");
-                }
-            } else {
-                println!("TEST SKIPPED (cannot run sudo)");
-            }
-        }
-    }
-
     #[cfg(all(unix, not(any(target_os = "macos", target_os = "openbsd"))))]
     #[test]
     fn test_compare_xattrs() {

@@ -298,7 +298,6 @@ fn test_recursive_reporting() {
         .stdout_contains("created directory 'test_dir/../test_dir_a/../test_dir_b'");
 }
 
-#[test]
 // Windows don't have acl entries
 // TODO Enable and modify this for macos when xattr processing for macos is added.
 // TODO Enable and modify this for freebsd when xattr processing for freebsd is enabled.
@@ -575,7 +574,6 @@ fn test_mkdir_control_characters() {
     // Test double quotes in path - platform-specific behavior expected
     // On Linux/Unix: Should succeed and create directory with quotes
     // On Windows: Should fail with "Invalid argument" error
-    #[cfg(unix)]
     {
         scene.ucmd().arg("-pv").arg("a/\"\"/b/c").succeeds();
         assert!(at.dir_exists("a/\"\"/b/c"));

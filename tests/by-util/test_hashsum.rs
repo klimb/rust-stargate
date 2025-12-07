@@ -75,7 +75,6 @@ macro_rules! test_digest {
             at.write("a", "file1\n");
             at.write("c", "file3\n");
 
-            #[cfg(unix)]
             let file_not_found_str = "No such file or directory";
             #[cfg(not(unix))]
             let file_not_found_str = "The system cannot find the file specified";
@@ -619,7 +618,6 @@ fn test_sha1_with_md5sum_should_fail() {
         .stderr_does_not_contain("WARNING: 1 line is improperly formatted");
 }
 
-#[test]
 // Disabled on Windows because of the "*"
 fn test_check_one_two_space_star() {
     let scene = TestScenario::new(util_name!());

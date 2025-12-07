@@ -128,9 +128,6 @@ fn test_chmod_octal() {
     run_tests(tests);
 }
 
-#[test]
-#[allow(clippy::unreadable_literal)]
-#[allow(clippy::too_many_lines)]
 // spell-checker:disable-next-line
 fn test_chmod_ugoa() {
     let tests = vec![

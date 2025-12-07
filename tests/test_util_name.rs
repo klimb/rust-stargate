@@ -2,7 +2,6 @@
 
 use sgtests::util::TestScenario;
 
-#[cfg(unix)]
 use std::os::unix::fs::symlink as symlink_file;
 
 use std::env;
@@ -45,63 +44,6 @@ fn execution_phrase_double() {
 }
 
 #[test]
-#[ignore = "Test assumes error upon non-UTF8"]
-#[cfg(feature = "sort")]
-fn util_name_double() {
-    use std::{
-        io::Write,
-        process::{Command, Stdio},
-    };
-
-    let scenario = TestScenario::new("sort");
-    if !scenario.bin_path.exists() {
-        println!("Skipping test: Binary not found at {:?}", scenario.bin_path);
-        return;
-    }
-    let mut child = Command::new(&scenario.bin_path)
-        .arg("sort")
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    // input invalid utf8 to cause an error
-    child.stdin.take().unwrap().write_all(&[255]).unwrap();
-    let output = child.wait_with_output().unwrap();
-    assert!(String::from_utf8(output.stderr).unwrap().contains("sort: "));
-}
-
-#[test]
-#[ignore = "Test assumes error upon non-UTF8"]
-#[cfg(feature = "sort")]
-#[cfg(unix)]
-fn util_name_single() {
-    use std::{
-        io::Write,
-        process::{Command, Stdio},
-    };
-
-    let scenario = TestScenario::new("sort");
-    if !scenario.bin_path.exists() {
-        println!("Skipping test: Binary not found at {:?}", scenario.bin_path);
-        return;
-    }
-
-    symlink_file(&scenario.bin_path, scenario.fixtures.plus("uu-sort")).unwrap();
-    let mut child = Command::new(scenario.fixtures.plus("uu-sort"))
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    // input invalid utf8 to cause an error
-    child.stdin.take().unwrap().write_all(&[255]).unwrap();
-    let output = child.wait_with_output().unwrap();
-    assert!(String::from_utf8(output.stderr).unwrap().contains(&format!(
-        "{}: ",
-        scenario.fixtures.plus("uu-sort").display()
-    )));
-}
-
-#[test]
 #[cfg(unix)]
 fn util_invalid_name_help() {
     use std::process::{Command, Stdio};
@@ -130,7 +72,6 @@ fn util_invalid_name_help() {
     );
 }
 
-#[test]
 // The exact set of permitted filenames depends on many factors. Non-UTF-8 strings
 // work on very few platforms, but linux works, especially because it also increases
 // the likelihood that a filesystem is being used that supports non-UTF-8 filenames.

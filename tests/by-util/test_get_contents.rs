@@ -2,7 +2,6 @@
 
 #[cfg(any(target_os = "linux"))]
 use rlimit::Resource;
-#[cfg(unix)]
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::fs::read_to_string;
@@ -96,7 +95,6 @@ fn test_fifo_symlink() {
     thread.join().unwrap();
 }
 
-#[test]
 // TODO(#7542): Re-enable on Android once we figure out why setting limit is broken.
 // #[cfg(any(target_os = "linux"))]
 #[cfg(target_os = "linux")]
@@ -572,39 +570,6 @@ fn test_write_fast_fallthrough_uses_flush() {
 
 #[test]
 #[cfg(unix)]
-#[ignore = ""]
-fn test_domain_socket() {
-    use std::io::prelude::*;
-    use std::os::unix::net::UnixListener;
-    use std::sync::{Arc, Barrier};
-    use std::thread;
-
-    let dir = tempfile::Builder::new()
-        .prefix("unix_socket")
-        .tempdir()
-        .expect("failed to create dir");
-    let socket_path = dir.path().join("sock");
-    let listener = UnixListener::bind(&socket_path).expect("failed to create socket");
-
-    // use a barrier to ensure we don't run cat before the listener is setup
-    let barrier = Arc::new(Barrier::new(2));
-    let barrier2 = Arc::clone(&barrier);
-
-    let thread = thread::spawn(move || {
-        let mut stream = listener.accept().expect("failed to accept connection").0;
-        barrier2.wait();
-        stream
-            .write_all(b"a\tb")
-            .expect("failed to write test data");
-    });
-
-    let child = new_ucmd!().args(&[socket_path]).run_no_wait();
-    barrier.wait();
-    child.wait().unwrap().stdout_is("a\tb");
-
-    thread.join().unwrap();
-}
-
 #[test]
 fn test_write_to_self_empty() {
     // it's ok if the input file is also the output file if it's empty

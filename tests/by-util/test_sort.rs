@@ -1080,7 +1080,6 @@ fn test_merge_batch_size() {
         .stdout_only_fixture("merge_ints_interleaved.expected");
 }
 
-#[test]
 // TODO(#7542): Re-enable on Android once we figure out why setting limit is broken.
 // #[cfg(any(target_os = "linux"))]
 #[cfg(target_os = "linux")]
@@ -1333,7 +1332,6 @@ fn test_failed_write_is_reported() {
         .stderr_is("sort: write failed: 'standard output': No space left on device\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort.pl "o2"
 fn test_multiple_output_files() {
     new_ucmd!()
@@ -1365,7 +1363,6 @@ fn test_output_file_with_leading_dash() {
     }
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "f-extra-arg"
 fn test_files0_from_extra_arg() {
     new_ucmd!()
@@ -1377,7 +1374,6 @@ fn test_files0_from_extra_arg() {
         .no_stdout();
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "missing"
 fn test_files0_from_missing() {
     new_ucmd!()
@@ -1391,7 +1387,6 @@ fn test_files0_from_missing() {
         );
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "minus-in-stdin"
 fn test_files0_from_minus_in_stdin() {
     new_ucmd!()
@@ -1403,7 +1398,6 @@ fn test_files0_from_minus_in_stdin() {
         );
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "empty"
 fn test_files0_from_empty() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1416,7 +1410,6 @@ fn test_files0_from_empty() {
 }
 
 #[cfg(target_os = "linux")]
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "empty-non-regular"
 fn test_files0_from_empty_non_regular() {
     new_ucmd!()
@@ -1425,7 +1418,6 @@ fn test_files0_from_empty_non_regular() {
         .stderr_only("sort: no input from '/dev/null'\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "nul-1"
 fn test_files0_from_nul() {
     new_ucmd!()
@@ -1435,7 +1427,6 @@ fn test_files0_from_nul() {
         .stderr_only("sort: -:1: invalid zero-length file name\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "nul-2"
 fn test_files0_from_nul2() {
     new_ucmd!()
@@ -1445,7 +1436,6 @@ fn test_files0_from_nul2() {
         .stderr_only("sort: -:1: invalid zero-length file name\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "1"
 fn test_files0_from_1() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1459,7 +1449,6 @@ fn test_files0_from_1() {
         .stdout_only("a\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "1a"
 fn test_files0_from_1a() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1473,7 +1462,6 @@ fn test_files0_from_1a() {
         .stdout_only("a\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "2"
 fn test_files0_from_2() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1487,7 +1475,6 @@ fn test_files0_from_2() {
         .stdout_only("a\na\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "2a"
 fn test_files0_from_2a() {
     let (at, mut ucmd) = at_and_ucmd!();
@@ -1501,7 +1488,6 @@ fn test_files0_from_2a() {
         .stdout_only("a\na\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-files0-from.pl "zero-len"
 fn test_files0_from_zero_length() {
     new_ucmd!()
@@ -1511,7 +1497,6 @@ fn test_files0_from_zero_length() {
         .stderr_only("sort: -:2: invalid zero-length file name\n");
 }
 
-#[test]
 // Test for GNU tests/sort/sort-float.sh
 fn test_g_float() {
     let input = "0\n-3.3621031431120935063e-4932\n3.3621031431120935063e-4932\n";
@@ -1523,7 +1508,6 @@ fn test_g_float() {
         .stdout_is(output);
 }
 
-#[test]
 // Test misc numbers ("'a" is not interpreted as literal, trailing text is ignored...)
 fn test_g_misc() {
     let input = "1\n100\n90\n'a\n85hello\n";
@@ -1535,7 +1519,6 @@ fn test_g_misc() {
         .stdout_is(output);
 }
 
-#[test]
 // Test numbers with a large number of digits, where only the last digit is different.
 // We use scientific notation to make sure string sorting does not correctly order them.
 fn test_g_arbitrary() {
@@ -1575,7 +1558,6 @@ fn test_g_arbitrary() {
         .stdout_is(output);
 }
 
-#[test]
 // Test hexadecimal numbers (and hex floats)
 fn test_g_float_hex() {
     let input = "0x123\n0x0\n0x2p10\n0x9p-10\n";

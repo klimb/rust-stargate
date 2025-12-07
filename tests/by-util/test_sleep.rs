@@ -4,7 +4,6 @@ use sgcore::display::Quotable;
 // spell-checker:ignore dont SIGBUS SIGSEGV sigsegv sigbus infd
 use sgtests::new_ucmd;
 
-#[cfg(unix)]
 use nix::sys::signal::Signal::{SIGBUS, SIGSEGV};
 use std::io::ErrorKind;
 use std::time::{Duration, Instant};
@@ -176,7 +175,6 @@ fn test_sleep_when_single_input_exceeds_max_duration_then_no_error() {
         .timeout(Duration::from_secs(10))
         .run_no_wait();
 
-    #[cfg(unix)]
     child
         .delay(100)
         .kill()
@@ -194,7 +192,6 @@ fn test_sleep_when_multiple_inputs_exceed_max_duration_then_no_error() {
         .timeout(Duration::from_secs(10))
         .run_no_wait();
 
-    #[cfg(unix)]
     child
         .delay(100)
         .kill()

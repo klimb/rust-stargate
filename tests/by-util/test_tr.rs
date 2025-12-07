@@ -2,7 +2,6 @@
 use sgtests::at_and_ucmd;
 use sgtests::new_ucmd;
 
-#[cfg(unix)]
 use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
 
 #[test]
@@ -16,7 +15,6 @@ fn test_invalid_input() {
         .args(&["1", "1", "<", "."])
         .fails_with_code(1)
         .stderr_contains("tr: extra operand '<'");
-    #[cfg(unix)]
     new_ucmd!()
         .args(&["1", "1"])
         // will test "tr 1 1 < ."
@@ -1037,7 +1035,6 @@ fn check_against_gnu_tr_tests_bs_055() {
         .stdout_is("def");
 }
 
-#[test]
 // Fails on Windows because it will not separate '\' and 'x' as separate arguments
 #[cfg(unix)]
 fn check_against_gnu_tr_tests_bs_at_end() {

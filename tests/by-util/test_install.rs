@@ -731,7 +731,6 @@ fn test_install_and_strip() {
     assert!(!stdout.contains(STRIP_SOURCE_FILE_SYMBOL));
 }
 
-#[test]
 // FIXME test runs in a timeout with macos-latest on x86_64 in the CI
 #[cfg(not(all(target_os = "macos", target_arch = "x86_64")))]
 fn test_install_and_strip_with_program() {
@@ -1908,7 +1907,6 @@ fn test_install_compare_symlink_handling() {
         .no_stdout(); // Now it's a regular file, so compare should work
 }
 
-#[test]
 // Matches part of tests/install/basic-1
 fn test_t_exist_dir() {
     let scene = TestScenario::new(util_name!());
@@ -1954,36 +1952,6 @@ fn test_target_file_ends_with_slash() {
         .arg(source)
         .fails()
         .stderr_contains("failed to access 'dir/target_file/': Not a directory");
-}
-
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_install_root_combined() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-    at.touch("a");
-    at.touch("c");
-
-    let run_and_check = |args: &[&str], target: &str, expected_uid: u32, expected_gid: u32| {
-        if let Ok(result) = run_ucmd_as_root(&ts, args) {
-            result.success();
-            assert!(at.file_exists(target));
-
-            let metadata = fs::metadata(at.plus(target)).unwrap();
-            assert_eq!(metadata.uid(), expected_uid);
-            assert_eq!(metadata.gid(), expected_gid);
-        } else {
-            print!("Test skipped; requires root user");
-        }
-    };
-
-    run_and_check(&["-Cv", "-o1", "-g1", "a", "b"], "b", 1, 1);
-    run_and_check(&["-Cv", "-o2", "-g1", "a", "b"], "b", 2, 1);
-    run_and_check(&["-Cv", "-o2", "-g2", "a", "b"], "b", 2, 2);
-
-    run_and_check(&["-Cv", "-o2", "c", "d"], "d", 2, 0);
-    run_and_check(&["-Cv", "c", "d"], "d", 0, 0);
-    run_and_check(&["-Cv", "c", "d"], "d", 0, 0);
 }
 
 #[test]

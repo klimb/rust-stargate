@@ -1694,7 +1694,6 @@ fn test_mv_seen_file() {
             .stderr_str()
             .contains("will not overwrite just-created 'c\\f' with 'b/f'")
     );
-    #[cfg(unix)]
     assert!(
         result
             .stderr_str()
@@ -1728,7 +1727,6 @@ fn test_mv_seen_multiple_files_to_directory() {
             .stderr_str()
             .contains("will not overwrite just-created 'c\\f' with 'b/f'")
     );
-    #[cfg(unix)]
     assert!(
         result
             .stderr_str()
@@ -2517,20 +2515,6 @@ fn test_mv_mixed_hardlinks_and_regular_files() {
 }
 
 #[cfg(not(windows))]
-#[ignore = "requires access to a different filesystem"]
-#[test]
-fn test_special_file_different_filesystem() {
-    let (at, mut ucmd) = at_and_ucmd!();
-    at.mkfifo("f");
-    // TODO Use `TestScenario::mount_temp_fs()` for this purpose and
-    // un-ignore this test.
-    std::fs::create_dir("/dev/shm/tmp").unwrap();
-    ucmd.args(&["f", "/dev/shm/tmp"]).succeeds().no_output();
-    assert!(!at.file_exists("f"));
-    assert!(Path::new("/dev/shm/tmp/f").exists());
-    std::fs::remove_dir_all("/dev/shm/tmp").unwrap();
-}
-
 /// Test cross-device move with permission denied error
 /// This test mimics the scenario from the GNU part-fail test where
 /// a cross-device move fails due to permission errors when removing the target file

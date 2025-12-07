@@ -346,15 +346,6 @@ fn sub_num_float_round_to_one() {
 }
 
 #[test]
-#[ignore = "Requires 'long double' precision floats to be used internally"]
-fn sub_num_float_round_to_two() {
-    new_ucmd!()
-        .args(&["two is %f", "1.9999995"])
-        .succeeds()
-        .stdout_only("two is 2.000000");
-}
-
-#[test]
 fn sub_num_float_round_nines_dec() {
     new_ucmd!()
         .args(&["%f", "0.99999999"])

@@ -221,29 +221,6 @@ fn output_delimiter_multiple_different() {
 }
 
 #[test]
-#[ignore = "This is too weird; deviate intentionally."]
-fn output_delimiter_multiple_different_prevents_help() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-    at.write("a", "a\nz\n");
-    at.write("b", "b\nz\n");
-    scene
-        .ucmd()
-        .args(&[
-            "--output-delimiter=word",
-            "--output-delimiter=other",
-            "--help",
-            "a",
-            "b",
-        ])
-        .fails()
-        .no_stdout()
-        .stderr_contains("multiple")
-        .stderr_contains("output")
-        .stderr_contains("delimiters");
-}
-
-#[test]
 fn output_delimiter_nul() {
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -305,49 +282,9 @@ fn zero_terminated_with_total() {
     }
 }
 
-#[ignore = "not implemented"]
-#[test]
-fn check_order() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-    at.write("bad_order_1", "e\nd\nb\na\n");
-    at.write("bad_order_2", "e\nc\nb\na\n");
-    scene
-        .ucmd()
-        .args(&["--check-order", "bad_order_1", "bad_order_2"])
-        .fails()
-        .stdout_is("\t\te")
-        .stderr_is("error to be defined");
-}
-
-#[ignore = "not implemented"]
-#[test]
-fn nocheck_order() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-    at.write("bad_order_1", "e\nd\nb\na\n");
-    at.write("bad_order_2", "e\nc\nb\na\n");
-    new_ucmd!()
-        .args(&["--nocheck-order", "bad_order_1", "bad_order_2"])
-        .succeeds()
-        .stdout_is("\t\te\n\tc\n\tb\n\ta\nd\nb\na\n");
-}
-
 // when neither --check-order nor --no-check-order is provided,
 // stderr and the error code behaves like check order, but stdout
 // behaves like nocheck_order. However with some quirks detailed below.
-#[ignore = "not implemented"]
-#[test]
-fn defaultcheck_order() {
-    let scene = TestScenario::new(util_name!());
-    let at = &scene.fixtures;
-    at.write("bad_order_1", "e\nd\nb\na\n");
-    new_ucmd!()
-        .args(&["a", "bad_order_1"])
-        .fails()
-        .stderr_only("error to be defined");
-}
-
 // * the first: if both files are not in order, the default behavior is the only
 // behavior that will provide an error message
 // * the second: if two rows are paired but are out of order,

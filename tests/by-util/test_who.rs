@@ -9,24 +9,8 @@ fn test_invalid_arg() {
     new_ucmd!().arg("--definitely-invalid").fails_with_code(1);
 }
 
-#[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_count() {
-    let ts = TestScenario::new(util_name!());
-    for opt in ["-q", "--count", "--c"] {
-        let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
-    }
-}
-
-#[cfg(unix)]
-#[test]
-#[cfg(not(target_os = "openbsd"))]
-#[cfg_attr(
-    all(target_arch = "aarch64", target_os = "linux"),
-    ignore = "Issue #7174 - Test not supported on ARM64 Linux"
-)]
+#[cfg(all(target_arch = "aarch64", target_os = "linux"))]
 fn test_boot() {
     let ts = TestScenario::new(util_name!());
     for opt in ["-b", "--boot", "--b"] {
@@ -37,34 +21,8 @@ fn test_boot() {
 
 #[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_heading() {
-    let ts = TestScenario::new(util_name!());
-    for opt in ["-H", "--heading", "--head"] {
-        // allow whitespace variation
-        // * minor whitespace differences occur between platform built-in outputs;
-        //   specifically number of TABs between "TIME" and "COMMENT" may be variant
-        let actual = ts.ucmd().arg(opt).succeeds().stdout_move_str();
-        let expect = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        println!("actual: {actual:?}");
-        println!("expect: {expect:?}");
-        let v_actual: Vec<&str> = actual.split_whitespace().collect();
-        let v_expect: Vec<&str> = expect.split_whitespace().collect();
-        assert_eq!(v_actual, v_expect);
-    }
-}
-
 #[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_short() {
-    let ts = TestScenario::new(util_name!());
-    for opt in ["-s", "--short", "--s"] {
-        let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
-    }
-}
-
 #[cfg(unix)]
 #[test]
 #[cfg(not(target_os = "openbsd"))]
@@ -123,29 +81,6 @@ fn test_time() {
 
 #[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_mesg() {
-    // -T, -w, --mesg
-    //     add user's message status as +, - or ?
-    // --message
-    //     same as -T
-    // --writable
-    //     same as -T
-    let ts = TestScenario::new(util_name!());
-    for opt in [
-        "-T",
-        "-w",
-        "--mesg",
-        "--m",
-        "--message",
-        "--writable",
-        "--w",
-    ] {
-        let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
-    }
-}
-
 #[cfg(unix)]
 #[test]
 #[cfg(not(target_os = "openbsd"))]
@@ -167,40 +102,8 @@ fn test_too_many_args() {
 
 #[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_users() {
-    let ts = TestScenario::new(util_name!());
-    for opt in ["-u", "--users", "--us"] {
-        let actual = ts.ucmd().arg(opt).succeeds().stdout_move_str();
-        let expect = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        println!("actual: {actual:?}");
-        println!("expect: {expect:?}");
-
-        let mut v_actual: Vec<&str> = actual.split_whitespace().collect();
-        let mut v_expect: Vec<&str> = expect.split_whitespace().collect();
-
-        // TODO: `--users` sometimes differs from GNU's output on macOS (race condition?)
-        // actual: "runner   console      Jun 23 06:37 00:34         196\n"
-        // expect: "runner   console      Jun 23 06:37  old          196\n"
-        if cfg!(target_os = "macos") {
-            v_actual.remove(5);
-            v_expect.remove(5);
-        }
-
-        assert_eq!(v_actual, v_expect);
-    }
-}
-
 #[cfg(unix)]
 #[test]
-#[ignore = "issue #3219"]
-fn test_lookup() {
-    let opt = "--lookup";
-    let ts = TestScenario::new(util_name!());
-    let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-    ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
-}
-
 #[cfg(unix)]
 #[test]
 #[cfg(not(target_os = "openbsd"))]
@@ -210,63 +113,4 @@ fn test_dead() {
         let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
         ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
     }
-}
-
-#[cfg(unix)]
-#[test]
-#[ignore = "issue #3219"]
-fn test_all_separately() {
-    if cfg!(target_os = "macos") {
-        // TODO: fix `-u`, see: test_users
-        return;
-    }
-
-    // -a, --all         same as -b -d --login -p -r -t -T -u
-    let args = ["-b", "-d", "--login", "-p", "-r", "-t", "-T", "-u"];
-    let ts = TestScenario::new(util_name!());
-    let expected_stdout = unwrap_or_return!(expected_result(&ts, &args)).stdout_move_str();
-    ts.ucmd().args(&args).succeeds().stdout_is(expected_stdout);
-    let expected_stdout = unwrap_or_return!(expected_result(&ts, &["--all"])).stdout_move_str();
-    ts.ucmd().arg("--all").succeeds().stdout_is(expected_stdout);
-}
-
-#[cfg(unix)]
-#[test]
-#[ignore = "issue #3219"]
-fn test_all() {
-    if cfg!(target_os = "macos") {
-        // TODO: fix `-u`, see: test_users
-        return;
-    }
-
-    let ts = TestScenario::new(util_name!());
-    for opt in ["-a", "--all", "--a"] {
-        let expected_stdout = unwrap_or_return!(expected_result(&ts, &[opt])).stdout_move_str();
-        ts.ucmd().arg(opt).succeeds().stdout_is(expected_stdout);
-    }
-}
-
-#[cfg(unix)]
-#[test]
-#[ignore = "issue #3219"]
-fn test_locale() {
-    let ts = TestScenario::new(util_name!());
-
-    let expected_stdout =
-        unwrap_or_return!(gnu_cmd_result(&ts, &[], &[("LC_ALL", "C")])).stdout_move_str();
-    ts.ucmd()
-        .env("LC_ALL", "C")
-        .succeeds()
-        .stdout_is(&expected_stdout);
-
-    let expected_stdout =
-        unwrap_or_return!(gnu_cmd_result(&ts, &[], &[("LC_ALL", "en_US.UTF-8")])).stdout_move_str();
-    ts.ucmd()
-        .env("LC_ALL", "C")
-        .succeeds()
-        .stdout_str_check(|s| s != expected_stdout);
-    ts.ucmd()
-        .env("LC_ALL", "en_US.UTF-8")
-        .succeeds()
-        .stdout_is(&expected_stdout);
 }

@@ -51,78 +51,6 @@ fn test_no_such_directory() {
 }
 
 #[test]
-#[ignore = "requires root/sudo access"]
-fn test_multiple_group_args() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-    at.mkdir("id");
-
-    if let Ok(result) = run_ucmd_as_root(
-        &ts,
-        &["--groups='invalid ignored'", "--groups=''", "/", "id", "-G"],
-    ) {
-        result.success().stdout_is("0");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_invalid_user_spec() {
-    let ts = TestScenario::new(util_name!());
-
-    if let Ok(result) = run_ucmd_as_root(&ts, &["--userspec=ARABA:", "/"]) {
-        result
-            .failure()
-            .code_is(125)
-            .stderr_is("chroot: invalid user");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-
-    if let Ok(result) = run_ucmd_as_root(&ts, &["--userspec=ARABA:ARABA", "/"]) {
-        result
-            .failure()
-            .code_is(125)
-            .stderr_is("chroot: invalid user");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-
-    if let Ok(result) = run_ucmd_as_root(&ts, &["--userspec=:ARABA", "/"]) {
-        result
-            .failure()
-            .code_is(125)
-            .stderr_is("chroot: invalid group");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_invalid_user() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    let dir = "CHROOT_DIR";
-    at.mkdir(dir);
-    if let Ok(result) = run_ucmd_as_root(&ts, &[dir, "whoami"]) {
-        result.success().no_stderr().stdout_is("root");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-
-    // `--user` is an abbreviation of `--userspec`.
-    if let Ok(result) = run_ucmd_as_root(&ts, &["--user=nobody:+65535", dir, "pwd"]) {
-        result.failure().stderr_is("chroot: invalid user");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
 fn test_preference_of_userspec() {
     let scene = TestScenario::new(util_name!());
     let result = scene.cmd("whoami").run();
@@ -166,47 +94,6 @@ fn test_preference_of_userspec() {
 }
 
 #[test]
-#[ignore = "requires root/sudo access"]
-fn test_default_shell() {
-    // NOTE: This test intends to trigger code which can only be reached with root permissions.
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    let dir = "CHROOT_DIR";
-    at.mkdir(dir);
-
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
-    let expected = format!("chroot: failed to run command '{shell}': No such file or directory");
-
-    if let Ok(result) = run_ucmd_as_root(&ts, &[dir]) {
-        result.stderr_contains(expected);
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_chroot() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    let dir = "CHROOT_DIR";
-    at.mkdir(dir);
-    if let Ok(result) = run_ucmd_as_root(&ts, &[dir, "whoami"]) {
-        result.success().no_stderr().stdout_is("root");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-
-    if let Ok(result) = run_ucmd_as_root(&ts, &[dir, "pwd"]) {
-        result.success().no_stderr().stdout_is("/");
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}
-
-#[test]
 fn test_chroot_skip_chdir_not_root() {
     let (at, mut ucmd) = at_and_ucmd!();
 
@@ -219,43 +106,3 @@ fn test_chroot_skip_chdir_not_root() {
         .stderr_contains("chroot: option --skip-chdir only permitted if NEWROOT is old '/'");
 }
 
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_chroot_skip_chdir() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-    let dirs = ["/", "/.", "/..", "isroot"];
-    at.symlink_file("/", "isroot");
-    for dir in dirs {
-        let env_cd = std::env::current_dir().unwrap();
-        if let Ok(result) = run_ucmd_as_root(&ts, &[dir, "--skip-chdir"]) {
-            // Should return the same path
-            assert_eq!(
-                result.success().no_stderr().stdout_str(),
-                env_cd.to_str().unwrap()
-            );
-        } else {
-            print!("Test skipped; requires root user");
-        }
-    }
-}
-
-#[test]
-#[ignore = "requires root/sudo access"]
-fn test_chroot_extra_arg() {
-    let ts = TestScenario::new(util_name!());
-    let at = &ts.fixtures;
-
-    let dir = "CHROOT_DIR";
-    at.mkdir(dir);
-    let env_cd = std::env::current_dir().unwrap();
-    // Verify that -P is pwd's and not chroot
-    if let Ok(result) = run_ucmd_as_root(&ts, &[dir, "pwd", "-P"]) {
-        assert_eq!(
-            result.success().no_stderr().stdout_str(),
-            env_cd.to_str().unwrap()
-        );
-    } else {
-        print!("Test skipped; requires root user");
-    }
-}

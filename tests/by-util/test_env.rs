@@ -1,28 +1,22 @@
 // spell-checker:ignore (words) bamf chdir rlimit prlimit COMSPEC cout cerr FFFD winsize xpixel ypixel
 #![allow(clippy::missing_errors_doc)]
 
-#[cfg(unix)]
 use nix::sys::signal::Signal;
 #[cfg(feature = "echo")]
 use regex::Regex;
 use std::env;
 use std::path::Path;
-#[cfg(unix)]
 use std::process::Command;
 use tempfile::tempdir;
 use sgtests::new_ucmd;
-#[cfg(unix)]
 use sgtests::util::TerminalSimulation;
 use sgtests::util::TestScenario;
-#[cfg(unix)]
 use sgtests::util::UChild;
 use sgtests::util_name;
 
-#[cfg(unix)]
 struct Target {
     child: UChild,
 }
-#[cfg(unix)]
 impl Target {
     fn new(signals: &[&str]) -> Self {
         let mut child = new_ucmd!()
@@ -50,7 +44,6 @@ impl Target {
         self.child.is_alive()
     }
 }
-#[cfg(unix)]
 impl Drop for Target {
     fn drop(&mut self) {
         self.child.kill();

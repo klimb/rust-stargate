@@ -2319,11 +2319,6 @@ mod gnu_cksum_c {
     }
 
     #[test]
-    #[ignore = "todo"]
-    fn test_signed_checksums() {
-        todo!()
-    }
-
     #[test]
     fn test_check_individual_digests_in_mixed_file() {
         let scene = make_scene();

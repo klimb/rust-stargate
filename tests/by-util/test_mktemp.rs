@@ -12,7 +12,6 @@ use std::path::MAIN_SEPARATOR;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
-#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
 static TEST_TEMPLATE1: &str = "tempXXXXXX";
@@ -22,7 +21,6 @@ static TEST_TEMPLATE4: &str = "tempXX";
 static TEST_TEMPLATE5: &str = "tempXXX";
 static TEST_TEMPLATE6: &str = "tempXXXlate";
 static TEST_TEMPLATE7: &str = "XXXtemplate";
-#[cfg(unix)]
 static TEST_TEMPLATE8: &str = "tempXXXl/ate";
 #[cfg(windows)]
 static TEST_TEMPLATE8: &str = "tempXXXl\\ate";

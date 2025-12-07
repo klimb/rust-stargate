@@ -930,7 +930,6 @@ fn test_du_exclude() {
         .stdout_contains("'subdir' ignored");
 }
 
-#[test]
 // Disable on Windows because we are looking for /
 // And the tests would be more complex if we have to support \ too
 #[cfg(not(target_os = "windows"))]
@@ -981,7 +980,6 @@ fn test_du_exclude_2() {
         .stdout_does_not_contain("azerty/xcwww/azeaze");
 }
 
-#[test]
 // Disable on Windows because we are looking for /
 // And the tests would be more complex if we have to support \ too
 #[cfg(not(target_os = "windows"))]
@@ -1036,7 +1034,6 @@ fn test_du_exclude_mix() {
     assert!(result.stdout_str().contains("xcwww"));
 }
 
-#[test]
 // Disable on Windows because we are looking for /
 // And the tests would be more complex if we have to support \ too
 #[cfg(not(target_os = "windows"))]
@@ -1130,7 +1127,6 @@ fn test_du_symlink_multiple_fail() {
     result.stdout_contains("4\tfile1\n");
 }
 
-#[test]
 // Disable on Windows because of different path separators and handling of null characters
 #[cfg(not(target_os = "windows"))]
 fn test_du_files0_from() {

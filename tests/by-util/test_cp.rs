@@ -56,10 +56,6 @@ static TEST_MOUNT_MOUNTPOINT: &str = "mount";
 #[cfg(any(target_os = "linux", target_os = "freebsd"))]
 static TEST_MOUNT_OTHER_FILESYSTEM_FILE: &str = "mount/DO_NOT_copy_me.txt";
 static TEST_NONEXISTENT_FILE: &str = "nonexistent_file.txt";
-#[cfg(all(
-    unix,
-    not(any(target_os = "macos", target_os = "openbsd"))
-))]
 use sgtests::util::compare_xattrs;
 
 /// Assert that mode, ownership, and permissions of two metadata objects match.
@@ -4109,10 +4105,6 @@ fn test_cp_no_such() {
         .stderr_is("cp: 'no-such/' is not a directory\n");
 }
 
-#[cfg(all(
-    unix,
-    not(any(target_os = "macos", target_os = "openbsd"))
-))]
 #[test]
 fn test_acl_preserve() {
     use std::process::Command;
@@ -6175,10 +6167,6 @@ fn test_cp_no_file() {
 }
 
 #[test]
-#[cfg(all(
-    unix,
-    not(any(target_os = "macos", target_os = "openbsd"))
-))]
 fn test_cp_preserve_xattr_readonly_source() {
     use std::process::Command;
     use sgtests::util::compare_xattrs;

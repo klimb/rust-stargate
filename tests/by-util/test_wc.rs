@@ -1,4 +1,3 @@
-#[cfg(unix)]
 use sgtests::at_and_ucmd;
 use sgtests::new_ucmd;
 use sgtests::util::vec_of_size;

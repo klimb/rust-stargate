@@ -14,22 +14,6 @@ fn test_users_no_arg() {
 
 #[test]
 #[cfg(any(target_vendor = "apple", target_os = "linux"))]
-#[ignore = "issue #3219"]
-fn test_users_check_name() {
-    #[cfg(target_os = "linux")]
-    let util_name = util_name!();
-    #[cfg(target_vendor = "apple")]
-    let util_name = &format!("g{}", util_name!());
-
-    let expected = TestScenario::new(util_name)
-        .cmd(util_name)
-        .env("LC_ALL", "C")
-        .succeeds()
-        .stdout_move_str();
-
-    new_ucmd!().succeeds().stdout_is(&expected);
-}
-
 #[test]
 #[cfg(target_os = "openbsd")]
 fn test_users_check_name_openbsd() {
