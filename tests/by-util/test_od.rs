@@ -4,8 +4,8 @@
 use std::io::Read;
 
 use unindent::unindent;
-use uutests::util::TestScenario;
-use uutests::{at_and_ucmd, new_ucmd, util_name};
+use sgtests::util::TestScenario;
+use sgtests::{at_and_ucmd, new_ucmd, util_name};
 
 // octal dump of 'abcdefghijklmnopqrstuvwxyz\n'
 static ALPHA_OUT: &str = "

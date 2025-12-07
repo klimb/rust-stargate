@@ -2,7 +2,7 @@
 
 use std::process::Stdio;
 
-use uutests::{at_and_ucmd, new_ucmd, util::TestScenario, util_name};
+use sgtests::{at_and_ucmd, new_ucmd, util::TestScenario, util_name};
 
 #[test]
 fn test_invalid_arg() {

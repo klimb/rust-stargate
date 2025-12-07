@@ -5,7 +5,7 @@
     clippy::cast_sign_loss
 )]
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 use std::fmt::Write;
 use std::time::{Duration, SystemTime};
@@ -56,7 +56,7 @@ fn test_parallel() {
     use sha1::{Digest, Sha1};
     use std::{fs::OpenOptions, time::Duration};
     use tempfile::TempDir;
-    use uutests::{
+    use sgtests::{
         util::{AtPath, TestScenario},
         util_name,
     };

@@ -1,5 +1,5 @@
 // spell-checker:ignore libc's setpriority
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_get_current_niceness() {

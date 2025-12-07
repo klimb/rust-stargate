@@ -2,9 +2,9 @@
 
 use std::path::PathBuf;
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::UCommand;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::UCommand;
 
 #[test]
 fn test_invalid_arg() {
@@ -27,8 +27,8 @@ fn test_failed() {
 #[test]
 fn test_deleted_dir() {
     use std::process::Command;
-    use uutests::util::TestScenario;
-    use uutests::util_name;
+    use sgtests::util::TestScenario;
+    use sgtests::util_name;
 
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;

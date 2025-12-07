@@ -1,5 +1,5 @@
 // spell-checker:ignore fffffffffffffffc
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn basic_literal() {

@@ -1,7 +1,7 @@
 #[cfg(unix)]
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::vec_of_size;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::vec_of_size;
 
 // spell-checker:ignore (flags) lwmcL clmwL ; (path) bogusfile emptyfile manyemptylines moby notrailingnewline onelongemptyline onelongword weirdchars
 #[test]

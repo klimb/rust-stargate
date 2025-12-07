@@ -1,6 +1,6 @@
 use std::fs;
 use tempfile::tempdir;
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {
@@ -56,8 +56,8 @@ fn test_sync_data_but_not_file() {
 #[cfg(feature = "chmod")]
 #[test]
 fn test_sync_no_permission_dir() {
-    use uutests::util::TestScenario;
-    use uutests::util_name;
+    use sgtests::util::TestScenario;
+    use sgtests::util_name;
 
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;
@@ -75,8 +75,8 @@ fn test_sync_no_permission_dir() {
 #[cfg(feature = "chmod")]
 #[test]
 fn test_sync_no_permission_file() {
-    use uutests::util::TestScenario;
-    use uutests::util_name;
+    use sgtests::util::TestScenario;
+    use sgtests::util_name;
 
     let ts = TestScenario::new(util_name!());
     let at = &ts.fixtures;

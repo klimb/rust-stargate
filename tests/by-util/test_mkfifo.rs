@@ -1,8 +1,8 @@
 // spell-checker:ignore nconfined
 
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {

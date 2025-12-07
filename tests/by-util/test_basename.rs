@@ -1,6 +1,6 @@
 // spell-checker:ignore (words) reallylongexecutable nbaz
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_help() {

@@ -1,10 +1,10 @@
 // spell-checker:ignore (ToDO) coreutil
 
 use std::process::{Command, Stdio};
-use uutests::new_ucmd;
-use uutests::unwrap_or_return;
-use uutests::util::{TestScenario, check_coreutil_version, expected_result, is_ci, whoami};
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::unwrap_or_return;
+use sgtests::util::{TestScenario, check_coreutil_version, expected_result, is_ci, whoami};
+use sgtests::util_name;
 
 const VERSION_MIN_MULTIPLE_USERS: &str = "8.31"; // this feature was introduced in GNU's coreutils 8.31
 

@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 #[cfg(not(windows))]
@@ -64,7 +64,7 @@ fn test_help() {
 #[cfg(all(unix, not(target_os = "freebsd")))]
 fn test_stdout_fail() {
     use std::process::{Command, Stdio};
-    use uutests::at_and_ts;
+    use sgtests::at_and_ts;
 
     let (_, ts) = at_and_ts!();
     // Sleep inside a shell to ensure the process doesn't finish before we've

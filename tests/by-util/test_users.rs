@@ -1,6 +1,6 @@
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 #[cfg(any(target_vendor = "apple", target_os = "linux"))]
-use uutests::{util::TestScenario, util_name};
+use sgtests::{util::TestScenario, util_name};
 
 #[test]
 fn test_invalid_arg() {

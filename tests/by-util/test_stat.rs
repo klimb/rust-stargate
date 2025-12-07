@@ -1,8 +1,8 @@
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::unwrap_or_return;
-use uutests::util::{TestScenario, expected_result};
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::unwrap_or_return;
+use sgtests::util::{TestScenario, expected_result};
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {

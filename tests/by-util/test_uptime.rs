@@ -2,9 +2,9 @@
 // spell-checker:ignore bincode serde utmp runlevel testusr testx
 #![allow(clippy::cast_possible_wrap, clippy::unreadable_literal)]
 
-use uutests::at_and_ucmd;
-use uutests::util::TestScenario;
-use uutests::{new_ucmd, util_name};
+use sgtests::at_and_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::{new_ucmd, util_name};
 
 use regex::Regex;
 

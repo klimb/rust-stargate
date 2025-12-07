@@ -2,10 +2,10 @@
 
 use std::os::unix::fs::PermissionsExt;
 
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util::run_ucmd_as_root;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util::run_ucmd_as_root;
+use sgtests::util_name;
 
 #[test]
 fn test_mknod_invalid_arg() {

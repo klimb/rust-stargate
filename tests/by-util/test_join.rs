@@ -6,9 +6,9 @@ use std::fs::OpenOptions;
 use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
 #[cfg(windows)]
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {

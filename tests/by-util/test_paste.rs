@@ -1,8 +1,8 @@
 // spell-checker:ignore bsdutils toybox
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 struct TestData<'b> {
     name: &'b str,

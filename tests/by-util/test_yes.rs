@@ -4,7 +4,7 @@ use std::process::ExitStatus;
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[cfg(unix)]
 fn check_termination(result: ExitStatus) {

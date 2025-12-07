@@ -1,6 +1,6 @@
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_no_args() {

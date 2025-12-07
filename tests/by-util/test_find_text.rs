@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 use tempfile::NamedTempFile;
 
 #[test]

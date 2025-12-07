@@ -5,8 +5,8 @@ use chrono::{DateTime, Datelike, Duration, NaiveTime, Utc}; // spell-checker:dis
 use regex::Regex;
 #[cfg(all(unix, not(target_os = "macos")))]
 use sgcore::process::geteuid;
-use uutests::util::TestScenario;
-use uutests::{at_and_ucmd, new_ucmd, util_name};
+use sgtests::util::TestScenario;
+use sgtests::{at_and_ucmd, new_ucmd, util_name};
 
 #[test]
 fn test_invalid_arg() {

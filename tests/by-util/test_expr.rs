@@ -3,7 +3,7 @@
 // spell-checker:ignore abbccd abcabc abcac acabc andand bigcmp bignum emptysub
 // spell-checker:ignore orempty oror bcdef fedcb
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_no_arguments() {
@@ -601,7 +601,7 @@ fn test_long_input() {
 
 /// Regroup the testcases of the GNU test expr.pl
 mod gnu_expr {
-    use uutests::new_ucmd;
+    use sgtests::new_ucmd;
 
     #[test]
     fn test_a() {
@@ -1468,7 +1468,7 @@ mod gnu_expr {
 
 /// Test that `expr` correctly detects and handles locales
 mod locale_aware {
-    use uutests::new_ucmd;
+    use sgtests::new_ucmd;
 
     #[test]
     fn test_expr_collating() {
@@ -1491,7 +1491,7 @@ mod locale_aware {
 /// This module reimplements the expr-multibyte.pl test
 #[cfg(target_os = "linux")]
 mod gnu_expr_multibyte {
-    use uutests::new_ucmd;
+    use sgtests::new_ucmd;
 
     use sgcore::os_str_from_bytes;
 

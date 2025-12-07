@@ -1,9 +1,9 @@
 // spell-checker:ignore (flags) runlevel mesg
 
-use uutests::new_ucmd;
-use uutests::unwrap_or_return;
-use uutests::util::{TestScenario, expected_result, gnu_cmd_result};
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::unwrap_or_return;
+use sgtests::util::{TestScenario, expected_result, gnu_cmd_result};
+use sgtests::util_name;
 #[test]
 fn test_invalid_arg() {
     new_ucmd!().arg("--definitely-invalid").fails_with_code(1);

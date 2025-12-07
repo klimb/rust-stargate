@@ -1,9 +1,9 @@
 // spell-checker:ignore wipesync
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 const PATTERNS: [&str; 22] = [
     "000000", "ffffff", "555555", "aaaaaa", "249249", "492492", "6db6db", "924924", "b6db6d",

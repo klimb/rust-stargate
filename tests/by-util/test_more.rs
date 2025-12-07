@@ -1,6 +1,6 @@
 use std::io::IsTerminal;
 
-use uutests::{at_and_ucmd, new_ucmd};
+use sgtests::{at_and_ucmd, new_ucmd};
 
 #[cfg(unix)]
 #[test]

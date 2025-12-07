@@ -1,7 +1,7 @@
 // spell-checker:ignore (words) egid euid pseudofloat
 
-use uutests::util::TestScenario;
-use uutests::{at_and_ucmd, new_ucmd, util_name};
+use sgtests::util::TestScenario;
+use sgtests::{at_and_ucmd, new_ucmd, util_name};
 
 #[test]
 fn test_empty_test_equivalent_to_false() {

@@ -1,10 +1,10 @@
 use std::fs::{OpenOptions, Permissions, metadata, set_permissions};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
-use uutests::at_and_ucmd;
-use uutests::util::{AtPath, TestScenario, UCommand};
+use sgtests::at_and_ucmd;
+use sgtests::util::{AtPath, TestScenario, UCommand};
 
-use uutests::new_ucmd;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util_name;
 
 static TEST_FILE: &str = "file";
 static REFERENCE_FILE: &str = "reference";

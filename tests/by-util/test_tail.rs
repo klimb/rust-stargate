@@ -48,18 +48,18 @@ use tail::chunks::BUFFER_SIZE as CHUNK_BUFFER_SIZE;
     not(target_os = "openbsd")
 ))]
 use tail::text;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::random::{AlphanumericNewline, RandomizedString};
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::random::{AlphanumericNewline, RandomizedString};
 #[cfg(unix)]
-use uutests::unwrap_or_return;
-use uutests::util::TestScenario;
+use sgtests::unwrap_or_return;
+use sgtests::util::TestScenario;
 #[cfg(unix)]
-use uutests::util::expected_result;
+use sgtests::util::expected_result;
 #[cfg(unix)]
 #[cfg(not(windows))]
-use uutests::util::is_ci;
-use uutests::util_name;
+use sgtests::util::is_ci;
+use sgtests::util_name;
 
 const FOOBAR_TXT: &str = "foobar.txt";
 const FOOBAR_2_TXT: &str = "foobar2.txt";

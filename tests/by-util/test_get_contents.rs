@@ -7,12 +7,12 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::fs::read_to_string;
 use std::process::Stdio;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
 #[cfg(not(windows))]
-use uutests::util::vec_of_size;
-use uutests::util_name;
+use sgtests::util::vec_of_size;
+use sgtests::util_name;
 
 #[test]
 fn test_output_simple() {

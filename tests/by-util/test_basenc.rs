@@ -1,7 +1,7 @@
 // spell-checker: ignore (encodings) lsbf msbf
 // spell-checker: ignore autopad MFRGG MFRGGZDF abcdeabc baddecode CPNMUO
 
-use uutests::{at_and_ucmd, new_ucmd};
+use sgtests::{at_and_ucmd, new_ucmd};
 
 #[test]
 fn test_z85_not_padded_decode() {

@@ -12,9 +12,9 @@ use std::{
     fs::{File, read_dir},
     io::{BufWriter, Read, Write},
 };
-use uutests::util::{AtPath, TestScenario};
+use sgtests::util::{AtPath, TestScenario};
 
-use uutests::{at_and_ucmd, new_ucmd, util_name};
+use sgtests::{at_and_ucmd, new_ucmd, util_name};
 
 fn random_chars(n: usize) -> String {
     rng()

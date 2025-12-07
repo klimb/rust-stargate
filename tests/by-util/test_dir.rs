@@ -1,7 +1,7 @@
 use regex::Regex;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 /*
  * As dir use the same functions than ls, we don't have to retest them here.

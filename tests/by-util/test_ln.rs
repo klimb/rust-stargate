@@ -1,10 +1,10 @@
 #![allow(clippy::similar_names)]
 
 use std::path::PathBuf;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {

@@ -1,7 +1,7 @@
 // spell-checker:ignore defg
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 static INPUT: &str = "lists.txt";
 
@@ -401,8 +401,8 @@ fn test_cut_non_utf8_paths() {
     use std::fs::File;
     use std::io::Write;
     use std::os::unix::ffi::OsStrExt;
-    use uutests::util::TestScenario;
-    use uutests::util_name;
+    use sgtests::util::TestScenario;
+    use sgtests::util_name;
 
     let ts = TestScenario::new(util_name!());
     let test_dir = ts.fixtures.subdir.as_path();

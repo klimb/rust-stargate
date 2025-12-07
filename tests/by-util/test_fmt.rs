@@ -1,7 +1,7 @@
 // spell-checker:ignore plass samp
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {
@@ -374,7 +374,7 @@ fn test_fmt_knuth_plass_line_breaking() {
 #[test]
 #[cfg(target_os = "linux")]
 fn test_fmt_non_utf8_paths() {
-    use uutests::at_and_ucmd;
+    use sgtests::at_and_ucmd;
 
     let (at, mut ucmd) = at_and_ucmd!();
     let filename = std::ffi::OsString::from_vec(vec![0xFF, 0xFE]);

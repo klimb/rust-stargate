@@ -62,15 +62,15 @@ static NO_STDIN_MEANINGLESS: &str = "Setting this flag has no effect if there is
 static END_OF_TRANSMISSION_SEQUENCE: &[u8] = b"\n\x04";
 
 static TESTS_BINARY_PATH: OnceLock<PathBuf> = OnceLock::new();
-/// This function needs the env variable UUTESTS_BINARY_PATH
+/// This function needs the env variable SGTESTS_BINARY_PATH
 /// which will very probably be env!("`CARGO_BIN_EXE_<program>`")
 /// because here, we are in a crate but we need the name of the final binary
 pub fn get_tests_binary() -> &'static str {
     TESTS_BINARY_PATH.get_or_init(|| {
-        if let Ok(path) = env::var("UUTESTS_BINARY_PATH") {
+        if let Ok(path) = env::var("SGTESTS_BINARY_PATH") {
             return PathBuf::from(path);
         }
-        panic!("Could not determine coreutils binary path. Please set UUTESTS_BINARY_PATH environment variable");
+        panic!("Could not determine coreutils binary path. Please set SGTESTS_BINARY_PATH environment variable");
     })
     .to_str()
     .unwrap()
@@ -2926,7 +2926,7 @@ const UUTILS_INFO: &str = "uutils-tests-info";
 /// Example:
 ///
 /// ```no_run
-/// use uutests::util::*;
+/// use sgtests::util::*;
 /// const VERSION_MIN_MULTIPLE_USERS: &str = "8.31";
 ///
 /// #[test]
@@ -3007,7 +3007,7 @@ fn parse_coreutil_version(version_string: &str) -> f32 {
 /// Example:
 ///
 /// ```no_run
-/// use uutests::util::*;
+/// use sgtests::util::*;
 /// #[test]
 /// fn test_xyz() {
 ///     let ts = TestScenario::new(util_name!());
@@ -3070,7 +3070,7 @@ pub fn gnu_cmd_result(
 /// Example:
 ///
 /// ```no_run
-/// use uutests::util::*;
+/// use sgtests::util::*;
 /// #[test]
 /// fn test_xyz() {
 ///     let ts = TestScenario::new(util_name!());
@@ -3100,7 +3100,7 @@ pub fn expected_result(ts: &TestScenario, args: &[&str]) -> std::result::Result<
 /// Example:
 ///
 /// ```no_run
-/// use uutests::util::*;
+/// use sgtests::util::*;
 /// #[test]
 /// fn test_xyz() {
 ///    let ts = TestScenario::new("whoami");
@@ -3178,7 +3178,7 @@ mod tests {
     #[ctor::ctor]
     fn init() {
         unsafe {
-            std::env::set_var("UUTESTS_BINARY_PATH", "");
+            std::env::set_var("SGTESTS_BINARY_PATH", "");
         }
     }
 

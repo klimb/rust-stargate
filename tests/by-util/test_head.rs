@@ -9,9 +9,9 @@
     not(target_os = "openbsd")
 ))]
 use std::io::Read;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 static INPUT: &str = "lorem_ipsum.txt";
 
 #[test]

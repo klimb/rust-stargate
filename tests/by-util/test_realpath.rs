@@ -1,8 +1,8 @@
 // spell-checker:ignore nusr
-use uutests::new_ucmd;
-use uutests::path_concat;
-use uutests::util::{TestScenario, get_root_path};
-use uutests::{at_and_ucmd, util_name};
+use sgtests::new_ucmd;
+use sgtests::path_concat;
+use sgtests::util::{TestScenario, get_root_path};
+use sgtests::{at_and_ucmd, util_name};
 
 use std::path::{MAIN_SEPARATOR, Path};
 

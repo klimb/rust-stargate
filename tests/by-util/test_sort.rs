@@ -3,8 +3,8 @@
 
 use std::time::Duration;
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 fn test_helper(file_name: &str, possible_args: &[&str]) {
     for args in possible_args {

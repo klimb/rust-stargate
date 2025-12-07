@@ -1,7 +1,7 @@
 // spell-checker:ignore nabcd badoption schar
 use sgcore::posix::OBSOLETE;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 static INPUT: &str = "sorted.txt";
 static OUTPUT: &str = "sorted-output.txt";

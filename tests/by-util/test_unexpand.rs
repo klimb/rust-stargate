@@ -1,7 +1,7 @@
 //
 // spell-checker:ignore contenta
 
-use uutests::{at_and_ucmd, new_ucmd};
+use sgtests::{at_and_ucmd, new_ucmd};
 
 #[test]
 fn test_invalid_arg() {

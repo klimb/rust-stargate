@@ -9,8 +9,8 @@
 use std::collections::HashSet;
 
 #[cfg(not(any(target_os = "freebsd", target_os = "windows")))]
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {

@@ -1,6 +1,6 @@
 //
 // spell-checker:ignore binvalid finvalid hinvalid iinvalid linvalid nabcabc nabcabcabc ninvalid vinvalid winvalid dabc näää
-use uutests::{at_and_ucmd, new_ucmd, util::TestScenario, util_name};
+use sgtests::{at_and_ucmd, new_ucmd, util::TestScenario, util_name};
 
 #[test]
 #[cfg(target_os = "linux")]

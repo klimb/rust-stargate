@@ -1,7 +1,7 @@
 #![allow(clippy::cast_possible_wrap)]
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 #[cfg(target_os = "linux")]

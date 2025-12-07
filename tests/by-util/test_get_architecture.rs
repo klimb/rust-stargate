@@ -1,4 +1,4 @@
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_arch() {

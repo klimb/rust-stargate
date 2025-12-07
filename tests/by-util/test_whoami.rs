@@ -1,9 +1,9 @@
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 #[cfg(unix)]
-use uutests::unwrap_or_return;
+use sgtests::unwrap_or_return;
 #[cfg(unix)]
-use uutests::util::{TestScenario, expected_result};
-use uutests::util::{is_ci, whoami};
+use sgtests::util::{TestScenario, expected_result};
+use sgtests::util::{is_ci, whoami};
 
 #[test]
 fn test_invalid_arg() {
@@ -13,7 +13,7 @@ fn test_invalid_arg() {
 #[test]
 #[cfg(unix)]
 fn test_normal() {
-    use uutests::util_name;
+    use sgtests::util_name;
 
     let ts = TestScenario::new(util_name!());
     let exp_result = unwrap_or_return!(expected_result(&ts, &[]));

@@ -5,10 +5,10 @@ use filetime::FileTime;
 use filetime::set_symlink_file_times;
 use std::fs::remove_file;
 use std::path::PathBuf;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::{AtPath, TestScenario};
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::{AtPath, TestScenario};
+use sgtests::util_name;
 
 fn get_file_times(at: &AtPath, path: &str) -> (FileTime, FileTime) {
     let m = at.metadata(path);

@@ -1,7 +1,7 @@
 // spell-checker:ignore overridable colorterm
 #[cfg(target_os = "linux")]
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 use dircolors::{OutputFmt, StrUtils, guess_syntax};
 

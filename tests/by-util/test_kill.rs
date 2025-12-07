@@ -2,7 +2,7 @@
 use regex::Regex;
 use std::os::unix::process::ExitStatusExt;
 use std::process::{Child, Command};
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 // A child process the tests will try to kill.
 struct Target {

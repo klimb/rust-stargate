@@ -1,6 +1,6 @@
 // spell-checker:ignore parenb parmrk ixany iuclc onlcr ofdel icanon noflsh econl igpar ispeed ospeed
 
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {

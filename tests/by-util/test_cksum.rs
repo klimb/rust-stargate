@@ -1,10 +1,10 @@
 // spell-checker:ignore (words) asdf algo algos asha mgmt xffname hexa GFYEQ HYQK Yqxb dont
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util::log_info;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util::log_info;
+use sgtests::util_name;
 
 const ALGOS: [&str; 12] = [
     "sysv", "bsd", "crc", "crc32b", "md5", "sha1", "sha224", "sha256", "sha384", "sha512",
@@ -2147,7 +2147,7 @@ fn test_check_incorrectly_formatted_checksum_keeps_processing_hex() {
 /// This module reimplements the cksum-base64.pl GNU test.
 mod gnu_cksum_base64 {
     use super::*;
-    use uutests::util::log_info;
+    use sgtests::util::log_info;
 
     const PAIRS: [(&str, &str); 12] = [
         ("sysv", "0 0 f"),

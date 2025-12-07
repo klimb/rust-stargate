@@ -1,4 +1,4 @@
-# spell-checker:ignore (misc) testsuite runtest findstring (targets) busytest toybox distclean pkgs nextest ; (vars/env) BINDIR BUILDDIR CARGOFLAGS DESTDIR DOCSDIR INSTALLDIR INSTALLEES MULTICALL DATAROOTDIR TESTDIR manpages
+# spell-checker:ignore (misc) testsuite runtest findstring (targets) busytest toybox distclean pkgs nextest ; (vars/env) BINDIR BUILDDIR CARGOFLAGS DESTDIR INSTALLDIR INSTALLEES MULTICALL DATAROOTDIR TESTDIR manpages
 
 # Config options
 ifneq (,$(filter install, $(MAKECMDGOALS)))
@@ -51,7 +51,6 @@ else
 BUILDDIR      := $(BASEDIR)/target/${PROFILE}
 endif
 PKG_BUILDDIR  := $(BUILDDIR)/deps
-DOCSDIR       := $(BASEDIR)/docs
 
 BUSYBOX_ROOT := $(BASEDIR)/tmp
 BUSYBOX_VER  := 1.36.1
@@ -385,7 +384,6 @@ endif
 
 clean:
 	cargo clean $(RUSTC_ARCH)
-	cd $(DOCSDIR) && $(MAKE) clean $(RUSTC_ARCH)
 
 distclean: clean
 	$(CARGO) clean $(CARGOFLAGS) $(RUSTC_ARCH) && $(CARGO) update $(CARGOFLAGS) $(RUSTC_ARCH)

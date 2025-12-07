@@ -1,5 +1,5 @@
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 const DIR: &str = "dir";
 const DIR_FILE: &str = "dir/file";

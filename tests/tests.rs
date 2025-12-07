@@ -6,8 +6,8 @@ pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_stargate");
 #[ctor::ctor]
 fn init() {
     unsafe {
-        // Necessary for uutests to be able to find the binary
-        std::env::set_var("UUTESTS_BINARY_PATH", TESTS_BINARY);
+        // Necessary for sgtests to be able to find the binary
+        std::env::set_var("SGTESTS_BINARY_PATH", TESTS_BINARY);
     }
 }
 

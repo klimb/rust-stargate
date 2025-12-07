@@ -1,10 +1,10 @@
 // spell-checker:ignore (words) araba newroot userspec chdir pwd's isroot
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::is_ci;
-use uutests::util::{TestScenario, run_ucmd_as_root};
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::is_ci;
+use sgtests::util::{TestScenario, run_ucmd_as_root};
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {

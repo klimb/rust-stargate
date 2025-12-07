@@ -1,5 +1,5 @@
 // spell-checker:ignore lmnop xlmnop
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {

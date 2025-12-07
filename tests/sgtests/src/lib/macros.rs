@@ -59,7 +59,7 @@ macro_rules! util_name {
 #[macro_export]
 macro_rules! new_ucmd {
     () => {
-        ::uutests::util::TestScenario::new(::uutests::util_name!()).ucmd()
+        ::sgtests::util::TestScenario::new(::sgtests::util_name!()).ucmd()
     };
 }
 
@@ -78,7 +78,7 @@ macro_rules! new_ucmd {
 #[macro_export]
 macro_rules! at_and_ucmd {
     () => {{
-        let ts = ::uutests::util::TestScenario::new(::uutests::util_name!());
+        let ts = ::sgtests::util::TestScenario::new(::sgtests::util_name!());
         (ts.fixtures.clone(), ts.ucmd())
     }};
 }
@@ -94,7 +94,7 @@ macro_rules! at_and_ucmd {
 #[macro_export]
 macro_rules! at_and_ts {
     () => {{
-        let ts = ::uutests::util::TestScenario::new(::uutests::util_name!());
+        let ts = ::sgtests::util::TestScenario::new(::sgtests::util_name!());
         (ts.fixtures.clone(), ts)
     }};
 }

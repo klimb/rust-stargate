@@ -1,11 +1,11 @@
 // spell-checker:ignore fname, tname, fpath, specfile, testfile, unspec, ifile, ofile, outfile, fullblock, urand, fileio, atoe, atoibm, availible, behaviour, bmax, bremain, btotal, cflags, creat, ctable, ctty, datastructures, doesnt, etoa, fileout, fname, gnudd, iconvflags, iseek, nocache, noctty, noerror, nofollow, nolinks, nonblock, oconvflags, oseek, outfile, parseargs, rlen, rmax, rposition, rremain, rsofar, rstat, sigusr, sigval, wlen, wstat abcdefghijklm abcdefghi nabcde nabcdefg abcdefg fifoname seekable
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
 
-use uutests::util::{UCommand, get_tests_binary};
-use uutests::util_name;
+use sgtests::util::{UCommand, get_tests_binary};
+use sgtests::util_name;
 
 use regex::Regex;
 use sgcore::io::OwnedFileDescriptorOrHandle;

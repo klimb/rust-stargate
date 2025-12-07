@@ -1,6 +1,6 @@
 // spell-checker:ignore readelf
 
-use uutests::util::TestScenario;
+use sgtests::util::TestScenario;
 
 #[cfg(unix)]
 use std::os::unix::fs::symlink as symlink_file;
@@ -15,10 +15,10 @@ pub const TESTS_BINARY: &str = env!("CARGO_BIN_EXE_stargate");
 fn init() {
     // No need for unsafe here
     unsafe {
-        std::env::set_var("UUTESTS_BINARY_PATH", TESTS_BINARY);
+        std::env::set_var("SGTESTS_BINARY_PATH", TESTS_BINARY);
     }
     // Print for debugging
-    eprintln!("Setting UUTESTS_BINARY_PATH={TESTS_BINARY}");
+    eprintln!("Setting SGTESTS_BINARY_PATH={TESTS_BINARY}");
 }
 
 #[test]

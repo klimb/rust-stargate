@@ -1,9 +1,9 @@
 // spell-checker:ignore (words) gpghome
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 use sgcore::display::Quotable;
 

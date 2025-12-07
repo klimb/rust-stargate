@@ -2,8 +2,8 @@
 
 use chrono::{DateTime, Duration, Utc};
 use std::fs::metadata;
-use uutests::new_ucmd;
-use uutests::util::UCommand;
+use sgtests::new_ucmd;
+use sgtests::util::UCommand;
 
 const DATE_TIME_FORMAT_DEFAULT: &str = "%Y-%m-%d %H:%M";
 

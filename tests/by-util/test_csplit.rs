@@ -1,6 +1,6 @@
 use glob::glob;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
 /// Returns a string of numbers with the given range, each on a new line.
 /// The upper bound is not included.

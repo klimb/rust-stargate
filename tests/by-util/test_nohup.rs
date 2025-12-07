@@ -1,9 +1,9 @@
 // spell-checker:ignore winsize Openpty openpty xpixel ypixel ptyprocess
 use std::thread::sleep;
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 // General observation: nohup.out will not be created in tests run by cargo test
 // because stdin/stdout is not attached to a TTY.

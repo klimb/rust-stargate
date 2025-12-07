@@ -1,6 +1,6 @@
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 // spell-checker:ignore checkfile, nonames, testf, ntestf
 macro_rules! get_hash(
     ($str:expr) => (
@@ -12,8 +12,8 @@ macro_rules! test_digest {
     ($($id:ident $t:ident $size:expr)*) => ($(
 
     mod $id {
-        use uutests::util::*;
-        use uutests::util_name;
+        use sgtests::util::*;
+        use sgtests::util_name;
         static DIGEST_ARG: &'static str = concat!("--", stringify!($t));
         static BITS_ARG: &'static str = concat!("--bits=", stringify!($size));
         static EXPECTED_FILE: &'static str = concat!(stringify!($id), ".expected");

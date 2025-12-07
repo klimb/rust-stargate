@@ -8,10 +8,10 @@ use libc::mode_t;
 use std::os::unix::fs::PermissionsExt;
 
 #[cfg(not(windows))]
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util_name;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util_name;
 
 #[test]
 fn test_invalid_arg() {
@@ -21,7 +21,7 @@ fn test_invalid_arg() {
 #[test]
 fn test_version_no_path() {
     use std::process::Command;
-    use uutests::get_tests_binary;
+    use sgtests::get_tests_binary;
 
     // This test verifies that when an individual utility binary is invoked with its full path,
     // the version output shows just "mkdir", not the full path like "/path/to/mkdir".

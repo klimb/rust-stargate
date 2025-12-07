@@ -1,8 +1,8 @@
 //
 // spell-checker:ignore regfile
 
-use uutests::util::{TestScenario, get_root_path};
-use uutests::{at_and_ucmd, new_ucmd, path_concat, util_name};
+use sgtests::util::{TestScenario, get_root_path};
+use sgtests::{at_and_ucmd, new_ucmd, path_concat, util_name};
 
 static GIBBERISH: &str = "supercalifragilisticexpialidocious";
 

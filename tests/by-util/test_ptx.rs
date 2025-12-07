@@ -1,6 +1,6 @@
 // spell-checker:ignore roff
 // spell-checker:ignore funnnnnnnnnnnnnnnnn
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[test]
 fn test_invalid_arg() {

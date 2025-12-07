@@ -2,7 +2,7 @@ use rstest::rstest;
 
 use sgcore::display::Quotable;
 // spell-checker:ignore dont SIGBUS SIGSEGV sigsegv sigbus infd
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 
 #[cfg(unix)]
 use nix::sys::signal::Signal::{SIGBUS, SIGSEGV};

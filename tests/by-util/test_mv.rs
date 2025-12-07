@@ -6,9 +6,9 @@ use rstest::rstest;
 use std::io::Write;
 use std::path::Path;
 
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::{at_and_ucmd, util_name};
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::{at_and_ucmd, util_name};
 
 #[test]
 fn test_mv_invalid_arg() {
@@ -1774,7 +1774,7 @@ fn test_mv_dir_into_path_slash() {
 fn test_acl() {
     use std::process::Command;
 
-    use uutests::util::compare_xattrs;
+    use sgtests::util::compare_xattrs;
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;
@@ -1873,8 +1873,8 @@ mod inter_partition_copying {
     use std::fs::{read_to_string, set_permissions, write};
     use std::os::unix::fs::{PermissionsExt, symlink};
     use tempfile::TempDir;
-    use uutests::util::TestScenario;
-    use uutests::util_name;
+    use sgtests::util::TestScenario;
+    use sgtests::util_name;
 
     // Ensure that the copying code used in an inter-partition move unlinks the destination symlink.
     #[test]
@@ -1928,7 +1928,7 @@ mod inter_partition_copying {
     // that it would output the proper error message.
     #[test]
     pub(crate) fn test_mv_unlinks_dest_symlink_error_message() {
-        use uutests::util::TestScenario;
+        use sgtests::util::TestScenario;
         let scene = TestScenario::new(util_name!());
         let at = &scene.fixtures;
 
@@ -1963,7 +1963,7 @@ mod inter_partition_copying {
         use std::fs::metadata;
         use std::os::unix::fs::MetadataExt;
         use tempfile::TempDir;
-        use uutests::util::TestScenario;
+        use sgtests::util::TestScenario;
 
         let scene = TestScenario::new(util_name!());
         let at = &scene.fixtures;
@@ -2039,7 +2039,7 @@ mod inter_partition_copying {
         use std::fs::metadata;
         use std::os::unix::fs::MetadataExt;
         use tempfile::TempDir;
-        use uutests::util::TestScenario;
+        use sgtests::util::TestScenario;
 
         let scene = TestScenario::new(util_name!());
         let at = &scene.fixtures;
@@ -2164,7 +2164,7 @@ mod inter_partition_copying {
         use std::fs::metadata;
         use std::os::unix::fs::MetadataExt;
         use tempfile::TempDir;
-        use uutests::util::TestScenario;
+        use sgtests::util::TestScenario;
 
         let scene = TestScenario::new(util_name!());
         let at = &scene.fixtures;
@@ -2266,7 +2266,7 @@ mod inter_partition_copying {
         use std::fs::metadata;
         use std::os::unix::fs::MetadataExt;
         use tempfile::TempDir;
-        use uutests::util::TestScenario;
+        use sgtests::util::TestScenario;
 
         let scene = TestScenario::new(util_name!());
         let at = &scene.fixtures;
@@ -2540,7 +2540,7 @@ fn test_mv_cross_device_permission_denied() {
     use std::fs::{set_permissions, write};
     use std::os::unix::fs::PermissionsExt;
     use tempfile::TempDir;
-    use uutests::util::TestScenario;
+    use sgtests::util::TestScenario;
 
     let scene = TestScenario::new(util_name!());
     let at = &scene.fixtures;

@@ -1,7 +1,7 @@
 # spell-checker:ignore (features) zerocopy serde
 
 [package]
-name = "uutests"
+name = "sgtests"
 description = "Stargate: core test library (cross-platform)"
 repository = "https://github.com/klimb/rust-stargate"
 authors.workspace = true

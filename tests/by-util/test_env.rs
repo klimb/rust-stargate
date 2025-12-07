@@ -10,13 +10,13 @@ use std::path::Path;
 #[cfg(unix)]
 use std::process::Command;
 use tempfile::tempdir;
-use uutests::new_ucmd;
+use sgtests::new_ucmd;
 #[cfg(unix)]
-use uutests::util::TerminalSimulation;
-use uutests::util::TestScenario;
+use sgtests::util::TerminalSimulation;
+use sgtests::util::TestScenario;
 #[cfg(unix)]
-use uutests::util::UChild;
-use uutests::util_name;
+use sgtests::util::UChild;
+use sgtests::util_name;
 
 #[cfg(unix)]
 struct Target {
@@ -529,7 +529,7 @@ fn test_split_string_into_args_debug_output_whitespace_handling() {
 fn test_gnu_e20() {
     let scene = TestScenario::new(util_name!());
 
-    let env_bin = String::from(uutests::util::get_tests_binary()) + " " + util_name!();
+    let env_bin = String::from(sgtests::util::get_tests_binary()) + " " + util_name!();
     let input = [
         String::from("-i"),
         String::from(r#"-SA="B\_C=D" "#) + env_bin.escape_default().to_string().as_str() + "",

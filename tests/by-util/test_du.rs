@@ -3,14 +3,14 @@
 
 use regex::Regex;
 
-use uutests::at_and_ucmd;
-use uutests::new_ucmd;
+use sgtests::at_and_ucmd;
+use sgtests::new_ucmd;
 
-use uutests::unwrap_or_return;
-use uutests::util::TestScenario;
+use sgtests::unwrap_or_return;
+use sgtests::util::TestScenario;
 
-use uutests::util::expected_result;
-use uutests::util_name;
+use sgtests::util::expected_result;
+use sgtests::util_name;
 
 #[cfg(not(target_os = "openbsd"))]
 const SUB_DIR: &str = "subdir/deeper";

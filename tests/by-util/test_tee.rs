@@ -1,6 +1,6 @@
 #![allow(clippy::borrow_as_ptr)]
 
-use uutests::{at_and_ucmd, new_ucmd};
+use sgtests::{at_and_ucmd, new_ucmd};
 
 use regex::Regex;
 use std::process::Stdio;
@@ -156,14 +156,14 @@ fn test_tee_output_not_buffered() {
 
 #[cfg(target_os = "linux")]
 mod linux_only {
-    use uutests::util::{AtPath, CmdResult, UCommand};
+    use sgtests::util::{AtPath, CmdResult, UCommand};
 
     use std::fmt::Write;
     use std::fs::File;
     use std::process::Stdio;
     use std::time::Duration;
-    use uutests::at_and_ucmd;
-    use uutests::new_ucmd;
+    use sgtests::at_and_ucmd;
+    use sgtests::new_ucmd;
 
     fn make_broken_pipe() -> File {
         use libc::c_int;

@@ -1,9 +1,9 @@
 // spell-checker:ignore (words) araba merci efjkow
 
 use regex::Regex;
-use uutests::new_ucmd;
-use uutests::util::TestScenario;
-use uutests::util::UCommand;
+use sgtests::new_ucmd;
+use sgtests::util::TestScenario;
+use sgtests::util::UCommand;
 
 #[test]
 fn test_default() {

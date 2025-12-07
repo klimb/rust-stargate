@@ -3,9 +3,9 @@
 #[cfg(target_os = "linux")]
 use std::os::unix::ffi::OsStringExt;
 use sgcore::process::getegid;
-use uutests::{at_and_ucmd, new_ucmd};
+use sgtests::{at_and_ucmd, new_ucmd};
 #[cfg(not(target_vendor = "apple"))]
-use uutests::{util::TestScenario, util_name};
+use sgtests::{util::TestScenario, util_name};
 
 #[test]
 fn test_invalid_option() {
