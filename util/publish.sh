@@ -53,7 +53,7 @@ TOTAL_ORDER=${TOTAL_ORDER#ROOT}
 CRATE_VERSION=$(grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f2)
 
 set -e
-CORE_DIRS="src/sgcore_procs/ src/sgcore/ src/sg/stdbuf/src/libstdbuf/ tests/sgtests/ fuzz/uufuzz/"
+CORE_DIRS="stargate-userland/sgcore_procs/ stargate-userland/sgcore/ stargate-userland/sg/stdbuf/src/libstdbuf/ tests/sgtests/ fuzz/uufuzz/"
 CORE_COUNT=$(echo $CORE_DIRS | wc -w)
 UTIL_COUNT=$(echo $TOTAL_ORDER | wc -w)
 TOTAL_COUNT=$((CORE_COUNT + UTIL_COUNT + 1))

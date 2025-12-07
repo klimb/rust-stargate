@@ -444,7 +444,7 @@ fn resolve_locales_dir_from_exe_dir(exe_dir: &Path, p: &str) -> Option<PathBuf> 
 /// Helper function to get the locales directory based on the build configuration
 fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
     // Normalize hyphenated util names to underscores for directory lookup
-    // (e.g., "change-group" -> "change_group" for src/sg/change_group/)
+    // (e.g., "change-group" -> "change_group" for stargate-userland/sg/change_group/)
     let dir_name = p.replace('-', "_");
     
     #[cfg(debug_assertions)]

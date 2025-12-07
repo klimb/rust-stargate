@@ -57,9 +57,9 @@ fn project_root() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let uucore_path = std::path::Path::new(&manifest_dir);
 
-    // Navigate from src/sgcore to project root
+    // Navigate from stargate-userland/sgcore to project root
     let project_root = uucore_path
-        .parent() // src/
+        .parent() // stargate-userland/
         .and_then(|p| p.parent()) // project root
         .ok_or("Could not determine project root")?;
 
@@ -124,14 +124,14 @@ fn embed_single_utility_locale(
     // Embed utility-specific locales
     embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
         project_root
-            .join("src/uu")
+            .join("stargate-userland/uu")
             .join(util_name)
             .join(format!("locales/{locale}.ftl"))
     })?;
 
     // Always embed sgcore locale file if it exists
     embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
-        project_root.join(format!("src/sgcore/locales/{locale}.ftl"))
+        project_root.join(format!("stargate-userland/sgcore/locales/{locale}.ftl"))
     })?;
 
     Ok(())
@@ -176,7 +176,7 @@ fn embed_all_utility_locales(
 
     // Also embed sgcore locale file if it exists
     embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
-        project_root.join(format!("src/sgcore/locales/{locale}.ftl"))
+        project_root.join(format!("stargate-userland/sgcore/locales/{locale}.ftl"))
     })?;
 
     embedded_file.flush()?;
