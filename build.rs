@@ -27,7 +27,6 @@ pub fn main() {
                 "nightly" | "test_unimplemented" | "expensive_tests" | "test_risky_names" => {
                     continue;
                 }
-                "uudoc" => continue,
                 "test" => continue,
                 s if s.starts_with(FEATURE_PREFIX) => continue,
                 _ => {}

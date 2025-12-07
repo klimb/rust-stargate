@@ -265,7 +265,6 @@ TEST_PROGS  := \
 	unexpand \
 	uniq \
 	unlink \
-	uudoc \
 	collect_count \
 	who
 
@@ -353,30 +352,18 @@ distclean: clean
 	$(CARGO) clean $(CARGOFLAGS) $(RUSTC_ARCH) && $(CARGO) update $(CARGOFLAGS) $(RUSTC_ARCH)
 
 ifeq ($(MANPAGES),y)
-build-uudoc:
-	# Use same PROFILE with coreutils to share crates (if not cross-build)
-	${CARGO} build ${CARGOFLAGS} --bin uudoc --features "uudoc ${EXES}" ${PROFILE_CMD} --no-default-features
-
-install-manpages: build-uudoc
+install-manpages:
 	mkdir -p $(DESTDIR)$(DATAROOTDIR)/man/man1
-	$(foreach prog, $(INSTALLEES) $(HASHSUM_PROGS), \
-		$(BUILDDIR)/uudoc manpage $(prog) > $(DESTDIR)$(DATAROOTDIR)/man/man1/$(PROG_PREFIX)$(prog).1 $(newline) \
-	)
 else
 install-manpages:
 endif
 
 ifeq ($(COMPLETIONS),y)
 
-install-completions: build-uudoc
+install-completions:
 	mkdir -p $(DESTDIR)$(DATAROOTDIR)/zsh/site-functions
 	mkdir -p $(DESTDIR)$(DATAROOTDIR)/bash-completion/completions
 	mkdir -p $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d
-	$(foreach prog, $(INSTALLEES) $(HASHSUM_PROGS) , \
-		$(BUILDDIR)/uudoc completion $(prog) zsh > $(DESTDIR)$(DATAROOTDIR)/zsh/site-functions/_$(PROG_PREFIX)$(prog) $(newline) \
-		$(BUILDDIR)/uudoc completion $(prog) bash > $(DESTDIR)$(DATAROOTDIR)/bash-completion/completions/$(PROG_PREFIX)$(prog).bash $(newline) \
-		$(BUILDDIR)/uudoc completion $(prog) fish > $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d/$(PROG_PREFIX)$(prog).fish $(newline) \
-	)
 else
 install-completions:
 endif
@@ -459,4 +446,4 @@ endif
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d/$(PROG_PREFIX),$(addsuffix .fish,$(PROGS)))
 	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/man/man1/$(PROG_PREFIX),$(addsuffix .1,$(PROGS)))
 
-.PHONY: all build build-stargate build-pkgs build-uudoc test test-scripting benchmark distclean clean busytest install uninstall
+.PHONY: all build build-stargate build-pkgs test test-scripting benchmark distclean clean busytest install uninstall

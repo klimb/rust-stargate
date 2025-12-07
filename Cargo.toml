@@ -30,8 +30,6 @@ windows = ["feat_os_windows"]
 expensive_tests = []
 # "test_risky_names" == enable tests that create problematic file names (would make a network share inaccessible to Windows, breaks SVN on Mac OS, etc.)
 test_risky_names = []
-# * only build `uudoc` when `--feature uudoc` is activated
-uudoc = ["dep:clap_complete", "dep:clap_mangen", "dep:fluent-syntax", "dep:zip"]
 ## features
 ## Optional feature for stdbuf
 # "feat_external_libstdbuf" == use an external libstdbuf.so for stdbuf instead of embedding it
@@ -533,11 +531,6 @@ path = "src/bin/stargate.rs"
 [[bin]]
 name = "stargate-shell"
 path = "src/bin/stargate_shell_main.rs"
-
-[[bin]]
-name = "uudoc"
-path = "src/bin/uudoc.rs"
-required-features = ["uudoc"]
 
 # The default release profile with some optimizations.
 [profile.release]
