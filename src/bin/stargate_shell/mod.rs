@@ -19,6 +19,7 @@ pub mod path_completion;
 pub mod scripting;
 pub mod interpreter;
 pub mod testing;
+pub mod theme;
 pub mod ui;
 pub mod jobs;
 pub mod bytecode;

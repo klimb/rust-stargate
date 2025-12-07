@@ -19,6 +19,7 @@ use super::path_completion::{
     get_directory_completions, get_path_completions,
     DIRECTORY_COMMANDS, COMMANDS
 };
+use super::theme::DEFAULT_THEME;
 
 const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
 
@@ -412,6 +413,14 @@ impl Highlighter for StargateCompletion {
 
     fn highlight_char(&self, _line: &str, _pos: usize, _forced: bool) -> bool {
         false
+    }
+    
+    fn highlight_candidate<'c>(
+        &self,
+        candidate: &'c str,
+        _completion: rustyline::CompletionType,
+    ) -> Cow<'c, str> {
+        Cow::Owned(DEFAULT_THEME.colorize(candidate))
     }
 }
 
