@@ -15,6 +15,7 @@ pub mod completion;
 pub mod execution;
 pub mod parsing;
 pub mod path;
+pub mod path_completion;
 pub mod scripting;
 pub mod interpreter;
 pub mod testing;
