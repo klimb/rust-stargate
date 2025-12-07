@@ -1,1 +1,72 @@
-../../LICENSE
+STARGATE LICENSE
+
+Copyright (c) 2025 Dmitry Kalashnikov
+
+This software is available under two licensing options:
+
+---
+
+OPEN SOURCE LICENSE (for non-commercial use)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to use, copy,
+modify, merge, and distribute the Software for NON-COMMERCIAL purposes only,
+subject to the following conditions:
+
+1. NON-COMMERCIAL USE ONLY
+   This license applies ONLY to non-commercial, open-source projects. Any 
+   commercial use, including but not limited to use in commercial products,
+   services, or proprietary applications, requires a separate Commercial License.
+
+2. ATTRIBUTION REQUIREMENTS
+   - The above copyright notice and this license shall be included in all
+     copies or substantial portions of the Software
+   - You must clearly credit the original authors in your documentation,
+     README, and any public-facing materials
+   - If you create a derivative work, you must state that your work is 
+     derived from Stargate
+
+3. COPYLEFT FOR DERIVATIVES
+   Any derivative works must be distributed under this same license or a 
+   license with equivalent or more restrictive terms. You may not relicense
+   derivative works under more permissive terms without explicit written
+   permission from the copyright holder.
+
+4. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
+
+---
+
+COMMERCIAL LICENSE (for commercial/proprietary use)
+
+A Commercial License is REQUIRED for:
+- Any commercial use, including commercial products or services
+- Closed-source or proprietary applications
+- Any use that generates revenue or is part of a for-profit business
+- SaaS (Software as a Service) offerings
+- Embedding in commercial hardware or software products
+- Any use by for-profit companies or organizations
+
+Commercial License Benefits:
+- Permission to use in proprietary/closed-source products
+- No copyleft requirements
+- No attribution requirements in end-user facing materials  
+- Right to sublicense and redistribute
+- Priority support and updates
+- Legal warranty and indemnification options
+- Perpetual license with ongoing updates
+
+To obtain a Commercial License, contact:
+  Dmitry Kalashnikov
+  Email: dvk@klimb.com
+  
+Pricing and terms are available upon request.
+
+For questions about which license applies to your use case, please contact
+the copyright holder before using this software.
