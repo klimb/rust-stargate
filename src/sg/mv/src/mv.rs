@@ -9,7 +9,7 @@ use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-#[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+#[cfg(all(unix, not(target_os = "macos")))]
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
@@ -34,7 +34,7 @@ use sgcore::fs::{
     MissingHandling, ResolveMode, are_hardlinks_or_one_way_symlink_to_same_file,
     are_hardlinks_to_same_file, canonicalize, path_ends_with_terminator,
 };
-#[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+#[cfg(all(unix, not(target_os = "macos")))]
 use sgcore::fsxattr;
 
 use sgcore::translate;
@@ -884,7 +884,7 @@ fn rename_dir_fallback(
         (_, _) => None,
     };
 
-    #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+    #[cfg(all(unix, not(target_os = "macos")))]
     let xattrs = fsxattr::retrieve_xattrs(from).unwrap_or_else(|_| HashMap::new());
 
     // Use directory copying (with or without hardlink support)
@@ -900,7 +900,7 @@ fn rename_dir_fallback(
         display_manager
     );
 
-    #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+    #[cfg(all(unix, not(target_os = "macos")))]
     fsxattr::apply_xattrs(to, xattrs)?;
 
     result?;
@@ -1057,11 +1057,11 @@ fn copy_file_with_hardlinks_helper(
     }
 
     // Regular file copy
-    #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         fs::copy(from, to).and_then(|_| fsxattr::copy_xattrs(&from, &to))?;
     }
-    #[cfg(any(target_os = "macos", target_os = "redox"))]
+    #[cfg(target_os = "macos")]
     {
         fs::copy(from, to)?;
     }
@@ -1104,12 +1104,12 @@ fn rename_file_fallback(
     }
 
     // Regular file copy
-    #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
+    #[cfg(all(unix, not(target_os = "macos")))]
     fs::copy(from, to)
         .and_then(|_| fsxattr::copy_xattrs(&from, &to))
         .and_then(|_| fs::remove_file(from))
         .map_err(|err| io::Error::new(err.kind(), translate!("mv-error-permission-denied")))?;
-    #[cfg(any(target_os = "macos", target_os = "redox", not(unix)))]
+    #[cfg(any(target_os = "macos", not(unix)))]
     fs::copy(from, to)
         .and_then(|_| fs::remove_file(from))
         .map_err(|err| io::Error::new(err.kind(), translate!("mv-error-permission-denied")))?;

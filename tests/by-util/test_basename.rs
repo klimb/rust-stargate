@@ -132,7 +132,7 @@ fn test_too_many_args_output() {
         .usage_error("extra operand 'c'");
 }
 
-#[cfg(any(unix, target_os = "redox"))]
+#[cfg(unix)]
 #[test]
 fn test_invalid_utf8_args() {
     let param = sgcore::os_str_from_bytes(b"/tmp/some-\xc0-file.k\xf3")

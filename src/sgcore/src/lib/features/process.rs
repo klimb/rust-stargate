@@ -3,7 +3,6 @@
 // spell-checker:ignore pgrep pwait snice getpgrp
 
 use libc::{gid_t, pid_t, uid_t};
-#[cfg(not(target_os = "redox"))]
 use nix::errno::Errno;
 use std::io;
 use std::process::Child;
@@ -55,12 +54,6 @@ pub fn getpid() -> pid_t {
 /// - [Errno::EPERM] A process with process ID pid exists, but it is not in the same session as the calling process, and the implementation considers this an error.
 /// - [Errno::ESRCH] No process with process ID pid was found.
 ///
-///
-/// # Platform
-///
-/// This function only support standard POSIX implementation platform,
-/// so some system such as redox doesn't supported.
-#[cfg(not(target_os = "redox"))]
 pub fn getsid(pid: i32) -> Result<pid_t, Errno> {
     unsafe {
         let result = libc::getsid(pid);
@@ -151,7 +144,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(not(target_os = "redox"))]
     fn test_getsid() {
         assert_eq!(
             getsid(getpid()).expect("getsid(getpid)"),

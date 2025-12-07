@@ -14,8 +14,6 @@ pub const _SC_NPROCESSORS_CONF: libc::c_int = 83;
 pub const _SC_NPROCESSORS_CONF: libc::c_int = libc::_SC_NPROCESSORS_CONF;
 #[cfg(target_os = "freebsd")]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = 57;
-#[cfg(target_os = "netbsd")]
-pub const _SC_NPROCESSORS_CONF: libc::c_int = 1001;
 
 static OPT_ALL: &str = "all";
 static OPT_IGNORE: &str = "ignore";

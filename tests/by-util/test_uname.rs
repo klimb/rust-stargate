@@ -62,11 +62,6 @@ fn test_uname_kernel() {
 
 #[test]
 fn test_uname_operating_system() {
-    #[cfg(target_os = "android")]
-    new_ucmd!()
-        .arg("--operating-system")
-        .succeeds()
-        .stdout_is("Android\n");
     #[cfg(target_vendor = "apple")]
     new_ucmd!()
         .arg("--operating-system")
@@ -77,11 +72,6 @@ fn test_uname_operating_system() {
         .arg("--operating-system")
         .succeeds()
         .stdout_is("FreeBSD\n");
-    #[cfg(target_os = "fuchsia")]
-    new_ucmd!()
-        .arg("--operating-system")
-        .succeeds()
-        .stdout_is("Fuchsia\n");
     #[cfg(all(target_os = "linux", any(target_env = "gnu", target_env = "")))]
     new_ucmd!()
         .arg("--operating-system")
@@ -92,21 +82,11 @@ fn test_uname_operating_system() {
         .arg("--operating-system")
         .succeeds()
         .stdout_is("Linux\n");
-    #[cfg(target_os = "netbsd")]
-    new_ucmd!()
-        .arg("--operating-system")
-        .succeeds()
-        .stdout_is("NetBSD\n");
     #[cfg(target_os = "openbsd")]
     new_ucmd!()
         .arg("--operating-system")
         .succeeds()
         .stdout_is("OpenBSD\n");
-    #[cfg(target_os = "redox")]
-    new_ucmd!()
-        .arg("--operating-system")
-        .succeeds()
-        .stdout_is("Redox\n");
 }
 
 #[test]

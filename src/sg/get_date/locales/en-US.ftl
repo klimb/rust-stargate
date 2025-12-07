@@ -94,13 +94,11 @@ date-help-debug = annotate the parsed date, and warn about questionable usage to
 date-help-reference = display the last modification time of FILE
 date-help-set = set time described by STRING
 date-help-set-macos = set time described by STRING (not available on mac yet)
-date-help-set-redox = set time described by STRING (not available on redox yet)
 date-help-universal = print or set Coordinated Universal Time (UTC)
 
 date-error-invalid-date = invalid date '{$date}'
-date-error-invalid-format = invalid format '{$format}' ({$error})
+date-error-invalid-format = invalid format '{$format}' ({$error})'
 date-error-expected-file-got-directory = expected file, got directory '{$path}'
 date-error-date-overflow = date overflow '{$date}'
 date-error-setting-date-not-supported-macos = setting the date is not supported by macOS
-date-error-setting-date-not-supported-redox = setting the date is not supported by Redox
 date-error-cannot-set-date = cannot set date

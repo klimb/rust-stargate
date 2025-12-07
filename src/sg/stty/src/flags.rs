@@ -8,14 +8,7 @@
 
 use crate::Flag;
 
-#[cfg(not(any(
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-)))]
+#[cfg(not(any(target_os = "freebsd", target_os = "macos", target_os = "openbsd")))]
 use nix::sys::termios::BaudRate;
 use nix::sys::termios::{
     ControlFlags as C, InputFlags as I, LocalFlags as L, OutputFlags as O,

@@ -28,14 +28,7 @@ use sgcore::error::{UError, UResult, USimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
 
-#[cfg(not(any(
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-)))]
+#[cfg(not(any(target_os = "freebsd", target_os = "macos", target_os = "openbsd")))]
 use flags::BAUD_RATES;
 use flags::{CONTROL_CHARS, CONTROL_FLAGS, INPUT_FLAGS, LOCAL_FLAGS, OUTPUT_FLAGS};
 
@@ -527,7 +520,7 @@ fn print_terminal_size(termios: &Termios, opts: &Options) -> nix::Result<()> {
         );
     }
 
-    #[cfg(any(target_os = "linux", target_os = "redox"))]
+    #[cfg(target_os = "linux")]
     {
         // For some reason the normal nix Termios struct does not expose the line,
         // so we get the underlying libc::termios struct to get that information.

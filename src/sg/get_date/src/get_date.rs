@@ -4,9 +4,9 @@ use clap::{Arg, ArgAction, Command};
 use jiff::fmt::strtime;
 use jiff::tz::{TimeZone, TimeZoneDatabase};
 use jiff::{Timestamp, Zoned};
-#[cfg(all(unix, not(target_os = "macos"), not(target_os = "redox")))]
+#[cfg(all(unix, not(target_os = "macos")))]
 use libc::clock_settime;
-#[cfg(all(unix, not(target_os = "redox")))]
+#[cfg(unix)]
 use libc::{CLOCK_REALTIME, clock_getres, timespec};
 use serde_json::json;
 use std::collections::HashMap;
@@ -532,17 +532,13 @@ pub fn sg_app() -> Command {
                 .long(OPT_SET)
                 .value_name("STRING")
                 .help({
-                    #[cfg(not(any(target_os = "macos", target_os = "redox")))]
+                    #[cfg(not(target_os = "macos"))]
                     {
                         translate!("date-help-set")
                     }
                     #[cfg(target_os = "macos")]
                     {
                         translate!("date-help-set-macos")
-                    }
-                    #[cfg(target_os = "redox")]
-                    {
-                        translate!("date-help-set-redox")
                     }
                 })
         )
@@ -766,7 +762,7 @@ fn parse_date<S: AsRef<str> + Clone>(
     }
 }
 
-#[cfg(all(unix, not(target_os = "redox")))]
+#[cfg(unix)]
 fn get_clock_resolution() -> Timestamp {
     let mut timespec = timespec {
         tv_sec: 0,
@@ -788,14 +784,6 @@ fn get_clock_resolution() -> Timestamp {
     Timestamp::constant(timespec.tv_sec as i64, timespec.tv_nsec as i32)
 }
 
-#[cfg(all(unix, target_os = "redox"))]
-fn get_clock_resolution() -> Timestamp {
-    // Redox OS does not support the posix clock_getres function, however
-    // internally it uses a resolution of 1ns to represent timestamps.
-    // https://gitlab.redox-os.org/redox-os/kernel/-/blob/master/src/time.rs
-    Timestamp::constant(0, 1)
-}
-
 #[cfg(target_os = "macos")]
 fn set_system_datetime(_date: Zoned) -> UResult<()> {
     Err(USimpleError::new(
@@ -804,15 +792,7 @@ fn set_system_datetime(_date: Zoned) -> UResult<()> {
     ))
 }
 
-#[cfg(target_os = "redox")]
-fn set_system_datetime(_date: Zoned) -> UResult<()> {
-    Err(USimpleError::new(
-        1,
-        translate!("date-error-setting-date-not-supported-redox")
-    ))
-}
-
-#[cfg(all(unix, not(target_os = "macos"), not(target_os = "redox")))]
+#[cfg(all(unix, not(target_os = "macos")))]
 /// System call to set date (unix).
 /// See here for more:
 /// `<https://doc.rust-lang.org/libc/i686-unknown-linux-gnu/libc/fn.clock_settime.html>`

@@ -107,17 +107,17 @@ pub fn get_groups() -> IOResult<Vec<gid_t>> {
 /// > variations and administrative sequences cause the set of groups
 /// > appearing in the result of getgroups() to vary in order and as to
 /// > whether the effective group ID is included, even when the set of
-/// > groups is the same (in the mathematical sense of ``set''). (The
+/// > groups is the same (in the mathematical sense of ''set''). (The
 /// > history of a process and its parents could affect the details of
 /// > the result.)
-#[cfg(all(unix, not(target_os = "redox"), feature = "process"))]
+#[cfg(all(unix, feature = "process"))]
 pub fn get_groups_gnu(arg_id: Option<u32>) -> IOResult<Vec<gid_t>> {
     let groups = get_groups()?;
     let egid = arg_id.unwrap_or_else(crate::features::process::getegid);
     Ok(sort_groups(groups, egid))
 }
 
-#[cfg(all(unix, not(target_os = "redox"), feature = "process"))]
+#[cfg(all(unix, feature = "process"))]
 fn sort_groups(mut groups: Vec<gid_t>, egid: gid_t) -> Vec<gid_t> {
     if let Some(index) = groups.iter().position(|&x| x == egid) {
         groups[..=index].rotate_right(1);

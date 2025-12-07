@@ -13,7 +13,7 @@ use std::ffi::OsString;
 use std::fs;
 use thiserror::Error;
 
-#[cfg(any(unix, target_os = "redox"))]
+#[cfg(unix)]
 use std::os::unix::fs::symlink;
 
 use std::path::{Path, PathBuf};

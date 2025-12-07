@@ -70,17 +70,10 @@ pub mod tty;
 
 #[cfg(all(unix, feature = "fsxattr"))]
 pub mod fsxattr;
-#[cfg(all(unix, not(target_os = "fuchsia"), feature = "signals"))]
+#[cfg(all(unix, feature = "signals"))]
 pub mod signals;
 #[cfg(feature = "feat_systemd_logind")]
 pub mod systemd_logind;
-#[cfg(all(
-    unix,
-    not(target_os = "android"),
-    not(target_os = "fuchsia"),
-    not(target_os = "openbsd"),
-    not(target_os = "redox"),
-    feature = "utmpx"
-))]
+#[cfg(all(unix, not(target_os = "openbsd"), feature = "utmpx"))]
 pub mod utmpx;
 

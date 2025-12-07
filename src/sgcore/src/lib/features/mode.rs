@@ -134,11 +134,7 @@ fn parse_change(mode: &str, fperm: u32, considering_dir: bool) -> (u32, usize) {
 
 #[allow(clippy::unnecessary_cast)]
 pub fn parse_mode(mode: &str) -> Result<mode_t, String> {
-    #[cfg(all(
-        not(target_os = "freebsd"),
-        not(target_vendor = "apple"),
-        not(target_os = "android")
-    ))]
+    #[cfg(all(not(target_os = "freebsd"), not(target_vendor = "apple")))]
     let fperm = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     #[cfg(any(target_os = "freebsd", target_vendor = "apple"))]
     let fperm = (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) as u32;
@@ -161,18 +157,9 @@ pub fn get_umask() -> u32 {
     // possible but it can't violate Rust's guarantees.
     let mask = unsafe { umask(0) };
     unsafe { umask(mask) };
-    #[cfg(all(
-        not(target_os = "freebsd"),
-        not(target_vendor = "apple"),
-        not(target_os = "android"),
-        not(target_os = "redox")
-    ))]
+    #[cfg(all(not(target_os = "freebsd"), not(target_vendor = "apple")))]
     return mask;
-    #[cfg(any(
-        target_os = "freebsd",
-        target_vendor = "apple",
-        target_os = "redox"
-    ))]
+    #[cfg(any(target_os = "freebsd", target_vendor = "apple"))]
     return mask as u32;
 }
 

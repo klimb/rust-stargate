@@ -458,7 +458,7 @@ fn wipe_file(
         #[allow(clippy::useless_conversion, clippy::unnecessary_cast)]
         {
             // NOTE: set_readonly(false) makes the file world-writable on Unix.
-            // NOTE: S_IWUSR type is u16 on macOS, i32 on Redox.
+            // NOTE: S_IWUSR type is u16 on macOS.
             if (perms.mode() & (S_IWUSR as u32)) == 0 {
                 perms.set_mode(S_IWUSR as u32);
             }

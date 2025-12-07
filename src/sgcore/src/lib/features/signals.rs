@@ -29,7 +29,7 @@ Linux Programmer's Manual
 */
 
 /// The list of all signals.
-#[cfg(any(target_os = "linux", target_os = "redox"))]
+#[cfg(target_os = "linux")]
 pub static ALL_SIGNALS: [&str; 32] = [
     "EXIT", "HUP", "INT", "QUIT", "ILL", "TRAP", "ABRT", "BUS", "FPE", "KILL", "USR1", "SEGV",
     "USR2", "PIPE", "ALRM", "TERM", "STKFLT", "CHLD", "CONT", "STOP", "TSTP", "TTIN", "TTOU",
@@ -121,13 +121,6 @@ pub static ALL_SIGNALS: [&str; 32] = [
      SIGUSR2          31    User defined signal 2
      SIGPWR           32    Power fail/restart
 */
-
-#[cfg(target_os = "netbsd")]
-pub static ALL_SIGNALS: [&str; 33] = [
-    "EXIT", "HUP", "INT", "QUIT", "ILL", "TRAP", "ABRT", "EMT", "FPE", "KILL", "BUS", "SEGV",
-    "SYS", "PIPE", "ALRM", "TERM", "URG", "STOP", "TSTP", "CONT", "CHLD", "TTIN", "TTOU", "IO",
-    "XCPU", "XFSZ", "VTALRM", "PROF", "WINCH", "INFO", "USR1", "USR2", "PWR",
-];
 
 /*
 
@@ -234,63 +227,6 @@ pub static ALL_SIGNALS: [&str; 33] = [
      SIGRTMAX     ((int)_sysconf(_SC_SIGRT_MAX)) last realtime signal
 */
 
-#[cfg(target_os = "solaris")]
-const SIGNALS_SIZE: usize = 46;
-
-#[cfg(target_os = "illumos")]
-const SIGNALS_SIZE: usize = 47;
-
-#[cfg(any(target_os = "solaris", target_os = "illumos"))]
-static ALL_SIGNALS: [&str; SIGNALS_SIZE] = [
-    "HUP",
-    "INT",
-    "QUIT",
-    "ILL",
-    "TRAP",
-    "IOT",
-    "ABRT",
-    "EMT",
-    "FPE",
-    "KILL",
-    "BUS",
-    "SEGV",
-    "SYS",
-    "PIPE",
-    "ALRM",
-    "TERM",
-    "USR1",
-    "USR2",
-    "CLD",
-    "CHLD",
-    "PWR",
-    "WINCH",
-    "URG",
-    "POLL",
-    "IO",
-    "STOP",
-    "TSTP",
-    "CONT",
-    "TTIN",
-    "TTOU",
-    "VTALRM",
-    "PROF",
-    "XCPU",
-    "XFSZ",
-    "WAITING",
-    "AIOCANCEL",
-    #[cfg(target_os = "illumos")]
-    "LWP",
-    "FREEZE",
-    "THAW",
-    "CANCEL",
-    "LOST",
-    "XRES",
-    "JVM1",
-    "JVM2",
-    "INFO",
-    "RTMIN",
-    "RTMAX",
-];
 
 /*
    The following signals are defined in AIX:
@@ -333,13 +269,6 @@ static ALL_SIGNALS: [&str; SIGNALS_SIZE] = [
    SIGVIRT    AIX virtual time alarm
    SIGTALRM   per-thread alarm clock
 */
-#[cfg(target_os = "aix")]
-pub static ALL_SIGNALS: [&str; 37] = [
-    "HUP", "INT", "QUIT", "ILL", "TRAP", "ABRT", "EMT", "FPE", "KILL", "BUS", "SEGV", "SYS",
-    "PIPE", "ALRM", "TERM", "URG", "STOP", "TSTP", "CONT", "CHLD", "TTIN", "TTOU", "IO", "XCPU",
-    "XFSZ", "MSG", "WINCH", "PWR", "USR1", "USR2", "PROF", "DANGER", "VTALRM", "MIGRATE", "PRE",
-    "VIRT", "TALRM",
-];
 
 /// Returns the signal number for a given signal name or value.
 pub fn signal_by_name_or_value(signal_name_or_value: &str) -> Option<usize> {

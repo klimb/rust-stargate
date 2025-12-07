@@ -3207,14 +3207,8 @@ fn display_len_or_rdev(metadata: &Metadata, config: &Config) -> SizeOrDeviceId {
     #[cfg(any(
         target_os = "linux",
         target_os = "macos",
-        
-        target_os = "ios",
         target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "netbsd",
-        target_os = "openbsd",
-        target_os = "illumos",
-        target_os = "solaris"
+        target_os = "openbsd"
     ))]
     {
         let ft = metadata.file_type();

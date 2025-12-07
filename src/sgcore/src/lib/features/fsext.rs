@@ -2,7 +2,7 @@
 
 // spell-checker:ignore DATETIME getmntinfo subsecond (fs) cifs smbfs
 
-#[cfg(all(unix, not(any(target_os = "aix", target_os = "redox"))))]
+#[cfg(unix)]
 static MOUNT_OPT_BIND: &str = "bind";
 
 #[cfg(any(
@@ -42,15 +42,6 @@ use std::time::Duration;
     target_os = "openbsd"
 ))]
 pub use libc::statfs as StatFs;
-#[cfg(any(
-    target_os = "aix",
-    target_os = "netbsd",
-    target_os = "dragonfly",
-    target_os = "illumos",
-    target_os = "solaris",
-    target_os = "redox"
-))]
-pub use libc::statvfs as StatFs;
 
 #[cfg(any(
     target_os = "linux",
@@ -59,15 +50,6 @@ pub use libc::statvfs as StatFs;
     target_os = "openbsd"
 ))]
 pub use libc::statfs as statfs_fn;
-#[cfg(any(
-    target_os = "aix",
-    target_os = "netbsd",
-    target_os = "illumos",
-    target_os = "solaris",
-    target_os = "dragonfly",
-    target_os = "redox"
-))]
-pub use libc::statvfs as statfs_fn;
 
 #[cfg(target_os = "linux")]
 const LINUX_MTAB: &str = "/etc/mtab";
@@ -338,7 +320,7 @@ impl From<StatFs> for MountInfo {
     }
 }
 
-#[cfg(all(unix, not(any(target_os = "aix", target_os = "redox"))))]
+#[cfg(unix)]
 fn is_dummy_filesystem(fs_type: &str, mount_option: &str) -> bool {
     // spell-checker:disable
     match fs_type {
@@ -357,14 +339,14 @@ fn is_dummy_filesystem(fs_type: &str, mount_option: &str) -> bool {
     // spell-checker:enable
 }
 
-#[cfg(all(unix, not(any(target_os = "aix", target_os = "redox"))))]
+#[cfg(unix)]
 fn is_remote_filesystem(dev_name: &str, fs_type: &str) -> bool {
     dev_name.find(':').is_some()
         || (dev_name.starts_with("//") && fs_type == "smbfs" || fs_type == "cifs")
         || dev_name == "-hosts"
 }
 
-#[cfg(all(unix, not(any(target_os = "aix", target_os = "redox"))))]
+#[cfg(unix)]
 fn mount_dev_id(mount_dir: &OsStr) -> String {
     use std::os::unix::fs::MetadataExt;
 
@@ -567,14 +549,8 @@ impl FsMeta for StatFs {
         #[cfg(all(
             not(target_env = "musl"),
             not(target_vendor = "apple"),
-            not(target_os = "aix"),
-            not(target_os = "android"),
             not(target_os = "freebsd"),
-            not(target_os = "netbsd"),
             not(target_os = "openbsd"),
-            not(target_os = "illumos"),
-            not(target_os = "solaris"),
-            not(target_os = "redox"),
             not(target_arch = "s390x"),
             target_pointer_width = "64"
         ))]
@@ -582,8 +558,6 @@ impl FsMeta for StatFs {
         #[cfg(all(
             not(target_env = "musl"),
             not(target_os = "freebsd"),
-            not(target_os = "netbsd"),
-            not(target_os = "redox"),
             any(
                 target_arch = "s390x",
                 target_vendor = "apple",
@@ -593,16 +567,7 @@ impl FsMeta for StatFs {
             )
         ))]
         return self.f_bsize.into();
-        #[cfg(any(
-            target_env = "musl",
-            target_os = "aix",
-            target_os = "freebsd",
-            target_os = "netbsd",
-            target_os = "illumos",
-            target_os = "solaris",
-            target_os = "redox",
-            all(target_pointer_width = "64")
-        ))]
+        #[cfg(any(target_env = "musl", target_os = "freebsd", all(target_pointer_width = "64")))]
         return self.f_bsize.try_into().unwrap();
     }
     fn total_blocks(&self) -> u64 {
@@ -656,7 +621,6 @@ impl FsMeta for StatFs {
         #[cfg(all(
             not(target_env = "musl"),
             not(target_vendor = "apple"),
-            not(target_os = "android"),
             not(target_os = "freebsd"),
             not(target_arch = "s390x"),
             target_pointer_width = "64"

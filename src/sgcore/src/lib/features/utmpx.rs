@@ -52,7 +52,7 @@ pub use libc::getutxent;
 #[cfg_attr(target_env = "musl", allow(deprecated))]
 pub use libc::setutxent;
 use libc::utmpx;
-#[cfg(any(target_vendor = "apple", target_os = "linux", target_os = "netbsd"))]
+#[cfg(any(target_vendor = "apple", target_os = "linux"))]
 #[cfg_attr(target_env = "musl", allow(deprecated))]
 pub use libc::utmpxname;
 
@@ -148,30 +148,6 @@ mod ut {
     pub use libc::NEW_TIME;
     pub use libc::OLD_TIME;
     pub use libc::SHUTDOWN_TIME;
-    pub use libc::USER_PROCESS;
-}
-
-#[cfg(target_os = "netbsd")]
-mod ut {
-    pub static DEFAULT_FILE: &str = "/var/run/utmpx";
-
-    pub const ACCOUNTING: usize = 9;
-    pub const SHUTDOWN_TIME: usize = 11;
-
-    pub use libc::_UTX_HOSTSIZE as UT_HOSTSIZE;
-    pub use libc::_UTX_IDSIZE as UT_IDSIZE;
-    pub use libc::_UTX_LINESIZE as UT_LINESIZE;
-    pub use libc::_UTX_USERSIZE as UT_NAMESIZE;
-
-    pub use libc::ACCOUNTING;
-    pub use libc::DEAD_PROCESS;
-    pub use libc::EMPTY;
-    pub use libc::INIT_PROCESS;
-    pub use libc::LOGIN_PROCESS;
-    pub use libc::NEW_TIME;
-    pub use libc::OLD_TIME;
-    pub use libc::RUN_LVL;
-    pub use libc::SIGNATURE;
     pub use libc::USER_PROCESS;
 }
 
