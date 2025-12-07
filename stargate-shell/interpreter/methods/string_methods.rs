@@ -2,7 +2,7 @@
 // Dual Licensed: Open-Source (see LICENSE) / Commercial (proprietary use)
 // Commercial use requires a Commercial License. See LICENSE file.
 
-use crate::stargate_shell::scripting::*;
+use crate::scripting::*;
 
 pub fn handle_string_methods(
     method: &str,

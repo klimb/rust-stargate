@@ -2,7 +2,7 @@
 // Dual Licensed: Open-Source (see LICENSE) / Commercial (proprietary use)
 // Commercial use requires a Commercial License. See LICENSE file.
 
-use crate::stargate_shell::jobs::{list_jobs, JobStatus};
+use crate::jobs::{list_jobs, JobStatus};
 
 pub fn execute() -> Result<(), String> {
     let jobs = list_jobs();

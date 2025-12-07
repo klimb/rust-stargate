@@ -2,7 +2,7 @@
 // Dual Licensed: Open-Source (see LICENSE) / Commercial (proprietary use)
 // Commercial use requires a Commercial License. See LICENSE file.
 
-use crate::stargate_shell::jobs::bring_to_foreground;
+use crate::jobs::bring_to_foreground;
 
 pub fn execute(args: &[String]) -> Result<(), String> {
     if args.is_empty() {

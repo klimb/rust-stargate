@@ -7,7 +7,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-use crate::stargate_shell::{execute_pipeline, execute_stargate_script, Interpreter};
+use crate::execution::execute_pipeline;
+use crate::interpreter::{execute_stargate_script, Interpreter};
 use super::command_type::CommandType;
 
 /// Execute command, determining if it's a statement or pipeline

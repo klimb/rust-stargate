@@ -4,7 +4,7 @@
 
 use super::ast::*;
 use super::value::Value;
-use crate::stargate_shell::commands;
+use crate::commands;
 
 pub struct Parser {
     tokens: Vec<String>,

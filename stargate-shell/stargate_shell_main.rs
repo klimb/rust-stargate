@@ -3,7 +3,26 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
-mod stargate_shell;
+mod commands;
+mod completion;
+mod execution;
+mod parsing;
+mod path;
+mod path_completion;
+mod scripting;
+mod interpreter;
+mod testing;
+mod theme;
+mod ui;
+mod jobs;
+mod bytecode;
+mod command_type;
+mod executor;
+mod piped_input;
+mod repl_handlers;
+
+#[path = "builtin-commands/mod.rs"]
+mod builtin_commands;
 
 use rustyline::error::ReadlineError;
 use rustyline::{Editor, Config, CompletionType, KeyEvent, ExternalPrinter};
@@ -14,14 +33,13 @@ use std::io::{IsTerminal, Write};
 use std::fs::OpenOptions;
 use std::time::SystemTime;
 
-use stargate_shell::{
-    StargateCompletion, execute_script_with_path, Interpreter, 
-    start_job_monitor, builtin_commands,
-};
-use stargate_shell::command_type::CommandType;
-use stargate_shell::executor::execute_chained_commands;
-use stargate_shell::piped_input::{handle_piped_input, skip_shebang};
-use stargate_shell::repl_handlers::handle_repl_command;
+use completion::StargateCompletion;
+use interpreter::{execute_script_with_path, Interpreter};
+use jobs::start_job_monitor;
+use command_type::CommandType;
+use executor::execute_chained_commands;
+use piped_input::{handle_piped_input, skip_shebang};
+use repl_handlers::handle_repl_command;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

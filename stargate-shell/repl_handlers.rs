@@ -9,7 +9,10 @@
 
 use rustyline::Editor;
 use std::sync::{Arc, Mutex};
-use crate::stargate_shell::{describe_command, execute_pipeline, execute_stargate_script, Interpreter, builtin_commands};
+use crate::ui::{describe_command, print_help};
+use crate::execution::execute_pipeline;
+use crate::interpreter::{execute_stargate_script, Interpreter};
+use crate::builtin_commands;
 use super::command_type::CommandType;
 
 pub const DESCRIBE_COMMAND_PREFIX: &str = "describe-command ";
@@ -30,7 +33,7 @@ where
     match input {
         "exit" | "quit" => return false,
         "help" => {
-            crate::stargate_shell::print_help();
+            print_help();
             return true;
         }
         _ if input == "list-history" || input.starts_with("list-history ") => {
