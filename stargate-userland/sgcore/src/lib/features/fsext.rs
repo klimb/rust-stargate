@@ -461,7 +461,9 @@ impl FsMeta for StatFs {
             not(target_arch = "s390x"),
             target_pointer_width = "64"
         ))]
-        return self.f_bsize;
+        {
+            return self.f_bsize;
+        }
         #[cfg(all(
             not(target_env = "musl"),
             not(target_os = "freebsd"),
@@ -473,9 +475,11 @@ impl FsMeta for StatFs {
                 not(target_pointer_width = "64")
             )
         ))]
-        return self.f_bsize.into();
-        #[cfg(any(target_env = "musl", target_os = "freebsd", all(target_pointer_width = "64")))]
-        return self.f_bsize.try_into().unwrap();
+        {
+            return self.f_bsize.into();
+        }
+        #[cfg(any(target_env = "musl", target_os = "freebsd"))]
+        self.f_bsize.try_into().unwrap()
     }
     fn total_blocks(&self) -> u64 {
         #[cfg(target_pointer_width = "64")]
@@ -532,7 +536,9 @@ impl FsMeta for StatFs {
             not(target_arch = "s390x"),
             target_pointer_width = "64"
         ))]
-        return self.f_type;
+        {
+            return self.f_type;
+        }
         #[cfg(all(
             not(target_env = "musl"),
             any(
@@ -543,12 +549,11 @@ impl FsMeta for StatFs {
                 not(target_pointer_width = "64")
             )
         ))]
-        return self.f_type.into();
-        #[cfg(any(
-            target_env = "musl",
-            all(target_pointer_width = "64")
-        ))]
-        return self.f_type.try_into().unwrap();
+        {
+            return self.f_type.into();
+        }
+        #[cfg(target_env = "musl")]
+        self.f_type.try_into().unwrap()
     }
     #[cfg(not(any(
         target_os = "linux",

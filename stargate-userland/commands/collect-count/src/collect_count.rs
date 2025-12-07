@@ -11,7 +11,7 @@ use std::{
     cmp::max,
     ffi::{OsStr, OsString},
     fs::{self, File},
-    io::{self, Write, Read, IsTerminal},
+    io::{self, Write},
     iter,
     path::{Path, PathBuf},
 };

@@ -153,7 +153,7 @@ fn get_username(uid: u32) -> String {
     cache.get(&uid).cloned().unwrap_or_else(|| uid.to_string())
 }
 
-fn output_text(processes: &[ProcessInfo], show_full: bool) {
+fn output_text(processes: &[ProcessInfo], _show_full: bool) {
     println!("PID\tUSER\tCOMMAND");
     
     for p in processes {

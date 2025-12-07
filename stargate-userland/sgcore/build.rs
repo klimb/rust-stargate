@@ -124,7 +124,7 @@ fn embed_single_utility_locale(
     // Embed utility-specific locales
     embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
         project_root
-            .join("stargate-userland/uu")
+            .join("stargate-userland/commands")
             .join(util_name)
             .join(format!("locales/{locale}.ftl"))
     })?;
@@ -145,17 +145,17 @@ fn embed_all_utility_locales(
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
 
-    // Discover all sg_* directories
-    let src_uu_dir = project_root.join("src/uu");
-    if !src_uu_dir.exists() {
-        // When src/uu doesn't exist (e.g., standalone sgcore from crates.io),
+    // Discover all command directories
+    let commands_dir = project_root.join("stargate-userland/commands");
+    if !commands_dir.exists() {
+        // When stargate-userland/commands doesn't exist (e.g., standalone sgcore from crates.io),
         // embed a static list of utility locales that are commonly used
         embed_static_utility_locales(embedded_file, locales_to_embed)?;
         return Ok(());
     }
 
     let mut util_dirs = Vec::new();
-    for entry in fs::read_dir(&src_uu_dir)? {
+    for entry in fs::read_dir(&commands_dir)? {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             if let Some(dir_name) = entry.file_name().to_str() {
@@ -168,7 +168,7 @@ fn embed_all_utility_locales(
     // Embed locale files for each utility
     for util_name in &util_dirs {
         embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
-            src_uu_dir
+            commands_dir
                 .join(util_name)
                 .join(format!("locales/{locale}.ftl"))
         })?;

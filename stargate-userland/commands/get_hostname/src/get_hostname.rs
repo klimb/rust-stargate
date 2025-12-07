@@ -1,7 +1,5 @@
 // spell-checker:ignore hashset Addrs addrs
 
-#[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
-use std::net::ToSocketAddrs;
 use std::str;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};

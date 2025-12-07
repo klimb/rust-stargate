@@ -1,6 +1,4 @@
 use clap::{Arg, ArgAction, Command};
-use serde::Serialize;
-use serde_json::json;
 use sgcore::object_output::{self, JsonOutputOptions};
 use sgcore::translate;
 use sgcore::{error::UResult, format_usage};

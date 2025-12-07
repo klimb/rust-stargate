@@ -205,8 +205,8 @@ test = ["sg_test"]
 resolver = "3"
 members = [
   ".",
-  "stargate-userland/sg/*",
-  "stargate-userland/sg/stdbuf/src/libstdbuf",
+  "stargate-userland/commands/*",
+  "stargate-userland/commands/stdbuf/src/libstdbuf",
   "stargate-userland/sgcore",
   "stargate-userland/sgcore_procs",
   "tests/sgtests",
@@ -335,8 +335,8 @@ fluent-syntax = "0.12.0"
 
 sgcore = { version = "0.4.0", package = "sgcore", path = "stargate-userland/sgcore" }
 sgcore_procs = { version = "0.4.0", package = "sgcore_procs", path = "stargate-userland/sgcore_procs" }
-sg_list_directory = { version = "0.4.0", path = "stargate-userland/sg/list_directory" }
-sg_base32 = { version = "0.4.0", path = "stargate-userland/sg/base32" }
+sg_list_directory = { version = "0.4.0", path = "stargate-userland/commands/list_directory" }
+sg_base32 = { version = "0.4.0", path = "stargate-userland/commands/base32" }
 sgtests = { version = "0.4.0", package = "sgtests", path = "tests/sgtests" }
 
 [dependencies]
@@ -355,113 +355,113 @@ zip = { workspace = true, optional = true }
 
 
 # * uutils
-sg_test = { optional = true, version = "0.4.0", package = "sg_test", path = "stargate-userland/sg/test" }
+sg_test = { optional = true, version = "0.4.0", package = "sg_test", path = "stargate-userland/commands/test" }
 #
-get_architecture = { optional = true, version = "0.4.0", package = "sg_get_architecture", path = "stargate-userland/sg/get_architecture" }
-base32 = { optional = true, version = "0.4.0", package = "sg_base32", path = "stargate-userland/sg/base32" }
-base64 = { optional = true, version = "0.4.0", package = "sg_base64", path = "stargate-userland/sg/base64" }
-basename = { optional = true, version = "0.4.0", package = "sg_basename", path = "stargate-userland/sg/basename" }
-basenc = { optional = true, version = "0.4.0", package = "sg_basenc", path = "stargate-userland/sg/basenc" }
-get_contents = { optional = true, version = "0.4.0", package = "sg_get_contents", path = "stargate-userland/sg/get_contents" }
-change_group = { optional = true, version = "0.4.0", package = "sg_change_group", path = "stargate-userland/sg/change_group" }
-chmod = { optional = true, version = "0.4.0", package = "sg_chmod", path = "stargate-userland/sg/chmod" }
-change_owner = { optional = true, version = "0.4.0", package = "sg_change_owner", path = "stargate-userland/sg/change_owner" }
-chroot = { optional = true, version = "0.4.0", package = "sg_chroot", path = "stargate-userland/sg/chroot" }
-cksum = { optional = true, version = "0.4.0", package = "sg_cksum", path = "stargate-userland/sg/cksum" }
-comm = { optional = true, version = "0.4.0", package = "sg_comm", path = "stargate-userland/sg/comm" }
-cp = { optional = true, version = "0.4.0", package = "sg_cp", path = "stargate-userland/sg/cp" }
-csplit = { optional = true, version = "0.4.0", package = "sg_csplit", path = "stargate-userland/sg/csplit" }
-cut = { optional = true, version = "0.4.0", package = "sg_cut", path = "stargate-userland/sg/cut" }
-get_date = { optional = true, version = "0.4.0", package = "sg_get_date", path = "stargate-userland/sg/get_date" }
-dd = { optional = true, version = "0.4.0", package = "sg_dd", path = "stargate-userland/sg/dd" }
-df = { optional = true, version = "0.4.0", package = "sg_df", path = "stargate-userland/sg/df" }
-dircolors = { optional = true, version = "0.4.0", package = "sg_dircolors", path = "stargate-userland/sg/dircolors" }
-dirname = { optional = true, version = "0.4.0", package = "sg_dirname", path = "stargate-userland/sg/dirname" }
-du = { optional = true, version = "0.4.0", package = "sg_du", path = "stargate-userland/sg/du" }
-echo = { optional = true, version = "0.4.0", package = "sg_echo", path = "stargate-userland/sg/echo" }
-get_environment = { optional = true, version = "0.4.0", package = "sg_get_environment", path = "stargate-userland/sg/get_environment" }
-expand = { optional = true, version = "0.4.0", package = "sg_expand", path = "stargate-userland/sg/expand" }
-expr = { optional = true, version = "0.4.0", package = "sg_expr", path = "stargate-userland/sg/expr" }
-factor = { optional = true, version = "0.4.0", package = "sg_factor", path = "stargate-userland/sg/factor" }
-false = { optional = true, version = "0.4.0", package = "sg_false", path = "stargate-userland/sg/false" }
-find_text = { optional = true, version = "0.4.0", package = "sg_find_text", path = "stargate-userland/sg/find-text" }
-fmt = { optional = true, version = "0.4.0", package = "sg_fmt", path = "stargate-userland/sg/fmt" }
-fold = { optional = true, version = "0.4.0", package = "sg_fold", path = "stargate-userland/sg/fold" }
-groups = { optional = true, version = "0.4.0", package = "sg_groups", path = "stargate-userland/sg/groups" }
-hashsum = { optional = true, version = "0.4.0", package = "sg_hashsum", path = "stargate-userland/sg/hashsum" }
-head = { optional = true, version = "0.4.0", package = "sg_head", path = "stargate-userland/sg/head" }
-set-hostname = { optional = true, version = "0.4.0", package = "sg_set_hostname", path = "stargate-userland/sg/set_hostname" }
-get_hostname = { optional = true, version = "0.4.0", package = "sg_get_hostname", path = "stargate-userland/sg/get_hostname" }
-get_domainname = { optional = true, version = "0.4.0", package = "sg_get_domainname", path = "stargate-userland/sg/get_domainname" }
-get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "stargate-userland/sg/get_fqdn" }
-id = { optional = true, version = "0.4.0", package = "sg_id", path = "stargate-userland/sg/id" }
-install = { optional = true, version = "0.4.0", package = "sg_install", path = "stargate-userland/sg/install" }
-join = { optional = true, version = "0.4.0", package = "sg_join", path = "stargate-userland/sg/join" }
-kill = { optional = true, version = "0.4.0", package = "sg_kill", path = "stargate-userland/sg/kill" }
-link = { optional = true, version = "0.4.0", package = "sg_link", path = "stargate-userland/sg/link" }
-ln = { optional = true, version = "0.4.0", package = "sg_ln", path = "stargate-userland/sg/ln" }
-list_directory = { optional = true, version = "0.4.0", package = "sg_list_directory", path = "stargate-userland/sg/list_directory" }
-get_username = { optional = true, version = "0.4.0", package = "sg_get_username", path = "stargate-userland/sg/get_username" }
-new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "stargate-userland/sg/new_directory" }
-new_file = { optional = true, version = "0.4.0", package = "sg_new_file", path = "stargate-userland/sg/new_file" }
-append_file = { optional = true, version = "0.4.0", package = "sg_append_file", path = "stargate-userland/sg/append_file" }
-prepend_file = { optional = true, version = "0.4.0", package = "sg_prepend_file", path = "stargate-userland/sg/prepend_file" }
-mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "stargate-userland/sg/mkfifo" }
-mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "stargate-userland/sg/mknod" }
-mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "stargate-userland/sg/mktemp" }
-more = { optional = true, version = "0.4.0", package = "sg_more", path = "stargate-userland/sg/more" }
-mv = { optional = true, version = "0.4.0", package = "sg_mv", path = "stargate-userland/sg/mv" }
-nice = { optional = true, version = "0.4.0", package = "sg_nice", path = "stargate-userland/sg/nice" }
-get_linenumber = { optional = true, version = "0.4.0", package = "sg_get_linenumber", path = "stargate-userland/sg/get_linenumber" }
-nohup = { optional = true, version = "0.4.0", package = "sg_nohup", path = "stargate-userland/sg/nohup" }
-nproc = { optional = true, version = "0.4.0", package = "sg_nproc", path = "stargate-userland/sg/nproc" }
-od = { optional = true, version = "0.4.0", package = "sg_od", path = "stargate-userland/sg/od" }
-paste = { optional = true, version = "0.4.0", package = "sg_paste", path = "stargate-userland/sg/paste" }
-pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "stargate-userland/sg/pathchk" }
-pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "stargate-userland/sg/pr" }
-printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "stargate-userland/sg/printenv" }
-list-processes = { optional = true, version = "0.4.0", package = "sg_list_processes", path = "stargate-userland/sg/list_processes" }
-printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "stargate-userland/sg/printf" }
-ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "stargate-userland/sg/ptx" }
-pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "stargate-userland/sg/pwd" }
-readlink = { optional = true, version = "0.4.0", package = "sg_readlink", path = "stargate-userland/sg/readlink" }
-realpath = { optional = true, version = "0.4.0", package = "sg_realpath", path = "stargate-userland/sg/realpath" }
-rm = { optional = true, version = "0.4.0", package = "sg_rm", path = "stargate-userland/sg/rm" }
-rmdir = { optional = true, version = "0.4.0", package = "sg_rmdir", path = "stargate-userland/sg/rmdir" }
+get_architecture = { optional = true, version = "0.4.0", package = "sg_get_architecture", path = "stargate-userland/commands/get_architecture" }
+base32 = { optional = true, version = "0.4.0", package = "sg_base32", path = "stargate-userland/commands/base32" }
+base64 = { optional = true, version = "0.4.0", package = "sg_base64", path = "stargate-userland/commands/base64" }
+basename = { optional = true, version = "0.4.0", package = "sg_basename", path = "stargate-userland/commands/basename" }
+basenc = { optional = true, version = "0.4.0", package = "sg_basenc", path = "stargate-userland/commands/basenc" }
+get_contents = { optional = true, version = "0.4.0", package = "sg_get_contents", path = "stargate-userland/commands/get_contents" }
+change_group = { optional = true, version = "0.4.0", package = "sg_change_group", path = "stargate-userland/commands/change_group" }
+chmod = { optional = true, version = "0.4.0", package = "sg_chmod", path = "stargate-userland/commands/chmod" }
+change_owner = { optional = true, version = "0.4.0", package = "sg_change_owner", path = "stargate-userland/commands/change_owner" }
+chroot = { optional = true, version = "0.4.0", package = "sg_chroot", path = "stargate-userland/commands/chroot" }
+cksum = { optional = true, version = "0.4.0", package = "sg_cksum", path = "stargate-userland/commands/cksum" }
+comm = { optional = true, version = "0.4.0", package = "sg_comm", path = "stargate-userland/commands/comm" }
+cp = { optional = true, version = "0.4.0", package = "sg_cp", path = "stargate-userland/commands/cp" }
+csplit = { optional = true, version = "0.4.0", package = "sg_csplit", path = "stargate-userland/commands/csplit" }
+cut = { optional = true, version = "0.4.0", package = "sg_cut", path = "stargate-userland/commands/cut" }
+get_date = { optional = true, version = "0.4.0", package = "sg_get_date", path = "stargate-userland/commands/get_date" }
+dd = { optional = true, version = "0.4.0", package = "sg_dd", path = "stargate-userland/commands/dd" }
+df = { optional = true, version = "0.4.0", package = "sg_df", path = "stargate-userland/commands/df" }
+dircolors = { optional = true, version = "0.4.0", package = "sg_dircolors", path = "stargate-userland/commands/dircolors" }
+dirname = { optional = true, version = "0.4.0", package = "sg_dirname", path = "stargate-userland/commands/dirname" }
+du = { optional = true, version = "0.4.0", package = "sg_du", path = "stargate-userland/commands/du" }
+echo = { optional = true, version = "0.4.0", package = "sg_echo", path = "stargate-userland/commands/echo" }
+get_environment = { optional = true, version = "0.4.0", package = "sg_get_environment", path = "stargate-userland/commands/get_environment" }
+expand = { optional = true, version = "0.4.0", package = "sg_expand", path = "stargate-userland/commands/expand" }
+expr = { optional = true, version = "0.4.0", package = "sg_expr", path = "stargate-userland/commands/expr" }
+factor = { optional = true, version = "0.4.0", package = "sg_factor", path = "stargate-userland/commands/factor" }
+false = { optional = true, version = "0.4.0", package = "sg_false", path = "stargate-userland/commands/false" }
+find_text = { optional = true, version = "0.4.0", package = "sg_find_text", path = "stargate-userland/commands/find-text" }
+fmt = { optional = true, version = "0.4.0", package = "sg_fmt", path = "stargate-userland/commands/fmt" }
+fold = { optional = true, version = "0.4.0", package = "sg_fold", path = "stargate-userland/commands/fold" }
+groups = { optional = true, version = "0.4.0", package = "sg_groups", path = "stargate-userland/commands/groups" }
+hashsum = { optional = true, version = "0.4.0", package = "sg_hashsum", path = "stargate-userland/commands/hashsum" }
+head = { optional = true, version = "0.4.0", package = "sg_head", path = "stargate-userland/commands/head" }
+set-hostname = { optional = true, version = "0.4.0", package = "sg_set_hostname", path = "stargate-userland/commands/set_hostname" }
+get_hostname = { optional = true, version = "0.4.0", package = "sg_get_hostname", path = "stargate-userland/commands/get_hostname" }
+get_domainname = { optional = true, version = "0.4.0", package = "sg_get_domainname", path = "stargate-userland/commands/get_domainname" }
+get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "stargate-userland/commands/get_fqdn" }
+id = { optional = true, version = "0.4.0", package = "sg_id", path = "stargate-userland/commands/id" }
+install = { optional = true, version = "0.4.0", package = "sg_install", path = "stargate-userland/commands/install" }
+join = { optional = true, version = "0.4.0", package = "sg_join", path = "stargate-userland/commands/join" }
+kill = { optional = true, version = "0.4.0", package = "sg_kill", path = "stargate-userland/commands/kill" }
+link = { optional = true, version = "0.4.0", package = "sg_link", path = "stargate-userland/commands/link" }
+ln = { optional = true, version = "0.4.0", package = "sg_ln", path = "stargate-userland/commands/ln" }
+list_directory = { optional = true, version = "0.4.0", package = "sg_list_directory", path = "stargate-userland/commands/list_directory" }
+get_username = { optional = true, version = "0.4.0", package = "sg_get_username", path = "stargate-userland/commands/get_username" }
+new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "stargate-userland/commands/new_directory" }
+new_file = { optional = true, version = "0.4.0", package = "sg_new_file", path = "stargate-userland/commands/new_file" }
+append_file = { optional = true, version = "0.4.0", package = "sg_append_file", path = "stargate-userland/commands/append_file" }
+prepend_file = { optional = true, version = "0.4.0", package = "sg_prepend_file", path = "stargate-userland/commands/prepend_file" }
+mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "stargate-userland/commands/mkfifo" }
+mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "stargate-userland/commands/mknod" }
+mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "stargate-userland/commands/mktemp" }
+more = { optional = true, version = "0.4.0", package = "sg_more", path = "stargate-userland/commands/more" }
+mv = { optional = true, version = "0.4.0", package = "sg_mv", path = "stargate-userland/commands/mv" }
+nice = { optional = true, version = "0.4.0", package = "sg_nice", path = "stargate-userland/commands/nice" }
+get_linenumber = { optional = true, version = "0.4.0", package = "sg_get_linenumber", path = "stargate-userland/commands/get_linenumber" }
+nohup = { optional = true, version = "0.4.0", package = "sg_nohup", path = "stargate-userland/commands/nohup" }
+nproc = { optional = true, version = "0.4.0", package = "sg_nproc", path = "stargate-userland/commands/nproc" }
+od = { optional = true, version = "0.4.0", package = "sg_od", path = "stargate-userland/commands/od" }
+paste = { optional = true, version = "0.4.0", package = "sg_paste", path = "stargate-userland/commands/paste" }
+pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "stargate-userland/commands/pathchk" }
+pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "stargate-userland/commands/pr" }
+printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "stargate-userland/commands/printenv" }
+list-processes = { optional = true, version = "0.4.0", package = "sg_list_processes", path = "stargate-userland/commands/list_processes" }
+printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "stargate-userland/commands/printf" }
+ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "stargate-userland/commands/ptx" }
+pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "stargate-userland/commands/pwd" }
+readlink = { optional = true, version = "0.4.0", package = "sg_readlink", path = "stargate-userland/commands/readlink" }
+realpath = { optional = true, version = "0.4.0", package = "sg_realpath", path = "stargate-userland/commands/realpath" }
+rm = { optional = true, version = "0.4.0", package = "sg_rm", path = "stargate-userland/commands/rm" }
+rmdir = { optional = true, version = "0.4.0", package = "sg_rmdir", path = "stargate-userland/commands/rmdir" }
 
-get_range = { optional = true, version = "0.4.0", package = "sg_get_range", path = "stargate-userland/sg/get_range" }
-shred = { optional = true, version = "0.4.0", package = "sg_shred", path = "stargate-userland/sg/shred" }
-shuf = { optional = true, version = "0.4.0", package = "sg_shuf", path = "stargate-userland/sg/shuf" }
-dice_object = { optional = true, version = "0.4.0", package = "sg_dice_object", path = "stargate-userland/sg/dice_object" }
-slice_object = { optional = true, version = "0.4.0", package = "sg_slice_object", path = "stargate-userland/sg/slice_object" }
-sleep = { optional = true, version = "0.4.0", package = "sg_sleep", path = "stargate-userland/sg/sleep" }
-sort = { optional = true, version = "0.4.0", package = "sg_sort", path = "stargate-userland/sg/sort" }
-split = { optional = true, version = "0.4.0", package = "sg_split", path = "stargate-userland/sg/split" }
-stat = { optional = true, version = "0.4.0", package = "sg_stat", path = "stargate-userland/sg/stat" }
-stdbuf = { optional = true, version = "0.4.0", package = "sg_stdbuf", path = "stargate-userland/sg/stdbuf" }
-stty = { optional = true, version = "0.4.0", package = "sg_stty", path = "stargate-userland/sg/stty" }
-sum = { optional = true, version = "0.4.0", package = "sg_sum", path = "stargate-userland/sg/sum" }
-sync = { optional = true, version = "0.4.0", package = "sg_sync", path = "stargate-userland/sg/sync" }
-tac = { optional = true, version = "0.4.0", package = "sg_tac", path = "stargate-userland/sg/tac" }
-tail = { optional = true, version = "0.4.0", package = "sg_tail", path = "stargate-userland/sg/tail" }
-tee = { optional = true, version = "0.4.0", package = "sg_tee", path = "stargate-userland/sg/tee" }
-timeout = { optional = true, version = "0.4.0", package = "sg_timeout", path = "stargate-userland/sg/timeout" }
-touch = { optional = true, version = "0.4.0", package = "sg_touch", path = "stargate-userland/sg/touch" }
-tr = { optional = true, version = "0.4.0", package = "sg_tr", path = "stargate-userland/sg/tr" }
-true = { optional = true, version = "0.4.0", package = "sg_true", path = "stargate-userland/sg/true" }
-truncate = { optional = true, version = "0.4.0", package = "sg_truncate", path = "stargate-userland/sg/truncate" }
-tsort = { optional = true, version = "0.4.0", package = "sg_tsort", path = "stargate-userland/sg/tsort" }
-tty = { optional = true, version = "0.4.0", package = "sg_tty", path = "stargate-userland/sg/tty" }
-uname = { optional = true, version = "0.4.0", package = "sg_uname", path = "stargate-userland/sg/uname" }
-unexpand = { optional = true, version = "0.4.0", package = "sg_unexpand", path = "stargate-userland/sg/unexpand" }
-uniq = { optional = true, version = "0.4.0", package = "sg_uniq", path = "stargate-userland/sg/uniq" }
-unlink = { optional = true, version = "0.4.0", package = "sg_unlink", path = "stargate-userland/sg/unlink" }
-uptime = { optional = true, version = "0.4.0", package = "sg_uptime", path = "stargate-userland/sg/uptime" }
-users = { optional = true, version = "0.4.0", package = "sg_users", path = "stargate-userland/sg/users" }
-collect_count = { optional = true, version = "0.4.0", package = "sg_collect_count", path = "stargate-userland/sg/collect-count" }
-who = { optional = true, version = "0.4.0", package = "sg_who", path = "stargate-userland/sg/who" }
-whoami = { optional = true, version = "0.4.0", package = "sg_whoami", path = "stargate-userland/sg/whoami" }
-yes = { optional = true, version = "0.4.0", package = "sg_yes", path = "stargate-userland/sg/yes" }
+get_range = { optional = true, version = "0.4.0", package = "sg_get_range", path = "stargate-userland/commands/get_range" }
+shred = { optional = true, version = "0.4.0", package = "sg_shred", path = "stargate-userland/commands/shred" }
+shuf = { optional = true, version = "0.4.0", package = "sg_shuf", path = "stargate-userland/commands/shuf" }
+dice_object = { optional = true, version = "0.4.0", package = "sg_dice_object", path = "stargate-userland/commands/dice_object" }
+slice_object = { optional = true, version = "0.4.0", package = "sg_slice_object", path = "stargate-userland/commands/slice_object" }
+sleep = { optional = true, version = "0.4.0", package = "sg_sleep", path = "stargate-userland/commands/sleep" }
+sort = { optional = true, version = "0.4.0", package = "sg_sort", path = "stargate-userland/commands/sort" }
+split = { optional = true, version = "0.4.0", package = "sg_split", path = "stargate-userland/commands/split" }
+stat = { optional = true, version = "0.4.0", package = "sg_stat", path = "stargate-userland/commands/stat" }
+stdbuf = { optional = true, version = "0.4.0", package = "sg_stdbuf", path = "stargate-userland/commands/stdbuf" }
+stty = { optional = true, version = "0.4.0", package = "sg_stty", path = "stargate-userland/commands/stty" }
+sum = { optional = true, version = "0.4.0", package = "sg_sum", path = "stargate-userland/commands/sum" }
+sync = { optional = true, version = "0.4.0", package = "sg_sync", path = "stargate-userland/commands/sync" }
+tac = { optional = true, version = "0.4.0", package = "sg_tac", path = "stargate-userland/commands/tac" }
+tail = { optional = true, version = "0.4.0", package = "sg_tail", path = "stargate-userland/commands/tail" }
+tee = { optional = true, version = "0.4.0", package = "sg_tee", path = "stargate-userland/commands/tee" }
+timeout = { optional = true, version = "0.4.0", package = "sg_timeout", path = "stargate-userland/commands/timeout" }
+touch = { optional = true, version = "0.4.0", package = "sg_touch", path = "stargate-userland/commands/touch" }
+tr = { optional = true, version = "0.4.0", package = "sg_tr", path = "stargate-userland/commands/tr" }
+true = { optional = true, version = "0.4.0", package = "sg_true", path = "stargate-userland/commands/true" }
+truncate = { optional = true, version = "0.4.0", package = "sg_truncate", path = "stargate-userland/commands/truncate" }
+tsort = { optional = true, version = "0.4.0", package = "sg_tsort", path = "stargate-userland/commands/tsort" }
+tty = { optional = true, version = "0.4.0", package = "sg_tty", path = "stargate-userland/commands/tty" }
+uname = { optional = true, version = "0.4.0", package = "sg_uname", path = "stargate-userland/commands/uname" }
+unexpand = { optional = true, version = "0.4.0", package = "sg_unexpand", path = "stargate-userland/commands/unexpand" }
+uniq = { optional = true, version = "0.4.0", package = "sg_uniq", path = "stargate-userland/commands/uniq" }
+unlink = { optional = true, version = "0.4.0", package = "sg_unlink", path = "stargate-userland/commands/unlink" }
+uptime = { optional = true, version = "0.4.0", package = "sg_uptime", path = "stargate-userland/commands/uptime" }
+users = { optional = true, version = "0.4.0", package = "sg_users", path = "stargate-userland/commands/users" }
+collect_count = { optional = true, version = "0.4.0", package = "sg_collect_count", path = "stargate-userland/commands/collect-count" }
+who = { optional = true, version = "0.4.0", package = "sg_who", path = "stargate-userland/commands/who" }
+whoami = { optional = true, version = "0.4.0", package = "sg_whoami", path = "stargate-userland/commands/whoami" }
+yes = { optional = true, version = "0.4.0", package = "sg_yes", path = "stargate-userland/commands/yes" }
 
 # this breaks clippy linting with: "tests/by-util/test_factor_benches.rs: No such file or directory (os error 2)"
 # factor_benches = { optional = true, version = "0.0.0", package = "sg_factor_benches", path = "tests/benches/factor" }

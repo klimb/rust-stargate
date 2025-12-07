@@ -6,7 +6,6 @@ use std::path::Path;
 pub fn main() {
     const ENV_FEATURE_PREFIX: &str = "CARGO_FEATURE_";
     const FEATURE_PREFIX: &str = "feat_";
-    const OVERRIDE_PREFIX: &str = "sg_";
 
     println!("cargo:rerun-if-changed=build.rs");
 
