@@ -113,6 +113,21 @@ fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
         .canonicalize()
         .unwrap_or_else(|_| utility_locales_dir.to_path_buf());
 
+    // Try new organized structure first:
+    // locales -> util_name -> subdir (text-commands/object-commands/object-native) -> commands -> sgcore/locales
+    if let Some(uucore_locales) = normalized_dir
+        .parent() // util_name (e.g., base32)
+        .and_then(|p| p.parent()) // subdir (e.g., text-commands)
+        .and_then(|p| p.parent()) // commands
+        .map(|p| p.join("..").join("sgcore").join("locales"))
+        .and_then(|p| p.canonicalize().ok())
+    {
+        if uucore_locales.exists() {
+            return Some(uucore_locales);
+        }
+    }
+
+    // Try old structure:
     // Walk up: locales -> util_name -> sg -> src, then down to sgcore/locales
     let uucore_locales = normalized_dir
         .parent()? // util_name (e.g., tail)
@@ -452,7 +467,22 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         // During development, use the project's locales directory
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         // from sgcore path, load the locales directory from the program directory
-        // Try commands/ first (rust-stargate), then fall back to uu/ (uutils-coreutils compatibility)
+        
+        // Try the new organized structure first: commands/*/dir_name/locales
+        let subdirs = ["text-commands", "object-commands", "object-native"];
+        for subdir in &subdirs {
+            let organized_path = PathBuf::from(manifest_dir)
+                .join("../commands")
+                .join(subdir)
+                .join(&dir_name)
+                .join("locales");
+            
+            if organized_path.exists() {
+                return Ok(organized_path);
+            }
+        }
+        
+        // Try commands/ directly (old structure)
         let dev_path = PathBuf::from(manifest_dir)
             .join("../commands")
             .join(&dir_name)
@@ -479,7 +509,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         }
 
         Err(LocalizationError::LocalesDirNotFound(format!(
-            "Development locales directory not found at {}, {}, or {}",
+            "Development locales directory not found in organized structure or at {}, {}, or {}",
             dev_path.display(),
             sg_path.display(),
             fallback_dev_path.display()
