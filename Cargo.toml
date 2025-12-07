@@ -208,7 +208,7 @@ members = [
   "stargate-userland/commands/*",
   "stargate-userland/commands/stdbuf/src/libstdbuf",
   "stargate-userland/sgcore",
-  "stargate-userland/sgcore_procs",
+  "stargate/sgcore_procs",
   "tests/sgtests",
   # "fuzz",  # TODO
 ]
@@ -334,7 +334,7 @@ unic-langid = "0.9.6"
 fluent-syntax = "0.12.0"
 
 sgcore = { version = "0.4.0", package = "sgcore", path = "stargate-userland/sgcore" }
-sgcore_procs = { version = "0.4.0", package = "sgcore_procs", path = "stargate-userland/sgcore_procs" }
+sgcore_procs = { version = "0.4.0", package = "sgcore_procs", path = "stargate/sgcore_procs" }
 sg_list_directory = { version = "0.4.0", path = "stargate-userland/commands/list_directory" }
 sg_base32 = { version = "0.4.0", path = "stargate-userland/commands/base32" }
 sgtests = { version = "0.4.0", package = "sgtests", path = "tests/sgtests" }
