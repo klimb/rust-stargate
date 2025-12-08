@@ -39,6 +39,46 @@ let largest_file = (list-directory "/tmp")
 
 ### 🎯 Key Features
 
+#### **🔒 Security: OpenBSD pledge() Support, but Rust instead of C**
+All 106 Stargate commands implement OpenBSD's `pledge()` system call for privilege reduction and attack surface minimization:
+
+```rust
+// Example: list-directory restricts itself after argument parsing
+sgcore::pledge::apply_pledge(&["stdio", "rpath", "getpw"])?;
+```
+
+**What is pledge()?**
+- OpenBSD's security mechanism that restricts system call access
+- Commands declare upfront what system resources they need
+- Violations trigger immediate termination - no exploitation possible
+- Reduces attack surface even if command is compromised
+
+**Common pledge promise sets used:**
+- `stdio` - Simple output commands (echo, printf, yes, false, basename)
+- `stdio, rpath` - Read-only file operations (cat, head, tail, wc, stat)
+- `stdio, rpath, wpath, cpath` - File creation (touch, mkdir, cp, mv, ln)
+- `stdio, rpath, fattr` - Permission changes (chmod, chown, chgrp)
+- `stdio, proc, exec` - Process spawning (timeout, nice, nohup, env)
+- `stdio, getpw` - User/group lookups (whoami, id, groups)
+- `stdio, tty` - Terminal operations (stty, tty, more)
+
+**Cross-platform design:**
+- Pledge calls are conditionally compiled for OpenBSD only
+- No-op on other platforms - zero overhead
+- Uses the `pledge` crate (version 0.4) for syscall interface
+
+**Example commands:**
+```bash
+# list-directory pledges: stdio, rpath, getpw (directory reading + user lookups)
+stargate> list-directory /etc
+
+# rm pledges: stdio, rpath, cpath (file removal)
+stargate> rm old_file.txt
+
+# cp pledges: stdio, rpath, wpath, cpath, fattr (full file operations)
+stargate> cp source.txt destination.txt
+```
+
 #### **Functional Programming with Closures**
 - Stargate now has the most concise closure syntax among popular languages. Less stuff to type.
 - Closures with `.map()`, `.filter()`, and `.reduce()` for elegant data transformations. 
@@ -739,18 +779,8 @@ Best for tight loops, recursive functions, and computational scripts.
 - GNU/Linux
 - macOS
 
----
 
-## 📜 License
 
-Stargate is available under **dual licensing**:
-
-- **Open-Source License** - Free for non-commercial, open-source projects (see [LICENSE](LICENSE))
-- **Commercial License** - Required for commercial/proprietary use
-
-**Commercial use requires a Commercial License.** Contact: dvk@klimb.com
-
-See [LICENSE](LICENSE) for full terms.
 
 ---
 
