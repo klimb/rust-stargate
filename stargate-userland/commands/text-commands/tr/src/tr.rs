@@ -34,6 +34,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+    }
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 

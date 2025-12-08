@@ -17,6 +17,7 @@ static OPT_PATH: &str = "FILE";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "cpath"])?;
     let json_output_options = JsonOutputOptions::from_matches(&matches);
 
     let path: &Path = matches.get_one::<OsString>(OPT_PATH).unwrap().as_ref();

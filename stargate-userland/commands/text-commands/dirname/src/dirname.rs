@@ -65,6 +65,7 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
     let opts = JsonOutputOptions::from_matches(&matches);

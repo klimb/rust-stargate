@@ -215,6 +215,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
+    }
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)

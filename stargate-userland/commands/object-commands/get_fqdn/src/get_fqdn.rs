@@ -15,6 +15,7 @@ static OBJ_FLAG: &str = "obj";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "dns"])?;
 
     if matches.get_flag(OBJ_FLAG) {
         produce_json(&matches)

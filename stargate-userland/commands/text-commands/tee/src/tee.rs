@@ -46,6 +46,7 @@ enum OutputErrorMode {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     let append = matches.get_flag(options::APPEND);
     let ignore_interrupts = matches.get_flag(options::IGNORE_INTERRUPTS);

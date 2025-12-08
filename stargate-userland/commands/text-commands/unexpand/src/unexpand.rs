@@ -147,6 +147,7 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app(), expand_shortcuts(args.collect()))?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     unexpand(&Options::new(&matches)?)
 }

@@ -334,6 +334,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Err(e) => {
             use sgcore::clap_localization::handle_clap_error_with_exit_code;
             if e.kind() == clap::error::ErrorKind::UnknownArgument {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
                 handle_clap_error_with_exit_code(e, 1);
             }
             if e.kind() == clap::error::ErrorKind::TooManyValues

@@ -21,6 +21,7 @@ static OPT_IGNORE: &str = "ignore";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     let object_output = JsonOutputOptions::from_matches(&matches);
 
     let cores = compute_cores(&matches)?;

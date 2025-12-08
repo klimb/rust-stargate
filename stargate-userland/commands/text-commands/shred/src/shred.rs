@@ -233,6 +233,7 @@ impl<'a> BytesWriter<'a> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     if !matches.contains_id(options::FILE) {
         return Err(UUsageError::new(

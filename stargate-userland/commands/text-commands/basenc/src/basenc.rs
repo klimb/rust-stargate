@@ -79,6 +79,7 @@ fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (config, format) = parse_cmd_args(args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let mut input = base_common::get_input(&config)?;
 

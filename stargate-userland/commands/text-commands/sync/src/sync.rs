@@ -58,6 +58,7 @@ mod platform {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     let mut opts = JsonOutputOptions::from_matches(&matches);
     // Object output is the default for this command
     if !matches.contains_id("object_output") {

@@ -45,6 +45,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let (args, obs_width) = handle_obsolete(&args[..]);
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let bytes = matches.get_flag(options::BYTES);
     let characters = matches.get_flag(options::CHARACTERS);

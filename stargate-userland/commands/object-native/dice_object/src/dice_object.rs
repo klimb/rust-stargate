@@ -12,6 +12,7 @@ pub mod options {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sg_app().try_get_matches_from(args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     // Read JSON from stdin
     let mut input = String::new();

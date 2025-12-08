@@ -18,6 +18,7 @@ mod options {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     let mode = calculate_mode(matches.get_one::<String>(options::MODE))
         .map_err(|e| USimpleError::new(1, translate!("mkfifo-error-invalid-mode", "error" => e)))?;

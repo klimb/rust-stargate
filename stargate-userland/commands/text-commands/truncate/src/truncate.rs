@@ -80,6 +80,7 @@ pub mod options {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let app = sg_app();
     let matches = sgcore::clap_localization::handle_clap_result(app, args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     let files: Vec<OsString> = matches
         .get_many::<OsString>(options::ARG_FILES)

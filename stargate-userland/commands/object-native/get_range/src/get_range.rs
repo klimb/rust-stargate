@@ -92,6 +92,7 @@ fn select_precision(
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app(), split_short_args_with_value(args))?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
 

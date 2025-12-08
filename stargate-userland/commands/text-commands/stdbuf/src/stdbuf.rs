@@ -179,6 +179,7 @@ fn get_preload_env(_tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
+    sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
 
     let options =
         ProgramOptions::try_from(&matches).map_err(|e| UUsageError::new(125, e.to_string()))?;

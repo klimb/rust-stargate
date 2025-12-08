@@ -1112,6 +1112,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut settings = GlobalSettings::default();
 
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "tmppath"])?;
 
     // Prevent -o/--output to be specified multiple times
     if matches

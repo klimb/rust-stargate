@@ -301,6 +301,7 @@ fn open_file(name: &OsString, line_ending: LineEnding) -> io::Result<LineReader>
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO_TERMINATED));
     let filename1 = matches.get_one::<OsString>(options::FILE_1).unwrap();
     let filename2 = matches.get_one::<OsString>(options::FILE_2).unwrap();

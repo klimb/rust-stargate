@@ -15,6 +15,8 @@ const BUF_SIZE: usize = 16 * 1024;
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let mut buffer = Vec::with_capacity(BUF_SIZE);

@@ -17,6 +17,7 @@ static ARG_HOSTNAME: &str = "hostname";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "dns", "inet"])?;
     
     let host = matches.get_one::<OsString>(ARG_HOSTNAME)
         .ok_or_else(|| sgcore::error::UUsageError::new(1, translate!("set-hostname-error-missing-operand")))?;

@@ -611,6 +611,7 @@ where
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     // get the file to split
     let file_name = matches.get_one::<OsString>(options::FILE).unwrap();

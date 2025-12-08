@@ -23,6 +23,7 @@ fn get_long_usage() -> String {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app().after_help(get_long_usage()), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let files: Vec<String> = matches
         .get_many::<String>(options::FILE)

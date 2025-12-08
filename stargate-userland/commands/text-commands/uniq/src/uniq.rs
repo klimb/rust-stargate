@@ -660,6 +660,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Ok(matches) => matches,
         Err(clap_error) => {
             if clap_error.exit_code() == 0 {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
                 // Let caller handle help/version
                 return Err(map_clap_errors(clap_error));
             }

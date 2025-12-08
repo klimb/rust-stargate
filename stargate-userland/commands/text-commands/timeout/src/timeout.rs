@@ -99,6 +99,7 @@ impl Config {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
+    sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
 
     let config = Config::from(&matches)?;
     timeout(

@@ -319,6 +319,7 @@ fn extract_width(matches: &ArgMatches) -> UResult<Option<usize>> {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let args: Vec<_> = args.collect();
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     // Warn the user if it looks like we're trying to pass a number in the first
     // argument with non-numeric characters

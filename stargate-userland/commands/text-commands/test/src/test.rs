@@ -39,6 +39,7 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
     let program = args.next().unwrap_or_else(|| OsString::from("test"));
     let binary_name = sgcore::util_name();
     let mut args: Vec<_> = args.collect();
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     if binary_name.ends_with('[') {
         // If invoked as [ we should recognize --help and --version (but not -h or -v)

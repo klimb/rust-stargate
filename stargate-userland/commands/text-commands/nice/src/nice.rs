@@ -100,6 +100,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
+    sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
 
     nix::errno::Errno::clear();
     let mut niceness = unsafe { libc::getpriority(PRIO_PROCESS, 0) };

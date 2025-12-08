@@ -12,6 +12,7 @@ static ARG_VARIABLES: &str = "variables";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
     

@@ -168,6 +168,7 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
         .file_stem()
         .unwrap_or_else(|| OsStr::new(NAME))
         .to_string_lossy();
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let args = iter::once(program.clone()).chain(args);
 

@@ -47,6 +47,7 @@ static ARG_PREFIX: &str = "prefix";
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (args, obs_lines) = handle_obsolete(args);
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     match Settings::from(&matches, obs_lines.as_deref()) {
         Ok(settings) => split(&settings),

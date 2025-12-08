@@ -882,6 +882,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
 #[allow(clippy::cognitive_complexity)]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let summarize = matches.get_flag(options::SUMMARIZE);
 

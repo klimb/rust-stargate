@@ -6,6 +6,8 @@ use sgcore::translate;
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+
     let mut command = sg_app();
 
     // Mirror GNU options, always return `1`. In particular even the 'successful' cases of no-op,

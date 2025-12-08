@@ -28,6 +28,7 @@ mod options {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let before = matches.get_flag(options::BEFORE);
     let regex = matches.get_flag(options::REGEX);

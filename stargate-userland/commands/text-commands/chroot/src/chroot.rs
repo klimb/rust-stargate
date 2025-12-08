@@ -152,6 +152,7 @@ impl Options {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec", "id", "chown"])?;
 
     let default_shell: &'static str = "/bin/sh";
     let default_option: &'static str = "-i";

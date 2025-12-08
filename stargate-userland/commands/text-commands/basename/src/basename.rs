@@ -23,6 +23,8 @@ pub mod options {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+
     //
     // Argument parsing
     //

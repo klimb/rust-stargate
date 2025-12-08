@@ -133,6 +133,7 @@ static OPT_DEBUG: &str = "debug";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "fattr"])?;
 
     let files: Vec<OsString> = matches
         .get_many::<OsString>(ARG_FILES)

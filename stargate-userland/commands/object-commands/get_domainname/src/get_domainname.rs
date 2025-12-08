@@ -12,6 +12,7 @@ use sgcore::{
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     // hostname https://datatracker.ietf.org/doc/html/rfc952
     //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
     //    sign (-), and period (.)

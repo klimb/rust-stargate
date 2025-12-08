@@ -9,6 +9,7 @@ use serde_json::json;
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
 

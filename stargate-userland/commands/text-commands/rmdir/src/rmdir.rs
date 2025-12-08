@@ -21,6 +21,7 @@ static ARG_DIRS: &str = "dirs";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "cpath"])?;
 
     let opts = Opts {
         ignore: matches.get_flag(OPT_IGNORE_FAIL_NON_EMPTY),

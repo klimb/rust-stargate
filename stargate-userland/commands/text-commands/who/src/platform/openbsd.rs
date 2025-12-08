@@ -7,6 +7,7 @@ use sgcore::translate;
 
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let _matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     println!("{}", translate!("who-unsupported-openbsd"));
     Ok(())
 }

@@ -388,6 +388,7 @@ fn maybe_sanitize_length(
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let check = matches.get_flag(options::CHECK);
 

@@ -480,6 +480,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .collect();
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let complement = matches.get_flag(options::COMPLEMENT);
     let only_delimited = matches.get_flag(options::ONLY_DELIMITED);

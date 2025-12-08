@@ -312,6 +312,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let command = sg_app();
     let matches = sgcore::clap_localization::handle_clap_result(command, opt_args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let mut files = matches
         .get_many::<String>(options::FILES)

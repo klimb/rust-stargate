@@ -89,6 +89,7 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "fattr"])?;
     chown_base(sg_app(), args, options::ARG_GROUP, parse_gid_and_uid, true)
 }
 

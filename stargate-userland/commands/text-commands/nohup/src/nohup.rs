@@ -54,6 +54,7 @@ impl UError for NohupError {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
 
     replace_fds()?;
 

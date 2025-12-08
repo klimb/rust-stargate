@@ -220,6 +220,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let clap_opts = sg_app();
 
     let clap_matches = sgcore::clap_localization::handle_clap_result(clap_opts, &args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let od_options = OdOptions::new(&clap_matches, &args)?;
 

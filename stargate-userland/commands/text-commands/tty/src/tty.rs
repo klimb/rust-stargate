@@ -15,6 +15,7 @@ mod options {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
+    sgcore::pledge::apply_pledge(&["stdio", "tty"])?;
     let object_output = JsonOutputOptions::from_matches(&matches);
 
     let silent = matches.get_flag(options::SILENT);

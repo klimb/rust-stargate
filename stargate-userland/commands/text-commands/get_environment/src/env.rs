@@ -761,6 +761,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
+    sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
     EnvAppData::default().run_env(args)
 }
 

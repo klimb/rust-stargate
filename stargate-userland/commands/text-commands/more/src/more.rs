@@ -148,6 +148,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         println!("{panic_info}");
     }));
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "tty"])?;
     let mut options = Options::from(&matches);
     if let Some(files) = matches.get_many::<OsString>(options::FILES) {
         let length = files.len();

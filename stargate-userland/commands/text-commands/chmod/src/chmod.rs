@@ -109,6 +109,7 @@ fn extract_negative_modes(mut args: impl sgcore::Args) -> (Option<String>, Vec<O
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (parsed_cmode, args) = extract_negative_modes(args.skip(1)); // skip binary name
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "fattr"])?;
 
     let changes = matches.get_flag(options::CHANGES);
     let quiet = matches.get_flag(options::QUIET);

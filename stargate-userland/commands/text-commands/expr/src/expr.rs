@@ -102,6 +102,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .skip(1) // Skip binary name
         .map(os_string_to_vec)
         .collect::<Result<Vec<_>, _>>()?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     if args.len() == 1 && args[0] == b"--help" {
         let _ = sg_app().print_help();

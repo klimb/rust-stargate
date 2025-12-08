@@ -1425,6 +1425,7 @@ fn is_fifo(filename: &str) -> bool {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let settings: Settings = Parser::new().parse(
         matches

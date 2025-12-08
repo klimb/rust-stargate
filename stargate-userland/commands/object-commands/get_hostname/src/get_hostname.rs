@@ -18,6 +18,7 @@ static FQDN_FLAG: &str = "fqdn";
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio"])?;
     // hostname https://datatracker.ietf.org/doc/html/rfc952
     //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
     //    sign (-), and period (.)

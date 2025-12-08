@@ -45,6 +45,7 @@ fn infallible_gid2grp(gid: &u32) -> String {
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
     let json_output_options = JsonOutputOptions::from_matches(&matches);
 
