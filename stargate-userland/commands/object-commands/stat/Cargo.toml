@@ -29,6 +29,9 @@ sgcore = { workspace = true, features = [
 thiserror = { workspace = true }
 fluent = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "stat"
 path = "src/main.rs"

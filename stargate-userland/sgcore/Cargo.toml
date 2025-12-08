@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "src/lib/lib.rs"
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [dependencies]
 atty = "0.2"
 bstr = { workspace = true }

@@ -60,8 +60,6 @@ use sgcore::{
 };
 use serde_json::json;
 
-#[cfg(target_os = "openbsd")]
-use pledge::pledge_promises;
 
 mod dired;
 use dired::{DiredOutput, is_dired_arg_present};
@@ -1164,20 +1162,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let config = Config::from(&matches)?;
 
-    // Apply OpenBSD pledge() to restrict system operations
-    // Similar to OpenBSD's /bin/ls which uses: pledge("stdio rpath getpw", NULL)
-    // - stdio: allow standard I/O operations
-    // - rpath: allow read access to the filesystem
-    // - getpw: allow access to password/group databases for user/group name resolution
-    #[cfg(target_os = "openbsd")]
-    {
-        pledge_promises![Stdio Rpath GetPw].map_err(|e| {
-            sgcore::error::USimpleError::new(
-                1,
-                format!("pledge failed: {}", e)
-            )
-        })?;
-    }
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "getpw"])?;
 
     let locs = matches
         .get_many::<OsString>(options::PATHS)

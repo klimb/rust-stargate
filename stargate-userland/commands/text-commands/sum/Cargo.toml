@@ -24,6 +24,9 @@ fluent = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "sum"
 path = "src/main.rs"

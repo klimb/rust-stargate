@@ -24,6 +24,9 @@ fluent = { workspace = true }
 serde_json = { workspace = true }
 procfs = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "list-processes"
 path = "src/main.rs"

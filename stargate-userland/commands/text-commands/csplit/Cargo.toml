@@ -24,6 +24,9 @@ regex = { workspace = true }
 sgcore = { workspace = true, features = ["entries", "fs", "format"] }
 fluent = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "csplit"
 path = "src/main.rs"

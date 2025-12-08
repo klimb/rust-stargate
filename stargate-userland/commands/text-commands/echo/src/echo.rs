@@ -130,6 +130,8 @@ fn filter_flags(mut args: impl Iterator<Item = OsString>) -> (Vec<OsString>, Opt
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+
     // args[0] is the name of the binary.
     let args: Vec<OsString> = args.skip(1).collect();
 

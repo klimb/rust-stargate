@@ -29,6 +29,9 @@ nix = { workspace = true }
 [target.'cfg(not(unix))'.dependencies]
 sgcore = { workspace = true, features = ["pipes"] }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "yes"
 path = "src/main.rs"

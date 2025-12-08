@@ -6,6 +6,8 @@ use sgcore::translate;
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio"])?;
+
     let mut command = sg_app();
 
     let args: Vec<OsString> = args.collect();

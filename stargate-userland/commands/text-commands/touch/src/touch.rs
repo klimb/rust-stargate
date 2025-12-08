@@ -182,6 +182,8 @@ fn shr2(s: &str) -> String {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "fattr"])?;
+
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let mut filenames: Vec<&OsString> = matches

@@ -27,6 +27,7 @@ pub use crate::mods::line_ending;
 pub use crate::mods::locale;
 pub use crate::mods::os;
 pub use crate::mods::panic;
+pub use crate::mods::pledge;
 pub use crate::mods::posix;
 
 // * feature-gated modules

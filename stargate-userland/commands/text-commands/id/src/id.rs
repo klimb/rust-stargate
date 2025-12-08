@@ -94,6 +94,8 @@ struct State {
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
+
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let opts = JsonOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());

@@ -27,6 +27,9 @@ divan = { workspace = true }
 tempfile = { workspace = true }
 sgcore = { workspace = true, features = ["benchmark", "parser"] }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "uniq"
 path = "src/main.rs"

@@ -2018,6 +2018,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pledge"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "252599417b7d9a43b7fdc63dd790b0848666a8910b2ebe1a25118309c3c981e5"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "portable-atomic"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3027,6 +3036,7 @@ dependencies = [
  "glob",
  "hostname",
  "lscolors",
+ "pledge",
  "serde",
  "serde_json",
  "sgcore",

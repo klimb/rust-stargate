@@ -541,6 +541,8 @@ fn sg_head(options: &HeadOptions) -> UResult<()> {
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
+
     let args: Vec<_> = arg_iterate(args)?.collect();
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let options = HeadOptions::get_from(&matches).map_err(HeadError::MatchOption)?;

@@ -193,6 +193,8 @@ static ARG_FILES: &str = "files";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath", "cpath"])?;
+
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let files: Vec<_> = matches

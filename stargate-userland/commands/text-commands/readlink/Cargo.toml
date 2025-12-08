@@ -23,6 +23,9 @@ sgcore = { workspace = true, features = ["fs"] }
 fluent = { workspace = true }
 serde_json = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "readlink"
 path = "src/main.rs"

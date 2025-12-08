@@ -34,6 +34,9 @@ sgcore = { workspace = true, features = ["parser"] }
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }
 
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
 [[bin]]
 name = "get-date"
 path = "src/main.rs"
