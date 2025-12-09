@@ -3339,6 +3339,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_say_text"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_set_hostname"
 version = "0.4.0"
 dependencies = [
@@ -4041,6 +4051,7 @@ dependencies = [
  "sg_realpath",
  "sg_rm",
  "sg_rmdir",
+ "sg_say_text",
  "sg_set_hostname",
  "sg_shred",
  "sg_shuf",
