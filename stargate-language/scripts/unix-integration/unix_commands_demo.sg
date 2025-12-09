@@ -9,8 +9,8 @@ fn test_absolute_path_echo() {
 
 [test]
 fn test_absolute_path_which() {
-    let result = execute-process("/usr/bin/which", "stargate");
-    ut.assert_not_equals(result, "", "/usr/bin/which should find stargate");
+    let result = execute-process("which", "stargate");
+    ut.assert_not_equals(result, "", "which should find stargate");
 }
 
 [test]
@@ -30,7 +30,7 @@ fn test_mixed_stargate_and_external() {
 
 [test]
 fn test_external_in_pipeline() {
-    let result = execute-process("/bin/sh", "-c", "echo 'testing grep' | /bin/grep test");
+    let result = execute-process("/bin/sh", "-c", "echo 'testing grep' | grep test");
     ut.assert_not_equals(result, "", "Pipeline with external command should work");
 }
 

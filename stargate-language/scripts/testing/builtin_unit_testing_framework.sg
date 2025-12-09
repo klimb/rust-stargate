@@ -2,7 +2,7 @@ use ut;
 
 [test]
 fn test_unix_ls() {
-    let result = execute-process("/usr/bin/ls", "--color=never");
+    let result = execute-process("ls", "--color=never");
     ut.assert_not_equals(result, "", "ls should produce output");
 }
 
@@ -54,7 +54,7 @@ fn test_string_non_empty() {
 
 [test]
 fn test_execute_process_args() {
-    let result = execute-process("/usr/bin/echo", "hello", "world");
+    let result = execute-process("echo", "hello", "world");
     ut.assert_not_equals(result, "", "echo with args should produce output");
 }
 

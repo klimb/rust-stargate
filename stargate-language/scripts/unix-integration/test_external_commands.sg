@@ -9,7 +9,7 @@ fn test_absolute_path_echo() {
 
 [test]
 fn test_absolute_path_printf() {
-    let result = execute-process("/usr/bin/printf", "✓ Printf works: %s\n", "formatted output");
+    let result = execute-process("printf", "✓ Printf works: %s\n", "formatted output");
     ut.assert_not_equals(result, "", "Printf should work");
 }
 
@@ -33,25 +33,25 @@ fn test_path_resolved_date() {
 
 [test]
 fn test_pipeline_stargate_to_unix() {
-    let result = execute-process("/bin/sh", "-c", "echo 'finding needle in haystack' | /bin/grep needle");
+    let result = execute-process("/bin/sh", "-c", "echo 'finding needle in haystack' | grep needle");
     ut.assert_not_equals(result, "", "Stargate to Unix pipeline should work");
 }
 
 [test]
 fn test_pipeline_unix_to_unix() {
-    let result = execute-process("/bin/sh", "-c", "/bin/echo 'one two three' | /usr/bin/tr ' ' '\\n'");
+    let result = execute-process("/bin/sh", "-c", "echo 'one two three' | tr ' ' '\\n'");
     ut.assert_not_equals(result, "", "Unix to Unix pipeline should work");
 }
 
 [test]
 fn test_mixed_pipeline_with_grep_wc() {
-    let result = execute-process("/bin/sh", "-c", "echo 'alpha beta gamma delta' | /bin/grep a | /usr/bin/wc -l");
+    let result = execute-process("/bin/sh", "-c", "echo 'alpha beta gamma delta' | grep a | wc -l");
     ut.assert_not_equals(result, "", "Mixed pipeline should work");
 }
 
 [test]
 fn test_external_script_in_pipeline() {
-    let result = execute-process("/bin/sh", "-c", "./stargate-language/scripts/shell-integration/json_producer.sh | /bin/cat");
+    let result = execute-process("/bin/sh", "-c", "./stargate-language/scripts/shell-integration/json_producer.sh | cat");
     ut.assert_not_equals(result, "", "External script in pipeline should work");
 }
 

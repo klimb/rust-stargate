@@ -2,13 +2,13 @@ use ut;
 
 [test]
 fn test_find_sg_scripts() {
-    let result = execute-process("/bin/sh", "-c", "/usr/bin/find stargate-language/scripts -name '*.sg' -type f | /usr/bin/head -5");
+    let result = execute-process("/bin/sh", "-c", "find stargate-language/scripts -name '*.sg' -type f | head -5");
     ut.assert_not_equals(result, "", "find should locate .sg files");
 }
 
 [test]
 fn test_list_with_grep() {
-    let result = execute-process("/bin/sh", "-c", "ls stargate-language/scripts/basics | /bin/grep .sg | /usr/bin/head -3");
+    let result = execute-process("/bin/sh", "-c", "ls stargate-language/scripts/basics | grep .sg | head -3");
     ut.assert_not_equals(result, "", "ls | grep should filter scripts");
 }
 
@@ -20,13 +20,13 @@ fn test_custom_analysis_script() {
 
 [test]
 fn test_count_sg_files() {
-    let result = execute-process("/bin/sh", "-c", "/usr/bin/find stargate-language/scripts -name '*.sg' | /usr/bin/wc -l");
+    let result = execute-process("/bin/sh", "-c", "find stargate-language/scripts -name '*.sg' | wc -l");
     ut.assert_not_equals(result, "", "Count pipeline should work");
 }
 
 [test]
 fn test_grep_for_keyword() {
-    let result = execute-process("/bin/sh", "-c", "/bin/grep -l pipeline stargate-language/scripts/*/*.sg 2>/dev/null | /usr/bin/wc -l");
+    let result = execute-process("/bin/sh", "-c", "grep -l pipeline stargate-language/scripts/*/*.sg 2>/dev/null | wc -l");
     ut.assert_not_equals(result, "", "grep search should work");
 }
 

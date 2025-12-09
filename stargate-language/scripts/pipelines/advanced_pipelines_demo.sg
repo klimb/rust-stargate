@@ -2,19 +2,19 @@ use ut;
 
 [test]
 fn test_stargate_list_piped_to_grep() {
-    let result = execute-process("/bin/sh", "-c", "ls stargate-language/scripts/*/*.sg | /bin/grep demo");
+    let result = execute-process("/bin/sh", "-c", "ls stargate-language/scripts/*/*.sg | grep demo");
     ut.assert_not_equals(result, "", "list-directory | grep should work");
 }
 
 [test]
 fn test_unix_ls_piped_to_stargate() {
-    let result = execute-process("/bin/sh", "-c", "/bin/ls -1 stargate-language/scripts/demos | /bin/grep demo");
+    let result = execute-process("/bin/sh", "-c", "ls -1 stargate-language/scripts/demos | grep demo");
     ut.assert_not_equals(result, "", "Unix ls piped should work");
 }
 
 [test]
 fn test_chain_multiple_unix_commands() {
-    let result = execute-process("/bin/sh", "-c", "echo 'one two three four' | /usr/bin/tr ' ' '\\n' | /bin/grep t");
+    let result = execute-process("/bin/sh", "-c", "echo 'one two three four' | tr ' ' '\\n' | grep t");
     ut.assert_not_equals(result, "", "Multi-command pipeline should work");
 }
 

@@ -6,9 +6,14 @@ use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::object_output::{self, JsonOutputOptions};
 use serde_json::json;
-use procfs::process::{Process, all_processes};
 use std::collections::HashMap;
 use std::sync::OnceLock;
+
+#[cfg(target_os = "linux")]
+use procfs::process::{Process, all_processes};
+
+#[cfg(target_os = "macos")]
+use sysinfo::{System, ProcessesToUpdate};
 
 static ARG_ALL: &str = "all";
 static ARG_FULL: &str = "full";
@@ -25,6 +30,7 @@ struct ProcessInfo {
     mem_usage: u64,
 }
 
+#[cfg(target_os = "linux")]
 impl ProcessInfo {
     fn from_process(process: &Process) -> Option<Self> {
         let stat = process.stat().ok()?;
@@ -73,6 +79,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
 fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
     let mut processes = Vec::new();
     let current_pid = std::process::id() as i32;
@@ -98,6 +105,66 @@ fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
     processes.sort_by_key(|p| p.pid);
     
     Ok(processes)
+}
+
+#[cfg(target_os = "macos")]
+fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
+    let mut sys = System::new_all();
+    sys.refresh_processes(ProcessesToUpdate::All, true);
+    
+    let current_pid = std::process::id() as i32;
+    let mut processes = Vec::new();
+    
+    for (pid, process) in sys.processes() {
+        let pid_i32 = pid.as_u32() as i32;
+        
+        // Skip the current process unless --all is specified
+        if !show_all && pid_i32 == current_pid {
+            continue;
+        }
+        
+        let ppid = process.parent().map(|p| p.as_u32() as i32).unwrap_or(0);
+        
+        // Get UID - default to 0 if not available
+        let uid = process.user_id()
+            .and_then(|id| id.to_string().parse::<u32>().ok())
+            .unwrap_or(0);
+        
+        let name = process.name().to_string_lossy().to_string();
+        
+        let cmdline: Vec<String> = process.cmd().iter()
+            .map(|s| s.to_string_lossy().to_string())
+            .collect();
+        
+        let state = format!("{:?}", process.status());
+        
+        // CPU time in seconds
+        let cpu_time = process.run_time();
+        
+        // Memory usage in KB
+        let mem_usage = process.memory() / 1024;
+        
+        processes.push(ProcessInfo {
+            pid: pid_i32,
+            ppid,
+            uid,
+            name,
+            cmdline,
+            state,
+            cpu_time,
+            mem_usage,
+        });
+    }
+    
+    // Sort by PID
+    processes.sort_by_key(|p| p.pid);
+    
+    Ok(processes)
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn collect_processes(_show_all: bool) -> UResult<Vec<ProcessInfo>> {
+    Err(sgcore::error::USimpleError::new(1, "list-processes is not supported on this platform"))
 }
 
 fn output_json(processes: Vec<ProcessInfo>, opts: JsonOutputOptions, show_full: bool) -> UResult<()> {
