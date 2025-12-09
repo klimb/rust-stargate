@@ -23,10 +23,13 @@ https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
 # Traditional: operate on unstructured stream of text
 ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
-# Stargate: Inline, expressive one-liners with type-safe object pipelines
+# Stargate: connect object commands to powerful language expressions
 (list-directory .).entries
     .filter(e: e.name.ends_with(".rs"))
     .size();
+
+# stargate: object pipelines are more readable than familiar unix commands
+list-directory | slice-object entries | dice-object name size --pretty
 ```
 
 **Maximum Expressivity**: Commands can be inlined and chained for ultra-concise code:
