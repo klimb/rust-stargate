@@ -152,9 +152,12 @@ fn handle_general_input(input: &str, interpreter: &Arc<Mutex<Interpreter>>) {
                               input == "list-variables" || input.starts_with("list-variables ");
     let is_statement = CommandType::is_script_statement(input) || input.ends_with(';') || is_builtin_command;
     
-    // Check for property access (excluding file paths)
+    let first_word = input.split_whitespace().next().unwrap_or("");
+    use super::path::find_in_path;
+    let is_external_command = !first_word.is_empty() && find_in_path(first_word).is_some();
+    
     let is_path_like = input.starts_with("./") || input.starts_with("../") || input.starts_with('/');
-    let has_prop_access = !is_path_like && CommandType::has_property_access(input);
+    let has_prop_access = !is_path_like && !is_external_command && CommandType::has_property_access(input);
     
     if is_statement || has_prop_access {
         let script_code = if is_statement && !input.ends_with(';') {

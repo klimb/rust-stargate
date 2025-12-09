@@ -121,45 +121,16 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
             return Err(format!("Command not found: {}", cmd_parts[0]));
         }
 
-        let mut child = Command::new(path)
+        let status = Command::new(path)
             .args(&cmd_parts[1..])
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()
             .map_err(|e| format!("Failed to execute command: {}", e))?;
 
-        let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
-        let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
-
-        let mut output = String::new();
-        let mut error_output = String::new();
-
-        BufReader::new(stdout)
-            .lines()
-            .for_each(|line| {
-                if let Ok(line) = line {
-                    output.push_str(&line);
-                    output.push('\n');
-                }
-            });
-
-        BufReader::new(stderr)
-            .lines()
-            .for_each(|line| {
-                if let Ok(line) = line {
-                    error_output.push_str(&line);
-                    error_output.push('\n');
-                }
-            });
-
-        let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
-
-        if !error_output.is_empty() {
-            eprint!("{}", error_output);
-        }
-
         if status.success() {
-            return Ok(output);
+            return Ok(String::new());
         } else {
             return Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)));
         }
@@ -226,47 +197,17 @@ fn execute_single_command_impl(cmd_parts: &[String], add_obj: bool) -> Result<St
             Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)))
         }
     } else {
-        // Try to find and execute from PATH
         if let Some(path_cmd) = find_in_path(&cmd_name) {
-            let mut child = Command::new(path_cmd)
+            let status = Command::new(path_cmd)
                 .args(&cmd_parts[1..])
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .status()
                 .map_err(|e| format!("Failed to execute command: {}", e))?;
 
-            let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
-            let stderr = child.stderr.take().ok_or("Failed to capture stderr")?;
-
-            let mut output = String::new();
-            let mut error_output = String::new();
-
-            BufReader::new(stdout)
-                .lines()
-                .for_each(|line| {
-                    if let Ok(line) = line {
-                        output.push_str(&line);
-                        output.push('\n');
-                    }
-                });
-
-            BufReader::new(stderr)
-                .lines()
-                .for_each(|line| {
-                    if let Ok(line) = line {
-                        error_output.push_str(&line);
-                        error_output.push('\n');
-                    }
-                });
-
-            let status = child.wait().map_err(|e| format!("Failed to wait for command: {}", e))?;
-
-            if !error_output.is_empty() {
-                eprint!("{}", error_output);
-            }
-
             if status.success() {
-                Ok(output)
+                Ok(String::new())
             } else {
                 Err(format!("Command failed with exit code: {}", status.code().unwrap_or(-1)))
             }
