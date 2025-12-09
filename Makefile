@@ -156,6 +156,7 @@ UNIX_PROGS := \
 	id \
 	install \
 	kill \
+	list-processes \
 	get_username \
 	mkfifo \
 	mknod \
