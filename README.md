@@ -1,7 +1,8 @@
-# Stargate 🌠
-### A Modern UNIX Userland with Built-In Testing, Classes & Object Pipes
+# Rust-Stargate (a new UNIX userland + language + shell) by Dmitry Kalashnikov
 
-**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
+I took a fresh look at UNIX userland (multiple layers, from 300+ commands, to shells) and decided to redo it...
+
+Stargate reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
 https://github.com/user-attachments/assets/29243d01-1473-49d5-b9a9-ff87daba5edf
 
@@ -23,10 +24,13 @@ https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
 # Traditional: operate on unstructured stream of text
 ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
-# Stargate: Inline, expressive one-liners with type-safe object pipelines
+# Stargate: connect object commands to powerful language expressions
 (list-directory .).entries
     .filter(e: e.name.ends_with(".rs"))
     .size();
+
+# stargate: object pipelines are more readable than familiar unix commands
+list-directory | slice-object entries | dice-object name size --pretty
 ```
 
 **Maximum Expressivity**: Commands can be inlined and chained for ultra-concise code:
