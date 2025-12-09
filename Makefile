@@ -95,6 +95,7 @@ PROGS       := \
 	head \
 	get_hostname \
 	get_domainname \
+	get_fqdn \
 	set-hostname \
 	join \
 	link \
