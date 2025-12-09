@@ -1,4 +1,5 @@
 // spell-checker:ignore procfs
+// Author: Dmitry Kalashnikov
 
 use clap::{Arg, ArgAction, Command};
 use sgcore::error::UResult;
@@ -37,13 +38,8 @@ impl ProcessInfo {
         let cmdline = process.cmdline().ok().unwrap_or_default();
         let status = process.status().ok()?;
         
-        // Calculate total CPU time in seconds
         let cpu_time = (stat.utime + stat.stime) / procfs::ticks_per_second();
-        
-        // Get memory usage in KB
         let mem_usage = status.vmrss.unwrap_or(0);
-        
-        // Get UID
         let uid = status.ruid;
         
         Some(ProcessInfo {
@@ -81,30 +77,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
 #[cfg(target_os = "linux")]
 fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
-    let mut processes = Vec::new();
-    let current_pid = std::process::id() as i32;
+    let processes = all_processes()
+        .map_err(|e| sgcore::error::USimpleError::new(1, format!("Failed to read processes: {}", e)))?
+        .filter_map(|prc| prc.ok())
+        .filter_map(|process| ProcessInfo::from_process(&process))
+        .collect();
     
-    for prc in all_processes().map_err(|e| {
-        sgcore::error::USimpleError::new(1, format!("Failed to read processes: {}", e))
-    })? {
-        let process = prc.map_err(|e| {
-            sgcore::error::USimpleError::new(1, format!("Failed to read process: {}", e))
-        })?;
-        
-        // Skip the current process (ps itself) unless --all is specified
-        if !show_all && process.pid() == current_pid {
-            continue;
-        }
-        
-        if let Some(info) = ProcessInfo::from_process(&process) {
-            processes.push(info);
-        }
-    }
-    
-    // Sort by PID
-    processes.sort_by_key(|p| p.pid);
-    
-    Ok(processes)
+    Ok(filter_and_sort(processes, show_all))
 }
 
 #[cfg(target_os = "macos")]
@@ -112,54 +91,21 @@ fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
     let mut sys = System::new_all();
     sys.refresh_processes(ProcessesToUpdate::All, true);
     
-    let current_pid = std::process::id() as i32;
-    let mut processes = Vec::new();
+    let processes: Vec<ProcessInfo> = sys.processes()
+        .into_iter()
+        .map(|(pid, proc)| ProcessInfo {
+            pid: pid.as_u32() as i32,
+            ppid: proc.parent().map(|p| p.as_u32() as i32).unwrap_or(0),
+            uid: proc.user_id().and_then(|id| id.to_string().parse().ok()).unwrap_or(0),
+            name: proc.name().to_string_lossy().to_string(),
+            cmdline: proc.cmd().iter().map(|s| s.to_string_lossy().to_string()).collect(),
+            state: format!("{:?}", proc.status()),
+            cpu_time: proc.run_time(),
+            mem_usage: proc.memory() / 1024,
+        })
+        .collect();
     
-    for (pid, process) in sys.processes() {
-        let pid_i32 = pid.as_u32() as i32;
-        
-        // Skip the current process unless --all is specified
-        if !show_all && pid_i32 == current_pid {
-            continue;
-        }
-        
-        let ppid = process.parent().map(|p| p.as_u32() as i32).unwrap_or(0);
-        
-        // Get UID - default to 0 if not available
-        let uid = process.user_id()
-            .and_then(|id| id.to_string().parse::<u32>().ok())
-            .unwrap_or(0);
-        
-        let name = process.name().to_string_lossy().to_string();
-        
-        let cmdline: Vec<String> = process.cmd().iter()
-            .map(|s| s.to_string_lossy().to_string())
-            .collect();
-        
-        let state = format!("{:?}", process.status());
-        
-        // CPU time in seconds
-        let cpu_time = process.run_time();
-        
-        // Memory usage in KB
-        let mem_usage = process.memory() / 1024;
-        
-        processes.push(ProcessInfo {
-            pid: pid_i32,
-            ppid,
-            uid,
-            name,
-            cmdline,
-            state,
-            cpu_time,
-            mem_usage,
-        });
-    }
-    
-    // Sort by PID
-    processes.sort_by_key(|p| p.pid);
-    
-    Ok(processes)
+    Ok(filter_and_sort(processes, show_all))
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
@@ -167,36 +113,40 @@ fn collect_processes(_show_all: bool) -> UResult<Vec<ProcessInfo>> {
     Err(sgcore::error::USimpleError::new(1, "list-processes is not supported on this platform"))
 }
 
+fn filter_and_sort(mut processes: Vec<ProcessInfo>, show_all: bool) -> Vec<ProcessInfo> {
+    if !show_all {
+        let current_pid = std::process::id() as i32;
+        processes.retain(|p| p.pid != current_pid);
+    }
+    processes.sort_by_key(|p| p.pid);
+    processes
+}
+
 fn output_json(processes: Vec<ProcessInfo>, opts: JsonOutputOptions, show_full: bool) -> UResult<()> {
-    let process_list: Vec<serde_json::Value> = processes.iter().map(|p| {
-        let mut obj = json!({
-            "pid": p.pid,
-            "ppid": p.ppid,
-            "uid": p.uid,
-            "user": get_username(p.uid),
-            "name": p.name,
-            "state": p.state,
-        });
-        
-        if show_full || !p.cmdline.is_empty() {
-            obj["cmdline"] = json!(p.cmdline);
-        }
-        
-        if show_full {
-            obj["cpu_time"] = json!(p.cpu_time);
-            obj["mem_kb"] = json!(p.mem_usage);
-        }
-        
-        obj
-    }).collect();
-    
-    let output = json!({
-        "processes": process_list,
-        "count": processes.len(),
-    });
-    
+    let process_list: Vec<_> = processes.iter().map(|p| process_to_json(p, show_full)).collect();
+    let output = json!({ "processes": process_list, "count": processes.len() });
     object_output::output(opts, output, || Ok(()))?;
     Ok(())
+}
+
+fn process_to_json(p: &ProcessInfo, show_full: bool) -> serde_json::Value {
+    let mut obj = json!({
+        "pid": p.pid,
+        "ppid": p.ppid,
+        "uid": p.uid,
+        "user": get_username(p.uid),
+        "name": p.name,
+        "state": p.state,
+    });
+    
+    if show_full || !p.cmdline.is_empty() {
+        obj["cmdline"] = json!(p.cmdline);
+    }
+    if show_full {
+        obj["cpu_time"] = json!(p.cpu_time);
+        obj["mem_kb"] = json!(p.mem_usage);
+    }
+    obj
 }
 
 fn get_username(uid: u32) -> String {
@@ -204,7 +154,6 @@ fn get_username(uid: u32) -> String {
     
     let cache = UID_CACHE.get_or_init(|| {
         let mut map = HashMap::new();
-        // Read /etc/passwd to build UID to username mapping
         if let Ok(contents) = std::fs::read_to_string("/etc/passwd") {
             for line in contents.lines() {
                 let parts: Vec<&str> = line.split(':').collect();
@@ -223,16 +172,9 @@ fn get_username(uid: u32) -> String {
 
 fn output_text(processes: &[ProcessInfo], _show_full: bool) {
     println!("PID\tUSER\tCOMMAND");
-    
     for p in processes {
-        let user = get_username(p.uid);
-        let command = if !p.cmdline.is_empty() {
-            p.cmdline.join(" ")
-        } else {
-            format!("[{}]", p.name)
-        };
-        
-        println!("{}\t{}\t{}", p.pid, user, command);
+        let command = if p.cmdline.is_empty() { format!("[{}]", p.name) } else { p.cmdline.join(" ") };
+        println!("{}\t{}\t{}", p.pid, get_username(p.uid), command);
     }
 }
 
