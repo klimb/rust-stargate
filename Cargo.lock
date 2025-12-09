@@ -2627,6 +2627,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "regex",
  "sgcore",
  "thiserror 2.0.17",
@@ -2814,6 +2815,7 @@ dependencies = [
  "clap",
  "fluent",
  "platform-info",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -2841,6 +2843,7 @@ dependencies = [
  "jiff",
  "libc",
  "parse_datetime",
+ "pledge",
  "serde",
  "serde_json",
  "sgcore",
@@ -2854,6 +2857,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -2879,6 +2883,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -2891,6 +2896,7 @@ dependencies = [
  "dns-lookup",
  "fluent",
  "hostname",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -2931,6 +2937,7 @@ dependencies = [
  "clap",
  "fluent",
  "libc",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -2976,6 +2983,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -3052,6 +3060,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "procfs",
  "serde_json",
  "sgcore",
@@ -3247,6 +3256,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "sgcore",
 ]
 
@@ -3277,6 +3287,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -3412,6 +3423,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "sgcore",
  "thiserror 2.0.17",
 ]
@@ -3452,6 +3464,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "serde",
  "serde_json",
  "sgcore",
@@ -3476,6 +3489,7 @@ dependencies = [
  "fluent",
  "memchr",
  "memmap2",
+ "pledge",
  "regex",
  "sgcore",
  "thiserror 2.0.17",
@@ -3559,6 +3573,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "sgcore",
 ]
 
@@ -3614,6 +3629,7 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "pledge",
  "sgcore",
  "tempfile",
  "thiserror 2.0.17",
@@ -3627,6 +3643,7 @@ dependencies = [
  "clap",
  "codspeed-divan-compat",
  "fluent",
+ "pledge",
  "sgcore",
  "tempfile",
 ]
@@ -3649,6 +3666,7 @@ dependencies = [
  "chrono",
  "clap",
  "fluent",
+ "pledge",
  "serde",
  "serde_json",
  "sgcore",
@@ -3662,6 +3680,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "serde_json",
  "sgcore",
  "utmp-classic",
@@ -3682,6 +3701,7 @@ version = "0.4.0"
 dependencies = [
  "clap",
  "fluent",
+ "pledge",
  "serde_json",
  "sgcore",
 ]
@@ -3694,6 +3714,7 @@ dependencies = [
  "fluent",
  "itertools",
  "nix 0.30.1",
+ "pledge",
  "sgcore",
 ]
 
@@ -3735,6 +3756,7 @@ dependencies = [
  "number_prefix",
  "os_display",
  "phf",
+ "pledge",
  "procfs",
  "serde_json",
  "sgcore_procs",

@@ -23,6 +23,7 @@ path = "src/lib/lib.rs"
 
 [target.'cfg(target_os = "openbsd")'.dependencies]
 pledge = "0.4"
+utmp-classic = { workspace = true, optional = true }
 
 [dependencies]
 atty = "0.2"
@@ -107,9 +108,6 @@ tempfile = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 procfs = { workspace = true }
-
-[target.'cfg(target_os = "openbsd")'.dependencies]
-utmp-classic = { workspace = true, optional = true }
 
 [features]
 default = []

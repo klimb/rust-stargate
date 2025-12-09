@@ -30,8 +30,6 @@ serde_json = { workspace = true }
 
 [target.'cfg(target_os = "openbsd")'.dependencies]
 utmp-classic = { workspace = true }
-
-[target.'cfg(target_os = "openbsd")'.dependencies]
 pledge = "0.4"
 
 [[bin]]
