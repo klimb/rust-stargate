@@ -1,7 +1,8 @@
-# Stargate 🌠
-### A Modern UNIX Userland with Built-In Testing, Classes & Object Pipes
+# Rust-Stargate (a new UNIX userland + language + shell) by Dmitry Kalashnikov
 
-**Stargate** reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
+I took a fresh look at UNIX userland (multiple layers, from 300+ commands, to shells) and decided to redo it...
+
+Stargate reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
 https://github.com/user-attachments/assets/29243d01-1473-49d5-b9a9-ff87daba5edf
 
