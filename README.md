@@ -7,16 +7,26 @@ https://github.com/user-attachments/assets/29243d01-1473-49d5-b9a9-ff87daba5edf
 
 https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
 
+### 🚀 The Power of Stargate (Shell + Language + Object Commands)
 
+```bash
+# Filter, transform, and chain operations on command objects
+(list-directory).entries
+    .filter(x: x.type == "file")
+    .filter(x: x.size > 10000)
+    .map(x: x.name)
+```
 
 ## ✨ Why Stargate?
 
 ```bash
 # Traditional: operate on unstructured stream of text
-zsh# ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
+ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
 # Stargate: Inline, expressive one-liners with type-safe object pipelines
-stargate> let rust_files = (list-directory .).entries.filter(e: e.name.ends_with(".rs")).size();
+(list-directory .).entries
+    .filter(e: e.name.ends_with(".rs"))
+    .size();
 ```
 
 **Maximum Expressivity**: Commands can be inlined and chained for ultra-concise code:
@@ -32,9 +42,9 @@ let file_count = (list-directory "/tmp").entries.filter(e: e.type == "file").siz
 
 # Extract specific data with chained apply
 let largest_file = (list-directory "/tmp")
-    .apply(obj: obj.entries)
-    .apply(list: list.map(e: e.size))
-    .apply(sizes: sizes.reduce(0, max, s: max));
+    .apply(x: x.entries)
+    .apply(x: x.map(e: e.size))
+    .apply(x: x.reduce(0, max, s: max));
 ```
 
 ### 🎯 Key Features
