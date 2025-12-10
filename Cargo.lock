@@ -3624,6 +3624,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sgcore",
+ "vosk",
 ]
 
 [[package]]
@@ -4778,6 +4779,24 @@ name = "virtue"
 version = "0.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "051eb1abcf10076295e815102942cc58f9d5e3b4560e46e53c21e8ff6f3af7b1"
+
+[[package]]
+name = "vosk"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae9e2a552b3fb49f097849cfed3d4a2a7163bb7ea507268666980605a676c627"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "vosk-sys",
+]
+
+[[package]]
+name = "vosk-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73ab2937e19c7d32c1a077a4a220011cbbb2b6ab83bb35635ffb65a82b7e43f6"
 
 [[package]]
 name = "vsimd"

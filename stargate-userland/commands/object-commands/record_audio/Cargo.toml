@@ -32,6 +32,10 @@ serde_json = { workspace = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 cpal = "0.15"
 hound = "3.5"
+vosk = { version = "0.3", optional = true }
+
+[features]
+transcription = ["vosk"]
 
 [package.metadata.cargo-udeps.ignore]
 development = []

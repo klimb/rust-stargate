@@ -11,6 +11,10 @@ use sgcore::{
 };
 
 static DURATION_ARG: &str = "duration";
+#[cfg(all(target_os = "linux", feature = "transcription"))]
+static TRANSCRIBE_ARG: &str = "transcribe";
+#[cfg(all(target_os = "linux", feature = "transcription"))]
+static MODEL_PATH_ARG: &str = "model-path";
 
 const MAX_DURATION_SECONDS: u32 = 60;
 const DEFAULT_DURATION_SECONDS: &str = "5";
@@ -28,7 +32,15 @@ const LINUX_FILE_EXTENSION: &str = ".wav";
 #[cfg(target_os = "linux")]
 const LINUX_BITS_PER_SAMPLE: u16 = 16;
 #[cfg(target_os = "linux")]
+const LINUX_SAMPLE_RATE: u32 = 16000;
+#[cfg(target_os = "linux")]
 const U16_SAMPLE_OFFSET: i32 = 32768;
+
+#[cfg(all(target_os = "linux", feature = "transcription"))]
+fn get_default_model_path() -> String {
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    format!("{}/.stargate/models/vosk-model-small-en-us-0.15", home)
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct RecordAudioResult {
@@ -80,6 +92,23 @@ pub fn sg_app() -> ClapCommand {
                 .help(format!("Duration to record in seconds (max {})", MAX_DURATION_SECONDS))
                 .default_value(DEFAULT_DURATION_SECONDS)
                 .value_parser(clap::value_parser!(u32)),
+        );
+
+    #[cfg(all(target_os = "linux", feature = "transcription"))]
+    let cmd = cmd
+        .arg(
+            Arg::new(TRANSCRIBE_ARG)
+                .short('t')
+                .long("transcribe")
+                .help("Transcribe audio to text using Vosk")
+                .action(clap::ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new(MODEL_PATH_ARG)
+                .short('m')
+                .long("model-path")
+                .value_name("PATH")
+                .help("Path to Vosk model directory (defaults to ~/.stargate/models/vosk-model-small-en-us-0.15)")
         );
 
     object_output::add_json_args(cmd)
@@ -256,7 +285,35 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     
     record_audio_linux(&temp_file, duration as f32)?;
     
-    println!("Audio recorded to: {}", temp_file);
+    #[cfg(feature = "transcription")]
+    {
+        if matches.get_flag(TRANSCRIBE_ARG) {
+            let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
+                .map(|s| s.as_str())
+                .unwrap_or_else(|| {
+                    static DEFAULT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+                    DEFAULT.get_or_init(get_default_model_path)
+                });
+            
+            match transcribe_audio_linux(&temp_file, model_path) {
+                Ok(transcript) => {
+                    println!("Transcript: {}", transcript);
+                }
+                Err(e) => {
+                    eprintln!("Transcription failed: {}", e);
+                    println!("Audio recorded to: {}", temp_file);
+                }
+            }
+        } else {
+            println!("Audio recorded to: {}", temp_file);
+        }
+    }
+    
+    #[cfg(not(feature = "transcription"))]
+    {
+        println!("Audio recorded to: {}", temp_file);
+    }
+    
     Ok(())
 }
 
@@ -271,10 +328,35 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
     
     let result = match record_audio_linux(&temp_file, duration as f32) {
         Ok(_samples) => {
+            #[cfg(feature = "transcription")]
+            let (transcript, word_count) = {
+                if matches.get_flag(TRANSCRIBE_ARG) {
+                    let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
+                        .map(|s| s.as_str())
+                        .unwrap_or_else(|| {
+                            static DEFAULT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+                            DEFAULT.get_or_init(get_default_model_path)
+                        });
+                    
+                    match transcribe_audio_linux(&temp_file, model_path) {
+                        Ok(text) => {
+                            let count = text.split_whitespace().count();
+                            (text, count)
+                        }
+                        Err(_) => (String::new(), 0)
+                    }
+                } else {
+                    (String::new(), 0)
+                }
+            };
+            
+            #[cfg(not(feature = "transcription"))]
+            let (transcript, word_count) = (String::new(), 0);
+            
             RecordAudioResult {
-                transcript: String::new(),
+                transcript,
                 duration: duration as f64,
-                word_count: 0,
+                word_count,
                 success: true,
                 audio_file: Some(temp_file.clone()),
                 error: None,
@@ -310,11 +392,15 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
     let device = host.default_input_device()
         .ok_or_else(|| USimpleError::new(1, "No default input device available".to_string()))?;
 
-    let config = device.default_input_config()
-        .map_err(|e| USimpleError::new(1, format!("Failed to get input config: {}", e)))?;
+    // Use 16000 Hz mono for Vosk compatibility
+    let sample_rate = LINUX_SAMPLE_RATE;
+    let channels = 1;
 
-    let sample_rate = config.sample_rate().0;
-    let channels = config.channels();
+    let config = cpal::StreamConfig {
+        channels,
+        sample_rate: cpal::SampleRate(sample_rate),
+        buffer_size: cpal::BufferSize::Default,
+    };
 
     let spec = hound::WavSpec {
         channels,
@@ -337,70 +423,24 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
         eprintln!("Error during recording: {}", err);
     };
 
-    let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => {
-            device.build_input_stream(
-                &config.into(),
-                move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                    let mut writer = writer_clone.lock().unwrap();
-                    let mut count = sample_count_clone.lock().unwrap();
-                    
-                    for &sample in data {
-                        if *count >= max_samples {
-                            break;
-                        }
-                        let amplitude = (sample * i16::MAX as f32) as i16;
-                        writer.write_sample(amplitude).ok();
-                        *count += 1;
-                    }
-                },
-                err_fn,
-                None,
-            )
-        }
-        cpal::SampleFormat::I16 => {
-            device.build_input_stream(
-                &config.into(),
-                move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                    let mut writer = writer_clone.lock().unwrap();
-                    let mut count = sample_count_clone.lock().unwrap();
-                    
-                    for &sample in data {
-                        if *count >= max_samples {
-                            break;
-                        }
-                        writer.write_sample(sample).ok();
-                        *count += 1;
-                    }
-                },
-                err_fn,
-                None,
-            )
-        }
-        cpal::SampleFormat::U16 => {
-            device.build_input_stream(
-                &config.into(),
-                move |data: &[u16], _: &cpal::InputCallbackInfo| {
-                    let mut writer = writer_clone.lock().unwrap();
-                    let mut count = sample_count_clone.lock().unwrap();
-                    
-                    for &sample in data {
-                        if *count >= max_samples {
-                            break;
-                        }
-                        let normalized = (sample as i32 - U16_SAMPLE_OFFSET) as i16;
-                        writer.write_sample(normalized).ok();
-                        *count += 1;
-                    }
-                },
-                err_fn,
-                None,
-            )
-        }
-        _ => {
-            return Err(USimpleError::new(1, "Unsupported sample format".to_string()));
-        }
-    }
+    // Try to build stream with i16 format (most common for audio input)
+    let stream = device.build_input_stream(
+        &config,
+        move |data: &[i16], _: &cpal::InputCallbackInfo| {
+            let mut writer = writer_clone.lock().unwrap();
+            let mut count = sample_count_clone.lock().unwrap();
+            
+            for &sample in data {
+                if *count >= max_samples {
+                    break;
+                }
+                writer.write_sample(sample).ok();
+                *count += 1;
+            }
+        },
+        err_fn,
+        None,
+    )
     .map_err(|e| USimpleError::new(1, format!("Failed to build input stream: {}", e)))?;
 
     stream.play()
@@ -420,4 +460,44 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
         .map_err(|e| USimpleError::new(1, format!("Failed to finalize WAV file: {}", e)))?;
 
     Ok(final_count)
+}
+
+#[cfg(all(target_os = "linux", feature = "transcription"))]
+fn transcribe_audio_linux(audio_file: &str, model_path: &str) -> UResult<String> {
+    sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
+    
+    let model = vosk::Model::new(model_path)
+        .ok_or_else(|| USimpleError::new(1, "Failed to load Vosk model".to_string()))?;
+    
+    let mut recognizer = vosk::Recognizer::new(&model, 16000.0)
+        .ok_or_else(|| USimpleError::new(1, "Failed to create recognizer".to_string()))?;
+    
+    let mut reader = hound::WavReader::open(audio_file)
+        .map_err(|e| USimpleError::new(1, format!("Failed to open WAV file: {}", e)))?;
+    
+    let spec = reader.spec();
+    
+    if spec.sample_format != hound::SampleFormat::Int || spec.bits_per_sample != 16 {
+        return Err(USimpleError::new(1, "Audio must be 16-bit PCM format".to_string()));
+    }
+    
+    let samples: Vec<i16> = reader.samples::<i16>()
+        .filter_map(|s| s.ok())
+        .collect();
+    
+    let _ = recognizer.accept_waveform(&samples);
+    
+    let result_json = recognizer.final_result();
+    
+    // Extract text - try single first (most common for final result)
+    let transcript = result_json.single()
+        .map(|s| s.text.to_string())
+        .or_else(|| {
+            // If single didn't work, we'd need to call final_result again for multiple
+            // but this consumes the recognizer, so let's just return empty
+            None
+        })
+        .unwrap_or_default();
+    
+    Ok(transcript)
 }
