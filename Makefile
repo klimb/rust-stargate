@@ -119,6 +119,7 @@ PROGS       := \
 	pwd \
 	readlink \
 	realpath \
+	record-audio \
 	rm \
 	rmdir \
 	get_range \
@@ -246,6 +247,7 @@ TEST_PROGS  := \
 	pwd \
 	readlink \
 	realpath \
+	record-audio \
 	rm \
 	rmdir \
 	get_range \

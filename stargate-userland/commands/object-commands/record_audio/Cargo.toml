@@ -1,6 +1,6 @@
 [package]
 name = "sg_record_audio"
-description = "record-audio (macOS only)"
+description = "record-audio (macOS and Linux)"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
@@ -28,6 +28,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+cpal = "0.15"
+hound = "3.5"
 
 [package.metadata.cargo-udeps.ignore]
 development = []
