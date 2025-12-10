@@ -12,7 +12,7 @@ use sgcore::{
 
 static DURATION_ARG: &str = "duration";
 #[cfg(all(target_os = "linux", feature = "transcription"))]
-static TRANSCRIBE_ARG: &str = "transcribe";
+static NO_TRANSCRIBE_ARG: &str = "no-transcription";
 #[cfg(all(target_os = "linux", feature = "transcription"))]
 static MODEL_PATH_ARG: &str = "model-path";
 
@@ -97,10 +97,9 @@ pub fn sg_app() -> ClapCommand {
     #[cfg(all(target_os = "linux", feature = "transcription"))]
     let cmd = cmd
         .arg(
-            Arg::new(TRANSCRIBE_ARG)
-                .short('t')
-                .long("transcribe")
-                .help("Transcribe audio to text using Vosk")
+            Arg::new(NO_TRANSCRIBE_ARG)
+                .long("no-transcription")
+                .help("Disable automatic transcription")
                 .action(clap::ArgAction::SetTrue)
         )
         .arg(
@@ -287,7 +286,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     
     #[cfg(feature = "transcription")]
     {
-        if matches.get_flag(TRANSCRIBE_ARG) {
+        if !matches.get_flag(NO_TRANSCRIBE_ARG) {
             let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
                 .map(|s| s.as_str())
                 .unwrap_or_else(|| {
@@ -330,7 +329,7 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
         Ok(_samples) => {
             #[cfg(feature = "transcription")]
             let (transcript, word_count) = {
-                if matches.get_flag(TRANSCRIBE_ARG) {
+                if !matches.get_flag(NO_TRANSCRIBE_ARG) {
                     let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
                         .map(|s| s.as_str())
                         .unwrap_or_else(|| {
