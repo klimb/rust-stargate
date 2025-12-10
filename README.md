@@ -4,9 +4,12 @@ I took a fresh look at UNIX userland (multiple layers, from 300+ commands, to sh
 
 Stargate reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
 
-https://github.com/user-attachments/assets/29243d01-1473-49d5-b9a9-ff87daba5edf
 
-https://github.com/user-attachments/assets/5601d551-74c6-4f03-b063-556eb5c98761
+
+https://github.com/user-attachments/assets/22a88cbd-ca00-4ee8-aef8-9c6fad715558
+
+https://github.com/user-attachments/assets/0fb86f02-999e-4ae4-9f40-031a7a9a08d1
+
 
 ### 🚀 The Power of Stargate (Shell + Language + Object Commands)
 
