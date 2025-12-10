@@ -132,6 +132,7 @@ feat_Tier1 = [
 feat_os_macos = [
   "feat_os_unix", ## == a modern/usual *nix platform
   #
+  "record-audio",
   "say-text",
 ]
 # "feat_os_unix" == set of utilities which can be built/run on modern/usual *nix platforms.
@@ -397,6 +398,7 @@ head = { optional = true, version = "0.4.0", package = "sg_head", path = "starga
 set-hostname = { optional = true, version = "0.4.0", package = "sg_set_hostname", path = "stargate-userland/commands/text-commands/set_hostname" }
 get_hostname = { optional = true, version = "0.4.0", package = "sg_get_hostname", path = "stargate-userland/commands/object-commands/get_hostname" }
 get_domainname = { optional = true, version = "0.4.0", package = "sg_get_domainname", path = "stargate-userland/commands/object-commands/get_domainname" }
+record-audio = { optional = true, version = "0.4.0", package = "sg_record_audio", path = "stargate-userland/commands/object-commands/record_audio" }
 say-text = { optional = true, version = "0.4.0", package = "sg_say_text", path = "stargate-userland/commands/object-commands/say_text" }
 get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "stargate-userland/commands/object-commands/get_fqdn" }
 id = { optional = true, version = "0.4.0", package = "sg_id", path = "stargate-userland/commands/text-commands/id" }

@@ -3315,6 +3315,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_record_audio"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_rm"
 version = "0.4.0"
 dependencies = [
@@ -4049,6 +4059,7 @@ dependencies = [
  "sg_pwd",
  "sg_readlink",
  "sg_realpath",
+ "sg_record_audio",
  "sg_rm",
  "sg_rmdir",
  "sg_say_text",

@@ -1,0 +1,34 @@
+[package]
+name = "sg_record_audio"
+description = "record-audio (macOS only)"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/record_audio.rs"
+
+[[bin]]
+name = "record-audio"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true, features = ["wide"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+
+[package.metadata.cargo-udeps.ignore]
+development = []
+normal = []
