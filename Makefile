@@ -198,6 +198,14 @@ ifneq ($(findstring stdbuf,$(UTILS)),)
 	CARGOFLAGS += --features feat_external_libstdbuf
 endif
 
+STARGATE_FEATURES :=
+
+ifeq ($(OS),Linux)
+ifneq ($(findstring record-audio,$(UTILS)),)
+	STARGATE_FEATURES += feat_transcription
+endif
+endif
+
 # Programs with usable tests
 TEST_PROGS  := \
 	base32 \
@@ -303,7 +311,7 @@ endif
 endif
 
 build-stargate:
-	${CARGO} build ${CARGOFLAGS} --features "${EXES} $(BUILD_SPEC_FEATURE)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} --features "${EXES} $(BUILD_SPEC_FEATURE) $(STARGATE_FEATURES)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
 
 build: build-stargate build-pkgs locales
 
