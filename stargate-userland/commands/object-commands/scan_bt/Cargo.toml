@@ -1,0 +1,16 @@
+[package]
+name = "sg_scan_bt"
+version = "0.4.0"
+authors = ["Dmitry Kalashnikov"]
+license = "MIT"
+edition = "2021"
+
+[[bin]]
+name = "scan-bt"
+path = "main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

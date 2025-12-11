@@ -3744,6 +3744,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_scan_bt"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_set_hostname"
 version = "0.4.0"
 dependencies = [
@@ -4451,6 +4461,7 @@ dependencies = [
  "sg_rm",
  "sg_rmdir",
  "sg_say_text",
+ "sg_scan_bt",
  "sg_set_hostname",
  "sg_shred",
  "sg_shuf",
