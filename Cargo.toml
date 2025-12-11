@@ -192,6 +192,7 @@ feat_require_unix_core = [
   "install",
   "kill",
   "get_username",
+  "last_touch",
   "mkfifo",
   "mknod",
   "nice",
@@ -419,6 +420,7 @@ link = { optional = true, version = "0.4.0", package = "sg_link", path = "starga
 ln = { optional = true, version = "0.4.0", package = "sg_ln", path = "stargate-userland/commands/text-commands/ln" }
 list_directory = { optional = true, version = "0.4.0", package = "sg_list_directory", path = "stargate-userland/commands/object-commands/list_directory" }
 get_username = { optional = true, version = "0.4.0", package = "sg_get_username", path = "stargate-userland/commands/object-commands/get_username" }
+last_touch = { optional = true, version = "0.4.0", package = "sg_last_touch", path = "stargate-userland/commands/object-commands/last_touch" }
 new_directory = { optional = true, version = "0.4.0", package = "sg_new_directory", path = "stargate-userland/commands/text-commands/new_directory" }
 new_file = { optional = true, version = "0.4.0", package = "sg_new_file", path = "stargate-userland/commands/text-commands/new_file" }
 append_file = { optional = true, version = "0.4.0", package = "sg_append_file", path = "stargate-userland/commands/text-commands/append_file" }

@@ -1,0 +1,36 @@
+[package]
+name = "sg_last_touch"
+description = "last-touch ~ (get the time since last keyboard/mouse/trackpad activity)"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/last_touch.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+fluent = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+
+[target.'cfg(target_vendor = "apple")'.dependencies]
+core-foundation = "0.9"
+core-graphics = "0.23"
+
+[target.'cfg(target_os = "openbsd")'.dependencies]
+pledge = "0.4"
+
+[[bin]]
+name = "last-touch"
+path = "src/main.rs"
