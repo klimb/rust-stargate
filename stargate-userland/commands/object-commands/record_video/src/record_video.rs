@@ -16,7 +16,7 @@ static NO_TRANSCRIBE_ARG: &str = "no-transcription";
 #[cfg(feature = "transcription")]
 static MODEL_PATH_ARG: &str = "model-path";
 
-const MAX_DURATION_SECONDS: u32 = 60 * 5; // 5 min
+const MAX_DURATION_SECONDS: u32 = 60;
 const DEFAULT_DURATION_SECONDS: &str = "5";
 
 fn get_record_dir() -> String {
