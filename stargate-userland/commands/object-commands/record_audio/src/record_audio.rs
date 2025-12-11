@@ -278,7 +278,7 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
 
 #[cfg(all(target_os = "macos", feature = "transcription"))]
 fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> {
-    vosk::set_log_level(-1);
+    vosk::set_log_level(vosk::LogLevel::Error);
     
     let wav_file = format!("{}.wav", audio_file);
     
@@ -316,7 +316,9 @@ fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> 
         .filter_map(|s| s.ok())
         .collect();
     
-    let _ = recognizer.accept_waveform(&samples);
+    for chunk in samples.chunks(4000) {
+        recognizer.accept_waveform(chunk);
+    }
     
     let result_json = recognizer.final_result();
     
@@ -515,7 +517,7 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
 fn transcribe_audio_linux(audio_file: &str, model_path: &str) -> UResult<String> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     
-    vosk::set_log_level(-1);
+    vosk::set_log_level(vosk::LogLevel::Error);
     
     let model = vosk::Model::new(model_path)
         .ok_or_else(|| USimpleError::new(1, "Failed to load Vosk model".to_string()))?;
@@ -536,18 +538,14 @@ fn transcribe_audio_linux(audio_file: &str, model_path: &str) -> UResult<String>
         .filter_map(|s| s.ok())
         .collect();
     
-    let _ = recognizer.accept_waveform(&samples);
+    for chunk in samples.chunks(4000) {
+        recognizer.accept_waveform(chunk);
+    }
     
     let result_json = recognizer.final_result();
     
-    // Extract text - try single first (most common for final result)
     let transcript = result_json.single()
         .map(|s| s.text.to_string())
-        .or_else(|| {
-            // If single didn't work, we'd need to call final_result again for multiple
-            // but this consumes the recognizer, so let's just return empty
-            None
-        })
         .unwrap_or_default();
     
     Ok(transcript)

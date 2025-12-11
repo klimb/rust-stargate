@@ -455,7 +455,9 @@ fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> 
         .filter_map(|s| s.ok())
         .collect();
     
-    let _ = recognizer.accept_waveform(&samples);
+    for chunk in samples.chunks(4000) {
+        recognizer.accept_waveform(chunk);
+    }
     
     let result_json = recognizer.final_result();
     
@@ -515,7 +517,9 @@ fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> 
         .filter_map(|s| s.ok())
         .collect();
     
-    let _ = recognizer.accept_waveform(&samples);
+    for chunk in samples.chunks(4000) {
+        recognizer.accept_waveform(chunk);
+    }
     
     let result_json = recognizer.final_result();
     
