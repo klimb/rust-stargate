@@ -11,14 +11,25 @@ use sgcore::{
 };
 
 static DURATION_ARG: &str = "duration";
-#[cfg(all(target_os = "linux", feature = "transcription"))]
+#[cfg(feature = "transcription")]
 static NO_TRANSCRIBE_ARG: &str = "no-transcription";
-#[cfg(all(target_os = "linux", feature = "transcription"))]
+#[cfg(feature = "transcription")]
 static MODEL_PATH_ARG: &str = "model-path";
 
 const MAX_DURATION_SECONDS: u32 = 60;
 const DEFAULT_DURATION_SECONDS: &str = "5";
-const TEMP_FILE_PREFIX: &str = "/tmp/record_audio_";
+
+fn get_record_dir() -> String {
+    let home = std::env::var("HOME").expect("HOME environment variable not set");
+    format!("{}/.stargate/record-audio", home)
+}
+
+fn ensure_record_dir() -> UResult<String> {
+    let dir = get_record_dir();
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| USimpleError::new(1, format!("failed to create directory: {}", e)))?;
+    Ok(dir)
+}
 
 #[cfg(target_os = "macos")]
 const MACOS_SAMPLE_RATE: &str = "16000";
@@ -36,9 +47,9 @@ const LINUX_SAMPLE_RATE: u32 = 16000;
 #[cfg(target_os = "linux")]
 const U16_SAMPLE_OFFSET: i32 = 32768;
 
-#[cfg(all(target_os = "linux", feature = "transcription"))]
+#[cfg(feature = "transcription")]
 fn get_default_model_path() -> String {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = std::env::var("HOME").expect("HOME environment variable not set");
     format!("{}/.stargate/models/vosk-model-small-en-us-0.15", home)
 }
 
@@ -94,7 +105,7 @@ pub fn sg_app() -> ClapCommand {
                 .value_parser(clap::value_parser!(u32)),
         );
 
-    #[cfg(all(target_os = "linux", feature = "transcription"))]
+    #[cfg(feature = "transcription")]
     let cmd = cmd
         .arg(
             Arg::new(NO_TRANSCRIBE_ARG)
@@ -120,7 +131,8 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS); 
     
-    let temp_file = format!("{}{}{}", TEMP_FILE_PREFIX, std::process::id(), MACOS_FILE_EXTENSION);
+    let dir = ensure_record_dir()?;
+    let temp_file = format!("{}/record_audio_{}{}", dir, std::process::id(), MACOS_FILE_EXTENSION);
     
     let record_result = ProcessCommand::new("rec")
         .args([
@@ -153,10 +165,25 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         ));
     }
 
-    let transcript = transcribe_audio(&temp_file)?;
+    #[cfg(feature = "transcription")]
+    {
+        if !matches.get_flag(NO_TRANSCRIBE_ARG) {
+            let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
+                .map(|s| s.as_str())
+                .unwrap_or_else(|| {
+                    static DEFAULT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+                    DEFAULT.get_or_init(get_default_model_path)
+                });
+            
+            let transcript = transcribe_audio_vosk(&temp_file, model_path)?;
+            let _ = std::fs::remove_file(&temp_file);
+            println!("{}", transcript);
+            return Ok(());
+        }
+    }
+    
     let _ = std::fs::remove_file(&temp_file);
-
-    println!("{}", transcript);
+    println!("");
     Ok(())
 }
 
@@ -167,7 +194,8 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS); 
     
-    let temp_file = format!("{}{}{}", TEMP_FILE_PREFIX, std::process::id(), MACOS_FILE_EXTENSION);
+    let dir = ensure_record_dir()?;
+    let temp_file = format!("{}/record_audio_{}{}", dir, std::process::id(), MACOS_FILE_EXTENSION);
     
     let record_result = ProcessCommand::new("rec")
         .args([
@@ -204,26 +232,37 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
             error: Some("failed to record audio: brew install sox".to_string()),
         }
     } else {
-        match transcribe_audio(&temp_file) {
-            Ok(transcript) => {
-                let word_count = transcript.split_whitespace().count();
-                RecordAudioResult {
-                    transcript: transcript.clone(),
-                    duration: duration as f64,
-                    word_count,
-                    success: true,
-                    audio_file: Some(temp_file.clone()),
-                    error: None,
+        #[cfg(feature = "transcription")]
+        let (transcript, word_count) = {
+            if !matches.get_flag(NO_TRANSCRIBE_ARG) {
+                let model_path = matches.get_one::<String>(MODEL_PATH_ARG)
+                    .map(|s| s.as_str())
+                    .unwrap_or_else(|| {
+                        static DEFAULT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+                        DEFAULT.get_or_init(get_default_model_path)
+                    });
+                match transcribe_audio_vosk(&temp_file, model_path) {
+                    Ok(transcript) => {
+                        let word_count = transcript.split_whitespace().count();
+                        (transcript, word_count)
+                    }
+                    Err(_) => (String::new(), 0),
                 }
+            } else {
+                (String::new(), 0)
             }
-            Err(e) => RecordAudioResult {
-                transcript: String::new(),
-                duration: duration as f64,
-                word_count: 0,
-                success: false,
-                audio_file: Some(temp_file.clone()),
-                error: Some(format!("Transcription failed: {}", e)),
-            },
+        };
+
+        #[cfg(not(feature = "transcription"))]
+        let (transcript, word_count) = (String::new(), 0);
+
+        RecordAudioResult {
+            transcript,
+            duration: duration as f64,
+            word_count,
+            success: true,
+            audio_file: Some(temp_file.clone()),
+            error: None,
         }
     };
 
@@ -237,40 +276,57 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
-fn transcribe_audio(audio_file: &str) -> UResult<String> {
-    let script = format!(
-        r#"
-        set audioFile to POSIX file "{}"
-        tell application "Speech Recognition Server"
-            try
-                -- This is a simplified approach
-                -- Real implementation would use Speech framework via FFI
-                return "Transcription not available - requires Speech framework integration"
-            end try
-        end tell
-        "#,
-        audio_file
-    );
+#[cfg(all(target_os = "macos", feature = "transcription"))]
+fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> {
+    vosk::set_log_level(-1);
     
-    let output = ProcessCommand::new("osascript")
-        .arg("-e")
-        .arg(&script)
+    let wav_file = format!("{}.wav", audio_file);
+    
+    let convert_result = ProcessCommand::new("sox")
+        .args([
+            audio_file,
+            "-r", "16000",
+            "-c", "1",
+            "-b", "16",
+            &wav_file,
+        ])
         .output();
-
-    match output {
-        Ok(output) if output.status.success() => {
-            let transcript = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            Ok(if transcript.is_empty() {
-                "speech recognition requires sox.".to_string()
-            } else {
-                transcript
-            })
-        }
-        _ => {
-            Ok("recorded audio".to_string())
-        }
+    
+    if !convert_result.is_ok() || !convert_result.as_ref().unwrap().status.success() {
+        return Err(USimpleError::new(1, "failed to convert audio to wav format".to_string()));
     }
+    
+    let model = vosk::Model::new(model_path)
+        .ok_or_else(|| USimpleError::new(1, "failed to load vosk model".to_string()))?;
+    
+    let mut recognizer = vosk::Recognizer::new(&model, 16000.0)
+        .ok_or_else(|| USimpleError::new(1, "failed to create recognizer".to_string()))?;
+    
+    let mut reader = hound::WavReader::open(&wav_file)
+        .map_err(|e| USimpleError::new(1, format!("failed to open wav file: {}", e)))?;
+    
+    let spec = reader.spec();
+    
+    if spec.sample_format != hound::SampleFormat::Int || spec.bits_per_sample != 16 {
+        let _ = std::fs::remove_file(&wav_file);
+        return Err(USimpleError::new(1, "audio must be 16-bit pcm format".to_string()));
+    }
+    
+    let samples: Vec<i16> = reader.samples::<i16>()
+        .filter_map(|s| s.ok())
+        .collect();
+    
+    let _ = recognizer.accept_waveform(&samples);
+    
+    let result_json = recognizer.final_result();
+    
+    let transcript = result_json.single()
+        .map(|s| s.text.to_string())
+        .unwrap_or_default();
+    
+    let _ = std::fs::remove_file(&wav_file);
+    
+    Ok(transcript)
 }
 
 #[cfg(target_os = "linux")]
@@ -280,7 +336,8 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
     
-    let temp_file = format!("{}{}{}", TEMP_FILE_PREFIX, std::process::id(), LINUX_FILE_EXTENSION);
+    let dir = ensure_record_dir()?;
+    let temp_file = format!("{}/record_audio_{}{}", dir, std::process::id(), LINUX_FILE_EXTENSION);
     
     record_audio_linux(&temp_file, duration as f32)?;
     
@@ -296,21 +353,16 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             
             match transcribe_audio_linux(&temp_file, model_path) {
                 Ok(transcript) => {
-                    println!("Transcript: {}", transcript);
+                    println!("{}", transcript);
                 }
-                Err(e) => {
-                    eprintln!("Transcription failed: {}", e);
-                    println!("Audio recorded to: {}", temp_file);
-                }
+                Err(_) => {}
             }
-        } else {
-            println!("Audio recorded to: {}", temp_file);
         }
     }
     
     #[cfg(not(feature = "transcription"))]
     {
-        println!("Audio recorded to: {}", temp_file);
+        let _ = temp_file;
     }
     
     Ok(())
@@ -323,7 +375,8 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
     
-    let temp_file = format!("{}{}{}", TEMP_FILE_PREFIX, std::process::id(), LINUX_FILE_EXTENSION);
+    let dir = ensure_record_dir()?;
+    let temp_file = format!("{}/record_audio_{}{}", dir, std::process::id(), LINUX_FILE_EXTENSION);
     
     let result = match record_audio_linux(&temp_file, duration as f32) {
         Ok(_samples) => {
@@ -418,9 +471,7 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
     let sample_count_clone = Arc::clone(&sample_count);
     let max_samples = (sample_rate as f32 * duration) as usize * channels as usize;
 
-    let err_fn = |err| {
-        eprintln!("Error during recording: {}", err);
-    };
+    let err_fn = |_err| {};
 
     // Try to build stream with i16 format (most common for audio input)
     let stream = device.build_input_stream(
@@ -445,7 +496,6 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
     stream.play()
         .map_err(|e| USimpleError::new(1, format!("Failed to start recording: {}", e)))?;
 
-    eprintln!("Recording for {} seconds...", duration);
     std::thread::sleep(std::time::Duration::from_secs_f32(duration));
 
     drop(stream);
@@ -464,6 +514,8 @@ fn record_audio_linux(output_file: &str, duration: f32) -> UResult<usize> {
 #[cfg(all(target_os = "linux", feature = "transcription"))]
 fn transcribe_audio_linux(audio_file: &str, model_path: &str) -> UResult<String> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
+    
+    vosk::set_log_level(-1);
     
     let model = vosk::Model::new(model_path)
         .ok_or_else(|| USimpleError::new(1, "Failed to load Vosk model".to_string()))?;

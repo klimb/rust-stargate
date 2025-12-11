@@ -3698,6 +3698,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_record_video"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "hound",
+ "serde",
+ "serde_json",
+ "sgcore",
+ "vosk",
+]
+
+[[package]]
 name = "sg_rm"
 version = "0.4.0"
 dependencies = [
@@ -4435,6 +4447,7 @@ dependencies = [
  "sg_readlink",
  "sg_realpath",
  "sg_record_audio",
+ "sg_record_video",
  "sg_rm",
  "sg_rmdir",
  "sg_say_text",

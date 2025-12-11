@@ -1,6 +1,6 @@
 [package]
-name = "sg_record_audio"
-description = "record-audio (macOS and Linux)"
+name = "sg_record_video"
+description = "record-video (macOS and Linux)"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
@@ -15,10 +15,10 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/record_audio.rs"
+path = "src/record_video.rs"
 
 [[bin]]
-name = "record-audio"
+name = "record-video"
 path = "src/main.rs"
 
 [dependencies]
@@ -27,13 +27,8 @@ sgcore = { workspace = true, features = ["wide"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { workspace = true }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-hound = { version = "3.5", optional = true }
-vosk = { version = "0.3", optional = true }
-
 [target.'cfg(target_os = "linux")'.dependencies]
-cpal = "0.15"
-hound = "3.5"
+hound = { version = "3.5", optional = true }
 vosk = { version = "0.3", optional = true }
 
 [features]

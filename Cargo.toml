@@ -36,8 +36,8 @@ feat_systemd_logind = [
   "sgcore/feat_systemd_logind",
   "who/feat_systemd_logind",
 ]
-# "feat_transcription" == enable speech-to-text transcription in record-audio (Linux only, requires Vosk)
-feat_transcription = ["record-audio/transcription"]
+# "feat_transcription" == enable speech-to-text transcription in record-audio and record-video (requires Vosk)
+feat_transcription = ["record-audio/transcription", "record-video/transcription"]
 
 # "feat_common_core" == baseline core set of utilities which can be built/run on most targets
 feat_common_core = [
@@ -137,6 +137,7 @@ feat_os_macos = [
   "list-wifis",
   "monitor-traffic",
   "record-audio",
+  "record-video",
   "say-text",
 ]
 # "feat_os_unix" == set of utilities which can be built/run on modern/usual *nix platforms.
@@ -403,6 +404,7 @@ set-hostname = { optional = true, version = "0.4.0", package = "sg_set_hostname"
 get_hostname = { optional = true, version = "0.4.0", package = "sg_get_hostname", path = "stargate-userland/commands/object-commands/get_hostname" }
 get_domainname = { optional = true, version = "0.4.0", package = "sg_get_domainname", path = "stargate-userland/commands/object-commands/get_domainname" }
 record-audio = { optional = true, version = "0.4.0", package = "sg_record_audio", path = "stargate-userland/commands/object-commands/record_audio" }
+record-video = { optional = true, version = "0.4.0", package = "sg_record_video", path = "stargate-userland/commands/object-commands/record_video" }
 say-text = { optional = true, version = "0.4.0", package = "sg_say_text", path = "stargate-userland/commands/object-commands/say_text" }
 get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "stargate-userland/commands/object-commands/get_fqdn" }
 id = { optional = true, version = "0.4.0", package = "sg_id", path = "stargate-userland/commands/text-commands/id" }
