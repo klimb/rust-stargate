@@ -1,0 +1,32 @@
+[package]
+name = "sg_monitor_traffic"
+description = "monitor-traffic ~ monitor network traffic (simple tcpdump)"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/monitor_traffic.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+fluent = { workspace = true }
+serde_json = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = { workspace = true }
+pcap = "1.1"
+
+[[bin]]
+name = "monitor-traffic"
+path = "src/main.rs"

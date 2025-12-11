@@ -134,6 +134,7 @@ feat_Tier1 = [
 feat_os_macos = [
   "feat_os_unix", ## == a modern/usual *nix platform
   #
+  "monitor-traffic",
   "record-audio",
   "say-text",
 ]
@@ -418,6 +419,7 @@ prepend_file = { optional = true, version = "0.4.0", package = "sg_prepend_file"
 mkfifo = { optional = true, version = "0.4.0", package = "sg_mkfifo", path = "stargate-userland/commands/text-commands/mkfifo" }
 mknod = { optional = true, version = "0.4.0", package = "sg_mknod", path = "stargate-userland/commands/text-commands/mknod" }
 mktemp = { optional = true, version = "0.4.0", package = "sg_mktemp", path = "stargate-userland/commands/text-commands/mktemp" }
+monitor-traffic = { optional = true, version = "0.4.0", package = "sg_monitor_traffic", path = "stargate-userland/commands/object-commands/monitor_traffic" }
 more = { optional = true, version = "0.4.0", package = "sg_more", path = "stargate-userland/commands/text-commands/more" }
 mv = { optional = true, version = "0.4.0", package = "sg_mv", path = "stargate-userland/commands/text-commands/mv" }
 nice = { optional = true, version = "0.4.0", package = "sg_nice", path = "stargate-userland/commands/text-commands/nice" }
