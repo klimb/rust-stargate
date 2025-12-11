@@ -1,0 +1,28 @@
+[package]
+name = "sg_scan_arp"
+description = "scan-arp ~ scan arp cache for active hosts"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/scan_arp.rs"
+
+[[bin]]
+name = "scan-arp"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { workspace = true }

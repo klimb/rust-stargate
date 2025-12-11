@@ -1,0 +1,3 @@
+scan-arp-about = Scan ARP cache for active hosts
+scan-arp-usage = scan-arp [OPTION]...
+scan-arp-help-network = Network CIDR to scan (e.g., 192.168.1.0/24)
