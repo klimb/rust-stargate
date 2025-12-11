@@ -125,24 +125,38 @@ fn parse_airport_output(output: &str) -> UResult<Vec<WifiNetwork>> {
             continue;
         }
         
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() < 7 {
-            continue;
+        let mac_pattern = regex::Regex::new(r"([0-9a-fA-F]{1,2}:[0-9a-fA-F]{1,2}:[0-9a-fA-F]{1,2}:[0-9a-fA-F]{1,2}:[0-9a-fA-F]{1,2}:[0-9a-fA-F]{1,2})").unwrap();
+        
+        if let Some(mac_match) = mac_pattern.find(line) {
+            let ssid_part = &line[..mac_match.start()];
+            let rest_part = &line[mac_match.end()..];
+            
+            let ssid = ssid_part.trim();
+            let ssid = if ssid.is_empty() {
+                "<hidden>".to_string()
+            } else {
+                ssid.to_string()
+            };
+            
+            let bssid = mac_match.as_str().to_string();
+            
+            let parts: Vec<&str> = rest_part.split_whitespace().collect();
+            if parts.len() < 5 {
+                continue;
+            }
+            
+            let rssi = parts[0].to_string();
+            let channel_info = parts[1].to_string();
+            let security = parts[4..].join(" ");
+            
+            networks.push(WifiNetwork {
+                bssid,
+                ssid,
+                channel: channel_info,
+                signal_strength: rssi,
+                encryption: security,
+            });
         }
-        
-        let ssid = parts[0].to_string();
-        let bssid = parts[1].to_string();
-        let rssi = parts[2].to_string();
-        let channel_info = parts[3].to_string();
-        let security = parts[6..].join(" ");
-        
-        networks.push(WifiNetwork {
-            bssid,
-            ssid,
-            channel: channel_info,
-            signal_strength: rssi,
-            encryption: security,
-        });
     }
     
     Ok(networks)
