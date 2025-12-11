@@ -134,7 +134,7 @@ feat_Tier1 = [
 feat_os_macos = [
   "feat_os_unix", ## == a modern/usual *nix platform
   #
-  "list-wifis",
+  "scan-wifi",
   "monitor-traffic",
   "record-audio",
   "record-video",
@@ -437,7 +437,7 @@ pathchk = { optional = true, version = "0.4.0", package = "sg_pathchk", path = "
 pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "stargate-userland/commands/text-commands/pr" }
 printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "stargate-userland/commands/text-commands/printenv" }
 list-processes = { optional = true, version = "0.4.0", package = "sg_list_processes", path = "stargate-userland/commands/object-commands/list_processes" }
-list-wifis = { optional = true, version = "0.4.0", package = "sg_list_wifis", path = "stargate-userland/commands/object-commands/list_wifis" }
+scan-wifi = { optional = true, version = "0.4.0", package = "sg_scan_wifi", path = "stargate-userland/commands/object-commands/scan_wifi" }
 printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "stargate-userland/commands/text-commands/printf" }
 ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "stargate-userland/commands/text-commands/ptx" }
 pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "stargate-userland/commands/text-commands/pwd" }

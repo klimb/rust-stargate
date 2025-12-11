@@ -1,6 +1,6 @@
 [package]
-name = "sg_list_wifis"
-description = "list-wifis ~ list available WiFi networks using aircrack-ng"
+name = "sg_scan_wifi"
+description = "scan-wifi ~ scan available WiFi networks using aircrack-ng"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true
@@ -15,7 +15,7 @@ readme.workspace = true
 workspace = true
 
 [lib]
-path = "src/list_wifis.rs"
+path = "src/scan_wifi.rs"
 
 [dependencies]
 clap = { workspace = true }
@@ -28,5 +28,5 @@ libc = { workspace = true }
 regex = { workspace = true }
 
 [[bin]]
-name = "list-wifis"
+name = "scan-wifi"
 path = "src/main.rs"

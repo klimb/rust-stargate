@@ -152,7 +152,7 @@ fn parse_airport_output(output: &str) -> UResult<Vec<WifiNetwork>> {
 fn scan_wifi_networks(_interface: &str, _duration: u64, _channel: Option<&str>) -> UResult<Vec<WifiNetwork>> {
     Err(sgcore::error::USimpleError::new(
         1,
-        "list-wifis is currently only supported on macOS".to_string()
+        "scan-wifi is currently only supported on macOS".to_string()
     ))
 }
 
@@ -204,15 +204,15 @@ pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
-        .about(translate!("list-wifis-about"))
-        .override_usage(format_usage(&translate!("list-wifis-usage")))
+        .about(translate!("scan-wifi-about"))
+        .override_usage(format_usage(&translate!("scan-wifi-usage")))
         .infer_long_args(true)
         .arg(
             Arg::new(ARG_INTERFACE)
                 .short('i')
                 .long("interface")
                 .value_name("INTERFACE")
-                .help(translate!("list-wifis-help-interface"))
+                .help(translate!("scan-wifi-help-interface"))
                 .default_value(DEFAULT_INTERFACE_MACOS)
         )
         .arg(
@@ -220,7 +220,7 @@ pub fn sg_app() -> Command {
                 .short('d')
                 .long("duration")
                 .value_name("SECONDS")
-                .help(translate!("list-wifis-help-duration"))
+                .help(translate!("scan-wifi-help-duration"))
                 .value_parser(clap::value_parser!(u64))
                 .default_value("15")
         )
@@ -229,7 +229,7 @@ pub fn sg_app() -> Command {
                 .short('c')
                 .long("channel")
                 .value_name("CHANNEL")
-                .help(translate!("list-wifis-help-channel"))
+                .help(translate!("scan-wifi-help-channel"))
         );
     
     object_output::add_json_args(cmd)
