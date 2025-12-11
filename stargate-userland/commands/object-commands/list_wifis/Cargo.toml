@@ -1,0 +1,32 @@
+[package]
+name = "sg_list_wifis"
+description = "list-wifis ~ list available WiFi networks using aircrack-ng"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/list_wifis.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+fluent = { workspace = true }
+serde_json = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = { workspace = true }
+regex = { workspace = true }
+
+[[bin]]
+name = "list-wifis"
+path = "src/main.rs"

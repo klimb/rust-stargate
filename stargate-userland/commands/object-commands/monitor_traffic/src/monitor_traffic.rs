@@ -15,6 +15,8 @@ static ARG_INTERFACE: &str = "interface";
 static ARG_COUNT: &str = "count";
 static ARG_VERBOSE: &str = "verbose";
 
+const DEFAULT_INTERFACE_MACOS: &str = "en0";
+
 #[derive(Debug, Clone)]
 struct PacketInfo {
     timestamp: f64,
@@ -38,7 +40,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     
     let interface = matches.get_one::<String>(ARG_INTERFACE)
         .map(|s| s.as_str())
-        .unwrap_or("en0");
+        .unwrap_or(DEFAULT_INTERFACE_MACOS);
     let count = matches.get_one::<usize>(ARG_COUNT).copied();
     let verbose = matches.get_flag(ARG_VERBOSE);
     
@@ -396,7 +398,7 @@ pub fn sg_app() -> Command {
                 .long("interface")
                 .value_name("INTERFACE")
                 .help(translate!("monitor-traffic-help-interface"))
-                .default_value("en0")
+                .default_value(DEFAULT_INTERFACE_MACOS)
         )
         .arg(
             Arg::new(ARG_COUNT)

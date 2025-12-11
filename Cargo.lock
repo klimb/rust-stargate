@@ -3424,6 +3424,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_list_wifis"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "libc",
+ "regex",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_ln"
 version = "0.4.0"
 dependencies = [
@@ -4398,6 +4410,7 @@ dependencies = [
  "sg_link",
  "sg_list_directory",
  "sg_list_processes",
+ "sg_list_wifis",
  "sg_ln",
  "sg_mkfifo",
  "sg_mknod",
