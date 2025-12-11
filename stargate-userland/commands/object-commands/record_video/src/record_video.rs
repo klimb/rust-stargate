@@ -13,7 +13,7 @@ use sgcore::{
 static DURATION_ARG: &str = "duration";
 static OUTPUT_ARG: &str = "output";
 static NO_TRANSCRIBE_ARG: &str = "no-transcription";
-#[cfg(all(target_os = "linux", feature = "transcription"))]
+#[cfg(feature = "transcription")]
 static MODEL_PATH_ARG: &str = "model-path";
 
 const MAX_DURATION_SECONDS: u32 = 60 * 5; // 5 min
@@ -33,7 +33,6 @@ fn ensure_record_dir() -> UResult<String> {
 
 const VIDEO_WIDTH: &str = "1280x720";
 const VIDEO_FRAMERATE: &str = "30";
-const DEFAULT_CAMERA_INDEX: &str = "0";
 const AUDIO_CODEC: &str = "pcm_s16le";
 const AUDIO_SAMPLE_RATE: &str = "16000";
 const AUDIO_CHANNELS: &str = "1";
@@ -43,6 +42,11 @@ const AUDIO_FILE_EXTENSION: &str = ".wav";
 const MACOS_FILE_EXTENSION: &str = ".mov";
 #[cfg(target_os = "macos")]
 const MACOS_VIDEO_INPUT: &str = "avfoundation";
+#[cfg(target_os = "macos")]
+const MACOS_DEVICE_INPUT: &str = "0:0";
+
+#[cfg(target_os = "linux")]
+const LINUX_DEVICE_INPUT: &str = "0";
 
 #[cfg(target_os = "linux")]
 const LINUX_FILE_EXTENSION: &str = ".mp4";
@@ -51,7 +55,7 @@ const LINUX_VIDEO_INPUT: &str = "v4l2";
 #[cfg(target_os = "linux")]
 const LINUX_CAMERA_DEVICE: &str = "/dev/video0";
 
-#[cfg(all(target_os = "linux", feature = "transcription"))]
+#[cfg(feature = "transcription")]
 fn get_default_model_path() -> String {
     let home = std::env::var("HOME").expect("HOME environment variable not set");
     format!("{}/.stargate/models/vosk-model-small-en-us-0.15", home)
@@ -121,7 +125,7 @@ pub fn sg_app() -> ClapCommand {
                 .action(clap::ArgAction::SetTrue)
         );
 
-    #[cfg(all(target_os = "linux", feature = "transcription"))]
+    #[cfg(feature = "transcription")]
     let cmd = cmd
         .arg(
             Arg::new(MODEL_PATH_ARG)
@@ -154,7 +158,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             "-f", MACOS_VIDEO_INPUT,
             "-video_size", VIDEO_WIDTH,
             "-framerate", VIDEO_FRAMERATE,
-            "-i", DEFAULT_CAMERA_INDEX,
+            "-i", MACOS_DEVICE_INPUT,
             "-t", &duration.to_string(),
             "-y",
             &output_file,
@@ -168,11 +172,19 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         ));
     }
 
+    #[cfg(feature = "transcription")]
     let transcript = if matches.get_flag(NO_TRANSCRIBE_ARG) {
         String::new()
     } else {
-        extract_and_transcribe(&output_file)?
+        let model_path = matches
+            .get_one::<String>(MODEL_PATH_ARG)
+            .map(|s| s.to_string())
+            .unwrap_or_else(get_default_model_path);
+        extract_and_transcribe(&output_file, &model_path)?
     };
+
+    #[cfg(not(feature = "transcription"))]
+    let transcript = String::new();
     
     println!("{}", transcript);
     Ok(())
@@ -198,7 +210,7 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
             "-f", MACOS_VIDEO_INPUT,
             "-video_size", VIDEO_WIDTH,
             "-framerate", VIDEO_FRAMERATE,
-            "-i", DEFAULT_CAMERA_INDEX,
+            "-i", MACOS_DEVICE_INPUT,
             "-t", &duration.to_string(),
             "-y",
             &output_file,
@@ -224,26 +236,33 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
             error: None,
         }
     } else {
-        match extract_and_transcribe(&output_file) {
-            Ok(transcript) => {
-                let word_count = transcript.split_whitespace().count();
-                RecordVideoResult {
-                    transcript,
-                    duration: duration as f64,
-                    word_count,
-                    success: true,
-                    video_file: output_file.clone(),
-                    error: None,
+        #[cfg(feature = "transcription")]
+        let (transcript, word_count) = if matches.get_flag(NO_TRANSCRIBE_ARG) {
+            (String::new(), 0)
+        } else {
+            let model_path = matches
+                .get_one::<String>(MODEL_PATH_ARG)
+                .map(|s| s.to_string())
+                .unwrap_or_else(get_default_model_path);
+            match extract_and_transcribe(&output_file, &model_path) {
+                Ok(transcript) => {
+                    let word_count = transcript.split_whitespace().count();
+                    (transcript, word_count)
                 }
+                Err(_) => (String::new(), 0),
             }
-            Err(e) => RecordVideoResult {
-                transcript: String::new(),
-                duration: duration as f64,
-                word_count: 0,
-                success: true,
-                video_file: output_file.clone(),
-                error: Some(format!("transcription failed: {}", e)),
-            },
+        };
+
+        #[cfg(not(feature = "transcription"))]
+        let (transcript, word_count) = (String::new(), 0);
+
+        RecordVideoResult {
+            transcript,
+            duration: duration as f64,
+            word_count,
+            success: true,
+            video_file: output_file,
+            error: None,
         }
     };
 
@@ -277,7 +296,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             "-f", LINUX_VIDEO_INPUT,
             "-video_size", VIDEO_WIDTH,
             "-framerate", VIDEO_FRAMERATE,
-            "-i", LINUX_CAMERA_DEVICE,
+            "-i", LINUX_DEVICE_INPUT,
             "-t", &duration.to_string(),
             "-y",
             &output_file,
@@ -328,7 +347,7 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
             "-f", LINUX_VIDEO_INPUT,
             "-video_size", VIDEO_WIDTH,
             "-framerate", VIDEO_FRAMERATE,
-            "-i", LINUX_CAMERA_DEVICE,
+            "-i", LINUX_DEVICE_INPUT,
             "-t", &duration.to_string(),
             "-y",
             &output_file,
@@ -385,8 +404,8 @@ fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()>
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
-fn extract_and_transcribe(video_file: &str) -> UResult<String> {
+#[cfg(all(target_os = "macos", feature = "transcription"))]
+fn extract_and_transcribe(video_file: &str, model_path: &str) -> UResult<String> {
     let dir = ensure_record_dir()?;
     let audio_file = format!("{}/record_video_audio_{}{}", dir, std::process::id(), AUDIO_FILE_EXTENSION);
     
@@ -406,40 +425,45 @@ fn extract_and_transcribe(video_file: &str) -> UResult<String> {
         return Ok("no audio in video".to_string());
     }
 
-    let transcript = transcribe_audio_macos(&audio_file);
+    let transcript = transcribe_audio_vosk(&audio_file, model_path)?;
     
     let _ = std::fs::remove_file(&audio_file);
     
-    transcript
+    Ok(transcript)
 }
 
-#[cfg(target_os = "macos")]
-fn transcribe_audio_macos(audio_file: &str) -> UResult<String> {
-    let script = format!(
-        r#"
-        set audioFile to POSIX file "{}"
-        return "{}"
-        "#,
-        audio_file,
-        "transcription requires additional setup"
-    );
+#[cfg(all(target_os = "macos", feature = "transcription"))]
+fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> {
+    vosk::set_log_level(vosk::LogLevel::Error);
     
-    let output = ProcessCommand::new("osascript")
-        .arg("-e")
-        .arg(&script)
-        .output();
-
-    match output {
-        Ok(output) if output.status.success() => {
-            let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            Ok(if result.is_empty() {
-                "video recorded successfully".to_string()
-            } else {
-                result
-            })
-        }
-        _ => Ok("video recorded successfully".to_string()),
+    let model = vosk::Model::new(model_path)
+        .ok_or_else(|| USimpleError::new(1, "failed to load vosk model".to_string()))?;
+    
+    let mut recognizer = vosk::Recognizer::new(&model, 16000.0)
+        .ok_or_else(|| USimpleError::new(1, "failed to create recognizer".to_string()))?;
+    
+    let mut reader = hound::WavReader::open(audio_file)
+        .map_err(|e| USimpleError::new(1, format!("failed to open audio file: {}", e)))?;
+    
+    let spec = reader.spec();
+    
+    if spec.sample_format != hound::SampleFormat::Int || spec.bits_per_sample != 16 {
+        return Err(USimpleError::new(1, "audio must be 16-bit PCM format".to_string()));
     }
+    
+    let samples: Vec<i16> = reader.samples::<i16>()
+        .filter_map(|s| s.ok())
+        .collect();
+    
+    let _ = recognizer.accept_waveform(&samples);
+    
+    let result_json = recognizer.final_result();
+    
+    let transcript = result_json.single()
+        .map(|s| s.text.to_string())
+        .unwrap_or_default();
+    
+    Ok(transcript)
 }
 
 #[cfg(all(target_os = "linux", feature = "transcription"))]
