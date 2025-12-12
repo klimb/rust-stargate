@@ -3827,6 +3827,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_scan_neighbors"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "libc",
+ "pcap",
+ "serde",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_scan_wifi"
 version = "0.4.0"
 dependencies = [
@@ -4548,6 +4560,7 @@ dependencies = [
  "sg_say_text",
  "sg_scan_arp",
  "sg_scan_bt",
+ "sg_scan_neighbors",
  "sg_scan_wifi",
  "sg_set_hostname",
  "sg_shred",

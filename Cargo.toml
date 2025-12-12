@@ -140,6 +140,7 @@ feat_os_macos = [
   "record-video",
   "scan-bt",
   "scan-arp",
+  "scan-neighbors",
   "say-text",
 ]
 # "feat_os_unix" == set of utilities which can be built/run on modern/usual *nix platforms.
@@ -148,6 +149,7 @@ feat_os_unix = [
   #
   "feat_require_unix",
   "feat_require_unix_utmpx",
+  "scan-neighbors",
 ]
 # "feat_os_unix_musl" == set of utilities which can be built/run on targets binding to the "musl" library (ref: <https://musl.libc.org/about.html>)
 # It excludes stdbuf due to cdylib limitations (https://github.com/rust-lang/rust/issues/82193)
@@ -410,6 +412,7 @@ record-audio = { optional = true, version = "0.4.0", package = "sg_record_audio"
 record-video = { optional = true, version = "0.4.0", package = "sg_record_video", path = "stargate-userland/commands/object-commands/record_video" }
 scan-bt = { optional = true, version = "0.4.0", package = "sg_scan_bt", path = "stargate-userland/commands/object-commands/scan_bt" }
 scan-arp = { optional = true, version = "0.4.0", package = "sg_scan_arp", path = "stargate-userland/commands/object-commands/scan_arp" }
+scan-neighbors = { optional = true, version = "0.4.0", package = "sg_scan_neighbors", path = "stargate-userland/commands/object-commands/scan_neighbors" }
 say-text = { optional = true, version = "0.4.0", package = "sg_say_text", path = "stargate-userland/commands/object-commands/say_text" }
 get_fqdn = { optional = true, version = "0.4.0", package = "sg_get_fqdn", path = "stargate-userland/commands/object-commands/get_fqdn" }
 id = { optional = true, version = "0.4.0", package = "sg_id", path = "stargate-userland/commands/text-commands/id" }
