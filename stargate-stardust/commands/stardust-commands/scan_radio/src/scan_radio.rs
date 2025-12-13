@@ -9,13 +9,28 @@ static ARG_FREQUENCY_START: &str = "freq-start";
 static ARG_FREQUENCY_END: &str = "freq-end";
 static ARG_DURATION: &str = "duration";
 static ARG_PPM: &str = "ppm";
+static ARG_PHONE: &str = "phone";
 
 const DEFAULT_FREQ_START: u32 = 88_000_000;
 const DEFAULT_FREQ_END: u32 = 108_000_000;
+const PHONE_FREQ_START: u32 = 800_000_000;
+const PHONE_FREQ_END: u32 = 2_700_000_000;
 const DEFAULT_BIN_SIZE: u32 = 125_000;
+const PHONE_BIN_SIZE: u32 = 1_000_000;
 const DEFAULT_GAIN: u32 = 40;
 const DEFAULT_DURATION: u64 = 10;
 const DEFAULT_PPM: i32 = 0;
+
+const GSM_850_START: u64 = 806_000_000;
+const GSM_850_END: u64 = 809_000_000;
+const GSM_900_START: u64 = 870_000_000;
+const GSM_900_END: u64 = 890_000_000;
+const DCS_1800_START: u64 = 1_800_000_000;
+const DCS_1800_END: u64 = 1_900_000_000;
+const PCS_1900_START: u64 = 1_920_000_000;
+const PCS_1900_END: u64 = 2_000_000_000;
+const UMTS_LTE_START: u64 = 2_050_000_000;
+const UMTS_LTE_END: u64 = 2_100_000_000;
 
 #[derive(Debug, Clone)]
 struct RFSignal {
@@ -23,6 +38,7 @@ struct RFSignal {
     frequency_hz: u64,
     signal_strength: f64,
     signal_dbm: String,
+    band: Option<String>,
 }
 
 #[sgcore::main]
@@ -35,12 +51,20 @@ fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
     
     let opts = StardustOutputOptions::from_matches(&matches);
     
+    let phone_mode = matches.get_flag(ARG_PHONE);
+    
+    let (default_start, default_end, bin_size) = if phone_mode {
+        (PHONE_FREQ_START, PHONE_FREQ_END, PHONE_BIN_SIZE)
+    } else {
+        (DEFAULT_FREQ_START, DEFAULT_FREQ_END, DEFAULT_BIN_SIZE)
+    };
+    
     let freq_start = matches.get_one::<u32>(ARG_FREQUENCY_START)
         .copied()
-        .unwrap_or(DEFAULT_FREQ_START);
+        .unwrap_or(default_start);
     let freq_end = matches.get_one::<u32>(ARG_FREQUENCY_END)
         .copied()
-        .unwrap_or(DEFAULT_FREQ_END);
+        .unwrap_or(default_end);
     let duration = matches.get_one::<u64>(ARG_DURATION)
         .copied()
         .unwrap_or(DEFAULT_DURATION);
@@ -51,12 +75,17 @@ fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
     if !opts.stardust_output {
         eprintln!("RF Signal Scanner using RTL-SDR");
         eprintln!("================================");
+        if phone_mode {
+            eprintln!("Mode: Phone/Cellular detection (800 MHz - 2.7 GHz)");
+        } else {
+            eprintln!("Mode: FM Radio (88-108 MHz)");
+        }
         eprintln!("Frequency range: {} Hz - {} Hz", freq_start, freq_end);
         eprintln!("Duration: {} seconds", duration);
         eprintln!("PPM correction: {}", ppm);
     }
     
-    let signals = scan_rf_signals(freq_start, freq_end, duration, ppm)?;
+    let signals = scan_rf_signals(freq_start, freq_end, duration, ppm, bin_size)?;
     
     if opts.stardust_output {
         output_json(&signals, opts)?;
@@ -67,7 +96,7 @@ fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
     Ok(())
 }
 
-fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32) -> UResult<Vec<RFSignal>> {
+fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32, bin_size: u32) -> UResult<Vec<RFSignal>> {
     if !command_exists("rtl_power") {
         return Err(sgcore::error::USimpleError::new(
             1,
@@ -75,12 +104,12 @@ fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32) -> U
         ));
     }
     
-    eprintln!("scanning RF spectrum...");
-    eprintln!("(this may take a moment...)");
+    eprintln!("Scanning RF spectrum...");
+    eprintln!("This may take a moment...");
     
     let mut cmd = ProcessCommand::new("rtl_power");
     cmd.arg("-f")
-        .arg(format!("{}:{}:{}", freq_start, freq_end, DEFAULT_BIN_SIZE))
+        .arg(format!("{}:{}:{}", freq_start, freq_end, bin_size))
         .arg("-g")
         .arg(DEFAULT_GAIN.to_string())
         .arg("-i")
@@ -159,6 +188,7 @@ fn parse_rtl_power_output(output: &str, _freq_start: u32) -> UResult<Vec<RFSigna
             frequency_hz: *freq_hz,
             signal_strength: *power,
             signal_dbm: format!("{:.1} dBm", power),
+            band: detect_cellular_band(*freq_hz),
         });
     }
     
@@ -179,6 +209,22 @@ fn format_frequency(hz: u64) -> String {
     }
 }
 
+fn detect_cellular_band(freq_hz: u64) -> Option<String> {
+    if freq_hz >= GSM_850_START && freq_hz <= GSM_850_END {
+        Some("GSM 850".to_string())
+    } else if freq_hz >= GSM_900_START && freq_hz <= GSM_900_END {
+        Some("GSM 900".to_string())
+    } else if freq_hz >= DCS_1800_START && freq_hz <= DCS_1800_END {
+        Some("DCS 1800".to_string())
+    } else if freq_hz >= PCS_1900_START && freq_hz <= PCS_1900_END {
+        Some("PCS 1900".to_string())
+    } else if freq_hz >= UMTS_LTE_START && freq_hz <= UMTS_LTE_END {
+        Some("UMTS/LTE".to_string())
+    } else {
+        None
+    }
+}
+
 fn command_exists(cmd: &str) -> bool {
     ProcessCommand::new("which")
         .arg(cmd)
@@ -196,13 +242,14 @@ fn output_text(signals: &[RFSignal]) {
     }
     
     println!();
-    println!("detected RF signals:");
+    println!("Detected RF Signals:");
     println!("====================");
-    println!("{:<20} {:<15}", "Frequency", "Signal Strength");
-    println!("{:-<20} {:-<15}", "", "");
+    println!("{:<20} {:<15} {:<12}", "Frequency", "Signal Strength", "Band");
+    println!("{:-<20} {:-<15} {:-<12}", "", "", "");
     
     for signal in signals.iter().take(50) {
-        println!("{:<20} {:<15}", signal.frequency, signal.signal_dbm);
+        let band_str = signal.band.as_ref().map(|s| s.as_str()).unwrap_or("-");
+        println!("{:<20} {:<15} {:<12}", signal.frequency, signal.signal_dbm, band_str);
     }
     
     if signals.len() > 50 {
@@ -212,11 +259,17 @@ fn output_text(signals: &[RFSignal]) {
 
 fn output_json(signals: &[RFSignal], _opts: StardustOutputOptions) -> UResult<()> {
     let json_signals: Vec<serde_json::Value> = signals.iter()
-        .map(|s| json!({
-            "frequency": s.frequency,
-            "frequency_hz": s.frequency_hz,
-            "signal_strength_dbm": s.signal_strength,
-        }))
+        .map(|s| {
+            let mut obj = json!({
+                "frequency": s.frequency,
+                "frequency_hz": s.frequency_hz,
+                "signal_strength_dbm": s.signal_strength,
+            });
+            if let Some(band) = &s.band {
+                obj["band"] = json!(band);
+            }
+            obj
+        })
         .collect();
     
     let output = json!({
@@ -236,20 +289,25 @@ pub fn sg_app() -> Command {
         .version(clap::crate_version!())
         .about("scan for radio transmissions using RTL-SDR and display signal strength")
         .arg(
+            Arg::new(ARG_PHONE)
+                .long("phone")
+                .short('p')
+                .action(clap::ArgAction::SetTrue)
+                .help("Scan phone/cellular frequency bands (800 MHz - 2.7 GHz)")
+        )
+        .arg(
             Arg::new(ARG_FREQUENCY_START)
                 .long("freq-start")
                 .value_name("FREQUENCY")
-                .default_value("88000000")
                 .value_parser(clap::value_parser!(u32))
-                .help("Start frequency in Hz (default: 88 MHz - FM radio band)")
+                .help("Start frequency in Hz (default: 88 MHz for FM, 800 MHz for phone)")
         )
         .arg(
             Arg::new(ARG_FREQUENCY_END)
                 .long("freq-end")
                 .value_name("FREQUENCY")
-                .default_value("108000000")
                 .value_parser(clap::value_parser!(u32))
-                .help("End frequency in Hz (default: 108 MHz - FM radio band)")
+                .help("End frequency in Hz (default: 108 MHz for FM, 2.7 GHz for phone)")
         )
         .arg(
             Arg::new(ARG_DURATION)
