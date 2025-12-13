@@ -9,7 +9,8 @@ use sgcore::{
     stardust_output::{self, StardustOutputOptions},
 };
 
-use crate::manufacturers::get_manufacturer_name;
+use crate::manufacturers::{get_manufacturer_name, decode_manufacturer_data};
+use crate::manufacturer_capability::detect_capabilities;
 
 static TIMEOUT_ARG: &str = "timeout";
 static NO_VERBOSE_ARG: &str = "no-verbose";
@@ -39,6 +40,10 @@ struct BluetoothDevice {
     appearance: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     manufacturer: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    capabilities: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    manufacturer_data_decoded: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -175,11 +180,17 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         let mut devices = devices;
         devices.sort_by(|a, b| a.address.cmp(&b.address));
         for device in devices {
+            let mut parts = vec![format!("{} ({})", device.name, device.address)];
+            
             if let Some(ref manufacturer) = device.manufacturer {
-                println!("{} ({}) - {}", device.name, device.address, manufacturer);
-            } else {
-                println!("{} ({})", device.name, device.address);
+                parts.push(manufacturer.clone());
             }
+            
+            if !device.capabilities.is_empty() {
+                parts.push(format!("[{}]", device.capabilities.join(", ")));
+            }
+            
+            println!("{}", parts.join(" - "));
         }
     }
     
@@ -262,6 +273,8 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
                         service_data: None,
                         appearance: None,
                         manufacturer: None,
+                        capabilities: vec![],
+                        manufacturer_data_decoded: None,
                     });
                 }
             }
@@ -303,6 +316,8 @@ fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice>
                 service_data: None,
                 appearance: None,
                 manufacturer: None,
+                capabilities: vec![],
+                manufacturer_data_decoded: None,
             });
         }
     }
@@ -333,8 +348,17 @@ fn parse_connected_devices(conn_array: &serde_json::Value) -> Vec<BluetoothDevic
             devices.push(BluetoothDevice {
                 name: format!("{} (connected)", name),
                 address,
-                rssi: None,
+                advertised_name: None,
                 device_type,
+                address_type: None,
+                tx_power: None,
+                services: vec![],
+                manufacturer_data: None,
+                service_data: None,
+                appearance: None,
+                manufacturer: None,
+                capabilities: vec![],
+                manufacturer_data_decoded: None,
             });
         }
     }
@@ -480,11 +504,13 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
                 };
 
                 let mut manufacturer = None;
+                let mut manufacturer_data_decoded = None;
                 
                 if let Some(ref m) = manufacturer_data {
-                    if let Some((id_str, _)) = m.iter().next() {
+                    if let Some((id_str, data_hex)) = m.iter().next() {
                         if let Ok(company_id) = u16::from_str_radix(id_str, 16) {
                             manufacturer = get_manufacturer_name(company_id).map(|s| s.to_string());
+                            manufacturer_data_decoded = decode_manufacturer_data(company_id, data_hex);
                             
                             if name == "unknown" && manufacturer.is_some() {
                                 name = format!("{} device", manufacturer.as_ref().unwrap().to_lowercase());
@@ -492,6 +518,8 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
                         }
                     }
                 }
+                
+                let capabilities = detect_capabilities(&services, tx_power);
 
                 out.push(BluetoothDevice {
                     name,
@@ -505,6 +533,8 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
                     service_data,
                     appearance: None,
                     manufacturer,
+                    capabilities,
+                    manufacturer_data_decoded,
                 });
             }
         }
