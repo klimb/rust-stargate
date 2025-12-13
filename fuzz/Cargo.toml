@@ -27,7 +27,7 @@ debug = true
 libfuzzer-sys = "0.4.7"
 rand = { version = "0.9.0", features = ["small_rng"] }
 uufuzz = { path = "uufuzz" }
-sgcore = { path = "../stargate-userland/sgcore", features = ["parser"] }
+sgcore = { path = "../stargate-stardust/sgcore", features = ["parser"] }
 uu_date = { path = "../src/uu/date" }
 uu_test = { path = "../src/uu/test" }
 uu_expr = { path = "../src/uu/expr" }

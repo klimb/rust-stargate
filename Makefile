@@ -385,17 +385,17 @@ endif
 ifeq ($(LOCALES),y)
 locales:
 	@# Copy uucore common locales
-	@if [ -d "$(BASEDIR)/stargate-userland/uucore/locales" ]; then \
-		mkdir -p "$(BUILDDIR)/locales/uucore"; \
-		for locale_file in "$(BASEDIR)"/stargate-userland/uucore/locales/*.ftl; do \
-			$(INSTALL) -m 644 "$$locale_file" "$(BUILDDIR)/locales/uucore/"; \
+	@if [ -d "$(BASEDIR)/stargate-stardust/sgcore/locales" ]; then \
+		mkdir -p "$(BUILDDIR)/locales/sgcore"; \
+		for locale_file in "$(BASEDIR)"/stargate-stardust/sgcore/locales/*.ftl; do \
+			$(INSTALL) -m 644 "$$locale_file" "$(BUILDDIR)/locales/sgcore/"; \
 		done; \
 	fi; \
 	# Copy utility-specific locales
 	@for prog in $(INSTALLEES); do \
-		if [ -d "$(BASEDIR)/stargate-userland/commands/$$prog/locales" ]; then \
+		if [ -d "$(BASEDIR)/stargate-stardust/commands/$$prog/locales" ]; then \
 			mkdir -p "$(BUILDDIR)/locales/$$prog"; \
-			for locale_file in "$(BASEDIR)"/stargate-userland/commands/$$prog/locales/*.ftl; do \
+			for locale_file in "$(BASEDIR)"/stargate-stardust/commands/$$prog/locales/*.ftl; do \
 				if [ "$$(basename "$$locale_file")" != "en-US.ftl" ]; then \
 					$(INSTALL) -m 644 "$$locale_file" "$(BUILDDIR)/locales/$$prog/"; \
 				fi; \
@@ -406,9 +406,9 @@ locales:
 
 install-locales:
 	@for prog in $(INSTALLEES); do \
-		if [ -d "$(BASEDIR)/stargate-userland/commands/$$prog/locales" ]; then \
+		if [ -d "$(BASEDIR)/stargate-stardust/commands/$$prog/locales" ]; then \
 			mkdir -p "$(DESTDIR)$(DATAROOTDIR)/locales/$$prog"; \
-			for locale_file in "$(BASEDIR)"/stargate-userland/commands/$$prog/locales/*.ftl; do \
+			for locale_file in "$(BASEDIR)"/stargate-stardust/commands/$$prog/locales/*.ftl; do \
 				if [ "$$(basename "$$locale_file")" != "en-US.ftl" ]; then \
 					$(INSTALL) -m 644 "$$locale_file" "$(DESTDIR)$(DATAROOTDIR)/locales/$$prog/"; \
 				fi; \

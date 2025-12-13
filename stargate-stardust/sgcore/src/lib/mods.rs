@@ -9,7 +9,6 @@ pub mod json_adapter;
 pub mod stardust_output;
 pub mod line_ending;
 pub mod locale;
-pub mod os;
 pub mod panic;
 pub mod pledge;
 pub mod posix;

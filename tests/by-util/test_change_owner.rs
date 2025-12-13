@@ -17,7 +17,7 @@ use sgtests::{at_and_ucmd, new_ucmd};
 // stderr: "id: cannot find name for group ID 116"
 // stderr: "thread 'main' panicked at 'called `Result::unwrap()` on an `Err`
 //     value: Custom { kind: NotFound, error: "No such id: 1001" }',
-//     /project/stargate-userland/sgcore/src/lib/features/perms.rs:176:44"
+//     /project/stargate-stardust/sgcore/src/lib/features/perms.rs:176:44"
 //
 fn skipping_test_is_okay(result: &CmdResult, needle: &str) -> bool {
     if !result.succeeded() {

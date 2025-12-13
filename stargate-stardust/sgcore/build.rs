@@ -13,24 +13,19 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         "// This file contains embedded English locale files"
     )?;
     writeln!(embedded_file)?;
-    // No imports needed for match-based lookup
     writeln!(embedded_file)?;
 
-    // Generate optimized lookup function instead of HashMap
     writeln!(
         embedded_file,
         "pub fn get_embedded_locale(key: &str) -> Option<&'static str> {{"
     )?;
     writeln!(embedded_file, "    match key {{")?;
 
-    // Try to detect if we're building for a specific utility by checking build configuration
-    // This attempts to identify individual utility builds vs multicall binary builds
     let target_utility = detect_target_utility();
     let locales_to_embed = get_locales_to_embed();
 
     match target_utility {
         Some(util_name) => {
-            // Embed only the specific utility's locale (cat.ftl for cat for example)
             embed_single_utility_locale(
                 &mut embedded_file,
                 &project_root()?,
@@ -39,7 +34,6 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             )?;
         }
         None => {
-            // Embed all utility locales (multicall binary or fallback)
             embed_all_utility_locales(&mut embedded_file, &project_root()?, &locales_to_embed)?;
         }
     }
@@ -52,35 +46,29 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Get the project root directory
 fn project_root() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let uucore_path = std::path::Path::new(&manifest_dir);
 
-    // Navigate from stargate-userland/sgcore to project root
     let project_root = uucore_path
-        .parent() // stargate-userland/
-        .and_then(|p| p.parent()) // project root
+        .parent()
+        .and_then(|p| p.parent())
         .ok_or("Could not determine project root")?;
 
     Ok(project_root.to_path_buf())
 }
 
-/// Attempt to detect which specific utility is being built
 fn detect_target_utility() -> Option<String> {
     use std::fs;
 
-    // Tell Cargo to rerun if this environment variable changes
     println!("cargo:rerun-if-env-changed=UUCORE_TARGET_UTIL");
 
-    // First check if an explicit environment variable was set
     if let Ok(target_util) = env::var("UUCORE_TARGET_UTIL") {
         if !target_util.is_empty() {
             return Some(target_util);
         }
     }
 
-    // Auto-detect utility name from CARGO_PKG_NAME if it's a sg_* package
     if let Ok(pkg_name) = env::var("CARGO_PKG_NAME") {
         if let Some(util_name) = pkg_name.strip_prefix("sg_") {
             println!("cargo:warning=Auto-detected utility name: {util_name}");
@@ -88,7 +76,6 @@ fn detect_target_utility() -> Option<String> {
         }
     }
 
-    // Check for a build configuration file in the target directory
     if let Ok(target_dir) = env::var("CARGO_TARGET_DIR") {
         let config_path = std::path::Path::new(&target_dir).join("uucore_target_util.txt");
         if let Ok(content) = fs::read_to_string(&config_path) {
@@ -99,7 +86,6 @@ fn detect_target_utility() -> Option<String> {
         }
     }
 
-    // Fallback: Check the default target directory
     if let Ok(project_root) = project_root() {
         let config_path = project_root.join("target/uucore_target_util.txt");
         if let Ok(content) = fs::read_to_string(&config_path) {
@@ -110,34 +96,29 @@ fn detect_target_utility() -> Option<String> {
         }
     }
 
-    // If no configuration found, assume multicall build
     None
 }
 
-/// Embed locale for a single specific utility
 fn embed_single_utility_locale(
     embedded_file: &mut std::fs::File,
     project_root: &Path,
     util_name: &str,
     locales_to_embed: &(String, Option<String>)
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Embed utility-specific locales
     embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
         project_root
-            .join("stargate-userland/commands")
+            .join("stargate-stardust/commands")
             .join(util_name)
             .join(format!("locales/{locale}.ftl"))
     })?;
 
-    // Always embed sgcore locale file if it exists
     embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
-        project_root.join(format!("stargate-userland/sgcore/locales/{locale}.ftl"))
+        project_root.join(format!("stargate-stardust/sgcore/locales/{locale}.ftl"))
     })?;
 
     Ok(())
 }
 
-/// Embed locale files for all utilities (multicall binary)
 fn embed_all_utility_locales(
     embedded_file: &mut std::fs::File,
     project_root: &Path,
@@ -145,11 +126,8 @@ fn embed_all_utility_locales(
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
 
-    // Discover all command directories
-    let commands_dir = project_root.join("stargate-userland/commands");
+    let commands_dir = project_root.join("stargate-stardust/commands");
     if !commands_dir.exists() {
-        // When stargate-userland/commands doesn't exist (e.g., standalone sgcore from crates.io),
-        // embed a static list of utility locales that are commonly used
         embed_static_utility_locales(embedded_file, locales_to_embed)?;
         return Ok(());
     }
@@ -165,7 +143,6 @@ fn embed_all_utility_locales(
     }
     util_dirs.sort();
 
-    // Embed locale files for each utility
     for util_name in &util_dirs {
         embed_component_locales(embedded_file, locales_to_embed, util_name, |locale| {
             commands_dir
@@ -174,9 +151,8 @@ fn embed_all_utility_locales(
         })?;
     }
 
-    // Also embed sgcore locale file if it exists
     embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
-        project_root.join(format!("stargate-userland/sgcore/locales/{locale}.ftl"))
+        project_root.join(format!("stargate-stardust/sgcore/locales/{locale}.ftl"))
     })?;
 
     embedded_file.flush()?;
@@ -196,15 +172,13 @@ fn embed_static_utility_locales(
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
     let Some(registry_dir) = Path::new(&manifest_dir).parent() else {
-        return Ok(()); // nothing to scan
+        return Ok(());
     };
 
-    // First, try to embed sgcore locales - critical for common translations like "Usage:"
     embed_component_locales(embedded_file, locales_to_embed, "sgcore", |locale| {
         Path::new(&manifest_dir).join(format!("locales/{locale}.ftl"))
     })?;
 
-    // Collect and sort for deterministic builds
     let mut entries: Vec<_> = std::fs::read_dir(registry_dir)?
         .filter_map(Result::ok)
         .collect();
@@ -213,7 +187,6 @@ fn embed_static_utility_locales(
     for entry in entries {
         let file_name = entry.file_name();
         if let Some(dir_name) = file_name.to_str() {
-            // Match sg_<util>-<version>
             if let Some((util_part, _)) = dir_name.split_once('-') {
                 if let Some(util_name) = util_part.strip_prefix("sg_") {
                     embed_component_locales(
@@ -230,14 +203,6 @@ fn embed_static_utility_locales(
     Ok(())
 }
 
-/// Determines which locales to embed into the binary.
-///
-/// To support localized messages in installed binaries (e.g., via `cargo install`),
-/// this function identifies the user's current locale from the `LANG` environment
-/// variable.
-///
-/// It always includes "en-US" to ensure that a fallback is available if the
-/// system locale's translation file is missing or if `LANG` is not set.
 fn get_locales_to_embed() -> (String, Option<String>) {
     let system_locale = env::var("LANG").ok().and_then(|lang| {
         let locale = lang.split('.').next()?.replace('_', "-");
@@ -250,7 +215,6 @@ fn get_locales_to_embed() -> (String, Option<String>) {
     ("en-US".to_string(), system_locale)
 }
 
-/// Helper function to iterate over the locales to embed.
 fn for_each_locale<F>(
     locales: &(String, Option<String>),
     mut f: F
@@ -265,7 +229,6 @@ where
     Ok(())
 }
 
-/// Helper function to embed a single locale file.
 fn embed_locale_file(
     embedded_file: &mut std::fs::File,
     locale_path: &Path,
@@ -286,14 +249,11 @@ fn embed_locale_file(
             "        \"{locale_key}\" => Some(r###\"{content}\"###),"
         )?;
 
-        // Tell Cargo to rerun if this file changes
         println!("cargo:rerun-if-changed={}", locale_path.display());
     }
     Ok(())
 }
 
-/// Higher-level helper to embed locale files for a component with a path pattern.
-/// This eliminates the repetitive for_each_locale + embed_locale_file pattern.
 fn embed_component_locales<F>(
     embedded_file: &mut std::fs::File,
     locales: &(String, Option<String>),
