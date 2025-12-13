@@ -135,6 +135,7 @@ feat_os_macos = [
   "feat_os_unix", ## == a modern/usual *nix platform
   #
   "scan-wifi",
+  "scan-radio",
   "monitor-traffic",
   "record-audio",
   "record-video",
@@ -149,6 +150,7 @@ feat_os_unix = [
   #
   "feat_require_unix",
   "feat_require_unix_utmpx",
+  "scan-radio",
   "scan-bt",
   "scan-neighbors",
 ]
@@ -446,6 +448,7 @@ pr = { optional = true, version = "0.4.0", package = "sg_pr", path = "stargate-s
 printenv = { optional = true, version = "0.4.0", package = "sg_printenv", path = "stargate-stardust/commands/text-commands/printenv" }
 list-processes = { optional = true, version = "0.4.0", package = "sg_list_processes", path = "stargate-stardust/commands/stardust-commands/list_processes" }
 scan-wifi = { optional = true, version = "0.4.0", package = "sg_scan_wifi", path = "stargate-stardust/commands/stardust-commands/scan_wifi" }
+scan-radio = { optional = true, version = "0.4.0", package = "sg_scan_radio", path = "stargate-stardust/commands/stardust-commands/scan_radio" }
 printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "stargate-stardust/commands/text-commands/printf" }
 ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "stargate-stardust/commands/text-commands/ptx" }
 pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "stargate-stardust/commands/text-commands/pwd" }

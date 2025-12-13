@@ -4111,6 +4111,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_scan_radio"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "regex",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_scan_wifi"
 version = "0.4.0"
 dependencies = [
@@ -4833,6 +4844,7 @@ dependencies = [
  "sg_scan_arp",
  "sg_scan_bt",
  "sg_scan_neighbors",
+ "sg_scan_radio",
  "sg_scan_wifi",
  "sg_set_hostname",
  "sg_shred",
