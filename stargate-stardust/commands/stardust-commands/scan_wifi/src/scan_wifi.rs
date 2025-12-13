@@ -30,6 +30,9 @@ struct WifiNetwork {
     channel: String,
     signal_strength: String,
     encryption: String,
+    clients: Option<usize>,
+    packets: Option<usize>,
+    beacons: Option<usize>,
 }
 
 #[sgcore::main]
@@ -63,11 +66,27 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         if let Some(ch) = channel {
             eprintln!("Channel: {}", ch);
         }
-        eprintln!("this requires aircrack-ng to be installed and root privileges.");
+        eprintln!("this requires root privileges and iw/wireless-tools (or airodump-ng).");
         eprintln!();
     }
     
-    let networks = scan_wifi_networks(interface, duration, channel)?;
+    let mut networks = {
+        #[cfg(target_os = "linux")]
+        {
+            scan_wifi_detailed(interface, duration, channel)
+                .or_else(|_| scan_wifi_networks(interface, duration, channel))?
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            scan_wifi_networks(interface, duration, channel)?
+        }
+    };
+    
+    networks.sort_by(|a, b| {
+        let sig_a = parse_signal_strength(&a.signal_strength);
+        let sig_b = parse_signal_strength(&b.signal_strength);
+        sig_b.partial_cmp(&sig_a).unwrap_or(std::cmp::Ordering::Equal)
+    });
     
     if opts.stardust_output {
         output_json(&networks, opts)?;
@@ -93,34 +112,58 @@ fn detect_wireless_interface() -> Option<String> {
         {
             if output.status.success() {
                 let text = String::from_utf8_lossy(&output.stdout);
+                let mut interfaces = Vec::new();
+                
                 for line in text.lines() {
                     let trimmed = line.trim();
                     if trimmed.starts_with("Interface ") {
                         let parts: Vec<&str> = trimmed.split_whitespace().collect();
                         if parts.len() >= 2 {
-                            return Some(parts[1].to_string());
+                            interfaces.push(parts[1].to_string());
                         }
                     }
+                }
+                
+                for iface in &interfaces {
+                    if iface.starts_with("wlx") {
+                        return Some(iface.clone());
+                    }
+                }
+                
+                if !interfaces.is_empty() {
+                    return Some(interfaces[0].clone());
                 }
             }
         }
     }
     
     if let Ok(entries) = std::fs::read_dir("/sys/class/net") {
-        let mut interfaces = Vec::new();
+        let mut wlx_interfaces = Vec::new();
+        let mut other_interfaces = Vec::new();
+        
         for entry in entries.flatten() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
             if name_str.starts_with("wl") {
                 let wireless_path = format!("/sys/class/net/{}/wireless", name_str);
                 if std::path::Path::new(&wireless_path).exists() {
-                    interfaces.push(name_str.to_string());
+                    if name_str.starts_with("wlx") {
+                        wlx_interfaces.push(name_str.to_string());
+                    } else {
+                        other_interfaces.push(name_str.to_string());
+                    }
                 }
             }
         }
-        interfaces.sort();
-        if !interfaces.is_empty() {
-            return Some(interfaces[0].clone());
+        
+        wlx_interfaces.sort();
+        if !wlx_interfaces.is_empty() {
+            return Some(wlx_interfaces[0].clone());
+        }
+        
+        other_interfaces.sort();
+        if !other_interfaces.is_empty() {
+            return Some(other_interfaces[0].clone());
         }
     }
     
@@ -254,6 +297,9 @@ fn parse_airport_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                 channel: channel_info,
                 signal_strength: rssi,
                 encryption: security,
+                clients: None,
+                packets: None,
+                beacons: None,
             });
         }
     }
@@ -334,6 +380,207 @@ fn scan_wifi_networks(interface: &str, _duration: u64, _channel: Option<&str>) -
 }
 
 #[cfg(target_os = "linux")]
+fn scan_wifi_detailed(interface: &str, duration: u64, _channel: Option<&str>) -> UResult<Vec<WifiNetwork>> {
+    use std::process::{Command as ProcessCommand, Stdio};
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    check_root_privileges()?;
+    
+    let airmon_paths = ["/usr/sbin/airmon-ng", "/sbin/airmon-ng", "/usr/bin/airmon-ng", "airmon-ng"];
+    let mut airmon_cmd = None;
+    for path in &airmon_paths {
+        if std::path::Path::new(path).exists() || *path == "airmon-ng" {
+            airmon_cmd = Some(*path);
+            break;
+        }
+    }
+    
+    let airmon_path = airmon_cmd.ok_or_else(|| {
+        sgcore::error::USimpleError::new(
+            1,
+            "airmon-ng not found. Install with: sudo apt install aircrack-ng".to_string()
+        )
+    })?;
+    
+    let airodump_paths = ["/usr/sbin/airodump-ng", "/sbin/airodump-ng", "/usr/bin/airodump-ng", "airodump-ng"];
+    let mut airodump_cmd = None;
+    for path in &airodump_paths {
+        if std::path::Path::new(path).exists() || *path == "airodump-ng" {
+            airodump_cmd = Some(*path);
+            break;
+        }
+    }
+    
+    let airodump_path = airodump_cmd.ok_or_else(|| {
+        sgcore::error::USimpleError::new(
+            1,
+            "airodump-ng not found. Install with: sudo apt install aircrack-ng".to_string()
+        )
+    })?;
+    
+    let _ = ProcessCommand::new(airmon_path)
+        .arg("stop")
+        .arg(interface)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    
+    let _ = ProcessCommand::new(airmon_path)
+        .arg("start")
+        .arg(interface)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    
+    std::thread::sleep(std::time::Duration::from_secs(3));
+    
+    let monitor_iface = interface.to_string();
+    
+    let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let scan_dir = format!("{}/.stargate/scan-wifi", home_dir);
+    fs::create_dir_all(&scan_dir)
+        .map_err(|e| sgcore::error::USimpleError::new(
+            1,
+            format!("Failed to create directory {}: {}", scan_dir, e)
+        ))?;
+    
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let output_prefix = format!("{}/scan-wifi-{}", scan_dir, timestamp);
+    let csv_file = format!("{}-01.csv", output_prefix);
+    
+    eprintln!("Starting airodump-ng on {} for {} seconds...", monitor_iface, duration);
+    
+    let mut child = ProcessCommand::new(airodump_path)
+        .arg(&monitor_iface)
+        .arg("--write")
+        .arg(&output_prefix)
+        .arg("--output-format")
+        .arg("csv")
+        .arg("--background")
+        .arg("1")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| sgcore::error::USimpleError::new(
+            1,
+            format!("Failed to start airodump-ng: {}. Make sure {} is in monitor mode", e, monitor_iface)
+        ))?;
+    
+    std::thread::sleep(std::time::Duration::from_secs(duration));
+    
+    let _ = child.kill();
+    let _ = child.wait();
+    
+    std::thread::sleep(std::time::Duration::from_secs(2));
+    
+    if !std::path::Path::new(&csv_file).exists() {
+        return Ok(Vec::new());
+    }
+    let csv_content = fs::read_to_string(&csv_file)
+        .map_err(|e| sgcore::error::USimpleError::new(
+            1,
+            format!("Failed to read airodump-ng output: {}", e)
+        ))?;
+    
+    let networks = parse_airodump_csv(&csv_content)?;
+    
+    let _ = ProcessCommand::new(airmon_path)
+        .arg("stop")
+        .arg(&monitor_iface)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    
+    let _ = fs::remove_file(&csv_file);
+    let cap_file = format!("{}-01.cap", output_prefix);
+    let _ = fs::remove_file(&cap_file);
+    let kismet_file = format!("{}-01.kismet.csv", output_prefix);
+    let _ = fs::remove_file(&kismet_file);
+    let netxml_file = format!("{}-01.kismet.netxml", output_prefix);
+    let _ = fs::remove_file(&netxml_file);
+    
+    Ok(networks)
+}
+
+#[cfg(target_os = "linux")]
+fn parse_airodump_csv(content: &str) -> UResult<Vec<WifiNetwork>> {
+    let mut networks = Vec::new();
+    let mut in_ap_section = false;
+    
+    for line in content.lines() {
+        let trimmed = line.trim();
+        
+        if trimmed.starts_with("BSSID") {
+            in_ap_section = true;
+            continue;
+        }
+        
+        if trimmed.is_empty() {
+            if in_ap_section {
+                break;
+            }
+            continue;
+        }
+        
+        if trimmed.starts_with("Station MAC") {
+            break;
+        }
+        
+        if !in_ap_section {
+            continue;
+        }
+        
+        let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+        if parts.len() < 14 {
+            continue;
+        }
+        
+        let bssid = parts[0].to_string();
+        if bssid.is_empty() {
+            continue;
+        }
+        
+        let channel = parts[3].trim().to_string();
+        let signal = format!("{} dBm", parts[8].trim());
+        let beacons = parts[9].trim().parse::<usize>().ok();
+        let packets = parts[10].trim().parse::<usize>().ok();
+        let encryption = format!("{} {}", parts[5].trim(), parts[6].trim()).trim().to_string();
+        let ssid = if parts.len() > 13 && !parts[13].trim().is_empty() {
+            parts[13].trim().to_string()
+        } else {
+            "<hidden>".to_string()
+        };
+        
+        networks.push(WifiNetwork {
+            bssid,
+            ssid,
+            channel,
+            signal_strength: signal,
+            encryption,
+            clients: None,
+            packets,
+            beacons,
+        });
+    }
+    
+    Ok(networks)
+}
+
+#[cfg(target_os = "macos")]
+fn scan_wifi_detailed(_interface: &str, _duration: u64, _channel: Option<&str>) -> UResult<Vec<WifiNetwork>> {
+    Err(sgcore::error::USimpleError::new(
+        1,
+        "--detailed mode is only supported on Linux with airodump-ng".to_string()
+    ))
+}
+
+#[cfg(target_os = "linux")]
 fn parse_iw_output(output: &str) -> UResult<Vec<WifiNetwork>> {
     let mut networks = Vec::new();
     let mut current_network: Option<WifiNetwork> = None;
@@ -355,6 +602,9 @@ fn parse_iw_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                     channel: String::new(),
                     signal_strength: String::new(),
                     encryption: "Open".to_string(),
+                    clients: None,
+                    packets: None,
+                    beacons: None,
                 });
             }
         } else if line.starts_with("SSID: ") {
@@ -430,6 +680,9 @@ fn parse_iwlist_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                     channel: String::new(),
                     signal_strength: String::new(),
                     encryption: String::new(),
+                    clients: None,
+                    packets: None,
+                    beacons: None,
                 });
             }
         } else if line.starts_with("Channel:") {
@@ -492,13 +745,25 @@ fn scan_wifi_networks(_interface: &str, _duration: u64, _channel: Option<&str>) 
 
 fn output_json(networks: &[WifiNetwork], opts: StardustOutputOptions) -> UResult<()> {
     let network_list: Vec<_> = networks.iter().map(|n| {
-        json!({
+        let mut obj = json!({
             "ssid": n.ssid,
             "bssid": n.bssid,
             "channel": n.channel,
             "signal_strength": n.signal_strength,
             "encryption": n.encryption
-        })
+        });
+        
+        if let Some(clients) = n.clients {
+            obj["clients"] = json!(clients);
+        }
+        if let Some(packets) = n.packets {
+            obj["packets"] = json!(packets);
+        }
+        if let Some(beacons) = n.beacons {
+            obj["beacons"] = json!(beacons);
+        }
+        
+        obj
     }).collect();
     
     let output = json!({
@@ -511,16 +776,34 @@ fn output_json(networks: &[WifiNetwork], opts: StardustOutputOptions) -> UResult
 }
 
 fn output_text(networks: &[WifiNetwork]) {
-    println!("SSID\t\t\tBSSID\t\t\tCHANNEL\tSIGNAL\tENCRYPTION");
-    println!("{}", "=".repeat(100));
+    let has_detailed = networks.iter().any(|n| n.beacons.is_some() || n.packets.is_some());
     
-    for network in networks {
-        println!("{}\t{}\t{}\t{}\t{}",
-            truncate_string(&network.ssid, 20),
-            network.bssid,
-            network.channel,
-            network.signal_strength,
-            truncate_string(&network.encryption, 20));
+    if has_detailed {
+        println!("SSID\t\t\tBSSID\t\t\tCH\tSIGNAL\t\tBEACONS\tPACKETS\tENCRYPTION");
+        println!("{}", "=".repeat(120));
+        
+        for network in networks {
+            println!("{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                truncate_string(&network.ssid, 20),
+                network.bssid,
+                network.channel,
+                truncate_string(&network.signal_strength, 10),
+                network.beacons.map(|b| b.to_string()).unwrap_or_else(|| "-".to_string()),
+                network.packets.map(|p| p.to_string()).unwrap_or_else(|| "-".to_string()),
+                truncate_string(&network.encryption, 15));
+        }
+    } else {
+        println!("SSID\t\t\tBSSID\t\t\tCHANNEL\tSIGNAL\tENCRYPTION");
+        println!("{}", "=".repeat(100));
+        
+        for network in networks {
+            println!("{}\t{}\t{}\t{}\t{}",
+                truncate_string(&network.ssid, 20),
+                network.bssid,
+                network.channel,
+                network.signal_strength,
+                truncate_string(&network.encryption, 20));
+        }
     }
     
     println!("\nTotal networks found: {}", networks.len());
@@ -532,6 +815,15 @@ fn truncate_string(s: &str, max_len: usize) -> String {
     } else {
         format!("{}...", &s[..max_len-3])
     }
+}
+
+fn parse_signal_strength(signal_str: &str) -> f64 {
+    signal_str
+        .trim()
+        .split_whitespace()
+        .next()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(-100.0)
 }
 
 pub fn sg_app() -> Command {
