@@ -1,5 +1,5 @@
 use clap::{Arg, ArgAction, Command};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{error::UResult, format_usage};
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
     
     let variables: Vec<String> = matches
         .get_many::<String>(ARG_VARIABLES)
@@ -27,12 +27,12 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         "\n"
     };
 
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         if variables.is_empty() {
             let env_map: HashMap<String, String> = env::vars().collect();
             let json_value = serde_json::to_value(&env_map)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-            object_output::output(json_output_options, json_value, || Ok(()))?;
+            stardust_output::output(json_output_options, json_value, || Ok(()))?;
         } else {
             let mut env_map: HashMap<String, Option<String>> = HashMap::new();
             let mut error_found = false;
@@ -49,7 +49,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
             let json_value = serde_json::to_value(&env_map)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-            object_output::output(json_output_options, json_value, || Ok(()))?;
+            stardust_output::output(json_output_options, json_value, || Ok(()))?;
             if error_found { return Err(1.into()); }
         }
         return Ok(());
@@ -98,5 +98,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Append)
                 .num_args(1..)
         );
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

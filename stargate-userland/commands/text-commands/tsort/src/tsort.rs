@@ -8,7 +8,7 @@ use thiserror::Error;
 use sgcore::display::Quotable;
 use sgcore::error::{UError, UResult};
 use sgcore::{format_usage, show};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 use sgcore::translate;
@@ -47,7 +47,7 @@ impl UError for LoopNode<'_> {}
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
 
     let input = matches
         .get_one::<OsString>(options::FILE)
@@ -104,7 +104,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 /// Find the element `x` in `vec` and remove it, returning its index.
@@ -165,7 +165,7 @@ impl<'input> Graph<'input> {
     }
 
     /// Implementation of algorithm T from TAOCP (Don. Knuth), vol. 1.
-    fn run_tsort(&mut self, opts: JsonOutputOptions) {
+    fn run_tsort(&mut self, opts: StardustOutputOptions) {
         let mut sorted_nodes = Vec::new();
         
         // First, we find nodes that have no prerequisites (independent nodes).
@@ -193,7 +193,7 @@ impl<'input> Graph<'input> {
             // Get the next node (breaking any cycles necessary to do so).
             let v = self.find_next_node(&mut independent_nodes_queue);
             
-            if opts.object_output {
+            if opts.stardust_output {
                 sorted_nodes.push(v.to_string());
             } else {
                 println!("{v}");
@@ -211,12 +211,12 @@ impl<'input> Graph<'input> {
             }
         }
         
-        if opts.object_output {
+        if opts.stardust_output {
             let output = json!({
                 "sorted": sorted_nodes,
                 "count": sorted_nodes.len()
             });
-            let _ = object_output::output(opts, output, || Ok(()));
+            let _ = stardust_output::output(opts, output, || Ok(()));
         }
     }
 

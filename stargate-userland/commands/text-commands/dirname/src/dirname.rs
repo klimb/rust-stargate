@@ -8,7 +8,7 @@ use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
 
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 mod options {
@@ -68,8 +68,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
 
     let dirnames: Vec<OsString> = matches
         .get_many::<OsString>(options::DIR)
@@ -81,7 +81,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         return Err(UUsageError::new(1, translate!("dirname-missing-operand")));
     }
 
-    if opts.object_output {
+    if opts.stardust_output {
         // For object (JSON) output, collect results into a vector without printing
         let mut results = Vec::new();
         for path in &dirnames {
@@ -129,8 +129,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
             results.push(dirname_str);
         }
-        let output = object_output::filter_fields(json!({"path": results}), field_filter);
-        object_output::output(opts, output, || Ok(()))?;
+        let output = stardust_output::filter_fields(json!({"path": results}), field_filter);
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         for path in &dirnames {
             let path_bytes = sgcore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
@@ -186,5 +186,5 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

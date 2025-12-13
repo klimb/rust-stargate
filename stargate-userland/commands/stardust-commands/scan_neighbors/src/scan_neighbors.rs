@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
     translate,
 };
 use std::collections::HashMap;
@@ -79,9 +79,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         
         check_root_privileges()?;
         
-        let object_output = JsonOutputOptions::from_matches(&matches);
+        let object_output = StardustOutputOptions::from_matches(&matches);
 
-        if object_output.object_output {
+        if object_output.stardust_output {
             produce_json(&matches, object_output)
         } else {
             produce(&matches)
@@ -120,7 +120,7 @@ pub fn sg_app() -> ClapCommand {
                 .action(ArgAction::SetTrue),
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
@@ -253,7 +253,7 @@ fn format_protocols(protocols: &HashMap<String, usize>) -> String {
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn produce_json(matches: &clap::ArgMatches, options: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &clap::ArgMatches, options: StardustOutputOptions) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "inet", "bpf"])?;
 
     let (interface, duration, continuous) = extract_config(matches);

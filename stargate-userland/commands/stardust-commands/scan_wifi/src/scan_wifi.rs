@@ -4,7 +4,7 @@ use clap::{Arg, Command};
 use sgcore::error::UResult;
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 #[cfg(target_os = "macos")]
@@ -33,7 +33,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     check_root_privileges()?;
     
     //sgcore::pledge::apply_pledge(&["stdio", "proc", "exec", "rpath"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
     
     let interface = matches.get_one::<String>(ARG_INTERFACE)
         .map(|s| s.as_str())
@@ -41,7 +41,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let duration = matches.get_one::<u64>(ARG_DURATION).copied().unwrap_or(15);
     let channel = matches.get_one::<String>(ARG_CHANNEL).map(|s| s.as_str());
     
-    if !opts.object_output {
+    if !opts.stardust_output {
         eprintln!("scanning for WiFi networks on interface: {}", interface);
         eprintln!("duration: {} seconds", duration);
         if let Some(ch) = channel {
@@ -53,7 +53,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     
     let networks = scan_wifi_networks(interface, duration, channel)?;
     
-    if opts.object_output {
+    if opts.stardust_output {
         output_json(&networks, opts)?;
     } else {
         output_text(&networks);
@@ -170,7 +170,7 @@ fn scan_wifi_networks(_interface: &str, _duration: u64, _channel: Option<&str>) 
     ))
 }
 
-fn output_json(networks: &[WifiNetwork], opts: JsonOutputOptions) -> UResult<()> {
+fn output_json(networks: &[WifiNetwork], opts: StardustOutputOptions) -> UResult<()> {
     let network_list: Vec<_> = networks.iter().map(|n| {
         json!({
             "ssid": n.ssid,
@@ -186,7 +186,7 @@ fn output_json(networks: &[WifiNetwork], opts: JsonOutputOptions) -> UResult<()>
         "count": networks.len()
     });
     
-    object_output::output(opts, output, || Ok(()))?;
+    stardust_output::output(opts, output, || Ok(()))?;
     Ok(())
 }
 
@@ -246,5 +246,5 @@ pub fn sg_app() -> Command {
                 .help(translate!("scan-wifi-help-channel"))
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

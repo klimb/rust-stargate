@@ -8,7 +8,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command as ClapCommand};
 use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
 };
 
 static TEXT_ARG: &str = "text";
@@ -29,7 +29,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
         //sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
-        let object_output = JsonOutputOptions::from_matches(&matches);
+        let object_output = StardustOutputOptions::from_matches(&matches);
 
         if object_output.object_output {
             produce_json(&matches, object_output)
@@ -70,7 +70,7 @@ pub fn sg_app() -> ClapCommand {
                 .action(ArgAction::Set),
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 #[cfg(target_os = "macos")]
@@ -107,7 +107,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
     let text_parts: Vec<&String> = matches
         .get_many::<String>(TEXT_ARG)
         .unwrap()
@@ -147,7 +147,7 @@ fn produce_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResu
         "exit_code": if success { 0 } else { exit_code }
     });
 
-    object_output::output(object_output, output, || Ok(()))?;
+    stardust_output::output(object_output, output, || Ok(()))?;
 
     if !success {
         return Err(USimpleError::new(

@@ -4,7 +4,7 @@ use clap::{Arg, ArgAction, Command};
 use sgcore::error::UResult;
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -36,7 +36,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     check_root_privileges()?;
     
     sgcore::pledge::apply_pledge(&["stdio", "inet", "rpath", "bpf"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
     
     let interface = matches.get_one::<String>(ARG_INTERFACE)
         .map(|s| s.as_str())
@@ -44,7 +44,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let count = matches.get_one::<usize>(ARG_COUNT).copied();
     let verbose = matches.get_flag(ARG_VERBOSE);
     
-    if !opts.object_output {
+    if !opts.stardust_output {
         eprintln!("Monitoring traffic on interface: {}", interface);
         eprintln!("Press Ctrl+C to stop...");
         eprintln!();
@@ -52,7 +52,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     
     let packets = capture_packets(interface, count, verbose)?;
     
-    if opts.object_output {
+    if opts.stardust_output {
         output_json(&packets, opts)?;
     } else {
         output_text(&packets, verbose);
@@ -337,7 +337,7 @@ fn capture_packets(_interface: &str, _max_count: Option<usize>, _verbose: bool) 
     ))
 }
 
-fn output_json(packets: &[PacketInfo], opts: JsonOutputOptions) -> UResult<()> {
+fn output_json(packets: &[PacketInfo], opts: StardustOutputOptions) -> UResult<()> {
     let packet_list: Vec<_> = packets.iter().map(|p| {
         json!({
             "timestamp": p.timestamp,
@@ -355,7 +355,7 @@ fn output_json(packets: &[PacketInfo], opts: JsonOutputOptions) -> UResult<()> {
         "count": packets.len()
     });
     
-    object_output::output(opts, output, || Ok(()))?;
+    stardust_output::output(opts, output, || Ok(()))?;
     Ok(())
 }
 
@@ -416,5 +416,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

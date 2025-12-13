@@ -4,7 +4,7 @@ use clap::{Arg, ArgAction, Command};
 use std::io::{IsTerminal, Write};
 use sgcore::error::{UResult, set_exit_code};
 use sgcore::format_usage;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 
 use sgcore::translate;
 
@@ -16,7 +16,7 @@ mod options {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
     sgcore::pledge::apply_pledge(&["stdio", "tty"])?;
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
 
     let silent = matches.get_flag(options::SILENT);
 
@@ -31,7 +31,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let name = nix::unistd::ttyname(std::io::stdin());
 
-    if object_output.object_output {
+    if object_output.stardust_output {
         let output = match &name {
             Ok(n) => serde_json::json!({
                 "tty": n.display().to_string(),
@@ -46,7 +46,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 })
             }
         };
-        object_output::output(object_output, output, || Ok(()))?;
+        stardust_output::output(object_output, output, || Ok(()))?;
     } else {
         let mut stdout = std::io::stdout();
         let write_result = match name {
@@ -82,5 +82,5 @@ pub fn sg_app() -> Command {
             .action(ArgAction::SetTrue)
     );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

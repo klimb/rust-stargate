@@ -38,7 +38,7 @@ use sgcore::translate;
 
 use sgcore::process::{getegid, geteuid, getgid, getuid};
 use sgcore::{format_usage, show_error};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 macro_rules! cstr2cow {
@@ -97,8 +97,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
 
     let users: Vec<String> = matches
         .get_many::<String>(options::ARG_USERS)
@@ -265,7 +265,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
 
         if default_format {
-            if opts.object_output {
+            if opts.stardust_output {
                 // Object output for default format
                 let user_name = entries::uid2usr(uid).ok();
                 let group_name = entries::gid2grp(gid).ok();
@@ -289,8 +289,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     "egid": state.ids.as_ref().unwrap().egid,
                     "groups": groups_array
                 });
-                let filtered = object_output::filter_fields(output, field_filter);
-                object_output::output(opts, filtered, || {
+                let filtered = stardust_output::filter_fields(output, field_filter);
+                stardust_output::output(opts, filtered, || {
                     id_print(&state, &groups);
                     Ok(())
                 })?;
@@ -418,7 +418,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::Username)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn pretty(possible_pw: Option<Passwd>) {

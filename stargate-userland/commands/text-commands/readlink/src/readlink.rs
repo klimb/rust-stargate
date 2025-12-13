@@ -11,7 +11,7 @@ use sgcore::libc::EINVAL;
 use sgcore::line_ending::LineEnding;
 use sgcore::translate;
 use sgcore::{format_usage, show_error};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 
 const OPT_CANONICALIZE: &str = "canonicalize";
 const OPT_CANONICALIZE_MISSING: &str = "canonicalize-missing";
@@ -28,9 +28,9 @@ const ARG_FILES: &str = "files";
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
 
-    if object_output.object_output {
+    if object_output.stardust_output {
         readlink_json(&matches, object_output)
     } else {
         readlink_text(&matches)
@@ -114,7 +114,7 @@ fn readlink_text(matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn readlink_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
+fn readlink_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
     let res_mode = if matches.get_flag(OPT_CANONICALIZE)
         || matches.get_flag(OPT_CANONICALIZE_EXISTING)
         || matches.get_flag(OPT_CANONICALIZE_MISSING)
@@ -181,7 +181,7 @@ fn readlink_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> URes
         "paths": results
     });
 
-    object_output::output(object_output, output, || Ok(()))?;
+    stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
 
@@ -255,7 +255,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn show(path: &Path, line_ending: Option<LineEnding>) -> std::io::Result<()> {

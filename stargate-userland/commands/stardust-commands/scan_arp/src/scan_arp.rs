@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
     translate,
 };
 use std::process::Command as ProcessCommand;
@@ -39,7 +39,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     #[cfg(target_os = "macos")]
     {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-        let object_output = JsonOutputOptions::from_matches(&matches);
+        let object_output = StardustOutputOptions::from_matches(&matches);
 
         if object_output.object_output {
             produce_json(&matches, object_output)
@@ -64,7 +64,7 @@ pub fn sg_app() -> ClapCommand {
                 .help(translate!("scan-arp-help-network")),
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 #[cfg(target_os = "macos")]
@@ -85,7 +85,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
 
     let hosts = scan_network_macos(matches)?;

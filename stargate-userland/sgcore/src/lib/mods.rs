@@ -6,7 +6,7 @@ pub mod error;
 #[cfg(feature = "fs")]
 pub mod io;
 pub mod json_adapter;
-pub mod object_output;
+pub mod stardust_output;
 pub mod line_ending;
 pub mod locale;
 pub mod os;

@@ -7,7 +7,7 @@ use sgcore::format_usage;
 
 use sgcore::display::println_verbatim;
 use sgcore::error::{FromIo, UResult};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 use sgcore::translate;
@@ -87,8 +87,8 @@ fn logical_path() -> io::Result<PathBuf> {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
     
     // if POSIXLY_CORRECT is set, we want to a logical resolution.
     // This produces a different output when doing mkdir -p a/b && ln -s a/b c && cd c && pwd
@@ -102,7 +102,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
     .map_err_context(|| translate!("pwd-error-failed-to-get-current-directory"))?;
     
-    if opts.object_output {
+    if opts.stardust_output {
         let path_str = cwd.to_string_lossy().to_string();
         let output = json!({
             "path": path_str,
@@ -111,8 +111,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     else if matches.get_flag(OPT_LOGICAL) { "logical" } 
                     else { "physical" }
         });
-        let filtered = object_output::filter_fields(output, field_filter);
-        object_output::output(opts, filtered, || Ok(()))?;
+        let filtered = stardust_output::filter_fields(output, field_filter);
+        stardust_output::output(opts, filtered, || Ok(()))?;
     } else {
         println_verbatim(cwd)
             .map_err_context(|| translate!("pwd-error-failed-to-print-current-directory"))?;
@@ -143,5 +143,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

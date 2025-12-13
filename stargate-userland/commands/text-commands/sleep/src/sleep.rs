@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use std::thread;
 use std::time::Duration;
 use serde_json::json;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
     error::{UResult, USimpleError, UUsageError},
@@ -20,7 +20,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let numbers = matches
         .get_many::<String>(options::NUMBER)
@@ -51,10 +51,10 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Append)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
-fn sleep(args: &[&str], json_output_options: JsonOutputOptions) -> UResult<()> {
+fn sleep(args: &[&str], json_output_options: StardustOutputOptions) -> UResult<()> {
     let mut arg_error = false;
 
     let sleep_dur = args
@@ -73,12 +73,12 @@ fn sleep(args: &[&str], json_output_options: JsonOutputOptions) -> UResult<()> {
         return Err(UUsageError::new(1, ""));
     }
     
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let output = json!({
             "duration_seconds": sleep_dur.as_secs(),
             "duration_nanos": sleep_dur.subsec_nanos(),
         });
-        object_output::output(json_output_options, output, || Ok(()))?;
+        stardust_output::output(json_output_options, output, || Ok(()))?;
     }
     
     thread::sleep(sleep_dur);

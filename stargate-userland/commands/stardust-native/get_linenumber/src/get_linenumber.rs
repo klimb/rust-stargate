@@ -5,7 +5,7 @@ use std::io::{BufRead, BufReader, BufWriter, Read, Write, stdin, stdout};
 use std::path::Path;
 use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
 use sgcore::{format_usage, show_error, translate};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 mod helper;
@@ -185,7 +185,7 @@ pub mod options {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
 
     let mut settings = Settings::default();
 
@@ -214,7 +214,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     for file in &files {
         if file == "-" {
             let mut buffer = BufReader::new(stdin());
-            if opts.object_output {
+            if opts.stardust_output {
                 nl_collect(&mut buffer, &mut stats, &settings, &mut all_lines)?;
             } else {
                 nl(&mut buffer, &mut stats, &settings)?;
@@ -232,7 +232,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 let reader =
                     File::open(path).map_err_context(|| file.to_string_lossy().to_string())?;
                 let mut buffer = BufReader::new(reader);
-                if opts.object_output {
+                if opts.stardust_output {
                     nl_collect(&mut buffer, &mut stats, &settings, &mut all_lines)?;
                 } else {
                     nl(&mut buffer, &mut stats, &settings)?;
@@ -241,12 +241,12 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
     }
 
-    if opts.object_output {
+    if opts.stardust_output {
         let output = json!({
             "lines": all_lines,
             "total_lines": all_lines.len()
         });
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
     }
 
     Ok(())
@@ -360,7 +360,7 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(usize))
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 /// `nl_collect` implements the functionality for collecting numbered lines into a vector for JSON output.

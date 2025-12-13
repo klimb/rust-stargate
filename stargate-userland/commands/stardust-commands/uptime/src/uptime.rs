@@ -7,7 +7,7 @@ use thiserror::Error;
 use serde_json::json;
 use sgcore::error::{UError, UResult};
 use sgcore::libc::time_t;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::uptime::*;
 
@@ -43,7 +43,7 @@ impl UError for UptimeError {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
     let file_path = matches.get_one::<OsString>(options::PATH);
 
     if matches.get_flag(options::SINCE) {
@@ -83,9 +83,9 @@ pub fn sg_app() -> Command {
             .value_hint(ValueHint::AnyPath)
     );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
-fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions) -> UResult<()> {
+fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOptions) -> UResult<()> {
     use std::fs;
     use std::os::unix::fs::FileTypeExt;
     use sgcore::error::set_exit_code;
@@ -133,7 +133,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
     }
 
     if non_fatal_error {
-        if json_output_options.object_output {
+        if json_output_options.stardust_output {
             let output = json!({
                 "error": "Could not read file",
                 "time": get_formatted_time(),
@@ -141,7 +141,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
                 "users": "0",
                 "load_average": get_formatted_loadavg().ok(),
             });
-            object_output::output(json_output_options, output, || Ok(()))?;
+            stardust_output::output(json_output_options, output, || Ok(()))?;
         } else {
             print_time();
             print!("{}", translate!("uptime-output-unknown-uptime"));
@@ -151,7 +151,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
         return Ok(());
     }
 
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         #[cfg(not(target_os = "openbsd"))]
         let (boot_time, user_count) = {
             let (boot_time, count) = process_utmpx(Some(file_path));
@@ -185,7 +185,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
             })
         };
         
-        object_output::output(json_output_options, output, || Ok(()))?;
+        stardust_output::output(json_output_options, output, || Ok(()))?;
         return Ok(());
     }
 
@@ -226,7 +226,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: JsonOutputOptions
     Ok(())
 }
 
-fn uptime_since(json_output_options: JsonOutputOptions) -> UResult<()> {
+fn uptime_since(json_output_options: StardustOutputOptions) -> UResult<()> {
     #[cfg(not(target_os = "openbsd"))]
     let uptime = {
         let (boot_time, _) = process_utmpx(None);
@@ -239,12 +239,12 @@ fn uptime_since(json_output_options: JsonOutputOptions) -> UResult<()> {
         .timestamp_opt(Utc::now().timestamp() - uptime, 0)
         .unwrap();
     
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let output = json!({
             "since": since_date.format("%Y-%m-%d %H:%M:%S").to_string(),
             "timestamp": since_date.timestamp(),
         });
-        object_output::output(json_output_options, output, || Ok(()))?;
+        stardust_output::output(json_output_options, output, || Ok(()))?;
     } else {
         println!("{}", since_date.format("%Y-%m-%d %H:%M:%S"));
     }
@@ -253,8 +253,8 @@ fn uptime_since(json_output_options: JsonOutputOptions) -> UResult<()> {
 }
 
 /// Default uptime behaviour i.e. when no file argument is given.
-fn default_uptime(json_output_options: JsonOutputOptions) -> UResult<()> {
-    if json_output_options.object_output {
+fn default_uptime(json_output_options: StardustOutputOptions) -> UResult<()> {
+    if json_output_options.stardust_output {
         let uptime_secs = get_uptime(None)?;
         let loadavg_result = get_formatted_loadavg();
         let nusers = get_formatted_nusers();
@@ -269,7 +269,7 @@ fn default_uptime(json_output_options: JsonOutputOptions) -> UResult<()> {
             "load_average": loadavg_result.ok(),
         });
         
-        object_output::output(json_output_options, output, || Ok(()))?;
+        stardust_output::output(json_output_options, output, || Ok(()))?;
     } else {
         print_time();
         print_uptime(None)?;

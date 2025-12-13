@@ -6,7 +6,7 @@ use sgcore::display::{Quotable, println_verbatim};
 use sgcore::error::{FromIo, UError, UResult, UUsageError};
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 use std::env;
@@ -352,11 +352,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
     };
 
-    let opts = JsonOutputOptions::from_matches(&matches);
-    // Object output is the default for this command
+    let opts = StardustOutputOptions::from_matches(&matches);
+    // Stardust output is the default for this command
     let mut opts = opts;
-    if !matches.contains_id("object_output") {
-        opts.object_output = true;
+    if !matches.contains_id("stardust_output") {
+        opts.stardust_output = true;
     }
 
     // Parse command-line options into a format suitable for the
@@ -401,14 +401,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let path = res?;
 
-    if opts.object_output {
+    if opts.stardust_output {
         let output = json!({
             "path": path.to_string_lossy(),
             "type": if make_dir { "directory" } else { "file" },
             "dry_run": dry_run,
             "absolute": path.is_absolute(),
         });
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         println_verbatim(&path).map_err_context(|| translate!("mktemp-error-failed-print"))?;
     }
@@ -485,7 +485,7 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<PathBuf> {

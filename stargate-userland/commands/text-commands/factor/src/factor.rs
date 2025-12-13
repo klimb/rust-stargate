@@ -9,7 +9,7 @@ use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{format_usage, show_error, show_warning};
 use serde_json::json;
@@ -216,10 +216,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
     let print_exponents = matches.get_flag(options::EXPONENTS);
 
-    if opts.object_output {
+    if opts.stardust_output {
         // JSON output mode
         let mut results = Vec::new();
 
@@ -250,7 +250,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             "results": results,
             "exponent_format": print_exponents
         });
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         // Text output mode (original behavior)
         let stdout = stdout();
@@ -312,5 +312,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

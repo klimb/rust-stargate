@@ -14,7 +14,7 @@ use sgcore::error::FromIo;
 use sgcore::error::{UResult, USimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 pub mod options {
@@ -59,10 +59,10 @@ mod platform {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let mut opts = JsonOutputOptions::from_matches(&matches);
-    // Object output is the default for this command
-    if !matches.contains_id("object_output") {
-        opts.object_output = true;
+    let mut opts = StardustOutputOptions::from_matches(&matches);
+    // Stardust output is the default for this command
+    if !matches.contains_id("stardust_output") {
+        opts.stardust_output = true;
     }
     let files: Vec<String> = matches
         .get_many::<String>(ARG_FILES)
@@ -111,13 +111,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         sync()?;
     }
 
-    if opts.object_output {
+    if opts.stardust_output {
         let output = json!({
             "operation": if file_system_sync { "file_system" } else if data_sync { "data" } else { "sync" },
             "files": files,
             "success": true,
         });
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
     }
 
     Ok(())
@@ -151,7 +151,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn sync() -> UResult<()> {

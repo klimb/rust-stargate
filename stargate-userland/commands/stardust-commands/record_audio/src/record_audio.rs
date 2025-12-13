@@ -7,7 +7,7 @@ use std::process::Command as ProcessCommand;
 use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
 };
 
 static DURATION_ARG: &str = "duration";
@@ -78,9 +78,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-        let object_output = JsonOutputOptions::from_matches(&matches);
+        let object_output = StardustOutputOptions::from_matches(&matches);
 
-        if object_output.object_output {
+        if object_output.stardust_output {
             produce_json(&matches, object_output)
         } else {
             produce(&matches)
@@ -121,7 +121,7 @@ pub fn sg_app() -> ClapCommand {
                 .help("Path to Vosk model directory (defaults to ~/.stargate/models/vosk-model-small-en-us-0.15)")
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 #[cfg(target_os = "macos")]
@@ -188,7 +188,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
     
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
@@ -371,7 +371,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn produce_json(matches: &ArgMatches, options: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "audio"])?;
     
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();

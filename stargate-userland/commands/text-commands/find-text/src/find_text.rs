@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Result as IoResult};
 use sgcore::error::{UResult, USimpleError};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::{json, Value};
 
 mod options {
@@ -75,7 +75,7 @@ pub fn search_file(
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
 
     // Get pattern (required)
     let pattern = matches
@@ -153,7 +153,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let case_insensitive = matches.get_flag(options::INSENSITIVE);
 
-    if opts.object_output {
+    if opts.stardust_output {
         // Object (JSON) output mode
         let mut all_results = Vec::new();
         let mut total_matches = 0;
@@ -185,7 +185,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
         }
 
-        object_output::output(
+        stardust_output::output(
             opts,
             json!({
                 "pattern": pattern,
@@ -249,5 +249,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue),
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

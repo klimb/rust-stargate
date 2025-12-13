@@ -5,7 +5,7 @@ use clap::{Arg, ArgAction, Command};
 use sgcore::error::UResult;
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -59,14 +59,14 @@ impl ProcessInfo {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
+    let opts = StardustOutputOptions::from_matches(&matches);
     
     let show_all = matches.get_flag(ARG_ALL);
     let show_full = matches.get_flag(ARG_FULL);
     
     let processes = collect_processes(show_all)?;
     
-    if opts.object_output {
+    if opts.stardust_output {
         output_json(processes, opts, show_full)?;
     } else {
         output_text(&processes, show_full);
@@ -122,10 +122,10 @@ fn filter_and_sort(mut processes: Vec<ProcessInfo>, show_all: bool) -> Vec<Proce
     processes
 }
 
-fn output_json(processes: Vec<ProcessInfo>, opts: JsonOutputOptions, show_full: bool) -> UResult<()> {
+fn output_json(processes: Vec<ProcessInfo>, opts: StardustOutputOptions, show_full: bool) -> UResult<()> {
     let process_list: Vec<_> = processes.iter().map(|p| process_to_json(p, show_full)).collect();
     let output = json!({ "processes": process_list, "count": processes.len() });
-    object_output::output(opts, output, || Ok(()))?;
+    stardust_output::output(opts, output, || Ok(()))?;
     Ok(())
 }
 
@@ -199,5 +199,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

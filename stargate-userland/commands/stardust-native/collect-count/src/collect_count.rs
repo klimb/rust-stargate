@@ -21,7 +21,7 @@ use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 use utf8::{BufReadDecoder, BufReadDecoderError};
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::json_adapter;
 
 use sgcore::{
@@ -50,7 +50,7 @@ struct Settings<'a> {
     show_max_line_length: bool,
     files0_from: Option<Input<'a>>,
     total_when: TotalWhen,
-    object_output: JsonOutputOptions,
+    object_output: StardustOutputOptions,
 }
 
 impl Default for Settings<'_> {
@@ -64,7 +64,7 @@ impl Default for Settings<'_> {
             show_max_line_length: false,
             files0_from: None,
             total_when: TotalWhen::default(),
-            object_output: JsonOutputOptions::default(),
+            object_output: StardustOutputOptions::default(),
         }
     }
 }
@@ -80,7 +80,7 @@ impl<'a> Settings<'a> {
             .map(Into::into)
             .unwrap_or_default();
 
-        let object_output = JsonOutputOptions::from_matches(matches);
+        let object_output = StardustOutputOptions::from_matches(matches);
 
         let settings = Self {
             show_bytes: matches.get_flag(options::BYTES),
@@ -468,7 +468,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn word_count_from_reader<T: WordCountable>(
@@ -856,7 +856,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
         };
         total_word_count += word_count;
         
-        if settings.object_output.object_output {
+        if settings.object_output.stardust_output {
             // Collect results for JSON output
             let title = input.to_title().map(|t| t.to_string_lossy().to_string());
             results.push((title, word_count));
@@ -870,7 +870,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
         }
     }
 
-    if settings.object_output.object_output {
+    if settings.object_output.stardust_output {
         // Create the CollectedCount with all collected data
         let collected_count = CollectedCount::new(
             results,
@@ -881,7 +881,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
 
         // Convert to JSON and output
         let output = collected_count.to_json();
-        object_output::output(settings.object_output, output, || Ok(()))?;
+        stardust_output::output(settings.object_output, output, || Ok(()))?;
     } else if settings.total_when.is_total_row_visible(num_inputs) {
         let wc_total_msg = translate!("wc-total");
         let title = are_stats_visible.then_some(OsStr::new(&wc_total_msg));

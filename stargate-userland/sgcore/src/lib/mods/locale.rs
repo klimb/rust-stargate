@@ -114,7 +114,7 @@ fn find_uucore_locales_dir(utility_locales_dir: &Path) -> Option<PathBuf> {
         .unwrap_or_else(|_| utility_locales_dir.to_path_buf());
 
     // Try new organized structure first:
-    // locales -> util_name -> subdir (text-commands/object-commands/object-native) -> commands -> sgcore/locales
+    // locales -> util_name -> subdir (text-commands/stardust-commands/stardust-native) -> commands -> sgcore/locales
     if let Some(uucore_locales) = normalized_dir
         .parent() // util_name (e.g., base32)
         .and_then(|p| p.parent()) // subdir (e.g., text-commands)
@@ -469,7 +469,7 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
         // from sgcore path, load the locales directory from the program directory
         
         // Try the new organized structure first: commands/*/dir_name/locales
-        let subdirs = ["text-commands", "object-commands", "object-native"];
+        let subdirs = ["text-commands", "stardust-commands", "stardust-native"];
         for subdir in &subdirs {
             let organized_path = PathBuf::from(manifest_dir)
                 .join("../commands")

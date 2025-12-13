@@ -8,7 +8,7 @@ use clap::{Arg, Command};
 use sgcore::error::UResult;
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 #[cfg(target_os = "openbsd")]
@@ -34,10 +34,10 @@ fn get_long_usage() -> String {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let mut opts = JsonOutputOptions::from_matches(&matches);
-    // Object output is the default for this command
-    if !matches.contains_id("object_output") {
-        opts.object_output = true;
+    let mut opts = StardustOutputOptions::from_matches(&matches);
+    // Stardust output is the default for this command
+    if !matches.contains_id("stardust_output") {
+        opts.stardust_output = true;
     }
 
     let maybe_file: Option<&Path> = matches.get_one::<OsString>(ARG_FILE).map(AsRef::as_ref);
@@ -76,12 +76,12 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     users.sort();
 
-    if opts.object_output {
+    if opts.stardust_output {
         let output = json!({
             "users": users,
             "count": users.len(),
         });
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         if !users.is_empty() {
             println!("{}", users.join(" "));
@@ -111,5 +111,5 @@ pub fn sg_app() -> Command {
                 .value_parser(ValueParser::os_string())
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

@@ -19,7 +19,7 @@ use sgcore::error::UResult;
 use sgcore::libc;
 use sgcore::translate;
 use sgcore::{fast_inc::fast_inc_one, format_usage};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 use std::collections::HashSet;
 use std::io::BufRead; // for read_line on BufReader
@@ -219,11 +219,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)
-    let opts = JsonOutputOptions { object_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(object_output::ARG_PRETTY) };
+    let opts = StardustOutputOptions { stardust_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(stardust_output::ARG_PRETTY) };
 
     // Line filtering for object output (-f line:1,3,5)
     let mut requested_lines: HashSet<usize> = HashSet::new();
-    if let Some(filter_spec) = matches.get_one::<String>(object_output::ARG_FIELD) {
+    if let Some(filter_spec) = matches.get_one::<String>(stardust_output::ARG_FIELD) {
         // Parse "line:1,3,5" or "lines:1,3,5" format
         if let Some(line_spec) = filter_spec.strip_prefix("line:").or_else(|| filter_spec.strip_prefix("lines:")) {
             for part in line_spec.split(',') {
@@ -281,9 +281,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         squeeze_blank,
     };
 
-    if opts.object_output {
+    if opts.stardust_output {
         let output = build_object_output(&files, &options, &requested_lines)?;
-        object_output::output(opts, output, || Ok(()))?;
+        stardust_output::output(opts, output, || Ok(()))?;
         return Ok(());
     }
     cat_files(&files, &options)
@@ -384,13 +384,13 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            Arg::new(object_output::ARG_PRETTY)
+            Arg::new(stardust_output::ARG_PRETTY)
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            Arg::new(object_output::ARG_FIELD)
+            Arg::new(stardust_output::ARG_FIELD)
                 .short('f')
                 .long("field")
                 .value_name("FIELD")

@@ -7,7 +7,7 @@ use std::io::Error;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError};
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 use sgcore::signals::{ALL_SIGNALS, signal_by_name_or_value, signal_name_by_value};
@@ -39,8 +39,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
 
     let mode = if matches.get_flag(options::TABLE) {
         Mode::Table
@@ -81,9 +81,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             if pids.is_empty() {
                 Err(USimpleError::new(1, translate!("kill-error-no-process-id")))
             } else {
-                if opts.object_output {
+                if opts.stardust_output {
                     let results = kill_with_results(sig, &pids);
-                    let output = object_output::filter_fields(
+                    let output = stardust_output::filter_fields(
                         json!({
                             "signal": sig.map_or(0, |s| s as i32),
                             "signal_name": sig_name,
@@ -91,7 +91,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                         }),
                         field_filter
                     );
-                    object_output::output(opts, output, || Ok(()))?;
+                    stardust_output::output(opts, output, || Ok(()))?;
                 } else {
                     kill(sig, &pids);
                 }
@@ -99,25 +99,25 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
         }
         Mode::Table => {
-            if opts.object_output {
+            if opts.stardust_output {
                 let signals: Vec<_> = ALL_SIGNALS.iter().enumerate()
                     .map(|(idx, signal)| json!({
                         "number": idx,
                         "name": signal
                     }))
                     .collect();
-                let output = object_output::filter_fields(json!({"signals": signals}), field_filter);
-                object_output::output(opts, output, || Ok(()))?;
+                let output = stardust_output::filter_fields(json!({"signals": signals}), field_filter);
+                stardust_output::output(opts, output, || Ok(()))?;
             } else {
                 table();
             }
             Ok(())
         }
         Mode::List => {
-            if opts.object_output {
+            if opts.stardust_output {
                 let output = list_as_json(&pids_or_signals)?;
-                let filtered = object_output::filter_fields(output, field_filter);
-                object_output::output(opts, filtered, || Ok(()))?;
+                let filtered = stardust_output::filter_fields(output, field_filter);
+                stardust_output::output(opts, filtered, || Ok(()))?;
             } else {
                 list(&pids_or_signals);
             }
@@ -165,7 +165,7 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Append)
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn handle_obsolete(args: &mut Vec<String>) -> Option<usize> {

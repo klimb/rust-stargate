@@ -5,7 +5,7 @@ use sgcore::translate;
 use sgcore::{
     error::UResult,
     show_error,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
 };
 use std::thread;
 use std::time::Duration;
@@ -172,7 +172,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     
     #[cfg(target_vendor = "apple")]
     {
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
     
     let number: usize = matches.get_one::<String>("number")
         .and_then(|s| s.parse().ok())
@@ -207,7 +207,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             serde_json::json!(samples)
         };
         
-        object_output::output(object_output, output, || Ok(()))?;
+        stardust_output::output(object_output, output, || Ok(()))?;
     } else {
         // For text output, show each sample with timestamp
         for i in 0..number {
@@ -257,5 +257,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Set)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

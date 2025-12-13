@@ -2,7 +2,7 @@
 
 I took a fresh look at UNIX userland (multiple layers, from 300+ commands, to shells) and decided to redo it...
 
-Stargate reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing—embrace object pipelines that are faster and infinitely more expressive.
+Stargate reimagines the UNIX command-line with structured data, intelligent tab completion, and a powerful scripting language featuring **built-in unit testing**, full OOP support, and type-safe object pipelines. No more text parsing. Embrace stardust pipelines that are faster and infinitely more expressive.
 
 
 
@@ -11,32 +11,34 @@ https://github.com/user-attachments/assets/22a88cbd-ca00-4ee8-aef8-9c6fad715558
 https://github.com/user-attachments/assets/0fb86f02-999e-4ae4-9f40-031a7a9a08d1
 
 
-### 🚀 The Power of Stargate (Shell + Language + Object Commands)
+### 🚀 The Power of Stargate (Shell + Language + Stardust)
 
 ```bash
-# Filter, transform, and chain operations on command objects
+# Filter, transform, and chain stardust
 (list-directory).entries
     .filter(x: x.type == "file")
     .filter(x: x.size > 10000)
     .map(x: x.name)
 ```
 
-## ✨ Why Stargate?
+## ✨ Stargate
+
+Stargate is a new UNIX userland called Stardust + its own Language + Shell.
 
 ```bash
 # Traditional: operate on unstructured stream of text
 ls -la | grep "\.rs$" | awk '{print $9}' | wc -l
 
-# Stargate: connect object commands to powerful language expressions
+# Stargate: use Stargate Language with Stardust 
 (list-directory .).entries
     .filter(e: e.name.ends_with(".rs"))
     .size();
 
-# stargate: object pipelines are more readable than familiar unix commands
+# stargate: stardust pipeline
 list-directory | slice-object entries | dice-object name size --pretty
 ```
 
-**Maximum Expressivity**: Commands can be inlined and chained for ultra-concise code:
+**Maximum Expressivity**: stardust can be inlined and chained for ultra-concise code:
 ```rust
 # Get total size of all .toml files in one expression
 let toml_size = (list-directory "/tmp").entries
@@ -57,7 +59,7 @@ let largest_file = (list-directory "/tmp")
 ### 🎯 Key Features
 
 #### **🔒 Security: OpenBSD pledge() Support, but Rust instead of C**
-All 106 Stargate commands implement OpenBSD's `pledge()` system call for privilege reduction and attack surface minimization:
+Stardust implements OpenBSD's `pledge()` system call for privilege reduction and attack surface minimization:
 
 ```rust
 // Example: list-directory restricts itself after argument parsing
@@ -197,9 +199,9 @@ fn test_functional_operations() {
 }
 ```
 
-**Closures on Command Objects:**
+**Closures on Stardust:**
 
-Commands that return JSON objects with arrays can use functional methods directly:
+Stardust can return JSON:
 ```rust
 # Get all file names from directory listing - inlined and concise
 let names = (list-directory "/tmp").entries.map(entry: entry.name);
@@ -638,7 +640,7 @@ let slice = entries[0..3];  # Range slicing
 ### 🎨 Design Philosophy
 
 - **Verb-Noun Naming**: `list-directory`, `get-hostname`, `set-permissions` - reads like English
-- **Object Pipelines**: Structured data flows through commands, no text parsing needed
+- **Stardust Pipelines**: Structured data flows through commands, no text parsing needed
 - **Intelligent Completion**: Tab completes commands, properties, directories, variables
 - **Classes & OOP**: Full class support with inheritance for complex scripts
 - **Consistent Parameters**: `-r` always means recursive, `-v` always means verbose, `-h` always shows help
@@ -652,17 +654,8 @@ git clone https://github.com/klimb/rust-stargate
 cd rust-stargate
 make
 
-# Beautiful colored output with file type indicators (no flags needed!)
-./target/debug/stargate list-directory
-
-# Interactive shell with tab completion & object scripting
 ./target/debug/stargate-shell 
 
-stargate> ls                           # Use alias (ls → list-directory)
-stargate> cd src                       # Built-in cd (no semicolon needed!)
-stargate> let files = (ls).entries;    # Capture command output
-stargate> print files[0].name;         # Access object properties
-stargate> files | slice-object | dice-object name size  # Pipeline objects
 ```
 
 **Run the complete test suite:**

@@ -46,7 +46,7 @@ use sgcore::{
     fs::FileInformation,
     fs::display_permissions,
     fsext::{MetadataTimeField, metadata_get_time},
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
     line_ending::LineEnding,
     os_str_as_bytes_lossy,
     parser::parse_glob,
@@ -351,7 +351,7 @@ pub struct Config {
     dired: bool,
     hyperlink: bool,
     tab_size: usize,
-    object_output: JsonOutputOptions,
+    object_output: StardustOutputOptions,
     object_fields: Vec<String>,
 }
 
@@ -1144,7 +1144,7 @@ impl Config {
             dired,
             hyperlink,
             tab_size,
-            object_output: JsonOutputOptions::from_matches(options),
+            object_output: StardustOutputOptions::from_matches(options),
             object_fields: if let Some(field) = options.get_one::<String>("object_field") {
                 vec![field.clone()]
             } else if let Some(fields) = options.get_many::<String>("object_fields") {
@@ -1811,24 +1811,24 @@ pub fn sg_app() -> Command {
             .action(ArgAction::SetTrue)
     );
     
-    // Add object output (JSON) arguments without -f short to avoid conflicts
+    // Add stardust output (JSON) arguments without -f short to avoid conflicts
     let cmd = cmd
         .arg(
-            Arg::new(object_output::ARG_OBJECT_OUTPUT)
+            Arg::new(stardust_output::ARG_STARDUST_OUTPUT)
                 .short('o')
                 .long("obj")
-                .help("Output as object (JSON)")
+                .help("Output as stardust (JSON)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new(object_output::ARG_VERBOSE)
+            Arg::new(stardust_output::ARG_VERBOSE)
                 .short('v')
                 .long("verbose")
                 .help("Include additional details in output")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new(object_output::ARG_PRETTY)
+            Arg::new(stardust_output::ARG_PRETTY)
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue),
@@ -2221,7 +2221,7 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> UResult<()> {
         output = filter_object_fields(&output, &config.object_fields);
     }
     
-    Ok(object_output::output(config.object_output, output, || Ok(()))?)
+    Ok(stardust_output::output(config.object_output, output, || Ok(()))?)
 }
 
 fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_json::Value {
@@ -2241,7 +2241,7 @@ fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_j
 #[allow(clippy::cognitive_complexity)]
 pub fn list(locs: Vec<&Path>, config: &Config) -> UResult<()> {
     // Handle object output (JSON)
-    if config.object_output.object_output {
+    if config.object_output.stardust_output {
         return list_json(locs, config);
     }
     

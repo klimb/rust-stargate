@@ -12,7 +12,7 @@ use sgcore::error::{FromIo, UResult};
 use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 use sgcore::format::num_format::FloatVariant;
 use sgcore::format::{Format, num_format};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::{fast_inc::fast_inc, format_usage};
 
 mod error;
@@ -94,7 +94,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         sgcore::clap_localization::handle_clap_result(sg_app(), split_short_args_with_value(args))?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let numbers_option = matches.get_many::<String>(ARG_NUMBERS);
 
@@ -152,7 +152,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     // If JSON output is requested, use JSON path
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let range = (first.number, increment.number, last.number);
         return generate_seq_json(range, json_output_options);
     }
@@ -270,27 +270,27 @@ pub fn sg_app() -> Command {
         )
         // Add JSON args manually without -f short flag to avoid conflict with --format
         .arg(
-            Arg::new(object_output::ARG_OBJECT_OUTPUT)
+            Arg::new(stardust_output::ARG_STARDUST_OUTPUT)
                 .short('o')
                 .long("obj")
-                .help("Output as object (JSON)")
+                .help("Output as stardust (JSON)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new(object_output::ARG_VERBOSE)
+            Arg::new(stardust_output::ARG_VERBOSE)
                 .short('v')
                 .long("verbose-json")
                 .help("Include additional details in output")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new(object_output::ARG_PRETTY)
+            Arg::new(stardust_output::ARG_PRETTY)
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue),
         )
         .arg(
-            Arg::new(object_output::ARG_FIELD)
+            Arg::new(stardust_output::ARG_FIELD)
                 .long("field")  // No short flag to avoid conflict with -f/--format
                 .value_name("FIELD")
                 .help("Filter object output to specific field(s) (comma-separated)")
@@ -376,7 +376,7 @@ fn done_printing<T: Zero + PartialOrd>(next: &T, increment: &T, last: &T) -> boo
 /// Generate sequence as JSON array
 fn generate_seq_json(
     range: RangeFloat,
-    json_output_options: JsonOutputOptions
+    json_output_options: StardustOutputOptions
 ) -> UResult<()> {
     let (first, increment, last) = range;
     let mut values: Vec<String> = Vec::new();
@@ -397,7 +397,7 @@ fn generate_seq_json(
     }
     
     let output = json!({ "sequence": values });
-    object_output::output(json_output_options, output, || Ok(()))?;
+    stardust_output::output(json_output_options, output, || Ok(()))?;
     Ok(())
 }
 

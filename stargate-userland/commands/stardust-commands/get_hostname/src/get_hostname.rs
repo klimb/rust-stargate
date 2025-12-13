@@ -8,7 +8,7 @@ use sgcore::translate;
 use sgcore::{
     error::{FromIo, UResult},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
 };
 
 static SHORT_FLAG: &str = "short";
@@ -26,9 +26,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // provides a broader organizational context. Together, they form a
     // Fully Qualified Domain Name (FQDN),
     
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
     
-    if object_output.object_output {
+    if object_output.stardust_output {
         produce_json(&matches, object_output)
     } else {
         produce(&matches)
@@ -68,7 +68,7 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn produce(matches: &ArgMatches) -> UResult<()> {
@@ -100,7 +100,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn produce_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get hostname".to_owned())?
         .to_string_lossy()
@@ -136,7 +136,7 @@ fn produce_json(matches: &ArgMatches, object_output: JsonOutputOptions) -> UResu
         }
     });
 
-    object_output::output(object_output, output, || Ok(()))?;
+    stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
 

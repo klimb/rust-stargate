@@ -31,7 +31,7 @@ fn usage<T>(utils: &UtilityMap<T>, name: &str) {
     println!("      --list    lists all defined functions, one per row\n");
     println!("Currently defined functions:\n");
     #[allow(clippy::map_clone)]
-    let mut utils: Vec<&str> = utils.keys().map(|&s| s).collect();
+    let mut utils: Vec<&str> = utils.keys().map(|&s| s).filter(|&s| s != "[").collect();
     utils.sort_unstable();
     let display_list = utils.join(", ");
     let width = cmp::min(textwrap::termwidth(), 100) - 4 * 2; // (opinion/heuristic) max 100 chars wide with 4 character side indentions

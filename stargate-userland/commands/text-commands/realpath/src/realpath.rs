@@ -6,7 +6,7 @@ use clap::{
 };
 use serde::Serialize;
 use sgcore::fs::make_path_relative_to;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
     display::{Quotable, print_verbatim},
@@ -87,7 +87,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     /*  the list of files */
 
@@ -121,7 +121,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
     let (relative_to, relative_base) = prepare_relative_options(&matches, can_mode, resolve_mode)?;
     
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         return realpath_json(
             &paths,
             resolve_mode,
@@ -240,7 +240,7 @@ pub fn sg_app() -> Command {
                 .value_parser(NonEmptyOsStringParser)
                 .value_hint(clap::ValueHint::AnyPath)
         );
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 /// Prepare `--relative-to` and `--relative-base` options.
@@ -274,7 +274,7 @@ fn realpath_json(
     can_mode: MissingHandling,
     relative_to: Option<&Path>,
     relative_base: Option<&Path>,
-    json_output_options: &JsonOutputOptions
+    json_output_options: &StardustOutputOptions
 ) -> UResult<()> {
     let mut results = Vec::new();
     
@@ -302,7 +302,7 @@ fn realpath_json(
     let output = RealpathOutput { paths: results };
     let json_value = serde_json::to_value(&output)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-    object_output::output(*json_output_options, json_value, || Ok(()))?;
+    stardust_output::output(*json_output_options, json_value, || Ok(()))?;
     Ok(())
 }
 

@@ -7,7 +7,7 @@ use std::io::{self, Read, Write};
 
 mod options {
     pub const PATH: &str = "PATH";
-    pub const OBJECT_OUTPUT: &str = "object_output";
+    pub const STARDUST_OUTPUT: &str = "stardust_output";
     pub const PRETTY: &str = "pretty";
 }
 
@@ -17,7 +17,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     let path = matches.get_one::<String>(options::PATH).unwrap();
-    let object_output = matches.get_flag(options::OBJECT_OUTPUT);
+    let object_output = matches.get_flag(options::STARDUST_OUTPUT);
     let pretty = matches.get_flag(options::PRETTY);
 
     // Read all input from stdin
@@ -85,7 +85,7 @@ pub fn sg_app() -> Command {
                 .index(1),
         )
         .arg(
-            Arg::new(options::OBJECT_OUTPUT)
+            Arg::new(options::STARDUST_OUTPUT)
                 .short('o')
                 .long("obj")
                 .help("Output result as JSON object")

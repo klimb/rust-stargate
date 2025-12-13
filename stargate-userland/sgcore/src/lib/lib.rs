@@ -22,7 +22,7 @@ pub use crate::mods::error;
 #[cfg(feature = "fs")]
 pub use crate::mods::io;
 pub use crate::mods::json_adapter;
-pub use crate::mods::object_output;
+pub use crate::mods::stardust_output;
 pub use crate::mods::line_ending;
 pub use crate::mods::locale;
 pub use crate::mods::os;

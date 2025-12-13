@@ -7,7 +7,7 @@ use sgcore::translate;
 use sgcore::{
     error::{FromIo, UResult},
     format_usage,
-    object_output::{self, JsonOutputOptions},
+    stardust_output::{self, StardustOutputOptions},
 };
 
 #[sgcore::main]
@@ -21,9 +21,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // Fully Qualified Domain Name (FQDN),
     
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
     
-    if object_output.object_output {
+    if object_output.stardust_output {
         print_domainname_json(&matches, object_output)
     } else {
         print_domainname()
@@ -37,7 +37,7 @@ pub fn sg_app() -> Command {
         .about(translate!("get_domainname-about"))
         .override_usage(format_usage(&translate!("get_domainname-usage")));
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 fn print_domainname() -> UResult<()> {
@@ -57,7 +57,7 @@ fn print_domainname() -> UResult<()> {
     Ok(())
 }
 
-fn print_domainname_json(_matches: &ArgMatches, object_output: JsonOutputOptions) -> UResult<()> {
+fn print_domainname_json(_matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get domain name".to_owned())?
         .to_string_lossy()
@@ -76,6 +76,6 @@ fn print_domainname_json(_matches: &ArgMatches, object_output: JsonOutputOptions
         "domainname": domain_name
     });
 
-    object_output::output(object_output, output, || Ok(()))?;
+    stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }

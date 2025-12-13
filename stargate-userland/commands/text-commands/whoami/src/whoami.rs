@@ -3,7 +3,7 @@ use std::ffi::OsString;
 use sgcore::display::println_verbatim;
 use sgcore::error::{FromIo, UResult};
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 mod platform;
@@ -13,14 +13,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
     let username = whoami()?;
 
-    if opts.object_output {
+    if opts.stardust_output {
         let username_str = username.to_string_lossy().to_string();
-        let output = object_output::filter_fields(json!({"username": username_str}), field_filter);
-        object_output::output(opts, output, || Ok(()))?;
+        let output = stardust_output::filter_fields(json!({"username": username_str}), field_filter);
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         println_verbatim(username).map_err_context(|| translate!("whoami-error-failed-to-print"))?;
     }
@@ -40,5 +40,5 @@ pub fn sg_app() -> Command {
         .override_usage(sgcore::util_name())
         .infer_long_args(true);
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

@@ -15,7 +15,7 @@ mod options {
     pub const NO_NEWLINE: &str = "no_newline";
     pub const ENABLE_BACKSLASH_ESCAPE: &str = "enable_backslash_escape";
     pub const DISABLE_BACKSLASH_ESCAPE: &str = "disable_backslash_escape";
-    pub const OBJECT_OUTPUT: &str = "object_output";
+    pub const STARDUST_OUTPUT: &str = "stardust_output";
     pub const PRETTY: &str = "pretty";
 }
 
@@ -255,7 +255,7 @@ pub fn sg_app() -> Command {
                 .overrides_with(options::ENABLE_BACKSLASH_ESCAPE)
         )
         .arg(
-            Arg::new(options::OBJECT_OUTPUT)
+            Arg::new(options::STARDUST_OUTPUT)
                 .short('o')
                 .long("obj")
                 .help("Output as JSON object")

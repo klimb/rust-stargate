@@ -28,7 +28,7 @@ use sgcore::line_ending::LineEnding;
 use sgcore::signals::signal_by_name_or_value;
 use sgcore::translate;
 use sgcore::{format_usage, show_warning};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 
 use thiserror::Error;
 
@@ -101,7 +101,7 @@ fn print_env(line_ending: LineEnding) {
 }
 
 /// produce JSON output of all environment variables
-fn produce_json(object_output: JsonOutputOptions) -> UResult<()> {
+fn produce_json(object_output: StardustOutputOptions) -> UResult<()> {
     let env_vars: serde_json::Map<String, serde_json::Value> = env::vars()
         .map(|(k, v)| (k, serde_json::Value::String(v)))
         .collect();
@@ -111,7 +111,7 @@ fn produce_json(object_output: JsonOutputOptions) -> UResult<()> {
         "count": env_vars.len()
     });
     
-    object_output::output(object_output, output, || Ok(()))?;
+    stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
 
@@ -238,7 +238,7 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 pub fn parse_args_from_str(text: &NativeIntStr) -> UResult<Vec<NativeIntString>> {
@@ -445,11 +445,11 @@ impl EnvAppData {
     fn run_env(&mut self, original_args: impl sgcore::Args) -> UResult<()> {
         let (_, matches) = self.parse_arguments(original_args)?;
 
-        let object_output = JsonOutputOptions::from_matches(&matches);
+        let object_output = StardustOutputOptions::from_matches(&matches);
         let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::NULL));
 
         // Just output all env vars
-        if object_output.object_output {
+        if object_output.stardust_output {
             produce_json(object_output)
         } else {
             print_env(line_ending);

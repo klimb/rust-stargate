@@ -6,7 +6,7 @@ use sgcore::display::Quotable;
 use sgcore::error::{UResult, USimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 
 #[cfg(any(target_os = "linux"))]
 pub const _SC_NPROCESSORS_CONF: libc::c_int = 83;
@@ -22,11 +22,11 @@ static OPT_IGNORE: &str = "ignore";
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    let object_output = JsonOutputOptions::from_matches(&matches);
+    let object_output = StardustOutputOptions::from_matches(&matches);
 
     let cores = compute_cores(&matches)?;
     
-    if object_output.object_output {
+    if object_output.stardust_output {
         let output = serde_json::json!({
             "nproc": cores,
             "flags": {
@@ -34,7 +34,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 "ignore": matches.get_one::<String>(OPT_IGNORE).map(|s| s.as_str())
             }
         });
-        object_output::output(object_output, output, || Ok(()))?;
+        stardust_output::output(object_output, output, || Ok(()))?;
     } else {
         println!("{cores}");
     }
@@ -125,7 +125,7 @@ pub fn sg_app() -> Command {
                 .help(translate!("nproc-help-ignore"))
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 #[cfg(any(

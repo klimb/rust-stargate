@@ -11,7 +11,7 @@ use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
 
 use sgcore::translate;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 pub mod options {
@@ -31,8 +31,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
-    let opts = JsonOutputOptions::from_matches(&matches);
-    let field_filter = matches.get_one::<String>(object_output::ARG_FIELD).map(|s| s.as_str());
+    let opts = StardustOutputOptions::from_matches(&matches);
+    let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
 
     let mut name_args = matches
         .get_many::<OsString>(options::NAME)
@@ -71,15 +71,15 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     // Main Program Processing
     //
 
-    if opts.object_output {
+    if opts.stardust_output {
         let mut results = Vec::new();
         for path in name_args {
             let basename_bytes = basename(path, &suffix)?;
             let basename_str = String::from_utf8_lossy(&basename_bytes).to_string();
             results.push(basename_str);
         }
-        let output = object_output::filter_fields(json!({"name": results}), field_filter);
-        object_output::output(opts, output, || Ok(()))?;
+        let output = stardust_output::filter_fields(json!({"name": results}), field_filter);
+        stardust_output::output(opts, output, || Ok(()))?;
     } else {
         for path in name_args {
             stdout().write_all(&basename(path, &suffix)?)?;
@@ -131,7 +131,7 @@ pub fn sg_app() -> Command {
                 .overrides_with(options::ZERO)
         );
 
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
 
 // We return a Vec<u8>. Returning a seemingly more proper `OsString` would

@@ -8,7 +8,7 @@ use std::path::Path;
 use serde_json::json;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, UResult, USimpleError};
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 
 use sgcore::{format_usage, show};
@@ -97,7 +97,7 @@ mod options {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let files: Vec<OsString> = match matches.get_many::<OsString>(options::FILE) {
         Some(v) => v.cloned().collect(),
@@ -106,7 +106,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let sysv = matches.get_flag(options::SYSTEM_V_COMPATIBLE);
 
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let mut results = Vec::new();
         
         for file in &files {
@@ -142,7 +142,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             json!({ "files": results })
         };
         
-        object_output::output(json_output_options, output, || Ok(()))?;
+        stardust_output::output(json_output_options, output, || Ok(()))?;
     } else {
         let print_names = files.len() > 1 || files[0] != "-";
         let width = if sysv { 1 } else { 5 };
@@ -204,5 +204,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         );
     
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

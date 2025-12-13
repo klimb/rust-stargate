@@ -3,7 +3,7 @@
 use clap::{Arg, ArgAction, Command};
 use platform_info::*;
 use serde::Serialize;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
     error::{UResult, USimpleError},
@@ -129,7 +129,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let options = Options {
         all: matches.get_flag(options::ALL),
@@ -144,10 +144,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
     let output = UNameOutput::new(&options)?;
     
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let json_value = serde_json::to_value(&output)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        object_output::output(json_output_options, json_value, || Ok(()))?;
+        stardust_output::output(json_output_options, json_value, || Ok(()))?;
     } else {
         println!("{}", output.display());
     }
@@ -228,5 +228,5 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
                 .hide(true)
         );
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }

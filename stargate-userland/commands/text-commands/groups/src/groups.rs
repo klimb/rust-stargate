@@ -2,7 +2,7 @@
 
 use clap::{Arg, ArgAction, Command};
 use serde_json::json;
-use sgcore::object_output::{self, JsonOutputOptions};
+use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
     display::Quotable,
@@ -47,7 +47,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
-    let json_output_options = JsonOutputOptions::from_matches(&matches);
+    let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let users: Vec<String> = matches
         .get_many::<String>(options::USERS)
@@ -60,16 +60,16 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         };
         let groups: Vec<String> = gids.iter().map(infallible_gid2grp).collect();
         
-        if json_output_options.object_output {
+        if json_output_options.stardust_output {
             let output = json!({ "groups": groups });
-            object_output::output(json_output_options, output, || Ok(()))?;
+            stardust_output::output(json_output_options, output, || Ok(()))?;
         } else {
             println!("{}", groups.join(" "));
         }
         return Ok(());
     }
 
-    if json_output_options.object_output {
+    if json_output_options.stardust_output {
         let mut user_groups: HashMap<String, Vec<String>> = HashMap::new();
         for user in users {
             match Passwd::locate(user.as_str()) {
@@ -85,7 +85,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
         let json_value = serde_json::to_value(&user_groups)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        object_output::output(json_output_options, json_value, || Ok(()))?;
+        stardust_output::output(json_output_options, json_value, || Ok(()))?;
     } else {
         for user in users {
             match Passwd::locate(user.as_str()) {
@@ -116,5 +116,5 @@ pub fn sg_app() -> Command {
                 .value_name(options::USERS)
                 .value_hint(clap::ValueHint::Username)
         );
-    object_output::add_json_args(cmd)
+    stardust_output::add_json_args(cmd)
 }
