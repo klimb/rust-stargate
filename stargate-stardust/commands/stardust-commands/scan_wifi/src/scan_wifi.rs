@@ -24,6 +24,13 @@ const DEFAULT_INTERFACE: &str = "wlan0";
 const DEFAULT_INTERFACE: &str = "wlan0";
 
 #[derive(Debug, Clone)]
+struct ClientInfo {
+    mac: String,
+    signal: String,
+    packets: usize,
+}
+
+#[derive(Debug, Clone)]
 struct WifiNetwork {
     bssid: String,
     ssid: String,
@@ -33,6 +40,7 @@ struct WifiNetwork {
     clients: Option<usize>,
     packets: Option<usize>,
     beacons: Option<usize>,
+    client_details: Vec<ClientInfo>,
 }
 
 #[sgcore::main]
@@ -300,6 +308,7 @@ fn parse_airport_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                 clients: None,
                 packets: None,
                 beacons: None,
+                client_details: Vec::new(),
             });
         }
     }
@@ -512,61 +521,99 @@ fn scan_wifi_detailed(interface: &str, duration: u64, _channel: Option<&str>) ->
 fn parse_airodump_csv(content: &str) -> UResult<Vec<WifiNetwork>> {
     let mut networks = Vec::new();
     let mut in_ap_section = false;
+    let mut in_station_section = false;
     
     for line in content.lines() {
         let trimmed = line.trim();
         
         if trimmed.starts_with("BSSID") {
             in_ap_section = true;
+            in_station_section = false;
+            continue;
+        }
+        
+        if trimmed.starts_with("Station MAC") {
+            in_ap_section = false;
+            in_station_section = true;
             continue;
         }
         
         if trimmed.is_empty() {
             if in_ap_section {
-                break;
+                in_ap_section = false;
             }
             continue;
         }
         
-        if trimmed.starts_with("Station MAC") {
-            break;
+        if in_ap_section {
+            let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+            if parts.len() < 14 {
+                continue;
+            }
+            
+            let bssid = parts[0].to_string();
+            if bssid.is_empty() {
+                continue;
+            }
+            
+            let channel = parts[3].trim().to_string();
+            let signal = format!("{} dBm", parts[8].trim());
+            let beacons = parts[9].trim().parse::<usize>().ok();
+            let packets = parts[10].trim().parse::<usize>().ok();
+            let encryption = format!("{} {}", parts[5].trim(), parts[6].trim()).trim().to_string();
+            let ssid = if parts.len() > 13 && !parts[13].trim().is_empty() {
+                parts[13].trim().to_string()
+            } else {
+                "<hidden>".to_string()
+            };
+            
+            networks.push(WifiNetwork {
+                bssid,
+                ssid,
+                channel,
+                signal_strength: signal,
+                encryption,
+                clients: None,
+                packets,
+                beacons,
+                client_details: Vec::new(),
+            });
+        } else if in_station_section {
+            let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+            if parts.len() < 6 {
+                continue;
+            }
+            
+            let client_mac = parts[0].to_string();
+            if client_mac.is_empty() {
+                continue;
+            }
+            
+            let bssid = parts[5].to_string();
+            if bssid == "(not associated)" || bssid.is_empty() {
+                continue;
+            }
+            
+            let signal = parts[3].to_string();
+            let packets = parts[4].trim().parse::<usize>().unwrap_or(0);
+            
+            let client_info = ClientInfo {
+                mac: client_mac,
+                signal: format!("{} dBm", signal),
+                packets,
+            };
+            
+            for network in &mut networks {
+                if network.bssid == bssid {
+                    network.client_details.push(client_info.clone());
+                    break;
+                }
+            }
         }
-        
-        if !in_ap_section {
-            continue;
-        }
-        
-        let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
-        if parts.len() < 14 {
-            continue;
-        }
-        
-        let bssid = parts[0].to_string();
-        if bssid.is_empty() {
-            continue;
-        }
-        
-        let channel = parts[3].trim().to_string();
-        let signal = format!("{} dBm", parts[8].trim());
-        let beacons = parts[9].trim().parse::<usize>().ok();
-        let packets = parts[10].trim().parse::<usize>().ok();
-        let encryption = format!("{} {}", parts[5].trim(), parts[6].trim()).trim().to_string();
-        let ssid = if parts.len() > 13 && !parts[13].trim().is_empty() {
-            parts[13].trim().to_string()
-        } else {
-            "<hidden>".to_string()
-        };
-        
-        networks.push(WifiNetwork {
-            bssid,
-            ssid,
-            channel,
-            signal_strength: signal,
-            encryption,
-            clients: None,
-            packets,
-            beacons,
-        });
+    }
+    
+    for network in &mut networks {
+        network.clients = Some(network.client_details.len());
     }
     
     Ok(networks)
@@ -605,6 +652,7 @@ fn parse_iw_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                     clients: None,
                     packets: None,
                     beacons: None,
+                    client_details: Vec::new(),
                 });
             }
         } else if line.starts_with("SSID: ") {
@@ -683,6 +731,7 @@ fn parse_iwlist_output(output: &str) -> UResult<Vec<WifiNetwork>> {
                     clients: None,
                     packets: None,
                     beacons: None,
+                    client_details: Vec::new(),
                 });
             }
         } else if line.starts_with("Channel:") {
@@ -763,6 +812,17 @@ fn output_json(networks: &[WifiNetwork], opts: StardustOutputOptions) -> UResult
             obj["beacons"] = json!(beacons);
         }
         
+        if !n.client_details.is_empty() {
+            let clients_json: Vec<_> = n.client_details.iter().map(|c| {
+                json!({
+                    "mac": c.mac,
+                    "signal": c.signal,
+                    "packets": c.packets
+                })
+            }).collect();
+            obj["client_details"] = json!(clients_json);
+        }
+        
         obj
     }).collect();
     
@@ -779,18 +839,26 @@ fn output_text(networks: &[WifiNetwork]) {
     let has_detailed = networks.iter().any(|n| n.beacons.is_some() || n.packets.is_some());
     
     if has_detailed {
-        println!("SSID\t\t\tBSSID\t\t\tCH\tSIGNAL\t\tBEACONS\tPACKETS\tENCRYPTION");
-        println!("{}", "=".repeat(120));
+        println!("SSID\t\t\tBSSID\t\t\tCH\tSIGNAL\t\tBEACONS\tPACKETS\tCLIENTS\tENCRYPTION");
+        println!("{}", "=".repeat(130));
         
         for network in networks {
-            println!("{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            println!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 truncate_string(&network.ssid, 20),
                 network.bssid,
                 network.channel,
                 truncate_string(&network.signal_strength, 10),
                 network.beacons.map(|b| b.to_string()).unwrap_or_else(|| "-".to_string()),
                 network.packets.map(|p| p.to_string()).unwrap_or_else(|| "-".to_string()),
+                network.clients.map(|c| c.to_string()).unwrap_or_else(|| "0".to_string()),
                 truncate_string(&network.encryption, 15));
+            
+            if !network.client_details.is_empty() {
+                for client in &network.client_details {
+                    println!("  └─ Client: {} (Signal: {}, Packets: {})", 
+                        client.mac, client.signal, client.packets);
+                }
+            }
         }
     } else {
         println!("SSID\t\t\tBSSID\t\t\tCHANNEL\tSIGNAL\tENCRYPTION");
