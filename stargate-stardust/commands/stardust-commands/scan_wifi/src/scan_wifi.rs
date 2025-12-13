@@ -14,7 +14,14 @@ static ARG_INTERFACE: &str = "interface";
 static ARG_DURATION: &str = "duration";
 static ARG_CHANNEL: &str = "channel";
 
-const DEFAULT_INTERFACE_MACOS: &str = "en0"; // will look for alfas later
+#[cfg(target_os = "macos")]
+const DEFAULT_INTERFACE: &str = "en0";
+
+#[cfg(target_os = "linux")]
+const DEFAULT_INTERFACE: &str = "wlan0";
+
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
+const DEFAULT_INTERFACE: &str = "wlan0";
 
 #[derive(Debug, Clone)]
 struct WifiNetwork {
@@ -29,20 +36,29 @@ struct WifiNetwork {
 pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     check_root_privileges()?;
     
-    //sgcore::pledge::apply_pledge(&["stdio", "proc", "exec", "rpath"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
     
-    let interface = matches.get_one::<String>(ARG_INTERFACE)
-        .map(|s| s.as_str())
-        .unwrap_or(DEFAULT_INTERFACE_MACOS);
+    let detected_interface = detect_wireless_interface();
+    let interface_from_args = matches.get_one::<String>(ARG_INTERFACE);
+    let interface = if interface_from_args.is_some() {
+        interface_from_args.unwrap().as_str()
+    } else if let Some(ref iface) = detected_interface {
+        iface.as_str()
+    } else {
+        DEFAULT_INTERFACE
+    };
     let duration = matches.get_one::<u64>(ARG_DURATION).copied().unwrap_or(15);
     let channel = matches.get_one::<String>(ARG_CHANNEL).map(|s| s.as_str());
     
     if !opts.stardust_output {
-        eprintln!("scanning for WiFi networks on interface: {}", interface);
+        if detected_interface.is_some() {
+            eprintln!("auto-detected wireless interface: {}", interface);
+        } else {
+            eprintln!("scanning for WiFi networks on interface: {}", interface);
+        }
         eprintln!("duration: {} seconds", duration);
         if let Some(ch) = channel {
             eprintln!("Channel: {}", ch);
@@ -60,6 +76,89 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
     
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn detect_wireless_interface() -> Option<String> {
+    use std::process::{Command as ProcessCommand, Stdio};
+    
+    let iw_paths = ["/usr/sbin/iw", "/sbin/iw", "/usr/bin/iw"];
+    
+    for iw_path in &iw_paths {
+        if let Ok(output) = ProcessCommand::new(iw_path)
+            .arg("dev")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .output()
+        {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                for line in text.lines() {
+                    let trimmed = line.trim();
+                    if trimmed.starts_with("Interface ") {
+                        let parts: Vec<&str> = trimmed.split_whitespace().collect();
+                        if parts.len() >= 2 {
+                            return Some(parts[1].to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if let Ok(entries) = std::fs::read_dir("/sys/class/net") {
+        let mut interfaces = Vec::new();
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name_str = name.to_string_lossy();
+            if name_str.starts_with("wl") {
+                let wireless_path = format!("/sys/class/net/{}/wireless", name_str);
+                if std::path::Path::new(&wireless_path).exists() {
+                    interfaces.push(name_str.to_string());
+                }
+            }
+        }
+        interfaces.sort();
+        if !interfaces.is_empty() {
+            return Some(interfaces[0].clone());
+        }
+    }
+    
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn detect_wireless_interface() -> Option<String> {
+    use std::process::{Command as ProcessCommand, Stdio};
+    
+    let output = ProcessCommand::new("networksetup")
+        .arg("-listallhardwareports")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output()
+        .ok()?;
+    
+    if output.status.success() {
+        let text = String::from_utf8_lossy(&output.stdout);
+        let mut is_wifi = false;
+        for line in text.lines() {
+            if line.contains("Wi-Fi") || line.contains("AirPort") {
+                is_wifi = true;
+            } else if is_wifi && line.starts_with("Device: ") {
+                let device = line.trim_start_matches("Device: ").trim();
+                return Some(device.to_string());
+            } else if line.starts_with("Hardware Port:") {
+                is_wifi = false;
+            }
+        }
+    }
+    
+    None
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
+fn detect_wireless_interface() -> Option<String> {
+    None
 }
 
 #[cfg(target_os = "macos")]
@@ -162,11 +261,232 @@ fn parse_airport_output(output: &str) -> UResult<Vec<WifiNetwork>> {
     Ok(networks)
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "linux")]
+fn check_root_privileges() -> UResult<()> {
+    let current_uid = unsafe { libc::getuid() };
+    let is_root = current_uid == 0;
+    
+    if !is_root {
+        return Err(sgcore::error::USimpleError::new(
+            1,
+            "This command requires root privileges. Please run with sudo.".to_string()
+        ));
+    }
+    
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn scan_wifi_networks(interface: &str, _duration: u64, _channel: Option<&str>) -> UResult<Vec<WifiNetwork>> {
+    use std::process::{Command as ProcessCommand, Stdio};
+    
+    check_root_privileges()?;
+    
+    let iw_paths = ["/usr/sbin/iw", "/sbin/iw", "/usr/bin/iw", "iw"];
+    let mut iw_cmd = None;
+    for path in &iw_paths {
+        if std::path::Path::new(path).exists() || *path == "iw" {
+            iw_cmd = Some(*path);
+            break;
+        }
+    }
+    
+    if let Some(iw_path) = iw_cmd {
+        let output = ProcessCommand::new(iw_path)
+            .arg("dev")
+            .arg(interface)
+            .arg("scan")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .map_err(|e| sgcore::error::USimpleError::new(
+                1,
+                format!("Failed to execute iw: {}", e)
+            ))?;
+        
+        if output.status.success() {
+            let output_text = String::from_utf8_lossy(&output.stdout);
+            return parse_iw_output(&output_text);
+        }
+    }
+    
+    let output = ProcessCommand::new("iwlist")
+        .arg(interface)
+        .arg("scan")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .map_err(|e| sgcore::error::USimpleError::new(
+            1,
+            format!("Failed to execute wireless scan. Please install iw or wireless-tools: sudo apt install iw wireless-tools\nError: {}", e)
+        ))?;
+    
+    if !output.status.success() {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(sgcore::error::USimpleError::new(
+            1,
+            format!("Wireless scan failed: {}. Try: sudo apt install iw wireless-tools", error_msg)
+        ));
+    }
+    
+    let output_text = String::from_utf8_lossy(&output.stdout);
+    parse_iwlist_output(&output_text)
+}
+
+#[cfg(target_os = "linux")]
+fn parse_iw_output(output: &str) -> UResult<Vec<WifiNetwork>> {
+    let mut networks = Vec::new();
+    let mut current_network: Option<WifiNetwork> = None;
+    
+    for line in output.lines() {
+        let line = line.trim();
+        
+        if line.starts_with("BSS ") {
+            if let Some(network) = current_network.take() {
+                networks.push(network);
+            }
+            
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let bssid = parts[1].trim_end_matches('(').to_string();
+                current_network = Some(WifiNetwork {
+                    bssid,
+                    ssid: String::new(),
+                    channel: String::new(),
+                    signal_strength: String::new(),
+                    encryption: "Open".to_string(),
+                });
+            }
+        } else if line.starts_with("SSID: ") {
+            if let Some(ref mut network) = current_network {
+                let ssid = line[6..].trim();
+                network.ssid = if ssid.is_empty() {
+                    "<hidden>".to_string()
+                } else {
+                    ssid.to_string()
+                };
+            }
+        } else if line.starts_with("signal: ") {
+            if let Some(ref mut network) = current_network {
+                let signal = line[8..].trim();
+                network.signal_strength = signal.to_string();
+            }
+        } else if line.starts_with("DS Parameter set: channel ") {
+            if let Some(ref mut network) = current_network {
+                let channel = line[27..].trim();
+                network.channel = channel.to_string();
+            }
+        } else if line.starts_with("* primary channel: ") {
+            if let Some(ref mut network) = current_network {
+                if network.channel.is_empty() {
+                    let channel = line[19..].trim();
+                    network.channel = channel.to_string();
+                }
+            }
+        } else if line.contains("RSN:") || line.contains("WPA:") {
+            if let Some(ref mut network) = current_network {
+                if line.contains("RSN:") {
+                    network.encryption = "WPA2/WPA3".to_string();
+                } else if network.encryption == "Open" {
+                    network.encryption = "WPA".to_string();
+                }
+            }
+        } else if line.starts_with("* Authentication suites:") {
+            if let Some(ref mut network) = current_network {
+                if line.contains("PSK") {
+                    if network.encryption == "Open" {
+                        network.encryption = "WPA-PSK".to_string();
+                    }
+                }
+            }
+        }
+    }
+    
+    if let Some(network) = current_network {
+        networks.push(network);
+    }
+    
+    Ok(networks)
+}
+
+#[cfg(target_os = "linux")]
+fn parse_iwlist_output(output: &str) -> UResult<Vec<WifiNetwork>> {
+    let mut networks = Vec::new();
+    let mut current_network: Option<WifiNetwork> = None;
+    
+    for line in output.lines() {
+        let line = line.trim();
+        
+        if line.starts_with("Cell ") {
+            if let Some(network) = current_network.take() {
+                networks.push(network);
+            }
+            
+            if let Some(addr_start) = line.find("Address: ") {
+                let bssid = line[addr_start + 9..].split_whitespace().next().unwrap_or("").to_string();
+                current_network = Some(WifiNetwork {
+                    bssid,
+                    ssid: String::new(),
+                    channel: String::new(),
+                    signal_strength: String::new(),
+                    encryption: String::new(),
+                });
+            }
+        } else if line.starts_with("Channel:") {
+            if let Some(ref mut network) = current_network {
+                network.channel = line.split(':').nth(1).unwrap_or("").trim().to_string();
+            }
+        } else if line.starts_with("Quality=") || line.contains("Signal level=") {
+            if let Some(ref mut network) = current_network {
+                if let Some(signal_pos) = line.find("Signal level=") {
+                    let signal_part = &line[signal_pos + 13..];
+                    let signal = signal_part.split_whitespace().next().unwrap_or("");
+                    network.signal_strength = signal.to_string();
+                }
+            }
+        } else if line.starts_with("ESSID:") {
+            if let Some(ref mut network) = current_network {
+                let essid = line.split(':').nth(1).unwrap_or("").trim().trim_matches('"');
+                network.ssid = if essid.is_empty() {
+                    "<hidden>".to_string()
+                } else {
+                    essid.to_string()
+                };
+            }
+        } else if line.contains("Encryption key:") {
+            if let Some(ref mut network) = current_network {
+                let encrypted = line.contains("on");
+                if encrypted {
+                    network.encryption = "Encrypted".to_string();
+                } else {
+                    network.encryption = "Open".to_string();
+                }
+            }
+        } else if line.starts_with("IE: IEEE 802.11i/WPA2") {
+            if let Some(ref mut network) = current_network {
+                network.encryption = "WPA2".to_string();
+            }
+        } else if line.starts_with("IE: WPA") {
+            if let Some(ref mut network) = current_network {
+                if network.encryption == "Encrypted" {
+                    network.encryption = "WPA".to_string();
+                }
+            }
+        }
+    }
+    
+    if let Some(network) = current_network {
+        networks.push(network);
+    }
+    
+    Ok(networks)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
 fn scan_wifi_networks(_interface: &str, _duration: u64, _channel: Option<&str>) -> UResult<Vec<WifiNetwork>> {
     Err(sgcore::error::USimpleError::new(
         1,
-        "scan-wifi is currently only supported on macOS".to_string()
+        "scan-wifi is currently only supported on macOS and Linux".to_string()
     ))
 }
 
@@ -227,7 +547,6 @@ pub fn sg_app() -> Command {
                 .long("interface")
                 .value_name("INTERFACE")
                 .help(translate!("scan-wifi-help-interface"))
-                .default_value(DEFAULT_INTERFACE_MACOS)
         )
         .arg(
             Arg::new(ARG_DURATION)

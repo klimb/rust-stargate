@@ -128,6 +128,7 @@ PROGS       := \
 	scan-bt \
 	scan-neighbors \
 	scan-radio \
+	scan-wifi \
 	shred \
 	shuf \
 	sleep \
