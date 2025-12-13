@@ -1,5 +1,5 @@
 # Benchmarking `tsort`
-<!-- spell-checker:ignore (words) randint tsort DAG uu_tsort GNU  -->
+<!-- spell-checker:ignore (words) randint tsort DAG sg_tsort GNU  -->
 Much of what makes `tsort` fast is the efficiency of its algorithm and implementation for topological sorting. 
 Our implementation of `tsort` also outputs a cycle whenever such ordering does not exist, just like GNU  `tsort`. 
 
@@ -56,7 +56,7 @@ The above scripts will output the generated graphs to the standard output. They 
 Use [`hyperfine`](https://github.com/sharkdp/hyperfine) to compare the performance of different `tsort` versions. For example, you can compare the performance of GNU `tsort` and another implementation with the following command:
 
 ```sh
-hyperfine 'tsort random_graph.txt' 'uu_tsort random_graph.txt'
+hyperfine 'tsort random_graph.txt' 'sg_tsort random_graph.txt'
 ```
 
 ## Note

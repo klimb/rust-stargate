@@ -1,4 +1,5 @@
-// spell-checker:ignore (ToDO) RFILE refsize rfilename fsize tsize
+
+
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::fs::{OpenOptions, metadata};
@@ -6,7 +7,7 @@ use std::io::ErrorKind;
 use std::os::unix::fs::FileTypeExt;
 use std::path::Path;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, SGUsageError};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -77,7 +78,7 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let app = sg_app();
     let matches = sgcore::clap_localization::handle_clap_result(app, args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
@@ -88,7 +89,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .unwrap_or_default();
 
     if files.is_empty() {
-        Err(UUsageError::new(
+        Err(SGUsageError::new(
             1,
             translate!("truncate-error-missing-file-operand")
         ))
@@ -165,11 +166,11 @@ pub fn sg_app() -> Command {
 ///
 /// If the file could not be opened, or there was a problem setting the
 /// size of the file.
-fn file_truncate(filename: &OsString, create: bool, size: u64) -> UResult<()> {
+fn file_truncate(filename: &OsString, create: bool, size: u64) -> SGResult<()> {
     let path = Path::new(filename);
     if let Ok(metadata) = metadata(path) {
         if metadata.file_type().is_fifo() {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote())
             ));
@@ -207,16 +208,16 @@ fn truncate_reference_and_size(
     size_string: &str,
     filenames: &[OsString],
     create: bool
-) -> UResult<()> {
+) -> SGResult<()> {
     let mode = match parse_mode_and_size(size_string) {
         Err(e) => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("truncate-error-invalid-number", "error" => e)
             ));
         }
         Ok(TruncateMode::Absolute(_)) => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("truncate-error-must-specify-relative-size")
             ));
@@ -225,14 +226,14 @@ fn truncate_reference_and_size(
     };
 
     if let TruncateMode::RoundDown(0) | TruncateMode::RoundUp(0) = mode {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("truncate-error-division-by-zero")
         ));
     }
 
     let metadata = metadata(rfilename).map_err(|e| match e.kind() {
-        ErrorKind::NotFound => USimpleError::new(
+        ErrorKind::NotFound => SGSimpleError::new(
             1,
             translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote())
         ),
@@ -266,9 +267,9 @@ fn truncate_reference_file_only(
     rfilename: &str,
     filenames: &[OsString],
     create: bool
-) -> UResult<()> {
+) -> SGResult<()> {
     let metadata = metadata(rfilename).map_err(|e| match e.kind() {
-        ErrorKind::NotFound => USimpleError::new(
+        ErrorKind::NotFound => SGSimpleError::new(
             1,
             translate!("truncate-error-cannot-stat-no-such-file", "filename" => rfilename.quote())
         ),
@@ -301,13 +302,13 @@ fn truncate_reference_file_only(
 /// the size of at least one file.
 ///
 /// If at least one file is a named pipe (also known as a fifo).
-fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -> UResult<()> {
+fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -> SGResult<()> {
     let mode = parse_mode_and_size(size_string).map_err(|e| {
-        USimpleError::new(1, translate!("truncate-error-invalid-number", "error" => e))
+        SGSimpleError::new(1, translate!("truncate-error-invalid-number", "error" => e))
     })?;
 
     if let TruncateMode::RoundDown(0) | TruncateMode::RoundUp(0) = mode {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("truncate-error-division-by-zero")
         ));
@@ -318,7 +319,7 @@ fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -
         let fsize = match metadata(path) {
             Ok(m) => {
                 if m.file_type().is_fifo() {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("truncate-error-cannot-open-no-device", "filename" => filename.to_string_lossy().quote())
                     ));
@@ -328,7 +329,6 @@ fn truncate_size_only(size_string: &str, filenames: &[OsString], create: bool) -
             Err(_) => 0,
         };
         let tsize = mode.to_size(fsize);
-        // TODO: Fix duplicate call to stat
         file_truncate(filename, create, tsize)?;
     }
 
@@ -341,21 +341,16 @@ fn truncate(
     reference: Option<String>,
     size: Option<String>,
     filenames: &[OsString]
-) -> UResult<()> {
+) -> SGResult<()> {
     let create = !no_create;
 
-    // There are four possibilities
-    // - reference file given and size given,
-    // - reference file given but no size given,
-    // - no reference file given but size given,
-    // - no reference file given and no size given,
     match (reference, size) {
         (Some(rfilename), Some(size_string)) => {
             truncate_reference_and_size(&rfilename, &size_string, filenames, create)
         }
         (Some(rfilename), None) => truncate_reference_file_only(&rfilename, filenames, create),
         (None, Some(size_string)) => truncate_size_only(&size_string, filenames, create),
-        (None, None) => unreachable!(), // this case cannot happen anymore because it's handled by clap
+        (None, None) => unreachable!(),
     }
 }
 
@@ -383,11 +378,8 @@ fn is_modifier(c: char) -> bool {
 /// assert_eq!(parse_mode_and_size("+123"), (TruncateMode::Extend, 123));
 /// ```
 fn parse_mode_and_size(size_string: &str) -> Result<TruncateMode, ParseSizeError> {
-    // Trim any whitespace.
     let mut size_string = size_string.trim();
 
-    // Get the modifier character from the size string, if any. For
-    // example, if the argument is "+123", then the modifier is '+'.
     if let Some(c) = size_string.chars().next() {
         if is_modifier(c) {
             size_string = &size_string[1..];
@@ -429,3 +421,4 @@ mod tests {
         assert_eq!(TruncateMode::Reduce(5).to_size(3), 0);
     }
 }
+

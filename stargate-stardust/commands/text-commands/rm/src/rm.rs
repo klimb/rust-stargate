@@ -1,4 +1,4 @@
-// spell-checker:ignore (path) eacces inacc rm-r4 unlinkat fstatat
+
 
 use clap::builder::{PossibleValue, ValueParser};
 use clap::{Arg, ArgAction, Command, parser::ValueSource};
@@ -13,7 +13,7 @@ use std::path::MAIN_SEPARATOR;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult};
+use sgcore::error::{FromIo, SGError, SGResult};
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::translate;
 use sgcore::{format_usage, os_str_as_bytes, prompt_yes, show_error};
@@ -40,7 +40,7 @@ enum RmError {
     RefusingToRemoveDirectory(OsString),
 }
 
-impl UError for RmError {}
+impl SGError for RmError {}
 
 /// Helper function to print verbose message for removed file
 fn verbose_removed_file(path: &Path, options: &Options) {
@@ -105,9 +105,6 @@ pub enum InteractiveMode {
     PromptProtected,
 }
 
-// We implement `From` instead of `TryFrom` because clap guarantees that we only receive valid values.
-//
-// The `PromptProtected` variant is not supposed to be created from a string.
 impl From<&str> for InteractiveMode {
     fn from(s: &str) -> Self {
         match s {
@@ -192,7 +189,7 @@ static PRESUME_INPUT_TTY: &str = "-presume-input-tty";
 static ARG_FILES: &str = "files";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "cpath"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
@@ -205,12 +202,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let force_flag = matches.get_flag(OPT_FORCE);
 
     if files.is_empty() && !force_flag {
-        // Still check by hand and not use clap
-        // Because "rm -f" is a thing
         return Err(RmError::MissingOperand.into());
     }
 
-    // If -f(--force) is before any -i (or variants) we want prompts else no prompts
     let force_prompt_never = force_flag && {
         let force_index = matches.index_of(OPT_FORCE).unwrap_or(0);
         ![OPT_PROMPT_ALWAYS, OPT_PROMPT_ONCE, OPT_INTERACTIVE]
@@ -367,14 +361,6 @@ pub fn sg_app() -> Command {
                 .help(translate!("rm-help-progress"))
                 .action(ArgAction::SetTrue)
         )
-        // From the GNU source code:
-        // This is solely for testing.
-        // Do not document.
-        // It is relatively difficult to ensure that there is a tty on stdin.
-        // Since rm acts differently depending on that, without this option,
-        // it'd be harder to test the parts of rm that depend on that setting.
-        // In contrast with Arg::long, Arg::alias does not strip leading
-        // hyphens. Therefore it supports 3 leading hyphens.
         .arg(
             Arg::new(PRESUME_INPUT_TTY)
                 .long("presume-input-tty")
@@ -428,8 +414,6 @@ fn count_files(paths: &[&OsStr], recursive: bool) -> u64 {
                 total += 1;
             }
         }
-        // If we can't access the file, skip it for counting
-        // This matches the behavior where -f suppresses errors for missing files
     }
     total
 }
@@ -455,7 +439,6 @@ fn count_files_in_directory(p: &Path) -> u64 {
     1 + entries_count
 }
 
-// TODO: implement one-file-system (this may get partially implemented in walkdir)
 /// Remove (or unlink) the given files
 ///
 /// Returns true if it has encountered an error.
@@ -465,7 +448,6 @@ fn count_files_in_directory(p: &Path) -> u64 {
 pub fn remove(files: &[&OsStr], options: &Options) -> bool {
     let mut had_err = false;
 
-    // Check if any files actually exist before creating progress bar
     let mut progress_bar: Option<ProgressBar> = None;
     let mut any_files_processed = false;
 
@@ -474,7 +456,6 @@ pub fn remove(files: &[&OsStr], options: &Options) -> bool {
 
         had_err = match file.symlink_metadata() {
             Ok(metadata) => {
-                // Create progress bar on first successful file metadata read
                 if options.progress && progress_bar.is_none() {
                     progress_bar = create_progress_bar(files, options.recursive);
                 }
@@ -490,10 +471,6 @@ pub fn remove(files: &[&OsStr], options: &Options) -> bool {
             }
 
             Err(_e) => {
-                // TODO: actually print out the specific error
-                // TODO: When the error is not about missing files
-                // (e.g., permission), even rm -f should fail with
-                // outputting the error, but there's no easy way.
                 if options.force {
                     false
                 } else {
@@ -508,7 +485,6 @@ pub fn remove(files: &[&OsStr], options: &Options) -> bool {
         .bitor(had_err);
     }
 
-    // Only finish progress bar if it was created and files were processed
     if let Some(pb) = progress_bar {
         if any_files_processed {
             pb.finish();
@@ -560,7 +536,6 @@ fn is_writable(path: &Path) -> bool {
 /// Whether the given file or directory is writable.
 #[cfg(not(unix))]
 fn is_writable(_path: &Path) -> bool {
-    // TODO Not yet implemented.
     true
 }
 
@@ -575,18 +550,10 @@ fn remove_dir_recursive(
     options: &Options,
     progress_bar: Option<&ProgressBar>
 ) -> bool {
-    // Base case 1: this is a file or a symbolic link.
-    //
-    // The symbolic link case is important because it could be a link to
-    // a directory and we don't want to recurse. In particular, this
-    // avoids an infinite recursion in the case of a link to the current
-    // directory, like `ln -s . link`.
     if !path.is_dir() || path.is_symlink() {
         return remove_file(path, options, progress_bar);
     }
 
-    // Base case 2: this is a non-empty directory, but the user
-    // doesn't want to descend into it.
     if options.interactive == InteractiveMode::Always
         && !is_dir_empty(path)
         && !prompt_descend(path)
@@ -594,13 +561,11 @@ fn remove_dir_recursive(
         return false;
     }
 
-    // Use secure traversal on Linux for all recursive directory removals
     #[cfg(target_os = "linux")]
     {
         safe_remove_dir_recursive(path, options, progress_bar)
     }
 
-    // Fallback for non-Linux or use fs::remove_dir_all for very long paths
     #[cfg(not(target_os = "linux"))]
     {
         if let Some(s) = path.to_str() {
@@ -618,11 +583,9 @@ fn remove_dir_recursive(
             }
         }
 
-        // Recursive case: this is a directory.
         let mut error = false;
         match fs::read_dir(path) {
             Err(e) if e.kind() == io::ErrorKind::PermissionDenied => {
-                // This is not considered an error.
             }
             Err(_) => error = true,
             Ok(iter) => {
@@ -639,17 +602,12 @@ fn remove_dir_recursive(
             }
         }
 
-        // Ask the user whether to remove the current directory.
         if options.interactive == InteractiveMode::Always && !prompt_dir(path, options) {
             return false;
         }
 
-        // Try removing the directory itself.
         match fs::remove_dir(path) {
             Err(_) if !error && !is_readable(path) => {
-                // For compatibility with GNU test case
-                // `tests/rm/unread2.sh`, show "Permission denied" in this
-                // case instead of "Directory not empty".
                 show_permission_denied_error(path);
                 error = true;
             }
@@ -661,10 +619,6 @@ fn remove_dir_recursive(
                 error = true;
             }
             Err(_) => {
-                // If there has already been at least one error when
-                // trying to remove the children, then there is no need to
-                // show another error message as we return from each level
-                // of the recursion.
             }
             Ok(_) => verbose_removed_directory(path, options),
         }
@@ -709,12 +663,10 @@ fn handle_dir(path: &Path, options: &Options, progress_bar: Option<&ProgressBar>
 ///
 /// Returns true if it has encountered an error.
 fn remove_dir(path: &Path, options: &Options, progress_bar: Option<&ProgressBar>) -> bool {
-    // Ask the user for permission.
     if !prompt_dir(path, options) {
         return false;
     }
 
-    // Called to remove a symlink_dir (windows) without "-r"/"-R" or "-d".
     if !options.dir && !options.recursive {
         show_error!(
             "{}",
@@ -723,7 +675,6 @@ fn remove_dir(path: &Path, options: &Options, progress_bar: Option<&ProgressBar>
         return true;
     }
 
-    // Use safe traversal on Linux for empty directory removal
     #[cfg(target_os = "linux")]
     {
         if let Some(result) = safe_remove_empty_dir(path, options, progress_bar) {
@@ -731,23 +682,19 @@ fn remove_dir(path: &Path, options: &Options, progress_bar: Option<&ProgressBar>
         }
     }
 
-    // Update progress bar for directory removal
     if let Some(pb) = progress_bar {
         pb.inc(1);
     }
 
-    // Fallback method for non-Linux or when safe traversal is unavailable
     remove_dir_with_feedback(path, options)
 }
 
 fn remove_file(path: &Path, options: &Options, progress_bar: Option<&ProgressBar>) -> bool {
     if prompt_file(path, options) {
-        // Update progress bar before removing the file
         if let Some(pb) = progress_bar {
             pb.inc(1);
         }
 
-        // Use safe traversal on Linux for individual file removal
         #[cfg(target_os = "linux")]
         {
             if let Some(result) = safe_remove_file(path, options, progress_bar) {
@@ -755,14 +702,12 @@ fn remove_file(path: &Path, options: &Options, progress_bar: Option<&ProgressBar
             }
         }
 
-        // Fallback method for non-Linux or when safe traversal is unavailable
         match fs::remove_file(path) {
             Ok(_) => {
                 verbose_removed_file(path, options);
             }
             Err(e) => {
                 if e.kind() == io::ErrorKind::PermissionDenied {
-                    // GNU compatibility (rm/fail-eacces.sh)
                     show_error!(
                         "{}",
                         RmError::CannotRemovePermissionDenied(path.as_os_str().to_os_string())
@@ -779,13 +724,10 @@ fn remove_file(path: &Path, options: &Options, progress_bar: Option<&ProgressBar
 }
 
 fn prompt_dir(path: &Path, options: &Options) -> bool {
-    // If interactive is Never we never want to send prompts
     if options.interactive == InteractiveMode::Never {
         return true;
     }
 
-    // We can't use metadata.permissions.readonly for directories because it only works on files
-    // So we have to handle whether a directory is writable manually
     if let Ok(metadata) = fs::metadata(path) {
         handle_writable_directory(path, options, &metadata)
     } else {
@@ -794,11 +736,9 @@ fn prompt_dir(path: &Path, options: &Options) -> bool {
 }
 
 fn prompt_file(path: &Path, options: &Options) -> bool {
-    // If interactive is Never we never want to send prompts
     if options.interactive == InteractiveMode::Never {
         return true;
     }
-    // If interactive is Always we want to check if the file is symlink to prompt the right message
     if options.interactive == InteractiveMode::Always {
         if let Ok(metadata) = fs::symlink_metadata(path) {
             if metadata.is_symlink() {
@@ -849,8 +789,6 @@ fn path_is_current_or_parent_directory(path: &Path) -> bool {
     false
 }
 
-// For directories finding if they are writable or not is a hassle. In Unix we can use the built-in rust crate to check mode bits. But other os don't have something similar afaik
-// Most cases are covered by keep eye out for edge cases
 fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata) -> bool {
     let stdin_ok = options.__presume_input_tty.unwrap_or(false) || stdin().is_terminal();
     match (
@@ -860,7 +798,7 @@ fn handle_writable_directory(path: &Path, options: &Options, metadata: &Metadata
         options.interactive
     ) {
         (false, _, _, InteractiveMode::PromptProtected) => true,
-        (false, false, false, InteractiveMode::Never) => true, // Don't prompt when interactive is never
+        (false, false, false, InteractiveMode::Never) => true,
         (_, false, false, _) => prompt_yes!(
             "attempt removal of inaccessible directory {}?",
             path.quote()
@@ -886,12 +824,8 @@ fn clean_trailing_slashes(path: &Path) -> &Path {
         } else {
             return path;
         };
-        // Checks if element at the end is a '/'
         if path_bytes[idx] == dir_separator {
             for i in (1..path_bytes.len()).rev() {
-                // Will break at the start of the continuous sequence of '/', eg: "abc//////" , will break at
-                // "abc/", this will clean ////// to the root '/', so we have to be careful to not
-                // delete the root.
                 if path_bytes[i - 1] != dir_separator {
                     idx = i;
                     break;
@@ -900,8 +834,6 @@ fn clean_trailing_slashes(path: &Path) -> &Path {
             return Path::new(OsStr::from_bytes(&path_bytes[0..=idx]));
 
             #[cfg(not(unix))]
-            // Unwrapping is fine here as os_str_as_bytes() would return an error on non unix
-            // systems with non utf-8 characters and thus bypass the if let Ok branch
             return Path::new(std::str::from_utf8(&path_bytes[0..=idx]).unwrap());
         }
     }
@@ -913,10 +845,6 @@ fn prompt_descend(path: &Path) -> bool {
 }
 
 fn normalize(path: &Path) -> PathBuf {
-    // copied from https://github.com/rust-lang/cargo/blob/2e4cfc2b7d43328b207879228a2ca7d427d188bb/src/cargo/util/paths.rs#L65-L90
-    // both projects are MIT https://github.com/rust-lang/cargo/blob/master/LICENSE-MIT
-    // for std impl progress see rfc https://github.com/rust-lang/rfcs/issues/2208
-    // TODO: replace this once that lands
     sgcore::fs::normalize_path(path)
 }
 
@@ -927,7 +855,6 @@ fn is_symlink_dir(_metadata: &Metadata) -> bool {
 mod tests {
 
     #[test]
-    // Testing whether path the `/////` collapses to `/`
     fn test_collapsible_slash_path() {
         use std::path::Path;
 
@@ -937,3 +864,4 @@ mod tests {
         assert_eq!(Path::new("/"), clean_trailing_slashes(path));
     }
 }
+

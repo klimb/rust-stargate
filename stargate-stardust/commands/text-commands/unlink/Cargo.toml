@@ -1,6 +1,6 @@
 [package]
 name = "sg_unlink"
-description = "unlink ~ (uutils) remove a (file system) link to FILE"
+description = "unlink ~ (stargate) remove a (file system) link to FILE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

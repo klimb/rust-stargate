@@ -1,9 +1,9 @@
-// spell-checker:ignore (ToDO) CGEventSource
+
 
 use clap::{Arg, ArgAction, Command};
 use sgcore::translate;
 use sgcore::{
-    error::UResult,
+    error::SGResult,
     show_error,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -22,11 +22,9 @@ unsafe extern "C" {
     ) -> f64;
 }
 
-// kCGAnyInputEventType = ~0 (all bits set) - tracks any user input event
 #[cfg(target_vendor = "apple")]
 const K_CG_ANY_INPUT_EVENT_TYPE: u32 = !0;
 
-// CGEventType values
 #[cfg(target_vendor = "apple")]
 const K_CG_EVENT_LEFT_MOUSE_DOWN: u32 = 1;
 #[cfg(target_vendor = "apple")]
@@ -69,8 +67,7 @@ struct EventInfo {
 fn get_seconds_since_last_event() -> Option<EventInfo> {
     unsafe {
         let state = CGEventSourceStateID::CombinedSessionState as u32;
-        
-        // Check different event types to find the most recent
+
         let events = vec![
             (K_CG_EVENT_KEY_DOWN, "keyboard"),
             (K_CG_EVENT_KEY_UP, "keyboard"),
@@ -88,9 +85,9 @@ fn get_seconds_since_last_event() -> Option<EventInfo> {
             (K_CG_EVENT_SCROLL_WHEEL, "scroll"),
             (K_CG_EVENT_TABLET_POINTER, "tablet"),
         ];
-        
+
         let mut most_recent: Option<(f64, &str)> = None;
-        
+
         for (event_type, name) in events {
             let seconds = CGEventSourceSecondsSinceLastEventType(state, event_type);
             if let Some((min_seconds, _)) = most_recent {
@@ -101,7 +98,7 @@ fn get_seconds_since_last_event() -> Option<EventInfo> {
                 most_recent = Some((seconds, name));
             }
         }
-        
+
         most_recent.map(|(seconds, event_type)| EventInfo {
             seconds,
             event_type: event_type.to_string(),
@@ -123,7 +120,7 @@ fn get_seconds_since_last_event() -> Option<EventInfo> {
 
 fn format_duration_human_readable(seconds: f64) -> String {
     let total_seconds = seconds as u64;
-    
+
     if total_seconds < 60 {
         format!("{} seconds ago", total_seconds)
     } else if total_seconds < 3600 {
@@ -132,7 +129,7 @@ fn format_duration_human_readable(seconds: f64) -> String {
         if secs == 0 {
             format!("{} minute{} ago", minutes, if minutes == 1 { "" } else { "s" })
         } else {
-            format!("{} minute{} {} second{} ago", 
+            format!("{} minute{} {} second{} ago",
                 minutes, if minutes == 1 { "" } else { "s" },
                 secs, if secs == 1 { "" } else { "s" })
         }
@@ -142,7 +139,7 @@ fn format_duration_human_readable(seconds: f64) -> String {
         if minutes == 0 {
             format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" })
         } else {
-            format!("{} hour{} {} minute{} ago", 
+            format!("{} hour{} {} minute{} ago",
                 hours, if hours == 1 { "" } else { "s" },
                 minutes, if minutes == 1 { "" } else { "s" })
         }
@@ -152,7 +149,7 @@ fn format_duration_human_readable(seconds: f64) -> String {
         if hours == 0 {
             format!("{} day{} ago", days, if days == 1 { "" } else { "s" })
         } else {
-            format!("{} day{} {} hour{} ago", 
+            format!("{} day{} {} hour{} ago",
                 days, if days == 1 { "" } else { "s" },
                 hours, if hours == 1 { "" } else { "s" })
         }
@@ -160,33 +157,31 @@ fn format_duration_human_readable(seconds: f64) -> String {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    
-    // On non-Apple platforms, exit silently as this feature is not supported
+
     #[cfg(not(target_vendor = "apple"))]
     {
         return Ok(());
     }
-    
+
     #[cfg(target_vendor = "apple")]
     {
     let object_output = StardustOutputOptions::from_matches(&matches);
-    
+
     let number: usize = matches.get_one::<String>("number")
         .and_then(|s| s.parse().ok())
         .unwrap_or(20);
 
     if object_output.object_output {
-        // For JSON output, collect all samples
         let mut samples = Vec::new();
         for _ in 0..number {
             if let Some(event_info) = get_seconds_since_last_event() {
                 use chrono::Utc;
                 let now = Utc::now();
                 let last_event_time = now - chrono::Duration::milliseconds((event_info.seconds * 1000.0) as i64);
-                
+
                 samples.push(serde_json::json!({
                     "seconds_since_last_event": event_info.seconds,
                     "event_type": event_info.event_type,
@@ -194,22 +189,21 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     "last_event_timestamp": last_event_time.to_rfc3339(),
                     "current_timestamp": now.to_rfc3339()
                 }));
-                
+
                 if samples.len() < number {
                     thread::sleep(Duration::from_millis(500));
                 }
             }
         }
-        
+
         let output = if number == 1 {
             samples.into_iter().next().unwrap_or(serde_json::json!({}))
         } else {
             serde_json::json!(samples)
         };
-        
+
         stardust_output::output(object_output, output, || Ok(()))?;
     } else {
-        // For text output, show each sample with timestamp
         for i in 0..number {
             match get_seconds_since_last_event() {
                 Some(event_info) => {
@@ -217,13 +211,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     let now = Local::now();
                     let timestamp = now.format("%H:%M:%S");
                     let human_readable = format_duration_human_readable(event_info.seconds);
-                    
+
                     if number == 1 {
                         println!("{} ({})", human_readable, event_info.event_type);
                     } else {
                         println!("[{}] {} ({})", timestamp, human_readable, event_info.event_type);
                     }
-                    
+
                     if i < number - 1 {
                         thread::sleep(Duration::from_millis(500));
                     }
@@ -256,6 +250,7 @@ pub fn sg_app() -> Command {
                 .default_value("20")
                 .action(ArgAction::Set)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

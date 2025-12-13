@@ -1,6 +1,6 @@
 //! Set of functions to manage file systems
 
-// spell-checker:ignore DATETIME getmntinfo subsecond (fs) cifs smbfs
+
 static MOUNT_OPT_BIND: &str = "bind";
 
 #[cfg(any(
@@ -65,7 +65,7 @@ impl From<&str> for MetadataTimeField {
             "access" | "atime" | "use" => Self::Access,
             "mtime" | "modification" => Self::Modification,
             "birth" | "creation" => Self::Birth,
-            // below should never happen as clap already restricts the values.
+
             _ => unreachable!("Invalid metadata time field."),
         }
     }
@@ -81,7 +81,7 @@ fn metadata_get_change_time(md: &Metadata) -> Option<SystemTime> {
     if nsecs >= 0 {
         st += Duration::from_nanos(nsecs as u64);
     } else {
-        // Probably never the case, but cover just in case.
+
         st -= Duration::from_nanos(-nsecs as u64);
     }
     Some(st)
@@ -89,7 +89,7 @@ fn metadata_get_change_time(md: &Metadata) -> Option<SystemTime> {
 
 #[cfg(not(unix))]
 fn metadata_get_change_time(_md: &Metadata) -> Option<SystemTime> {
-    // Not available.
+
     None
 }
 
@@ -102,8 +102,8 @@ pub fn metadata_get_time(md: &Metadata, md_time: MetadataTimeField) -> Option<Sy
     }
 }
 
-// TODO: Types for this struct are probably mostly wrong. Possibly, most of them
-// should be OsString.
+
+
 #[derive(Debug, Clone)]
 pub struct MountInfo {
     /// Stores `volume_name` in windows platform and `dev_id` in unix platform
@@ -122,12 +122,12 @@ pub struct MountInfo {
 fn replace_special_chars(s: &[u8]) -> Vec<u8> {
     use bstr::ByteSlice;
 
-    // Replace
-    //
-    // * ASCII space with a regular space character,
-    // * \011 ASCII horizontal tab with a tab character,
-    // * ASCII backslash with an actual backslash character.
-    //
+
+
+
+
+
+
     s.replace(r#"\040"#, " ")
         .replace(r#"\011"#, "	")
         .replace(r#"\134"#, r#"\"#)
@@ -151,9 +151,9 @@ impl MountInfo {
         let mount_option;
 
         match file_name {
-            // spell-checker:ignore (word) noatime
-            // Format: 36 35 98:0 /mnt1 /mnt2 rw,noatime master:1 - ext3 /dev/root rw,errors=continue
-            // "man proc" for more details
+
+
+
             LINUX_MOUNTINFO => {
                 const FIELDS_OFFSET: usize = 6;
                 let after_fields = raw[FIELDS_OFFSET..]
@@ -204,19 +204,19 @@ impl MountInfo {
 impl From<StatFs> for MountInfo {
     fn from(statfs: StatFs) -> Self {
         let dev_name = unsafe {
-            // spell-checker:disable-next-line
+
             CStr::from_ptr(&statfs.f_mntfromname[0])
                 .to_string_lossy()
                 .into_owned()
         };
         let fs_type = unsafe {
-            // spell-checker:disable-next-line
+
             CStr::from_ptr(&statfs.f_fstypename[0])
                 .to_string_lossy()
                 .into_owned()
         };
         let mount_dir_bytes = unsafe {
-            // spell-checker:disable-next-line
+
             CStr::from_ptr(&statfs.f_mntonname[0]).to_bytes()
         };
         let mount_dir = os_str_from_bytes(mount_dir_bytes).unwrap().into_owned();
@@ -238,21 +238,21 @@ impl From<StatFs> for MountInfo {
     }
 }
 fn is_dummy_filesystem(fs_type: &str, mount_option: &str) -> bool {
-    // spell-checker:disable
+
     match fs_type {
         "autofs" | "proc" | "subfs"
-        // for Linux 2.6/3.x
+
         | "debugfs" | "devpts" | "fusectl" | "mqueue" | "rpc_pipefs" | "sysfs"
-        // FreeBSD, Linux 2.4
+
         | "devfs"
-        // for NetBSD 3.0
+
         | "kernfs"
-        // for Irix 6.5
+
         | "ignore" => true,
         _ => fs_type == "none"
             && !mount_option.contains(MOUNT_OPT_BIND)
     }
-    // spell-checker:enable
+
 }
 fn is_remote_filesystem(dev_name: &str, fs_type: &str) -> bool {
     dev_name.find(':').is_some()
@@ -263,7 +263,7 @@ fn mount_dev_id(mount_dir: &OsStr) -> String {
     use std::os::unix::fs::MetadataExt;
 
     if let Ok(stat) = std::fs::metadata(mount_dir) {
-        // Why do we cast this to i32?
+
         (stat.dev() as i32).to_string()
     } else {
         String::new()
@@ -296,15 +296,15 @@ unsafe extern "C" {
     #[link_name = "getmntinfo"]
     fn get_mount_info(mount_buffer_p: *mut *mut StatFs, flags: c_int) -> c_int;
 
-    // Rust on FreeBSD uses 11.x ABI for filesystem metadata syscalls.
-    // Call the right version of the symbol for getmntinfo() result to
-    // match libc StatFS layout.
+
+
+
     #[cfg(target_os = "freebsd")]
     #[link_name = "getmntinfo@FBSD_1.0"]
     fn get_mount_info(mount_buffer_p: *mut *mut StatFs, flags: c_int) -> c_int;
 }
 
-use crate::error::UResult;
+use crate::error::SGResult;
 #[cfg(any(
     target_os = "freebsd",
     target_vendor = "apple",
@@ -312,7 +312,7 @@ use crate::error::UResult;
     target_os = "openbsd",
     target_os = "windows"
 ))]
-use crate::error::USimpleError;
+use crate::error::SGSimpleError;
 #[cfg(any(target_os = "linux"))]
 use std::fs::File;
 #[cfg(any(target_os = "linux"))]
@@ -334,7 +334,7 @@ use std::ptr;
 use std::slice;
 
 /// Read file system list.
-pub fn read_fs_list() -> UResult<Vec<MountInfo>> {
+pub fn read_fs_list() -> SGResult<Vec<MountInfo>> {
     #[cfg(any(target_os = "linux"))]
     {
         let (file_name, f) = File::open(LINUX_MOUNTINFO)
@@ -360,7 +360,7 @@ pub fn read_fs_list() -> UResult<Vec<MountInfo>> {
         let mut mount_buffer_ptr: *mut StatFs = ptr::null_mut();
         let len = unsafe { get_mount_info(&mut mount_buffer_ptr, 1_i32) };
         if len < 0 {
-            return Err(USimpleError::new(1, "get_mount_info() failed"));
+            return Err(SGSimpleError::new(1, "get_mount_info() failed"));
         }
         let mounts = unsafe { slice::from_raw_parts(mount_buffer_ptr, len as usize) };
         Ok(mounts
@@ -389,7 +389,7 @@ impl FsUsage {
                 target_pointer_width = "64"
             ))]
             return Self {
-                blocksize: statvfs.f_bsize as u64, // or `statvfs.f_frsize` ?
+                blocksize: statvfs.f_bsize as u64,
                 blocks: statvfs.f_blocks,
                 bfree: statvfs.f_bfree,
                 bavail: statvfs.f_bavail,
@@ -402,7 +402,7 @@ impl FsUsage {
                 not(target_pointer_width = "64")
             ))]
             return Self {
-                blocksize: statvfs.f_bsize as u64, // or `statvfs.f_frsize` ?
+                blocksize: statvfs.f_bsize as u64,
                 blocks: statvfs.f_blocks.into(),
                 bfree: statvfs.f_bfree.into(),
                 bavail: statvfs.f_bavail.into(),
@@ -412,7 +412,7 @@ impl FsUsage {
             };
             #[cfg(target_os = "freebsd")]
             return Self {
-                blocksize: statvfs.f_bsize, // or `statvfs.f_frsize` ?
+                blocksize: statvfs.f_bsize,
                 blocks: statvfs.f_blocks,
                 bfree: statvfs.f_bfree,
                 bavail: statvfs.f_bavail.try_into().unwrap(),
@@ -561,7 +561,7 @@ impl FsMeta for StatFs {
         target_os = "freebsd"
     )))]
     fn fs_type(&self) -> i64 {
-        // FIXME: statvfs doesn't have an equivalent, so we need to do something else
+
         unimplemented!()
     }
 
@@ -576,7 +576,7 @@ impl FsMeta for StatFs {
         #[cfg(not(target_os = "freebsd"))]
         return self.f_iosize as u64;
     }
-    // XXX: dunno if this is right
+
     #[cfg(not(any(
         target_vendor = "apple",
         target_os = "freebsd",
@@ -587,12 +587,12 @@ impl FsMeta for StatFs {
         self.f_bsize as u64
     }
 
-    // Linux, SunOS, HP-UX, 4.4BSD, FreeBSD have a system call statfs() that returns
-    // a struct statfs, containing a fsid_t f_fsid, where fsid_t is defined
-    // as struct { int val[2];  }
-    //
-    // Solaris, Irix and POSIX have a system call statvfs(2) that returns a
-    // struct statvfs, containing an  unsigned  long  f_fsid
+
+
+
+
+
+
     #[cfg(any(
         target_vendor = "apple",
         target_os = "freebsd",
@@ -600,8 +600,8 @@ impl FsMeta for StatFs {
         target_os = "openbsd"
     ))]
     fn fsid(&self) -> u64 {
-        // Use type inference to determine the type of f_fsid
-        // (libc::__fsid_t on Android, libc::fsid_t on other platforms)
+
+
         let f_fsid: &[u32; 2] = unsafe { &*(&raw const self.f_fsid as *const [u32; 2]) };
         ((u64::from(f_fsid[0])) << 32) | u64::from(f_fsid[1])
     }
@@ -625,9 +625,9 @@ impl FsMeta for StatFs {
     }
     #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
     fn namelen(&self) -> u64 {
-        self.f_namemax as u64 // spell-checker:disable-line
+        self.f_namemax as u64
     }
-    // XXX: should everything just use statvfs?
+
     #[cfg(not(any(
         target_vendor = "apple",
         target_os = "freebsd",
@@ -636,7 +636,7 @@ impl FsMeta for StatFs {
         target_os = "openbsd"
     )))]
     fn namelen(&self) -> u64 {
-        self.f_namemax as u64 // spell-checker:disable-line
+        self.f_namemax as u64
     }
 }
 pub fn statfs(path: &OsStr) -> Result<StatFs, String> {
@@ -678,14 +678,14 @@ pub fn pretty_filetype(mode: mode_t, size: u64) -> String {
         S_IFBLK => "block special file",
         S_IFIFO => "fifo",
         S_IFSOCK => "socket",
-        // TODO: Other file types
+
         _ => return format!("weird file ({:07o})", mode & S_IFMT),
     }
     .to_owned()
 }
 
 pub fn pretty_fstype<'a>(fstype: i64) -> Cow<'a, str> {
-    // spell-checker:disable
+
     match fstype {
         0x6163_6673 => "acfs".into(),
         0xADF5 => "adfs".into(),
@@ -805,7 +805,7 @@ pub fn pretty_fstype<'a>(fstype: i64) -> Cow<'a, str> {
         0xDE => "zfs".into(),
         other => format!("UNKNOWN ({other:#x})").into(),
     }
-    // spell-checker:enable
+
 }
 
 #[cfg(test)]
@@ -823,7 +823,7 @@ mod tests {
 
     #[test]
     fn test_fs_type() {
-        // spell-checker:disable
+
         assert_eq!("ext2/ext3", pretty_fstype(0xEF53));
         assert_eq!("tmpfs", pretty_fstype(0x0102_1994));
         assert_eq!("nfs", pretty_fstype(0x6969));
@@ -833,13 +833,13 @@ mod tests {
         assert_eq!("ntfs", pretty_fstype(0x5346_544e));
         assert_eq!("fat", pretty_fstype(0x4006));
         assert_eq!("UNKNOWN (0x1234)", pretty_fstype(0x1234));
-        // spell-checker:enable
+
     }
 
     #[test]
     #[cfg(any(target_os = "linux"))]
     fn test_mountinfo() {
-        // spell-checker:ignore (word) relatime
+
         let info = MountInfo::new(
             LINUX_MOUNTINFO,
             &b"106 109 253:6 / /mnt rw,relatime - xfs /dev/fs0 rw"
@@ -854,7 +854,7 @@ mod tests {
         assert_eq!(info.fs_type, "xfs");
         assert_eq!(info.dev_name, "/dev/fs0");
 
-        // Test parsing with different amounts of optional fields.
+
         let info = MountInfo::new(
             LINUX_MOUNTINFO,
             &b"106 109 253:6 / /mnt rw,relatime master:1 - xfs /dev/fs0 rw"
@@ -926,10 +926,11 @@ mod tests {
         )
         .unwrap();
 
-        // Note that the \040 above will have been substituted by a space.
+
         assert_eq!(
             info.mount_dir,
             crate::os_str_from_bytes(b"/mnt/some- -dir-\xf3").unwrap()
         );
     }
 }
+

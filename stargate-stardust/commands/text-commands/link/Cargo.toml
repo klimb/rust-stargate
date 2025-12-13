@@ -1,6 +1,6 @@
 [package]
 name = "sg_link"
-description = "link ~ (uutils) create a hard (file system) link to FILE"
+description = "link ~ (stargate) create a hard (file system) link to FILE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

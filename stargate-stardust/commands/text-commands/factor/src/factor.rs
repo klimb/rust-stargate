@@ -1,4 +1,4 @@
-// spell-checker:ignore funcs
+
 
 use std::collections::BTreeMap;
 use std::io::BufRead;
@@ -8,7 +8,7 @@ use clap::{Arg, ArgAction, Command};
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, set_exit_code};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{format_usage, show_error, show_warning};
@@ -23,27 +23,23 @@ fn print_factors_str(
     num_str: &str,
     w: &mut io::BufWriter<impl Write>,
     print_exponents: bool
-) -> UResult<()> {
+) -> SGResult<()> {
     let rx = num_str.trim().parse::<BigUint>();
     let Ok(x) = rx else {
-        // return Ok(). it's non-fatal and we should try the next number.
         show_warning!("{}: {}", num_str.maybe_quote(), rx.unwrap_err());
         set_exit_code(1);
         return Ok(());
     };
 
     if x > BigUint::from_u32(1).unwrap() {
-        // use num_prime's factorize64 algorithm for u64 integers
         if x <= BigUint::from_u64(u64::MAX).unwrap() {
             let prime_factors = num_prime::nt_funcs::factorize64(x.clone().to_u64_digits()[0]);
             write_result_u64(w, &x, prime_factors, print_exponents)
                 .map_err_context(|| translate!("factor-error-write-error"))?;
         }
-        // use num_prime's factorize128 algorithm for u128 integers
         else if x <= BigUint::from_u128(u128::MAX).unwrap() {
             let rx = num_str.trim().parse::<u128>();
             let Ok(x) = rx else {
-                // return Ok(). it's non-fatal and we should try the next number.
                 show_warning!("{}: {}", num_str.maybe_quote(), rx.unwrap_err());
                 set_exit_code(1);
                 return Ok(());
@@ -52,11 +48,10 @@ fn print_factors_str(
             write_result_u128(w, &x, prime_factors, print_exponents)
                 .map_err_context(|| translate!("factor-error-write-error"))?;
         }
-        // use num_prime's fallible factorization for anything greater than u128::MAX
         else {
             let (prime_factors, remaining) = num_prime::nt_funcs::factors(x.clone(), None);
             if let Some(_remaining) = remaining {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("factor-error-factorization-incomplete")
                 ));
@@ -143,7 +138,7 @@ fn write_result_big_uint(
 }
 
 /// Collect factorization for JSON output
-fn factorize_to_json(num_str: &str, print_exponents: bool) -> UResult<serde_json::Value> {
+fn factorize_to_json(num_str: &str, print_exponents: bool) -> SGResult<serde_json::Value> {
     let rx = num_str.trim().parse::<BigUint>();
     let Ok(x) = rx else {
         set_exit_code(1);
@@ -185,7 +180,7 @@ fn factorize_to_json(num_str: &str, print_exponents: bool) -> UResult<serde_json
         } else {
             let (prime_factors, remaining) = num_prime::nt_funcs::factors(x.clone(), None);
             if let Some(_remaining) = remaining {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("factor-error-factorization-incomplete")
                 ));
@@ -212,7 +207,7 @@ fn factorize_to_json(num_str: &str, print_exponents: bool) -> UResult<serde_json
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
@@ -220,7 +215,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let print_exponents = matches.get_flag(options::EXPONENTS);
 
     if opts.stardust_output {
-        // JSON output mode
         let mut results = Vec::new();
 
         if let Some(values) = matches.get_many::<String>(options::NUMBER) {
@@ -252,7 +246,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         });
         stardust_output::output(opts, output, || Ok(()))?;
     } else {
-        // Text output mode (original behavior)
         let stdout = stdout();
         let mut w = io::BufWriter::with_capacity(4 * 1024, stdout.lock());
 
@@ -311,6 +304,7 @@ pub fn sg_app() -> Command {
                 .help(translate!("factor-help-exponents"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

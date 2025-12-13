@@ -16,7 +16,7 @@ performance before and after your code changes.
     execution time of one or more commands.
 
     ```shell
-    cargo build --release --package uu_cut
+    cargo build --release --package sg_cut
 
     hyperfine -w3 "./target/release/cut -f2-4,8 -d' ' input.txt" "cut -f2-4,8 -d' ' input.txt"
     ```
@@ -30,7 +30,7 @@ function is called, and the amount of time it takes can be useful.
 - `cargo flamegraph` generates flame graphs from function level metrics it records using `perf` or `dtrace`
 
     ```shell
-    cargo flamegraph --bin cut --package uu_cut -- -f1,3-4 input.txt > /dev/null
+    cargo flamegraph --bin cut --package sg_cut -- -f1,3-4 input.txt > /dev/null
     ```
 
 ## What to benchmark

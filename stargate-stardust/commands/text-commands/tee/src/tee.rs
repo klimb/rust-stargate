@@ -1,4 +1,4 @@
-// cSpell:ignore POLLERR POLLRDBAND pfds revents
+
 
 use clap::{Arg, ArgAction, Command, builder::PossibleValue};
 use std::ffi::OsString;
@@ -6,12 +6,11 @@ use std::fs::OpenOptions;
 use std::io::{Error, ErrorKind, Read, Result, Write, stdin, stdout};
 use std::path::PathBuf;
 use sgcore::display::Quotable;
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::translate;
 use sgcore::{format_usage, show_error};
 
-// spell-checker:ignore nopipe
 use sgcore::signals::{enable_pipe_errors, ignore_interrupts};
 
 mod options {
@@ -44,7 +43,7 @@ enum OutputErrorMode {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
@@ -57,8 +56,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             .map(String::as_str)
         {
             Some("warn") => Some(OutputErrorMode::Warn),
-            // If no argument is specified for --output-error,
-            // defaults to warn-nopipe
             None | Some("warn-nopipe") => Some(OutputErrorMode::WarnNoPipe),
             Some("exit") => Some(OutputErrorMode::Exit),
             Some("exit-nopipe") => Some(OutputErrorMode::ExitNoPipe),
@@ -94,8 +91,6 @@ pub fn sg_app() -> Command {
         .override_usage(format_usage(&translate!("tee-usage")))
         .after_help(translate!("tee-after-help"))
         .infer_long_args(true)
-        // Since we use value-specific help texts for "--output-error", clap's "short help" and "long help" differ.
-        // However, this is something that the GNU tests explicitly test for, so we *always* show the long help instead.
         .disable_help_flag(true)
         .arg(
             Arg::new("--help")
@@ -149,8 +144,6 @@ pub fn sg_app() -> Command {
 
 fn tee(options: &Options) -> Result<()> {
     {
-        // ErrorKind::Other is raised by MultiWriter when all writers have exited.
-        // This is therefore just a clever way to stop all writers
 
         if options.ignore_interrupts {
             ignore_interrupts().map_err(|_| Error::from(ErrorKind::Other))?;
@@ -184,13 +177,7 @@ fn tee(options: &Options) -> Result<()> {
         return Ok(());
     }
 
-    // We cannot use std::io::copy here as it doesn't flush the output buffer
     let res = match copy(input, &mut output) {
-        // ErrorKind::Other is raised by MultiWriter when all writers
-        // have exited, so that copy will abort. It's equivalent to
-        // success of this part (if there was an error that should
-        // cause a failure from any writer, that error would have been
-        // returned instead).
         Err(e) if e.kind() != ErrorKind::Other => Err(e),
         _ => Ok(()),
     };
@@ -206,13 +193,7 @@ fn tee(options: &Options) -> Result<()> {
 ///
 /// Returns the number of written bytes.
 fn copy(mut input: impl Read, mut output: impl Write) -> Result<usize> {
-    // The implementation for this function is adopted from the generic buffer copy implementation from
-    // the standard library:
-    // https://github.com/rust-lang/rust/blob/2feb91181882e525e698c4543063f4d0296fcf91/library/std/src/io/copy.rs#L271-L297
 
-    // Use buffer size from std implementation:
-    // https://github.com/rust-lang/rust/blob/2feb91181882e525e698c4543063f4d0296fcf91/library/std/src/sys/io/mod.rs#L44
-    // spell-checker:ignore espidf
     const DEFAULT_BUF_SIZE: usize = if cfg!(target_os = "espidf") {
         512
     } else {
@@ -235,8 +216,6 @@ fn copy(mut input: impl Read, mut output: impl Write) -> Result<usize> {
 
         output.write_all(&buffer[0..received])?;
 
-        // We need to flush the buffer here to comply with POSIX requirement that
-        // `tee` does not buffer the input.
         output.flush()?;
         len += received;
     }
@@ -349,9 +328,6 @@ impl Write for MultiWriter {
         if let Some(e) = aborted {
             Err(e)
         } else if self.writers.is_empty() {
-            // This error kind will never be raised by the standard
-            // library, so we can use it for early termination of
-            // `copy`
             Err(Error::from(ErrorKind::Other))
         } else {
             Ok(buf.len())
@@ -427,20 +403,16 @@ pub fn ensure_stdout_not_broken() -> Result<bool> {
 
     let out = stdout();
 
-    // First, check that stdout is a fifo and return true if it's not the case
     let stat = fstat(out.as_fd())?;
     if !SFlag::from_bits_truncate(stat.st_mode).contains(SFlag::S_IFIFO) {
         return Ok(true);
     }
 
-    // POLLRDBAND is the flag used by GNU tee.
     let mut pfds = [PollFd::new(out.as_fd(), PollFlags::POLLRDBAND)];
 
-    // Then, ensure that the pipe is not broken
     let res = nix::poll::poll(&mut pfds, PollTimeout::NONE)?;
 
     if res > 0 {
-        // poll succeeded;
         let error = pfds.iter().any(|pfd| {
             if let Some(revents) = pfd.revents() {
                 revents.contains(PollFlags::POLLERR)
@@ -451,8 +423,6 @@ pub fn ensure_stdout_not_broken() -> Result<bool> {
         return Ok(!error);
     }
 
-    // if res == 0, it means that timeout was reached, which is impossible
-    // because we set infinite timeout.
-    // And if res < 0, the nix wrapper should have sent back an error.
     unreachable!();
 }
+

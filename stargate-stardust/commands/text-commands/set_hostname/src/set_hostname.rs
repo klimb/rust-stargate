@@ -1,4 +1,4 @@
-// spell-checker:ignore hostname
+
 
 use std::ffi::OsString;
 
@@ -8,20 +8,20 @@ use clap::{Arg, Command};
 use sgcore::translate;
 
 use sgcore::{
-    error::{FromIo, UResult},
+    error::{FromIo, SGResult},
     format_usage,
 };
 
 static ARG_HOSTNAME: &str = "hostname";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "dns", "inet"])?;
-    
+
     let host = matches.get_one::<OsString>(ARG_HOSTNAME)
-        .ok_or_else(|| sgcore::error::UUsageError::new(1, translate!("set-hostname-error-missing-operand")))?;
-    
+        .ok_or_else(|| sgcore::error::SGUsageError::new(1, translate!("set-hostname-error-missing-operand")))?;
+
     hostname::set(host).map_err_context(|| translate!("set-hostname-error-set-hostname"))
 }
 
@@ -40,3 +40,4 @@ pub fn sg_app() -> Command {
                 .help(translate!("set-hostname-help-hostname"))
         )
 }
+

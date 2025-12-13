@@ -1,6 +1,6 @@
 [package]
 name = "sg_readlink"
-description = "readlink ~ (uutils) display resolved path of PATHNAME"
+description = "readlink ~ (stargate) display resolved path of PATHNAME"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

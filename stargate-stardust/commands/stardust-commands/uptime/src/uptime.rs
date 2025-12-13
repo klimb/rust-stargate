@@ -1,11 +1,11 @@
-// spell-checker:ignore getloadavg behaviour loadavg uptime upsecs updays upmins uphours boottime nusers utmpxname gettime clockid couldnt
+
 
 use chrono::{Local, TimeZone, Utc};
 use std::ffi::OsString;
 use std::io;
 use thiserror::Error;
 use serde_json::json;
-use sgcore::error::{UError, UResult};
+use sgcore::error::{SGError, SGResult};
 use sgcore::libc::time_t;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
@@ -24,7 +24,6 @@ pub mod options {
 
 #[derive(Debug, Error)]
 pub enum UptimeError {
-    // io::Error wrapper
     #[error("{}", translate!("uptime-error-io", "error" => format!("{}", .0)))]
     IoErr(#[from] io::Error),
     #[error("{}", translate!("uptime-error-target-is-dir"))]
@@ -33,14 +32,14 @@ pub enum UptimeError {
     TargetIsFifo,
 }
 
-impl UError for UptimeError {
+impl SGError for UptimeError {
     fn code(&self) -> i32 {
         1
     }
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let json_output_options = StardustOutputOptions::from_matches(&matches);
@@ -82,20 +81,17 @@ pub fn sg_app() -> Command {
             .value_parser(ValueParser::os_string())
             .value_hint(ValueHint::AnyPath)
     );
-    
+
     stardust_output::add_json_args(cmd)
 }
-fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOptions) -> UResult<()> {
+fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOptions) -> SGResult<()> {
     use std::fs;
     use std::os::unix::fs::FileTypeExt;
     use sgcore::error::set_exit_code;
     use sgcore::show_error;
 
-    // Uptime will print loadavg and time to stderr unless we encounter an extra operand.
     let mut non_fatal_error = false;
 
-    // process_utmpx_from_file() doesn't detect or report failures, we check if the path is valid
-    // before proceeding with more operations.
     let md_res = fs::metadata(file_path);
     if let Ok(md) = md_res {
         if md.is_dir() {
@@ -113,8 +109,6 @@ fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOpt
         set_exit_code(1);
         show_error!("{}", UptimeError::IoErr(e));
     }
-    // utmpxname() returns an -1 , when filename doesn't end with 'x' or its too long.
-    // Reference: `<https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/utmpxname.3.html>`
 
     #[cfg(target_os = "macos")]
     {
@@ -157,14 +151,14 @@ fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOpt
             let (boot_time, count) = process_utmpx(Some(file_path));
             (boot_time, count)
         };
-        
+
         #[cfg(target_os = "openbsd")]
         let (boot_time, user_count) = {
             let upsecs = get_uptime(None)?;
             let count = get_nusers(file_path.to_str().expect("invalid utmp path file"));
             (if upsecs >= 0 { Some(upsecs) } else { None }, count)
         };
-        
+
         let output = if let Some(bt) = boot_time {
             let uptime_str = get_formatted_uptime(Some(bt))?;
             let uptime_secs = get_uptime(Some(bt))?;
@@ -184,7 +178,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOpt
                 "load_average": get_formatted_loadavg().ok(),
             })
         };
-        
+
         stardust_output::output(json_output_options, output, || Ok(()))?;
         return Ok(());
     }
@@ -226,7 +220,7 @@ fn uptime_with_file(file_path: &OsString, json_output_options: StardustOutputOpt
     Ok(())
 }
 
-fn uptime_since(json_output_options: StardustOutputOptions) -> UResult<()> {
+fn uptime_since(json_output_options: StardustOutputOptions) -> SGResult<()> {
     #[cfg(not(target_os = "openbsd"))]
     let uptime = {
         let (boot_time, _) = process_utmpx(None);
@@ -238,7 +232,7 @@ fn uptime_since(json_output_options: StardustOutputOptions) -> UResult<()> {
     let since_date = Local
         .timestamp_opt(Utc::now().timestamp() - uptime, 0)
         .unwrap();
-    
+
     if json_output_options.stardust_output {
         let output = json!({
             "since": since_date.format("%Y-%m-%d %H:%M:%S").to_string(),
@@ -253,14 +247,14 @@ fn uptime_since(json_output_options: StardustOutputOptions) -> UResult<()> {
 }
 
 /// Default uptime behaviour i.e. when no file argument is given.
-fn default_uptime(json_output_options: StardustOutputOptions) -> UResult<()> {
+fn default_uptime(json_output_options: StardustOutputOptions) -> SGResult<()> {
     if json_output_options.stardust_output {
         let uptime_secs = get_uptime(None)?;
         let loadavg_result = get_formatted_loadavg();
         let nusers = get_formatted_nusers();
         let time_str = get_formatted_time();
         let uptime_str = get_formatted_uptime(None)?;
-        
+
         let output = json!({
             "time": time_str,
             "uptime": uptime_str,
@@ -268,7 +262,7 @@ fn default_uptime(json_output_options: StardustOutputOptions) -> UResult<()> {
             "users": nusers,
             "load_average": loadavg_result.ok(),
         });
-        
+
         stardust_output::output(json_output_options, output, || Ok(()))?;
     } else {
         print_time();
@@ -330,7 +324,8 @@ fn print_time() {
     print!(" {}  ", get_formatted_time());
 }
 
-fn print_uptime(boot_time: Option<time_t>) -> UResult<()> {
+fn print_uptime(boot_time: Option<time_t>) -> SGResult<()> {
     print!("up  {},  ", get_formatted_uptime(boot_time)?);
     Ok(())
 }
+

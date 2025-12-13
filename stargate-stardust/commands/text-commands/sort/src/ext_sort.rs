@@ -15,7 +15,7 @@ use std::{
 };
 
 use itertools::Itertools;
-use sgcore::error::{UResult, strip_errno};
+use sgcore::error::{SGResult, strip_errno};
 
 use crate::Output;
 use crate::chunks::RecycledChunk;
@@ -31,16 +31,15 @@ use crate::{
 };
 use crate::{Line, print_sorted};
 
-// Note: update `test_sort::test_start_buffer` if this size is changed
 const START_BUFFER_SIZE: usize = 8_000;
 
 /// Sort files by using auxiliary files for storing intermediate chunks (if needed), and output the result.
 pub fn ext_sort(
-    files: &mut impl Iterator<Item = UResult<Box<dyn Read + Send>>>,
+    files: &mut impl Iterator<Item = SGResult<Box<dyn Read + Send>>>,
     settings: &GlobalSettings,
     output: Output,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     let (sorted_sender, sorted_receiver) = std::sync::mpsc::sync_channel(1);
     let (recycled_sender, recycled_receiver) = std::sync::mpsc::sync_channel(1);
     thread::spawn({
@@ -48,10 +47,8 @@ pub fn ext_sort(
         move || sorter(&recycled_receiver, &sorted_sender, &settings)
     });
 
-    // Test if compression program exists and works, disable if not
     let mut effective_settings = settings.clone();
     if let Some(ref prog) = settings.compress_prog {
-        // Test the compression program by trying to spawn it
         match std::process::Command::new(prog)
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
@@ -59,11 +56,9 @@ pub fn ext_sort(
             .spawn()
         {
             Ok(mut child) => {
-                // Kill the test process immediately
                 let _ = child.kill();
             }
             Err(err) => {
-                // Print the error and disable compression
                 eprintln!(
                     "sort: could not run compress program '{}': {}",
                     prog,
@@ -96,7 +91,7 @@ pub fn ext_sort(
 }
 
 fn reader_writer<
-    F: Iterator<Item = UResult<Box<dyn Read + Send>>>,
+    F: Iterator<Item = SGResult<Box<dyn Read + Send>>>,
     Tmp: WriteableTmpFile + 'static,
 >(
     files: F,
@@ -105,11 +100,9 @@ fn reader_writer<
     sender: SyncSender<Chunk>,
     output: Output,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     let separator = settings.line_ending.into();
 
-    // Cap oversized buffer requests to avoid unnecessary allocations and give the automatic
-    // heuristic room to grow when the user does not provide an explicit value.
     let mut buffer_size = match settings.buffer_size {
         size if size <= 512 * 1024 * 1024 => size,
         size => size / 2,
@@ -173,7 +166,6 @@ fn reader_writer<
             }
         }
         ReadResult::EmptyInput => {
-            // don't output anything
         }
     }
     Ok(())
@@ -186,8 +178,6 @@ fn sorter(receiver: &Receiver<Chunk>, sender: &SyncSender<Chunk>, settings: &Glo
             sort_by(&mut contents.lines, settings, &contents.line_data);
         });
         if sender.send(payload).is_err() {
-            // The receiver has gone away, likely because the other thread hit an error.
-            // We stop silently because the actual error is printed by the other thread.
             return;
         }
     }
@@ -206,18 +196,17 @@ enum ReadResult<I: WriteableTmpFile> {
 }
 /// The function that is executed on the reader/writer thread.
 fn read_write_loop<I: WriteableTmpFile>(
-    mut files: impl Iterator<Item = UResult<Box<dyn Read + Send>>>,
+    mut files: impl Iterator<Item = SGResult<Box<dyn Read + Send>>>,
     tmp_dir: &mut TmpDirWrapper,
     separator: u8,
     buffer_size: usize,
     settings: &GlobalSettings,
     receiver: &Receiver<Chunk>,
     sender: SyncSender<Chunk>
-) -> UResult<ReadResult<I>> {
+) -> SGResult<ReadResult<I>> {
     let mut file = files.next().unwrap()?;
 
     let mut carry_over = vec![];
-    // kick things off with two reads
     for _ in 0..2 {
         let should_continue = chunks::read(
             &sender,
@@ -236,9 +225,6 @@ fn read_write_loop<I: WriteableTmpFile>(
 
         if !should_continue {
             drop(sender);
-            // We have already read the whole input. Since we are in our first two reads,
-            // this means that we can fit the whole input into memory. Bypass writing below and
-            // handle this case in a more straightforward way.
             return Ok(if let Ok(first_chunk) = receiver.recv() {
                 if let Ok(second_chunk) = receiver.recv() {
                     ReadResult::SortedTwoChunks([first_chunk, second_chunk])
@@ -293,7 +279,7 @@ fn write<I: WriteableTmpFile>(
     file: (File, PathBuf),
     compress_prog: Option<&str>,
     separator: u8
-) -> UResult<I::Closed> {
+) -> SGResult<I::Closed> {
     let mut tmp_file = I::create(file, compress_prog)?;
     write_lines(chunk.lines(), tmp_file.as_write(), separator);
     tmp_file.finished_writing()
@@ -305,3 +291,4 @@ fn write_lines<T: Write>(lines: &[Line], writer: &mut T, separator: u8) {
         writer.write_all(&[separator]).unwrap();
     }
 }
+

@@ -23,9 +23,10 @@ pub enum ParseError {
 /// A Result type for parsing test expressions
 pub type ParseResult<T> = Result<T, ParseError>;
 
-/// Implement `UError` trait for `ParseError` to make it easier to return useful error codes from `main()`.
-impl sgcore::error::UError for ParseError {
+/// Implement `SGError` trait for `ParseError` to make it easier to return useful error codes from `main()`.
+impl sgcore::error::SGError for ParseError {
     fn code(&self) -> i32 {
         2
     }
 }
+

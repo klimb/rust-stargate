@@ -1,8 +1,8 @@
-// spell-checker:ignore procfs
-// Author: Dmitry Kalashnikov
+
+
 
 use clap::{Arg, ArgAction, Command};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
@@ -37,11 +37,11 @@ impl ProcessInfo {
         let stat = process.stat().ok()?;
         let cmdline = process.cmdline().ok().unwrap_or_default();
         let status = process.status().ok()?;
-        
+
         let cpu_time = (stat.utime + stat.stime) / procfs::ticks_per_second();
         let mem_usage = status.vmrss.unwrap_or(0);
         let uid = status.ruid;
-        
+
         Some(ProcessInfo {
             pid: process.pid(),
             ppid: stat.ppid,
@@ -56,41 +56,41 @@ impl ProcessInfo {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
-    
+
     let show_all = matches.get_flag(ARG_ALL);
     let show_full = matches.get_flag(ARG_FULL);
-    
+
     let processes = collect_processes(show_all)?;
-    
+
     if opts.stardust_output {
         output_json(processes, opts, show_full)?;
     } else {
         output_text(&processes, show_full);
     }
-    
+
     Ok(())
 }
 
 #[cfg(target_os = "linux")]
-fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
+fn collect_processes(show_all: bool) -> SGResult<Vec<ProcessInfo>> {
     let processes = all_processes()
-        .map_err(|e| sgcore::error::USimpleError::new(1, format!("Failed to read processes: {}", e)))?
+        .map_err(|e| sgcore::error::SGSimpleError::new(1, format!("Failed to read processes: {}", e)))?
         .filter_map(|prc| prc.ok())
         .filter_map(|process| ProcessInfo::from_process(&process))
         .collect();
-    
+
     Ok(filter_and_sort(processes, show_all))
 }
 
 #[cfg(target_os = "macos")]
-fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
+fn collect_processes(show_all: bool) -> SGResult<Vec<ProcessInfo>> {
     let mut sys = System::new_all();
     sys.refresh_processes(ProcessesToUpdate::All, true);
-    
+
     let processes: Vec<ProcessInfo> = sys.processes()
         .into_iter()
         .map(|(pid, proc)| ProcessInfo {
@@ -104,13 +104,13 @@ fn collect_processes(show_all: bool) -> UResult<Vec<ProcessInfo>> {
             mem_usage: proc.memory() / 1024,
         })
         .collect();
-    
+
     Ok(filter_and_sort(processes, show_all))
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-fn collect_processes(_show_all: bool) -> UResult<Vec<ProcessInfo>> {
-    Err(sgcore::error::USimpleError::new(1, "list-processes is not supported on this platform"))
+fn collect_processes(_show_all: bool) -> SGResult<Vec<ProcessInfo>> {
+    Err(sgcore::error::SGSimpleError::new(1, "list-processes is not supported on this platform"))
 }
 
 fn filter_and_sort(mut processes: Vec<ProcessInfo>, show_all: bool) -> Vec<ProcessInfo> {
@@ -122,7 +122,7 @@ fn filter_and_sort(mut processes: Vec<ProcessInfo>, show_all: bool) -> Vec<Proce
     processes
 }
 
-fn output_json(processes: Vec<ProcessInfo>, opts: StardustOutputOptions, show_full: bool) -> UResult<()> {
+fn output_json(processes: Vec<ProcessInfo>, opts: StardustOutputOptions, show_full: bool) -> SGResult<()> {
     let process_list: Vec<_> = processes.iter().map(|p| process_to_json(p, show_full)).collect();
     let output = json!({ "processes": process_list, "count": processes.len() });
     stardust_output::output(opts, output, || Ok(()))?;
@@ -138,7 +138,7 @@ fn process_to_json(p: &ProcessInfo, show_full: bool) -> serde_json::Value {
         "name": p.name,
         "state": p.state,
     });
-    
+
     if show_full || !p.cmdline.is_empty() {
         obj["cmdline"] = json!(p.cmdline);
     }
@@ -151,7 +151,7 @@ fn process_to_json(p: &ProcessInfo, show_full: bool) -> serde_json::Value {
 
 fn get_username(uid: u32) -> String {
     static UID_CACHE: OnceLock<HashMap<u32, String>> = OnceLock::new();
-    
+
     let cache = UID_CACHE.get_or_init(|| {
         let mut map = HashMap::new();
         if let Ok(contents) = std::fs::read_to_string("/etc/passwd") {
@@ -166,7 +166,7 @@ fn get_username(uid: u32) -> String {
         }
         map
     });
-    
+
     cache.get(&uid).cloned().unwrap_or_else(|| uid.to_string())
 }
 
@@ -198,6 +198,7 @@ pub fn sg_app() -> Command {
                 .help(translate!("list-processes-help-full"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

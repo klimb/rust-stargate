@@ -14,7 +14,7 @@ sudo apt-get install hyperfine
 Next, build the `split` binary under the release profile:
 
 ```
-cargo build --release -p uu_split
+cargo build --release -p sg_split
 ```
 
 Now, get a text file to test `split` on. The `split` program has three

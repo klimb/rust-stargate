@@ -1,4 +1,4 @@
-// spell-checker:ignore (path) osrelease myutil
+
 
 //! Helper clap functions to localize error handling and options
 //!
@@ -7,7 +7,7 @@
 //! instead of parsing error strings, providing a more robust solution.
 //!
 
-use crate::error::UResult;
+use crate::error::SGResult;
 use crate::locale::translate;
 
 use clap::error::{ContextKind, ErrorKind};
@@ -116,7 +116,6 @@ impl<'a> ErrorFormatter<'a> {
                 self.handle_missing_required_with_callback(err, exit_code, callback)
             }
             ErrorKind::TooFewValues | ErrorKind::TooManyValues | ErrorKind::WrongNumberOfValues => {
-                // These need full clap formatting
                 eprint!("{}", err.render());
                 callback();
                 std::process::exit(exit_code);
@@ -145,7 +144,6 @@ impl<'a> ErrorFormatter<'a> {
             let arg_str = invalid_arg.to_string();
             let error_word = translate!("common-error");
 
-            // Print main error
             eprintln!(
                 "{}",
                 translate!(
@@ -156,7 +154,6 @@ impl<'a> ErrorFormatter<'a> {
             );
             eprintln!();
 
-            // Show suggestion if available
             if let Some(suggested_arg) = err.get(ContextKind::SuggestedArg) {
                 let tip_word = translate!("common-tip");
                 eprintln!(
@@ -169,7 +166,6 @@ impl<'a> ErrorFormatter<'a> {
                 );
                 eprintln!();
             } else {
-                // Look for other tips from clap
                 self.print_clap_tips(err);
             }
 
@@ -198,7 +194,6 @@ impl<'a> ErrorFormatter<'a> {
             let value = value.to_string();
 
             if value.is_empty() {
-                // Value required but not provided
                 let error_word = translate!("common-error");
                 eprintln!(
                     "{}",
@@ -207,7 +202,6 @@ impl<'a> ErrorFormatter<'a> {
                         "option" => self.color_mgr.colorize(&option, Color::Green))
                 );
             } else {
-                // Invalid value provided
                 let error_word = translate!("common-error");
                 let error_msg = translate!(
                     "clap-error-invalid-value",
@@ -216,7 +210,6 @@ impl<'a> ErrorFormatter<'a> {
                     "option" => self.color_mgr.colorize(&option, Color::Green)
                 );
 
-                // Include validation error if present
                 match err.source() {
                     Some(source) if matches!(err.kind(), ErrorKind::ValueValidation) => {
                         eprintln!("{error_msg}: {source}");
@@ -225,7 +218,6 @@ impl<'a> ErrorFormatter<'a> {
                 }
             }
 
-            // Show possible values for InvalidValue errors
             if matches!(err.kind(), ErrorKind::InvalidValue) {
                 if let Some(valid_values) = err.get(ContextKind::ValidValue) {
                     if !valid_values.to_string().is_empty() {
@@ -244,14 +236,10 @@ impl<'a> ErrorFormatter<'a> {
             self.print_simple_error(&err.render().to_string(), exit_code);
         }
 
-        // InvalidValue errors traditionally use exit code 1 for backward compatibility
-        // But if a utility explicitly requests a high exit code (>= 125), respect it
-        // This allows utilities like runcon (125) to override the default while preserving
-        // the standard behavior for utilities using normal error codes (1, 2, etc.)
         let actual_exit_code = if matches!(err.kind(), ErrorKind::InvalidValue) && exit_code < 125 {
-            1 // Force exit code 1 for InvalidValue unless using special exit codes
+            1
         } else {
-            exit_code // Respect the requested exit code for special cases
+            exit_code
         };
         callback();
         std::process::exit(actual_exit_code);
@@ -284,7 +272,6 @@ impl<'a> ErrorFormatter<'a> {
                     )
                 );
 
-                // Print the missing arguments
                 for line in lines.iter().skip(1) {
                     if line.starts_with("  ") {
                         eprintln!("{line}");
@@ -295,7 +282,6 @@ impl<'a> ErrorFormatter<'a> {
                 }
                 eprintln!();
 
-                // Print usage
                 lines
                     .iter()
                     .skip_while(|line| !line.starts_with("Usage:"))
@@ -421,7 +407,7 @@ impl<'a> ErrorFormatter<'a> {
 /// let args = vec!["myutil", "--help"];
 /// let result = handle_clap_result(cmd, args);
 /// ```
-pub fn handle_clap_result<I, T>(cmd: Command, itr: I) -> UResult<ArgMatches>
+pub fn handle_clap_result<I, T>(cmd: Command, itr: I) -> SGResult<ArgMatches>
 where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
@@ -465,14 +451,14 @@ pub fn handle_clap_result_with_exit_code<I, T>(
     cmd: Command,
     itr: I,
     exit_code: i32
-) -> UResult<ArgMatches>
+) -> SGResult<ArgMatches>
 where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {
     cmd.try_get_matches_from(itr).map_err(|e| {
         if e.exit_code() == 0 {
-            e.into() // Preserve help/version
+            e.into()
         } else {
             handle_clap_error_with_exit_code(e, exit_code)
         }
@@ -547,7 +533,6 @@ pub fn configure_localized_command(mut cmd: Command) -> Command {
     let color_choice = get_color_choice();
     cmd = cmd.color(color_choice);
 
-    // For help output (stdout), we check stdout TTY status
     let colors_enabled = should_use_color_for_stream(&std::io::stdout());
 
     cmd = cmd.help_template(crate::localized_help_template_with_colors(
@@ -557,7 +542,6 @@ pub fn configure_localized_command(mut cmd: Command) -> Command {
     cmd
 }
 
-/* spell-checker: disable */
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -629,8 +613,6 @@ mod tests {
     fn test_configure_localized_command() {
         let cmd = Command::new("test");
         let configured = configure_localized_command(cmd);
-        // The command should have color and help template configured
-        // We can't easily test the internal state, but we can verify it doesn't panic
         assert_eq!(configured.get_name(), "test");
     }
 
@@ -638,7 +620,6 @@ mod tests {
     fn test_color_environment_vars() {
         use std::env;
 
-        // Test NO_COLOR disables colors
         unsafe {
             env::set_var("NO_COLOR", "1");
         }
@@ -650,7 +631,6 @@ mod tests {
             env::remove_var("NO_COLOR");
         }
 
-        // Test CLICOLOR_FORCE enables colors
         unsafe {
             env::set_var("CLICOLOR_FORCE", "1");
         }
@@ -662,7 +642,6 @@ mod tests {
             env::remove_var("CLICOLOR_FORCE");
         }
 
-        // Test FORCE_COLOR also enables colors
         unsafe {
             env::set_var("FORCE_COLOR", "1");
         }
@@ -677,7 +656,6 @@ mod tests {
     fn test_error_formatter_creation() {
         let formatter = ErrorFormatter::new("test");
         assert_eq!(formatter.util_name, "test");
-        // Color manager should be created based on environment
     }
 
     #[test]
@@ -731,4 +709,4 @@ mod tests {
         }
     }
 }
-/* spell-checker: enable */
+

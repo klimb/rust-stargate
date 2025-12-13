@@ -1,7 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
-use sgcore::{error::UResult, format_usage};
+use sgcore::{error::SGResult, format_usage};
 use std::collections::HashMap;
 use std::env;
 
@@ -10,12 +10,12 @@ static OPT_NULL: &str = "null";
 static ARG_VARIABLES: &str = "variables";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let json_output_options = StardustOutputOptions::from_matches(&matches);
-    
+
     let variables: Vec<String> = matches
         .get_many::<String>(ARG_VARIABLES)
         .map(|v| v.map(ToString::to_string).collect())
@@ -64,7 +64,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let mut error_found = false;
     for env_var in variables {
-        // we silently ignore a=b as variable but we trigger an error
         if env_var.contains('=') {
             error_found = true;
             continue;
@@ -100,3 +99,4 @@ pub fn sg_app() -> Command {
         );
     stardust_output::add_json_args(cmd)
 }
+

@@ -3,7 +3,7 @@ use clap::{Arg, ArgAction, Command};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::io::{self, StdoutLock, Write};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format::{FormatChar, OctalParsing, parse_escape_only};
 use sgcore::{format_usage, os_str_as_bytes};
 
@@ -68,34 +68,21 @@ fn is_flag(arg: &OsStr, options: &mut Options) -> bool {
     let arg = arg.as_encoded_bytes();
 
     if arg.first() != Some(&b'-') || arg == b"-" {
-        // Argument doesn't start with '-' or is '-' => not a flag.
         return false;
     }
 
-    // We don't modify the given options until after
-    // the loop because there is a chance the flag isn't
-    // valid after all & shouldn't affect the options.
     let mut options_: Options = *options;
 
-    // Skip the '-' when processing characters.
     for c in &arg[1..] {
         match c {
             b'e' => options_.escape = true,
             b'E' => options_.escape = false,
             b'n' => options_.trailing_newline = false,
 
-            // If there is any character in an supposed flag
-            // that is not a valid flag character, it is not
-            // a flag.
-            //
-            // "-eeEnEe" => is a flag.
-            // "-eeBne" => not a flag, short circuit at the B.
             _ => return false,
         }
     }
 
-    // We are now sure that the argument is a
-    // flag, and can apply the modified options.
     *options = options_;
     true
 }
@@ -110,48 +97,28 @@ fn filter_flags(mut args: impl Iterator<Item = OsString>) -> (Vec<OsString>, Opt
     let mut arguments = Vec::with_capacity(args.size_hint().0);
     let mut options = Options::default();
 
-    // Process arguments until first non-flag is found.
     for arg in &mut args {
-        // We parse flags and aggregate the options in `options`.
-        // First call to `is_echo_flag` to return false will break the loop.
         if !is_flag(&arg, &mut options) {
-            // Not a flag. Can break out of flag-processing loop.
-            // Don't forget to push it to the arguments too.
             arguments.push(arg);
             break;
         }
     }
 
-    // Collect remaining non-flag arguments.
     arguments.extend(args);
 
     (arguments, options)
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    // args[0] is the name of the binary.
     let args: Vec<OsString> = args.skip(1).collect();
 
-    // Check POSIX compatibility mode
-    //
-    // From the GNU manual, on what it should do:
-    //
-    // > If the POSIXLY_CORRECT environment variable is set, then when
-    // > echo’s first argument is not -n it outputs option-like arguments
-    // > instead of treating them as options. For example, echo -ne hello
-    // > outputs ‘-ne hello’ instead of plain ‘hello’. Also backslash
-    // > escapes are always enabled. To echo the string ‘-n’, one of the
-    // > characters can be escaped in either octal or hexadecimal
-    // > representation. For example, echo -e '\x2dn'.
     let is_posixly_correct = env::var_os("POSIXLY_CORRECT").is_some();
 
     let (args, options) = if is_posixly_correct {
         if args.first().is_some_and(|arg| arg == "-n") {
-            // if POSIXLY_CORRECT is set and the first argument is the "-n" flag
-            // we filter flags normally but 'escaped' is activated nonetheless.
             let (args, _) = filter_flags(args.into_iter());
             (
                 args,
@@ -161,29 +128,18 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 }
             )
         } else {
-            // if POSIXLY_CORRECT is set and the first argument is not the "-n" flag
-            // we just collect all arguments as no arguments are interpreted as flags.
             (args, Options::posixly_correct_default())
         }
     } else if args.len() == 1 && args[0] == "--help" {
-        // If POSIXLY_CORRECT is not set and the first argument
-        // is `--help`, GNU coreutils prints the help message.
-        //
-        // Verify this using:
-        //
-        //   POSIXLY_CORRECT=1 echo --help
-        //                     echo --help
         sg_app().print_help()?;
         return Ok(());
     } else if args.len() == 1 && args[0] == "--version" {
         print!("{}", sg_app().render_version());
         return Ok(());
     } else {
-        // if POSIXLY_CORRECT is not set we filter the flags normally
         filter_flags(args.into_iter())
     };
 
-    // Check if object (JSON) output is requested (filter -o/--obj and --pretty from args)
     let (args, options) = {
         let mut json_flag = false;
         let mut json_pretty = false;
@@ -201,14 +157,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 }
             })
             .collect();
-        
+
         let (final_args, mut opts) = if json_flag {
-            // If object output requested, we need to re-filter flags
             filter_flags(filtered.into_iter())
         } else {
             (filtered, options)
         };
-        
+
         opts.object_output = json_flag;
         opts.json_pretty = json_pretty;
         (final_args, opts)
@@ -220,13 +175,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 pub fn sg_app() -> Command {
-    // Note: echo is different from the other utils in that it should **not**
-    // have `infer_long_args(true)`, because, for example, `--ver` should be
-    // printed as `--ver` and not show the version text.
     Command::new(sgcore::util_name())
-        // TrailingVarArg specifies the final positional argument is a VarArg
-        // and it doesn't attempts the parse any further args.
-        // Final argument must have multiple(true) or the usage string equivalent.
         .trailing_var_arg(true)
         .allow_hyphen_values(true)
         .version(sgcore::crate_version!())
@@ -274,20 +223,17 @@ pub fn sg_app() -> Command {
         )
 }
 
-fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UResult<()> {
+fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> SGResult<()> {
     if options.object_output {
-        // Build the output string as usual
         let mut output = String::new();
         for (i, arg) in args.iter().enumerate() {
             let bytes = os_str_as_bytes(&arg)?;
-            
-            // Don't add a space before the first argument
+
             if i > 0 {
                 output.push(' ');
             }
-            
+
             if options.escape {
-                // For escaped output, we need to process escape sequences
                 let mut temp: Vec<u8> = Vec::new();
                 for item in parse_escape_only(bytes, OctalParsing::ThreeDigits) {
                     item.write(&mut temp)?;
@@ -297,12 +243,12 @@ fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UR
                 output.push_str(&String::from_utf8_lossy(bytes));
             }
         }
-        
+
         let json_output = json!({
             "output": output,
             "trailing_newline": options.trailing_newline
         });
-        
+
         if options.json_pretty {
             match serde_json::to_string_pretty(&json_output) {
                 Ok(s) => writeln!(stdout, "{}", s)?,
@@ -312,11 +258,9 @@ fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UR
             writeln!(stdout, "{}", json_output)?;
         }
     } else {
-        // Original non-object output logic
         for (i, arg) in args.into_iter().enumerate() {
             let bytes = os_str_as_bytes(&arg)?;
 
-            // Don't print a space before the first argument
             if i > 0 {
                 stdout.write_all(b" ")?;
             }
@@ -339,3 +283,4 @@ fn execute(stdout: &mut StdoutLock, args: Vec<OsString>, options: Options) -> UR
 
     Ok(())
 }
+

@@ -1,6 +1,6 @@
 [package]
 name = "sg_tty"
-description = "tty ~ (uutils) display the name of the terminal connected to standard input"
+description = "tty ~ (stargate) display the name of the terminal connected to standard input"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

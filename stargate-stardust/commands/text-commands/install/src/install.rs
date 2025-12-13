@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) rwxr sourcepath targetpath Isnt uioerror matchpathcon
+
 
 mod mode;
 
@@ -17,7 +17,7 @@ use sgcore::backup_control::{self, BackupMode};
 use sgcore::buf_copy::copy_stream;
 use sgcore::display::Quotable;
 use sgcore::entries::{grp2gid, usr2uid};
-use sgcore::error::{FromIo, UError, UResult, UUsageError};
+use sgcore::error::{FromIo, SGError, SGResult, SGUsageError};
 use sgcore::fs::dir_strip_dot_for_creation;
 use sgcore::perms::{Verbosity, VerbosityLevel, wrap_chown};
 use sgcore::process::{getegid, geteuid};
@@ -106,7 +106,7 @@ enum InstallError {
 
 }
 
-impl UError for InstallError {
+impl SGError for InstallError {
     fn code(&self) -> i32 {
         1
     }
@@ -155,7 +155,7 @@ static ARG_FILES: &str = "files";
 /// Returns a program return code.
 ///
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "fattr"])?;
 
@@ -312,7 +312,7 @@ pub fn sg_app() -> Command {
 ///
 /// In event of failure, returns an integer intended as a program return code.
 ///
-fn behavior(matches: &ArgMatches) -> UResult<Behavior> {
+fn behavior(matches: &ArgMatches) -> SGResult<Behavior> {
     let main_function = if matches.get_flag(OPT_DIRECTORY) {
         MainFunction::Directory
     } else {
@@ -360,11 +360,9 @@ fn behavior(matches: &ArgMatches) -> UResult<Behavior> {
         return Err(1.into());
     }
 
-    // Check if compare is used with non-permission mode bits
-    // TODO use a let chain once we have a MSRV of 1.88 or greater
     if compare {
         if let Some(mode) = specified_mode {
-            let non_permission_bits = 0o7000; // setuid, setgid, sticky bits
+            let non_permission_bits = 0o7000;
             if mode & non_permission_bits != 0 {
                 show_error!("{}", translate!("install-warning-compare-ignored"));
             }
@@ -434,27 +432,13 @@ fn behavior(matches: &ArgMatches) -> UResult<Behavior> {
 ///
 /// Returns a Result type with the Err variant containing the error message.
 ///
-fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
+fn directory(paths: &[OsString], b: &Behavior) -> SGResult<()> {
     if paths.is_empty() {
         Err(InstallError::DirNeedsArg.into())
     } else {
         for path in paths.iter().map(Path::new) {
-            // if the path already exist, don't try to create it again
             if !path.exists() {
-                // Special case to match GNU's behavior:
-                // install -d foo/. should work and just create foo/
-                // std::fs::create_dir("foo/."); fails in pure Rust
-                // See also mkdir.rs for another occurrence of this
                 let path_to_create = dir_strip_dot_for_creation(path);
-                // Differently than the primary functionality
-                // (MainFunction::Standard), the directory functionality should
-                // create all ancestors (or components) of a directory
-                // regardless of the presence of the "-D" flag.
-                //
-                // NOTE: the GNU "install" sets the expected mode only for the
-                // target directory. All created ancestor directories will have
-                // the default mode. Hence it is safe to use fs::create_dir_all
-                // and then only modify the target's dir mode.
                 if let Err(e) = fs::create_dir_all(path_to_create.as_path())
                     .map_err_context(|| translate!("install-error-create-dir-failed", "path" => path_to_create.as_path().quote()))
                 {
@@ -471,7 +455,6 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
             }
 
             if mode::chmod(path, b.mode()).is_err() {
-                // Error messages are printed by the mode::chmod function!
                 sgcore::error::set_exit_code(1);
                 continue;
             }
@@ -479,9 +462,6 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
             show_if_err!(chown_optional_user_group(path, b));
 
         }
-        // If the exit code was set, or show! has been called at least once
-        // (which sets the exit code as well), function execution will end after
-        // this return.
         Ok(())
     }
 }
@@ -490,7 +470,7 @@ fn directory(paths: &[OsString], b: &Behavior) -> UResult<()> {
 /// created immediately
 fn is_new_file_path(path: &Path) -> bool {
     !path.exists()
-        && (path.parent().is_none_or(Path::is_dir) || path.parent().unwrap().as_os_str().is_empty()) // In case of a simple file
+        && (path.parent().is_none_or(Path::is_dir) || path.parent().unwrap().as_os_str().is_empty())
 }
 
 /// Test if the path is an existing directory or ends with a trailing separator.
@@ -513,10 +493,9 @@ fn is_potential_directory_path(path: &Path) -> bool {
 /// Returns a Result type with the Err variant containing the error message.
 ///
 #[allow(clippy::cognitive_complexity)]
-fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
-    // first check that paths contains at least one element
+fn standard(mut paths: Vec<OsString>, b: &Behavior) -> SGResult<()> {
     if paths.is_empty() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("install-error-missing-file-operand")
         ));
@@ -529,15 +508,13 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
         .into());
     }
 
-    // get the target from either "-t foo" param or from the last given paths argument
     let target: PathBuf = if let Some(path) = &b.target_dir {
         path.into()
     } else {
         let last_path: PathBuf = paths.pop().unwrap().into();
 
-        // paths has to contain more elements
         if paths.is_empty() {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 1,
                 translate!("install-error-missing-destination-operand", "path" => last_path.to_string_lossy())
             ));
@@ -549,10 +526,8 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
     let sources = &paths.iter().map(PathBuf::from).collect::<Vec<_>>();
 
     if b.create_leading {
-        // if -t is used in combination with -D, create whole target because it does not include filename
         let to_create: Option<&Path> = if b.target_dir.is_some() {
             Some(target.as_path())
-        // if source and target are filenames used in combination with -D, create target's parent
         } else if !(sources.len() > 1 || is_potential_directory_path(&target)) {
             target.parent()
         } else {
@@ -560,7 +535,6 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
         };
 
         if let Some(to_create) = to_create {
-            // if the path ends in /, remove it
             let to_create_owned;
             let to_create = match sgcore::os_str_as_bytes(to_create.as_os_str()) {
                 Ok(path_bytes) if path_bytes.ends_with(b"/") => {
@@ -578,11 +552,9 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
             if !to_create.exists() {
                 if b.verbose {
                     let mut result = PathBuf::new();
-                    // When creating directories with -Dv, show directory creations step by step
                     for part in to_create.components() {
                         result.push(part.as_os_str());
                         if !result.is_dir() {
-                            // Don't display when the directory already exists
                             println!(
                                 "{}",
                                 translate!("install-verbose-creating-directory-step", "path" => result.quote())
@@ -642,7 +614,7 @@ fn standard(mut paths: Vec<OsString>, b: &Behavior) -> UResult<()> {
 /// `files` must all exist as non-directories.
 /// `target_dir` must be a directory.
 ///
-fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> UResult<()> {
+fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> SGResult<()> {
     if !target_dir.is_dir() {
         return Err(InstallError::TargetDirIsntDir(target_dir.to_path_buf()).into());
     }
@@ -667,9 +639,6 @@ fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> UR
 
         show_if_err!(copy(sourcepath, &targetpath, b));
     }
-    // If the exit code was set, or show! has been called at least once
-    // (which sets the exit code as well), function execution will end after
-    // this return.
     Ok(())
 }
 
@@ -687,21 +656,17 @@ fn copy_files_into_dir(files: &[PathBuf], target_dir: &Path, b: &Behavior) -> UR
 /// If the owner or group are invalid or copy system call fails, we print a verbose error and
 /// return an empty error value.
 ///
-fn chown_optional_user_group(path: &Path, b: &Behavior) -> UResult<()> {
-    // GNU coreutils doesn't print change_owner operations during install with verbose flag.
+fn chown_optional_user_group(path: &Path, b: &Behavior) -> SGResult<()> {
     let verbosity = Verbosity {
         groups_only: b.owner_id.is_none(),
         level: VerbosityLevel::Normal,
     };
 
-    // Determine the owner and group IDs to be used for change_owner.
     let (owner_id, group_id) = if b.owner_id.is_some() || b.group_id.is_some() {
         (b.owner_id, b.group_id)
     } else if geteuid() == 0 {
-        // Special case for root user.
         (Some(0), Some(0))
     } else {
-        // No change_owner operation needed.
         return Ok(());
     };
 
@@ -729,7 +694,7 @@ fn chown_optional_user_group(path: &Path, b: &Behavior) -> UResult<()> {
 ///
 /// Returns an Option containing the backup path, or None if backup is not needed.
 ///
-fn perform_backup(to: &Path, b: &Behavior) -> UResult<Option<PathBuf>> {
+fn perform_backup(to: &Path, b: &Behavior) -> SGResult<Option<PathBuf>> {
     if to.exists() {
         if b.verbose {
             println!(
@@ -758,7 +723,7 @@ fn perform_backup(to: &Path, b: &Behavior) -> UResult<Option<PathBuf>> {
 /// # Returns
 ///
 /// Returns an empty Result or an error in case of failure.
-fn copy_normal_file(from: &Path, to: &Path) -> UResult<()> {
+fn copy_normal_file(from: &Path, to: &Path) -> SGResult<()> {
     if let Err(err) = fs::copy(from, to) {
         return Err(InstallError::InstallFailed(from.to_path_buf(), to.to_path_buf(), err).into());
     }
@@ -777,7 +742,7 @@ fn copy_normal_file(from: &Path, to: &Path) -> UResult<()> {
 ///
 /// Returns an empty Result or an error in case of failure.
 ///
-fn copy_file(from: &Path, to: &Path) -> UResult<()> {
+fn copy_file(from: &Path, to: &Path) -> SGResult<()> {
     if let Ok(to_abs) = to.canonicalize() {
         if from.canonicalize()? == to_abs {
             return Err(InstallError::SameFile(from.to_path_buf(), to.to_path_buf()).into());
@@ -791,8 +756,6 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
         )
         .into());
     }
-    // fs::copy fails if destination is a invalid symlink.
-    // so lets just remove all existing files at destination before copy.
     if let Err(e) = fs::remove_file(to) {
         if e.kind() != std::io::ErrorKind::NotFound {
             show_error!(
@@ -811,7 +774,6 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
         }
     };
 
-    // Stream-based copying to get around the limitations of std::fs::copy
     if ft.is_char_device() || ft.is_block_device() || ft.is_fifo() {
         let mut handle = File::open(from)?;
         let mut dest = File::create(to)?;
@@ -835,8 +797,7 @@ fn copy_file(from: &Path, to: &Path) -> UResult<()> {
 ///
 /// Returns an empty Result or an error in case of failure.
 ///
-fn strip_file(to: &Path, b: &Behavior) -> UResult<()> {
-    // Check if the filename starts with a hyphen and adjust the path
+fn strip_file(to: &Path, b: &Behavior) -> SGResult<()> {
     let to_str = to.to_string_lossy();
     let to = if to_str.starts_with('-') {
         let mut new_path = PathBuf::from(".");
@@ -848,7 +809,6 @@ fn strip_file(to: &Path, b: &Behavior) -> UResult<()> {
     match process::Command::new(&b.strip_program).arg(&to).status() {
         Ok(status) => {
             if !status.success() {
-                // Follow GNU's behavior: if strip fails, removes the target
                 let _ = fs::remove_file(to);
                 return Err(InstallError::StripProgramFailed(
                     translate!("install-error-strip-abnormal", "code" => status.code().unwrap())
@@ -857,7 +817,6 @@ fn strip_file(to: &Path, b: &Behavior) -> UResult<()> {
             }
         }
         Err(e) => {
-            // Follow GNU's behavior: if strip fails, removes the target
             let _ = fs::remove_file(to);
             return Err(InstallError::StripProgramFailed(e.to_string()).into());
         }
@@ -876,8 +835,7 @@ fn strip_file(to: &Path, b: &Behavior) -> UResult<()> {
 ///
 /// Returns an empty Result or an error in case of failure.
 ///
-fn set_ownership_and_permissions(to: &Path, b: &Behavior) -> UResult<()> {
-    // Silent the warning as we want to the error message
+fn set_ownership_and_permissions(to: &Path, b: &Behavior) -> SGResult<()> {
     #[allow(clippy::question_mark)]
     if mode::chmod(to, b.mode()).is_err() {
         return Err(InstallError::ChmodFailed(to.to_path_buf()).into());
@@ -899,7 +857,7 @@ fn set_ownership_and_permissions(to: &Path, b: &Behavior) -> UResult<()> {
 ///
 /// Returns an empty Result or an error in case of failure.
 ///
-fn preserve_timestamps(from: &Path, to: &Path) -> UResult<()> {
+fn preserve_timestamps(from: &Path, to: &Path) -> SGResult<()> {
     let meta = match metadata(from) {
         Ok(meta) => meta,
         Err(e) => return Err(InstallError::MetadataFailed(e).into()),
@@ -910,7 +868,6 @@ fn preserve_timestamps(from: &Path, to: &Path) -> UResult<()> {
 
     if let Err(e) = set_file_times(to, accessed_time, modified_time) {
         show_error!("{e}");
-        // ignore error
     }
     Ok(())
 }
@@ -928,11 +885,10 @@ fn preserve_timestamps(from: &Path, to: &Path) -> UResult<()> {
 ///
 /// If the copy system call fails, we print a verbose error and return an empty error value.
 ///
-fn copy(from: &Path, to: &Path, b: &Behavior) -> UResult<()> {
+fn copy(from: &Path, to: &Path, b: &Behavior) -> SGResult<()> {
     if b.compare && !need_copy(from, to, b) {
         return Ok(());
     }
-    // Declare the path here as we may need it for the verbose output below.
     let backup_path = perform_backup(to, b)?;
 
     copy_file(from, to)?;
@@ -964,21 +920,15 @@ fn copy(from: &Path, to: &Path, b: &Behavior) -> UResult<()> {
     Ok(())
 }
 
-
 /// Check if a file needs to be copied due to ownership differences when no explicit group is specified.
 /// Returns true if the destination file's ownership would differ from what it should be after installation.
 fn needs_copy_for_ownership(to: &Path, to_meta: &fs::Metadata) -> bool {
     use std::os::unix::fs::MetadataExt;
 
-    // Check if the destination file's owner differs from the effective user ID
     if to_meta.uid() != geteuid() {
         return true;
     }
 
-    // For group, we need to determine what the group would be after installation
-    // If no group is specified, the behavior depends on the directory:
-    // - If the directory has setgid bit, the file inherits the directory's group
-    // - Otherwise, the file gets the user's effective group
     let expected_gid = to
         .parent()
         .and_then(|parent| metadata(parent).ok())
@@ -1006,33 +956,23 @@ fn needs_copy_for_ownership(to: &Path, to_meta: &fs::Metadata) -> bool {
 /// Crashes the program if a nonexistent owner or group is specified in _b_.
 ///
 fn need_copy(from: &Path, to: &Path, b: &Behavior) -> bool {
-    // Attempt to retrieve metadata for the source file.
-    // If this fails, assume the file needs to be copied.
     let Ok(from_meta) = metadata(from) else {
         return true;
     };
 
-    // Attempt to retrieve metadata for the destination file.
-    // If this fails, assume the file needs to be copied.
     let Ok(to_meta) = metadata(to) else {
         return true;
     };
 
-    // Check if the destination is a symlink (should always be replaced)
     if let Ok(to_symlink_meta) = fs::symlink_metadata(to) {
         if to_symlink_meta.file_type().is_symlink() {
             return true;
         }
     }
 
-    // Define special file mode bits (setuid, setgid, sticky).
     let extra_mode: u32 = 0o7000;
-    // Define all file mode bits (including permissions).
-    // setuid || setgid || sticky || permissions
     let all_modes: u32 = 0o7777;
 
-    // Check if any special mode bits are set in the specified mode,
-    // source file mode, or destination file mode.
     if b.mode() & extra_mode != 0
         || from_meta.mode() & extra_mode != 0
         || to_meta.mode() & extra_mode != 0
@@ -1040,31 +980,24 @@ fn need_copy(from: &Path, to: &Path, b: &Behavior) -> bool {
         return true;
     }
 
-    // Check if the mode of the destination file differs from the specified mode.
     if b.mode() != to_meta.mode() & all_modes {
         return true;
     }
 
-    // Check if either the source or destination is not a file.
     if !from_meta.is_file() || !to_meta.is_file() {
         return true;
     }
 
-    // Check if the file sizes differ.
     if from_meta.len() != to_meta.len() {
         return true;
     }
 
-    // TODO: if -P (#1809) and from/to contexts mismatch, return true.
-
-    // Check if the owner ID is specified and differs from the destination file's owner.
     if let Some(owner_id) = b.owner_id {
         if owner_id != to_meta.uid() {
             return true;
         }
     }
 
-    // Check if the group ID is specified and differs from the destination file's group.
     if let Some(group_id) = b.group_id {
         if group_id != to_meta.gid() {
             return true;
@@ -1073,10 +1006,10 @@ fn need_copy(from: &Path, to: &Path, b: &Behavior) -> bool {
         return true;
     }
 
-    // Check if the contents of the source and destination files differ.
     if !diff(&from.to_string_lossy(), &to.to_string_lossy()) {
         return true;
     }
 
     false
 }
+

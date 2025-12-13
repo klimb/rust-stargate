@@ -3,7 +3,7 @@
 
 use std::io::{Read, Write};
 
-use crate::error::UResult;
+use crate::error::SGResult;
 
 /// Copy data from `Read` implementor `source` into a `Write` implementor
 /// `dest`. This works by reading a chunk of data from `source` and writing the
@@ -18,7 +18,7 @@ use crate::error::UResult;
 ///
 /// Result of operation and bytes successfully written (as a `u64`) when
 /// operation is successful.
-pub fn copy_stream<R, S>(src: &mut R, dest: &mut S) -> UResult<u64>
+pub fn copy_stream<R, S>(src: &mut R, dest: &mut S) -> SGResult<u64>
 where
     R: Read,
     S: Write,
@@ -26,3 +26,4 @@ where
     let result = std::io::copy(src, dest)?;
     Ok(result)
 }
+

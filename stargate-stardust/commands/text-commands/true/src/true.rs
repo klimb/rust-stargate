@@ -1,11 +1,11 @@
 use clap::{Arg, ArgAction, Command};
 use std::{ffi::OsString, io::Write};
-use sgcore::error::{UResult, set_exit_code};
+use sgcore::error::{SGResult, set_exit_code};
 
 use sgcore::translate;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let mut command = sg_app();
@@ -25,11 +25,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         };
 
         if let Err(print_fail) = error {
-            // Try to display this error.
             let _ = writeln!(std::io::stderr(), "{}: {print_fail}", sgcore::util_name());
-            // Mirror GNU options. When failing to print warnings or version flags, then we exit
-            // with FAIL. This avoids allocation some error information which may result in yet
-            // other types of failure.
             set_exit_code(1);
         }
     }
@@ -42,7 +38,6 @@ pub fn sg_app() -> Command {
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("true-about"))
-        // We provide our own help and version options, to ensure maximum compatibility with GNU.
         .disable_help_flag(true)
         .disable_version_flag(true)
         .arg(
@@ -58,3 +53,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Version)
         )
 }
+

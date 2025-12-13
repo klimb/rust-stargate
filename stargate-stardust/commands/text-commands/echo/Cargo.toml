@@ -1,6 +1,6 @@
 [package]
 name = "sg_echo"
-description = "echo ~ (uutils) display TEXT"
+description = "echo ~ (stargate) display TEXT"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,20 +1,18 @@
-// cSpell:ignore strs
+
 
 use clap::{Arg, ArgAction, Command, builder::ValueParser};
 use std::error::Error;
 use std::ffi::OsString;
 use std::io::{self, Write};
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::signals::enable_pipe_errors;
 use sgcore::translate;
 
-// it's possible that using a smaller or larger buffer might provide better performance on some
-// systems, but honestly this is good enough
 const BUF_SIZE: usize = 16 * 1024;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
@@ -26,7 +24,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     match exec(&buffer) {
         Ok(()) => Ok(()),
         Err(err) if err.kind() == io::ErrorKind::BrokenPipe => Ok(()),
-        Err(err) => Err(USimpleError::new(
+        Err(err) => Err(SGSimpleError::new(
             1,
             translate!("yes-error-standard-output", "error" => err)
         )),
@@ -57,7 +55,6 @@ fn args_into_buffer<'a>(
         return Ok(());
     };
 
-    // On Unix (and wasi), OsStrs are just &[u8]'s underneath...
     #[cfg(any(unix, target_os = "wasi"))]
     {
         use std::os::unix::ffi::OsStrExt;
@@ -166,3 +163,4 @@ mod tests {
         }
     }
 }
+

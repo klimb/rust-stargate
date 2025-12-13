@@ -1,10 +1,10 @@
-// spell-checker:ignore (ToDO) ttyname hostnames runlevel mesg wtmp statted boottime deadprocs initspawn clockchange curr pidstr exitstr hoststr
+
 
 use crate::options;
 use crate::sg_app;
 
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::libc::{S_IWGRP, STDIN_FILENO, ttyname};
 use sgcore::translate;
 
@@ -20,7 +20,7 @@ fn get_long_usage() -> String {
     translate!("who-long-usage", "default_file" => utmpx::DEFAULT_FILE)
 }
 
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app().after_help(get_long_usage()), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
@@ -30,39 +30,26 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .map(|v| v.map(ToString::to_string).collect())
         .unwrap_or_default();
 
-    // If true, attempt to canonicalize hostnames via a DNS lookup.
     let do_lookup = matches.get_flag(options::LOOKUP);
 
-    // If true, display only a list of usernames and count of
-    // the users logged on.
-    // Ignored for 'who am i'.
     let short_list = matches.get_flag(options::COUNT);
 
     let all = matches.get_flag(options::ALL);
 
-    // If true, display a line at the top describing each field.
     let include_heading = matches.get_flag(options::HEADING);
 
-    // If true, display a '+' for each user if mesg y, a '-' if mesg n,
-    // or a '?' if their tty cannot be statted.
     let include_mesg = all || matches.get_flag(options::MESG);
 
-    // If true, display the last boot time.
     let need_boottime = all || matches.get_flag(options::BOOT);
 
-    // If true, display dead processes.
     let need_deadprocs = all || matches.get_flag(options::DEAD);
 
-    // If true, display processes waiting for user login.
     let need_login = all || matches.get_flag(options::LOGIN);
 
-    // If true, display processes started by init.
     let need_initspawn = all || matches.get_flag(options::PROCESS);
 
-    // If true, display the last clock change.
     let need_clockchange = all || matches.get_flag(options::TIME);
 
-    // If true, display the current runlevel.
     let need_runlevel = all || matches.get_flag(options::RUNLEVEL);
 
     let use_defaults = !(all
@@ -74,21 +61,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         || need_clockchange
         || matches.get_flag(options::USERS));
 
-    // If true, display user processes.
     let need_users = all || matches.get_flag(options::USERS) || use_defaults;
 
-    // If true, display the hours:minutes since each user has touched
-    // the keyboard, or "." if within the last minute, or "old" if
-    // not within the last day.
     let include_idle = need_deadprocs || need_login || need_runlevel || need_users;
 
-    // If true, display process termination & exit status.
     let include_exit = need_deadprocs;
 
-    // If true, display only name, line, and time fields.
     let short_output = !include_exit && use_defaults;
 
-    // If true, display info only for the controlling tty.
     let my_line_only = matches.get_flag(options::ONLY_HOSTNAME_USER) || files.len() == 2;
 
     let mut who = Who {
@@ -163,11 +143,9 @@ fn time_string(ut: &UtmpxRecord) -> String {
         .unwrap_or_default();
 
     let time_format: Vec<time::format_description::FormatItem> = if lc_time == "C" {
-        // "%b %e %H:%M"
         time::format_description::parse("[month repr:short] [day padding:space] [hour]:[minute]")
             .unwrap()
     } else {
-        // "%Y-%m-%d %H:%M"
         time::format_description::parse("[year]-[month]-[day] [hour]:[minute]").unwrap()
     };
     ut.login_time().format(&time_format).unwrap()
@@ -190,7 +168,7 @@ fn current_tty() -> String {
 
 impl Who {
     #[allow(clippy::cognitive_complexity)]
-    fn exec(&mut self) -> UResult<()> {
+    fn exec(&mut self) -> SGResult<()> {
         let run_level_chk = |_record: i16| {
             #[cfg(not(target_os = "linux"))]
             return false;
@@ -348,7 +326,7 @@ impl Who {
         );
     }
 
-    fn print_user(&self, ut: &UtmpxRecord) -> UResult<()> {
+    fn print_user(&self, ut: &UtmpxRecord) -> SGResult<()> {
         let mut p = PathBuf::from("/dev");
         p.push(ut.tty_device().as_str());
         let mesg;
@@ -422,7 +400,6 @@ impl Who {
             buf.push_str(&msg);
         }
         write!(buf, " {line:<12}").unwrap();
-        // "%b %e %H:%M" (LC_ALL=C)
         let time_size = 3 + 2 + 2 + 1 + 2;
         write!(buf, " {time:<time_size$}").unwrap();
 
@@ -453,3 +430,4 @@ impl Who {
         );
     }
 }
+

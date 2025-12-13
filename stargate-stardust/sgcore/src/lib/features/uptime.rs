@@ -1,13 +1,13 @@
-// spell-checker:ignore gettime BOOTTIME clockid boottime nusers loadavg getloadavg
+
 
 //! Provides functions to get system uptime, number of users and load average.
 
-// The code was originally written in sg_uptime
-// (https://github.com/uutils/coreutils/blob/main/src/uu/uptime/src/uptime.rs)
-// but was eventually moved here.
-// See https://github.com/uutils/coreutils/pull/7289 for discussion.
 
-use crate::error::{UError, UResult};
+
+
+
+
+use crate::error::{SGError, SGResult};
 use crate::translate;
 use chrono::Local;
 use libc::time_t;
@@ -25,7 +25,7 @@ pub enum UptimeError {
     BootTime,
 }
 
-impl UError for UptimeError {
+impl SGError for UptimeError {
     fn code(&self) -> i32 {
         1
     }
@@ -44,9 +44,9 @@ pub fn get_formatted_time() -> String {
 ///
 /// # Returns
 ///
-/// Returns a UResult with the uptime in seconds if successful, otherwise an UptimeError.
+/// Returns a SGResult with the uptime in seconds if successful, otherwise an UptimeError.
 #[cfg(target_os = "openbsd")]
-pub fn get_uptime(_boot_time: Option<time_t>) -> UResult<i64> {
+pub fn get_uptime(_boot_time: Option<time_t>) -> SGResult<i64> {
     use libc::CLOCK_BOOTTIME;
     use libc::clock_gettime;
 
@@ -59,7 +59,6 @@ pub fn get_uptime(_boot_time: Option<time_t>) -> UResult<i64> {
     };
     let raw_tp = &mut tp as *mut timespec;
 
-    // OpenBSD prototype: clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
     let ret: c_int = unsafe { clock_gettime(CLOCK_BOOTTIME, raw_tp) };
 
     if ret == 0 {
@@ -82,9 +81,9 @@ pub fn get_uptime(_boot_time: Option<time_t>) -> UResult<i64> {
 ///
 /// # Returns
 ///
-/// Returns a UResult with the uptime in seconds if successful, otherwise an UptimeError.
+/// Returns a SGResult with the uptime in seconds if successful, otherwise an UptimeError.
 #[cfg(not(target_os = "openbsd"))]
-pub fn get_uptime(boot_time: Option<time_t>) -> UResult<i64> {
+pub fn get_uptime(boot_time: Option<time_t>) -> SGResult<i64> {
     use crate::utmpx::Utmpx;
     use libc::BOOT_TIME;
     use std::fs::File;
@@ -141,9 +140,9 @@ pub fn get_uptime(boot_time: Option<time_t>) -> UResult<i64> {
 ///
 /// # Returns
 ///
-/// Returns a UResult with the uptime in a human-readable format(e.g. "1 day, 3:45") if successful, otherwise an UptimeError.
+/// Returns a SGResult with the uptime in a human-readable format(e.g. "1 day, 3:45") if successful, otherwise an UptimeError.
 #[inline]
-pub fn get_formatted_uptime(boot_time: Option<time_t>) -> UResult<String> {
+pub fn get_formatted_uptime(boot_time: Option<time_t>) -> SGResult<String> {
     let up_secs = get_uptime(boot_time)?;
 
     if up_secs < 0 {
@@ -166,7 +165,6 @@ pub fn get_formatted_uptime(boot_time: Option<time_t>) -> UResult<String> {
 ///
 /// Returns the number of users currently logged in if successful, otherwise 0.
 #[cfg(not(target_os = "openbsd"))]
-// see: https://gitlab.com/procps-ng/procps/-/blob/4740a0efa79cade867cfc7b32955fe0f75bf5173/library/uptime.c#L63-L115
 pub fn get_nusers() -> usize {
     use crate::utmpx::Utmpx;
     use libc::USER_PROCESS;
@@ -197,7 +195,6 @@ pub fn get_nusers(file: &str) -> usize {
         return 0;
     }
 
-    // Count entries that have a non-empty user field
     entries
         .iter()
         .filter_map(|entry| match entry {
@@ -206,7 +203,6 @@ pub fn get_nusers(file: &str) -> usize {
         })
         .count()
 }
-
 
 /// Format the number of users to a human-readable string
 ///
@@ -239,14 +235,13 @@ pub fn get_formatted_nusers() -> String {
 ///
 /// # Returns
 ///
-/// Returns a UResult with the load average if successful, otherwise an UptimeError.
+/// Returns a SGResult with the load average if successful, otherwise an UptimeError.
 /// The load average is a tuple of three floating point numbers representing the 1-minute, 5-minute, and 15-minute load averages.
-pub fn get_loadavg() -> UResult<(f64, f64, f64)> {
+pub fn get_loadavg() -> SGResult<(f64, f64, f64)> {
     use crate::libc::c_double;
     use libc::getloadavg;
 
     let mut avg: [c_double; 3] = [0.0; 3];
-    // SAFETY: checked whether it returns -1
     let loads: i32 = unsafe { getloadavg(avg.as_mut_ptr(), 3) };
 
     if loads == -1 {
@@ -260,10 +255,10 @@ pub fn get_loadavg() -> UResult<(f64, f64, f64)> {
 ///
 /// # Returns
 ///
-/// Returns a UResult with the load average in a human-readable format if successful, otherwise an UptimeError.
+/// Returns a SGResult with the load average in a human-readable format if successful, otherwise an UptimeError.
 /// e.g. "load average: 0.00, 0.00, 0.00"
 #[inline]
-pub fn get_formatted_loadavg() -> UResult<String> {
+pub fn get_formatted_loadavg() -> SGResult<String> {
     let loadavg = get_loadavg()?;
     Ok(translate!(
         "uptime-lib-format-loadavg",
@@ -289,3 +284,4 @@ mod tests {
         assert_eq!("2 users", format_nusers(2));
     }
 }
+

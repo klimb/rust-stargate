@@ -1,6 +1,6 @@
-// spell-checker:ignore datetime
 
-use sgcore::error::{UError, UResult, USimpleError};
+
+use sgcore::error::{SGError, SGResult, SGSimpleError};
 use sgcore::translate;
 
 use clap::builder::ValueParser;
@@ -43,7 +43,7 @@ enum StatError {
     CannotStat { file: String, error: String },
 }
 
-impl UError for StatError {
+impl SGError for StatError {
     fn code(&self) -> i32 {
         1
     }
@@ -71,9 +71,9 @@ struct Flags {
 /// checks if the string is within the specified bound,
 /// if it gets out of bound, error out by printing sub-string from index `beg` to`end`,
 /// where `beg` & `end` is the beginning and end index of sub-string, respectively
-fn check_bound(slice: &str, bound: usize, beg: usize, end: usize) -> UResult<()> {
+fn check_bound(slice: &str, bound: usize, beg: usize, end: usize) -> SGResult<()> {
     if end >= bound {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             StatError::InvalidDirective {
                 directive: slice[beg..end].quote().to_string(),
@@ -182,7 +182,6 @@ impl std::str::FromStr for QuotingStyle {
             "locale" => Ok(Self::Locale),
             "shell" => Ok(Self::Shell),
             "shell-escape-always" => Ok(Self::ShellEscapeAlways),
-            // The others aren't exposed to the user
             _ => Err(StatError::InvalidQuotingStyle {
                 style: s.to_string(),
             }),
@@ -316,35 +315,7 @@ struct Stater {
 ///
 /// This function delegates the printing process to more specialized functions depending on the output type.
 fn print_it(output: &OutputType, flags: Flags, width: usize, precision: Precision) {
-    // If the precision is given as just '.', the precision is taken to be zero.
-    // A negative precision is taken as if the precision were omitted.
-    // This gives the minimum number of digits to appear for d, i, o, u, x, and X conversions,
-    // the maximum number of characters to be printed from a string for s and S conversions.
 
-    // #
-    // The value should be converted to an "alternate form".
-    // For o conversions, the first character of the output string  is made  zero  (by  prefixing  a 0 if it was not zero already).
-    // For x and X conversions, a nonzero result has the string "0x" (or "0X" for X conversions) prepended to it.
-
-    // 0
-    // The value should be zero padded.
-    // For d, i, o, u, x, X, a, A, e, E, f, F, g, and G conversions, the converted value is padded on the left with zeros rather than blanks.
-    // If the 0 and - flags both appear, the 0 flag is ignored.
-    // If a precision  is  given with a numeric conversion (d, i, o, u, x, and X), the 0 flag is ignored.
-    // For other conversions, the behavior is undefined.
-
-    // -
-    // The converted value is to be left adjusted on the field boundary.  (The default is right justification.)
-    // The  converted  value  is padded on the right with blanks, rather than on the left with blanks or zeros.
-    // A - overrides a 0 if both are given.
-
-    // ' ' (a space)
-    // A blank should be left before a positive number (or empty string) produced by a signed conversion.
-
-    // +
-    // A sign (+ or -) should always be placed before a number produced by a signed conversion.
-    // By default, a sign  is  used only for negative numbers.
-    // A + overrides a space if both are used.
     let padding_char = determine_padding_char(&flags);
 
     match output {
@@ -416,7 +387,6 @@ fn print_os_str(s: &OsString, flags: &Flags, width: usize, precision: Precision)
         let bytes = s.as_bytes();
 
         if pad_and_print_bytes(std::io::stdout(), bytes, flags.left, width, precision).is_err() {
-            // if an error occurred while trying to print bytes fall back to normal lossy string so it can be printed
             let fallback_string = s.to_string_lossy();
             print_str(&fallback_string, flags, width, precision);
         }
@@ -486,29 +456,17 @@ fn process_token_filesystem(t: &Token, meta: &StatFs, display_name: &str) {
             format,
         } => {
             let output = match format {
-                // free blocks available to non-superuser
                 'a' => OutputType::Unsigned(meta.avail_blocks()),
-                // total data blocks in file system
                 'b' => OutputType::Unsigned(meta.total_blocks()),
-                // total file nodes in file system
                 'c' => OutputType::Unsigned(meta.total_file_nodes()),
-                // free file nodes in file system
                 'd' => OutputType::Unsigned(meta.free_file_nodes()),
-                // free blocks in file system
                 'f' => OutputType::Unsigned(meta.free_blocks()),
-                // file system ID in hex
                 'i' => OutputType::UnsignedHex(meta.fsid()),
-                // maximum length of filenames
                 'l' => OutputType::Unsigned(meta.namelen()),
-                // file name
                 'n' => OutputType::Str(display_name.to_string()),
-                // block size (for faster transfers)
                 's' => OutputType::Unsigned(meta.io_size()),
-                // fundamental block size (for block counts)
                 'S' => OutputType::Integer(meta.block_size()),
-                // file system type in hex
                 't' => OutputType::UnsignedHex(meta.fs_type() as u64),
-                // file system type in human readable form
                 'T' => OutputType::Str(pretty_fstype(meta.fs_type()).into()),
                 _ => OutputType::Unknown,
             };
@@ -557,26 +515,6 @@ fn print_integer(
 
 /// Truncate a float to the given number of digits after the decimal point.
 fn precision_trunc(num: f64, precision: Precision) -> String {
-    // GNU `stat` doesn't round, it just seems to truncate to the
-    // given precision:
-    //
-    //     $ stat -c "%.5Y" /dev/pts/ptmx
-    //     1736344012.76399
-    //     $ stat -c "%.4Y" /dev/pts/ptmx
-    //     1736344012.7639
-    //     $ stat -c "%.3Y" /dev/pts/ptmx
-    //     1736344012.763
-    //
-    // Contrast this with `printf`, which seems to round the
-    // numbers:
-    //
-    //     $ printf "%.5f\n" 1736344012.76399
-    //     1736344012.76399
-    //     $ printf "%.4f\n" 1736344012.76399
-    //     1736344012.7640
-    //     $ printf "%.3f\n" 1736344012.76399
-    //     1736344012.764
-    //
     let num_str = num.to_string();
     let n = num_str.len();
     match (num_str.find('.'), precision) {
@@ -699,9 +637,6 @@ impl Stater {
                 '0' => flag.zero = true,
                 '-' => flag.left = true,
                 ' ' => flag.space = true,
-                // This is not documented but the behavior seems to be
-                // the same as a space. For example `stat -c "%I5s" f`
-                // prints "    0".
                 'I' => flag.space = true,
                 '+' => flag.sign = true,
                 '\'' => flag.group = true,
@@ -726,7 +661,7 @@ impl Stater {
         i: &mut usize,
         bound: usize,
         format_str: &str
-    ) -> UResult<Token> {
+    ) -> SGResult<Token> {
         let old = *i;
 
         *i += 1;
@@ -751,10 +686,9 @@ impl Stater {
             width = field_width;
             j += offset;
 
-            // Reject directives like `%<NUMBER>` by checking if width has been parsed.
             if j >= bound || chars[j] == '%' {
                 let invalid_directive: String = chars[old..=j.min(bound - 1)].iter().collect();
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     StatError::InvalidDirective {
                         directive: invalid_directive.quote().to_string(),
@@ -784,7 +718,6 @@ impl Stater {
 
         *i = j;
 
-        // Check for multi-character specifiers (e.g., `%Hd`, `%Lr`)
         if *i + 1 < bound {
             if let Some(&next_char) = chars.get(*i + 1) {
                 if (chars[*i] == 'H' || chars[*i] == 'L') && (next_char == 'd' || next_char == 'r')
@@ -821,17 +754,16 @@ impl Stater {
             return Token::Char('\\');
         }
         match chars[*i] {
-            'a' => Token::Byte(0x07),   // BEL
-            'b' => Token::Byte(0x08),   // Backspace
-            'f' => Token::Byte(0x0C),   // Form feed
-            'n' => Token::Byte(0x0A),   // Line feed
-            'r' => Token::Byte(0x0D),   // Carriage return
-            't' => Token::Byte(0x09),   // Horizontal tab
-            '\\' => Token::Byte(b'\\'), // Backslash
-            '\'' => Token::Byte(b'\''), // Single quote
-            '"' => Token::Byte(b'"'),   // Double quote
+            'a' => Token::Byte(0x07),
+            'b' => Token::Byte(0x08),
+            'f' => Token::Byte(0x0C),
+            'n' => Token::Byte(0x0A),
+            'r' => Token::Byte(0x0D),
+            't' => Token::Byte(0x09),
+            '\\' => Token::Byte(b'\\'),
+            '\'' => Token::Byte(b'\''),
+            '"' => Token::Byte(b'"'),
             '0'..='7' => {
-                // Parse octal escape sequence (up to 3 digits)
                 let mut value = 0u8;
                 let mut count = 0;
                 while *i < bound && count < 3 {
@@ -843,12 +775,10 @@ impl Stater {
                         break;
                     }
                 }
-                *i -= 1; // Adjust index to account for the outer loop increment
+                *i -= 1;
                 Token::Byte(value)
             }
             'x' => {
-                // Parse hexadecimal escape sequence (\xNN format)
-                // Uses UTF-8 safe byte indexing to handle multi-byte characters properly
                 if *i + 1 < bound {
                     let byte_index = Self::char_index_to_byte_index(format_str, *i + 1);
                     if let Some((c, offset)) = format_str[byte_index..].scan_char(16) {
@@ -873,7 +803,7 @@ impl Stater {
         }
     }
 
-    fn generate_tokens(format_str: &str, use_printf: bool) -> UResult<Vec<Token>> {
+    fn generate_tokens(format_str: &str, use_printf: bool) -> SGResult<Vec<Token>> {
         let mut tokens = Vec::new();
         let chars = format_str.chars().collect::<Vec<char>>();
         let bound = chars.len();
@@ -903,13 +833,13 @@ impl Stater {
         Ok(tokens)
     }
 
-    fn new(matches: &ArgMatches) -> UResult<Self> {
+    fn new(matches: &ArgMatches) -> SGResult<Self> {
         let files: Vec<OsString> = matches
             .get_many::<OsString>(options::FILES)
             .map(|v| v.map(OsString::from).collect())
             .unwrap_or_default();
         if files.is_empty() {
-            return Err(Box::new(StatError::MissingOperand) as Box<dyn UError>);
+            return Err(Box::new(StatError::MissingOperand) as Box<dyn SGError>);
         }
         let format_str = if matches.contains_id(options::PRINTF) {
             matches
@@ -934,12 +864,11 @@ impl Stater {
             Self::generate_tokens(&Self::default_format(show_fs, terse, true), use_printf)?;
 
         let mount_list = if show_fs {
-            // mount points aren't displayed when showing filesystem information
             None
         } else {
             let mut mount_list = read_fs_list()
                 .map_err(|e| {
-                    USimpleError::new(
+                    SGSimpleError::new(
                         e.code(),
                         StatError::CannotReadFilesystem {
                             error: e.to_string(),
@@ -950,7 +879,6 @@ impl Stater {
                 .iter()
                 .map(|mi| mi.mount_dir.clone())
                 .collect::<Vec<_>>();
-            // Reverse sort. The longer comes first.
             mount_list.sort();
             mount_list.reverse();
             Some(mount_list)
@@ -1012,97 +940,64 @@ impl Stater {
                 format,
             } => {
                 let output = match format {
-                    // access rights in octal
                     'a' => OutputType::UnsignedOct(0o7777 & meta.mode()),
-                    // access rights in human readable form
                     'A' => OutputType::Str(display_permissions(meta, true)),
-                    // number of blocks allocated (see %B)
                     'b' => OutputType::Unsigned(meta.blocks()),
 
-                    // the size in bytes of each block reported by %b
-                    // FIXME: blocksize differs on various platform
-                    // See coreutils/gnulib/lib/stat-size.h ST_NBLOCKSIZE // spell-checker:disable-line
                     'B' => OutputType::Unsigned(512),
-                    // device number in decimal
                     'd' => OutputType::Unsigned(meta.dev()),
-                    // device number in hex
                     'D' => OutputType::UnsignedHex(meta.dev()),
-                    // raw mode in hex
                     'f' => OutputType::UnsignedHex(meta.mode() as u64),
-                    // file type
                     'F' => OutputType::Str(pretty_filetype(meta.mode() as mode_t, meta.len())),
-                    // group ID of owner
                     'g' => OutputType::Unsigned(meta.gid() as u64),
-                    // group name of owner
                     'G' => {
                         let group_name =
                             entries::gid2grp(meta.gid()).unwrap_or_else(|_| "UNKNOWN".to_owned());
                         OutputType::Str(group_name)
                     }
-                    // number of hard links
                     'h' => OutputType::Unsigned(meta.nlink()),
-                    // inode number
                     'i' => OutputType::Unsigned(meta.ino()),
-                    // mount point
                     'm' => match self.find_mount_point(file) {
                         Some(s) => OutputType::OsStr(s),
                         None => OutputType::Str(String::new()),
                     },
-                    // file name
                     'n' => OutputType::Str(display_name.to_string()),
-                    // quoted file name with dereference if symbolic link
                     'N' => {
                         let file_name =
                             get_quoted_file_name(display_name, file, file_type, from_user)?;
                         OutputType::Str(file_name)
                     }
-                    // optimal I/O transfer size hint
                     'o' => OutputType::Unsigned(meta.blksize()),
-                    // total size, in bytes
                     's' => OutputType::Integer(meta.len() as i64),
-                    // major device type in hex, for character/block device special
-                    // files
                     't' => OutputType::UnsignedHex(meta.rdev() >> 8),
-                    // minor device type in hex, for character/block device special
-                    // files
                     'T' => OutputType::UnsignedHex(meta.rdev() & 0xff),
-                    // user ID of owner
                     'u' => OutputType::Unsigned(meta.uid() as u64),
-                    // user name of owner
                     'U' => {
                         let user_name =
                             entries::uid2usr(meta.uid()).unwrap_or_else(|_| "UNKNOWN".to_owned());
                         OutputType::Str(user_name)
                     }
 
-                    // time of file birth, human-readable; - if unknown
                     'w' => OutputType::Str(pretty_time(meta, MetadataTimeField::Birth)),
 
-                    // time of file birth, seconds since Epoch; 0 if unknown
                     'W' => OutputType::Integer(
                         metadata_get_time(meta, MetadataTimeField::Birth)
                             .map_or(0, |x| system_time_to_sec(x).0)
                     ),
 
-                    // time of last access, human-readable
                     'x' => OutputType::Str(pretty_time(meta, MetadataTimeField::Access)),
-                    // time of last access, seconds since Epoch
                     'X' => {
                         let (sec, nsec) = metadata_get_time(meta, MetadataTimeField::Access)
                             .map_or((0, 0), system_time_to_sec);
                         OutputType::Float(sec as f64 + nsec as f64 / 1_000_000_000.0)
                     }
-                    // time of last data modification, human-readable
                     'y' => OutputType::Str(pretty_time(meta, MetadataTimeField::Modification)),
-                    // time of last data modification, seconds since Epoch
                     'Y' => {
                         let (sec, nsec) = metadata_get_time(meta, MetadataTimeField::Modification)
                             .map_or((0, 0), system_time_to_sec);
                         OutputType::Float(sec as f64 + nsec as f64 / 1_000_000_000.0)
                     }
-                    // time of last status change, human-readable
                     'z' => OutputType::Str(pretty_time(meta, MetadataTimeField::Change)),
-                    // time of last status change, seconds since Epoch
                     'Z' => {
                         let (sec, nsec) = metadata_get_time(meta, MetadataTimeField::Change)
                             .map_or((0, 0), system_time_to_sec);
@@ -1114,8 +1009,8 @@ impl Stater {
                         OutputType::Str(format!("{major},{minor}"))
                     }
                     'r' => OutputType::Unsigned(meta.rdev()),
-                    'H' => OutputType::Unsigned(meta.rdev() >> 8), // Major in decimal
-                    'L' => OutputType::Unsigned(meta.rdev() & 0xff), // Minor in decimal
+                    'H' => OutputType::Unsigned(meta.rdev() >> 8),
+                    'L' => OutputType::Unsigned(meta.rdev() & 0xff),
 
                     _ => OutputType::Unknown,
                 };
@@ -1145,7 +1040,6 @@ impl Stater {
                 Ok(meta) => {
                     let tokens = &self.default_tokens;
 
-                    // Usage
                     for t in tokens {
                         process_token_filesystem(t, &meta, &display_name);
                     }
@@ -1276,7 +1170,7 @@ impl Stater {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -1372,9 +1266,9 @@ mod tests {
         assert_eq!(None, "z192zxc".scan_num::<i32>());
 
         assert_eq!(Some(('a', 3)), "141zxc".scan_char(8));
-        assert_eq!(Some(('\n', 2)), "12qzxc".scan_char(8)); // spell-checker:disable-line
-        assert_eq!(Some(('\r', 1)), "dqzxc".scan_char(16)); // spell-checker:disable-line
-        assert_eq!(None, "z2qzxc".scan_char(8)); // spell-checker:disable-line
+        assert_eq!(Some(('\n', 2)), "12qzxc".scan_char(8));
+        assert_eq!(Some(('\r', 1)), "dqzxc".scan_char(16));
+        assert_eq!(None, "z2qzxc".scan_char(8));
     }
 
     #[test]
@@ -1486,19 +1380,16 @@ mod tests {
 
     #[test]
     fn test_pad_and_print_bytes() {
-        // testing non-utf8 with normal settings
         let mut buffer = Vec::new();
         let bytes = b"\x80\xFF\x80";
         pad_and_print_bytes(&mut buffer, bytes, false, 3, Precision::NotSpecified).unwrap();
         assert_eq!(&buffer, b"\x80\xFF\x80");
 
-        // testing left padding
         let mut buffer = Vec::new();
         let bytes = b"\x80\xFF\x80";
         pad_and_print_bytes(&mut buffer, bytes, false, 5, Precision::NotSpecified).unwrap();
         assert_eq!(&buffer, b"  \x80\xFF\x80");
 
-        // testing right padding
         let mut buffer = Vec::new();
         let bytes = b"\x80\xFF\x80";
         pad_and_print_bytes(&mut buffer, bytes, true, 5, Precision::NotSpecified).unwrap();
@@ -1527,3 +1418,4 @@ mod tests {
         );
     }
 }
+

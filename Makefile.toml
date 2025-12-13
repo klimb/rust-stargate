@@ -79,8 +79,8 @@ set_env CARGO_MAKE_TASK_BUILD_EXAMPLES_ARGS "${args_examples}"
 args_utils_list = split "${args}" ";"
 for arg in "${args_utils_list}"
 	if not is_empty "${arg}"
-		if not starts_with "${arg}" "uu_"
-			arg = set "uu_${arg}"
+		if not starts_with "${arg}" "sg_"
+			arg = set "sg_${arg}"
 		end_if
 		args_utils = set "${args_utils} -p${arg}"
 	end_if
@@ -281,8 +281,8 @@ if is_empty "${package_options}"
 	utils = array %{result.stdout}
 	for util in ${utils}
 		if not is_empty "${util}"
-			if not starts_with "${util}" "uu_"
-				util = set "uu_${util}"
+			if not starts_with "${util}" "sg_"
+				util = set "sg_${util}"
 			end_if
 			package_options = set "${package_options} -p${util}"
 		end_if

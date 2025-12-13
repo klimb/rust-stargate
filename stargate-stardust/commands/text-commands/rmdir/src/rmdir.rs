@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) ENOTDIR
+
 
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, Command};
@@ -7,7 +7,7 @@ use std::fs::{read_dir, remove_dir};
 use std::io;
 use std::path::Path;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, set_exit_code, strip_errno};
+use sgcore::error::{SGResult, set_exit_code, strip_errno};
 use sgcore::translate;
 
 use sgcore::{format_usage, show_error, util_name};
@@ -19,7 +19,7 @@ static OPT_VERBOSE: &str = "verbose";
 static ARG_DIRS: &str = "dirs";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "cpath"])?;
 
@@ -43,14 +43,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
             set_exit_code(1);
 
-            // If `foo` is a symlink to a directory then `rmdir foo/` may give
-            // a "not a directory" error. This is confusing as `rm foo/` says
-            // "is a directory".
-            // This differs from system to system. Some don't give an error.
-            // GNU rmdir seems to print "Symbolic link not followed" if:
-            // - It has a trailing slash
-            // - It's a symlink
-            // - It either points to a directory or dangles
             {
                 use std::ffi::OsStr;
                 use std::os::unix::ffi::OsStrExt;
@@ -61,7 +53,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
                 let bytes = path.as_os_str().as_bytes();
                 if error.raw_os_error() == Some(libc::ENOTDIR) && bytes.ends_with(b"/") {
-                    // Strip the trailing slash or .symlink_metadata() will follow the symlink
                     let no_slash: &Path = OsStr::from_bytes(&bytes[..bytes.len() - 1]).as_ref();
                     if no_slash.is_symlink() && points_to_directory(no_slash).unwrap_or(true) {
                         show_error!(
@@ -112,13 +103,8 @@ fn remove_single(path: &Path, opts: Opts) -> Result<(), Error<'_>> {
     remove_dir(path).map_err(|error| Error { error, path })
 }
 
-// POSIX: https://pubs.opengroup.org/onlinepubs/009696799/functions/rmdir.html
 const NOT_EMPTY_CODES: &[i32] = &[libc::ENOTEMPTY, libc::EEXIST];
 
-// Other error codes you might get for directories that could be found and are
-// not empty.
-// This is a subset of the error codes listed in rmdir(2) from the Linux man-pages
-// project. Maybe other systems have additional codes that apply?
 const PERHAPS_EMPTY_CODES: &[i32] = &[libc::EACCES, libc::EBUSY, libc::EPERM, libc::EROFS];
 
 fn dir_not_empty(error: &io::Error, path: &Path) -> bool {
@@ -126,9 +112,6 @@ fn dir_not_empty(error: &io::Error, path: &Path) -> bool {
         if NOT_EMPTY_CODES.contains(&code) {
             return true;
         }
-        // If --ignore-fail-on-non-empty is used then we want to ignore all errors
-        // for non-empty directories, even if the error was e.g. because there's
-        // no permission. So we do an additional check.
         if PERHAPS_EMPTY_CODES.contains(&code) {
             if let Ok(mut iterator) = read_dir(path) {
                 if iterator.next().is_some() {
@@ -183,3 +166,4 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::DirPath)
         )
 }
+

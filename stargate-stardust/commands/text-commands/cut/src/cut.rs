@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) delim sourcefiles
+
 
 use bstr::io::BufReadExt;
 use clap::{Arg, ArgAction, ArgMatches, Command, builder::ValueParser};
@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, IsTerminal, Read, Write, stdin, stdout};
 use std::path::Path;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, set_exit_code};
 use sgcore::line_ending::LineEnding;
 use sgcore::os_str_as_bytes;
 
@@ -67,7 +67,7 @@ fn cut_bytes<R: Read, W: Write>(
     out: &mut W,
     ranges: &[Range],
     opts: &Options
-) -> UResult<()> {
+) -> SGResult<()> {
     let newline_char = opts.line_ending.into();
     let mut buf_in = BufReader::new(reader);
     let out_delim = opts.out_delimiter.unwrap_or(b"\t");
@@ -83,7 +83,6 @@ fn cut_bytes<R: Read, W: Write>(
             } else if opts.out_delimiter.is_some() {
                 print_delim = true;
             }
-            // change `low` from 1-indexed value to 0-index value
             let low = low - 1;
             let high = high.min(line.len());
             out.write_all(&line[low..high])?;
@@ -93,7 +92,7 @@ fn cut_bytes<R: Read, W: Write>(
     });
 
     if let Err(e) = result {
-        return Err(USimpleError::new(1, e.to_string()));
+        return Err(SGSimpleError::new(1, e.to_string()));
     }
 
     Ok(())
@@ -108,7 +107,7 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
     only_delimited: bool,
     newline_char: u8,
     out_delim: &[u8]
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut buf_in = BufReader::new(reader);
 
     let result = buf_in.for_byte_record_with_terminator(newline_char, |line| {
@@ -119,7 +118,6 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
 
         if delim_search.peek().is_none() {
             if !only_delimited {
-                // Always write the entire line, even if it doesn't end with `newline_char`
                 out.write_all(line)?;
                 if line.is_empty() || line[line.len() - 1] != newline_char {
                     out.write_all(&[newline_char])?;
@@ -131,17 +129,13 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
 
         for &Range { low, high } in ranges {
             if low - fields_pos > 0 {
-                // current field is not in the range, so jump to the field corresponding to the
-                // beginning of the range if any
                 low_idx = match delim_search.nth(low - fields_pos - 1) {
                     Some((_, last)) => last,
                     None => break,
                 };
             }
 
-            // at this point, current field is the first in the range
             for _ in 0..=high - low {
-                // skip printing delimiter if this is the first matching field for this line
                 if print_delim {
                     out.write_all(out_delim)?;
                 } else {
@@ -149,7 +143,6 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
                 }
 
                 match delim_search.next() {
-                    // print the current field up to the next field delim
                     Some((first, last)) => {
                         let segment = &line[low_idx..first];
 
@@ -159,7 +152,6 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
                         fields_pos = high + 1;
                     }
                     None => {
-                        // this is the last field in the line, so print the rest
                         let segment = &line[low_idx..];
 
                         out.write_all(segment)?;
@@ -178,7 +170,7 @@ fn cut_fields_explicit_out_delim<R: Read, W: Write, M: Matcher>(
     });
 
     if let Err(e) = result {
-        return Err(USimpleError::new(1, e.to_string()));
+        return Err(SGSimpleError::new(1, e.to_string()));
     }
 
     Ok(())
@@ -192,7 +184,7 @@ fn cut_fields_implicit_out_delim<R: Read, W: Write, M: Matcher>(
     ranges: &[Range],
     only_delimited: bool,
     newline_char: u8
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut buf_in = BufReader::new(reader);
 
     let result = buf_in.for_byte_record_with_terminator(newline_char, |line| {
@@ -203,7 +195,6 @@ fn cut_fields_implicit_out_delim<R: Read, W: Write, M: Matcher>(
 
         if delim_search.peek().is_none() {
             if !only_delimited {
-                // Always write the entire line, even if it doesn't end with `newline_char`
                 out.write_all(line)?;
                 if line.is_empty() || line[line.len() - 1] != newline_char {
                     out.write_all(&[newline_char])?;
@@ -249,7 +240,7 @@ fn cut_fields_implicit_out_delim<R: Read, W: Write, M: Matcher>(
     });
 
     if let Err(e) = result {
-        return Err(USimpleError::new(1, e.to_string()));
+        return Err(SGSimpleError::new(1, e.to_string()));
     }
 
     Ok(())
@@ -262,7 +253,7 @@ fn cut_fields_newline_char_delim<R: Read, W: Write>(
     ranges: &[Range],
     newline_char: u8,
     out_delim: &[u8]
-) -> UResult<()> {
+) -> SGResult<()> {
     let buf_in = BufReader::new(reader);
 
     let segments: Vec<_> = buf_in.split(newline_char).filter_map(|x| x.ok()).collect();
@@ -270,7 +261,6 @@ fn cut_fields_newline_char_delim<R: Read, W: Write>(
 
     for &Range { low, high } in ranges {
         for i in low..=high {
-            // "- 1" is necessary because fields start from 1 whereas a Vec starts from 0
             if let Some(segment) = segments.get(i - 1) {
                 if print_delim {
                     out.write_all(out_delim)?;
@@ -292,9 +282,9 @@ fn cut_fields<R: Read, W: Write>(
     out: &mut W,
     ranges: &[Range],
     opts: &Options
-) -> UResult<()> {
+) -> SGResult<()> {
     let newline_char = opts.line_ending.into();
-    let field_opts = opts.field_opts.as_ref().unwrap(); // it is safe to unwrap() here - field_opts will always be Some() for cut_fields() call
+    let field_opts = opts.field_opts.as_ref().unwrap();
     match field_opts.delimiter {
         Delimiter::Slice(delim) if delim == [newline_char] => {
             let out_delim = opts.out_delimiter.unwrap_or(delim);
@@ -399,28 +389,25 @@ fn cut_files(mut filenames: Vec<OsString>, mode: &Mode) {
 
 /// Get delimiter and output delimiter from `-d`/`--delimiter` and `--output-delimiter` options respectively
 /// Allow either delimiter to have a value that is neither UTF-8 nor ASCII to align with GNU behavior
-fn get_delimiters(matches: &ArgMatches) -> UResult<(Delimiter<'_>, Option<&[u8]>)> {
+fn get_delimiters(matches: &ArgMatches) -> SGResult<(Delimiter<'_>, Option<&[u8]>)> {
     let whitespace_delimited = matches.get_flag(options::WHITESPACE_DELIMITED);
     let delim_opt = matches.get_one::<OsString>(options::DELIMITER);
     let delim = match delim_opt {
         Some(_) if whitespace_delimited => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("cut-error-delimiter-and-whitespace-conflict")
             ));
         }
         Some(os_string) => {
             if os_string == "''" || os_string.is_empty() {
-                // treat `''` as empty delimiter
                 Delimiter::Slice(b"\0")
             } else {
-                // For delimiter `-d` option value - allow both UTF-8 (possibly multi-byte) characters
-                // and Non UTF-8 (and not ASCII) single byte "characters", like `b"\xAD"` to align with GNU behavior
                 let bytes = os_str_as_bytes(os_string)?;
                 if os_string.to_str().is_some_and(|s| s.chars().count() > 1)
                     || os_string.to_str().is_none() && bytes.len() > 1
                 {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("cut-error-delimiter-must-be-single-character")
                     ));
@@ -459,15 +446,11 @@ mod options {
     pub const WHITESPACE_DELIMITED: &str = "whitespace-delimited";
     pub const COMPLEMENT: &str = "complement";
     pub const FILE: &str = "file";
-    // ignored option
     pub const NOTHING: &str = "nothing";
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // GNU's `cut` supports `-d=` to set the delimiter to `=`.
-    // Clap parsing is limited in this situation, see:
-    // https://github.com/uutils/coreutils/issues/2424#issuecomment-863825242
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args: Vec<OsString> = args
         .into_iter()
         .map(|x| {
@@ -488,9 +471,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let (delimiter, out_delimiter) = get_delimiters(&matches)?;
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO_TERMINATED));
 
-    // Only one, and only one of cutting mode arguments, i.e. `-b`, `-c`, `-f`,
-    // is expected. The number of those arguments is used for parsing a cutting
-    // mode and handling the error cases.
     let mode_args_count = [
         matches.indices_of(options::BYTES),
         matches.indices_of(options::CHARACTERS),
@@ -585,7 +565,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             cut_files(files, &mode);
             Ok(())
         }
-        Err(e) => Err(USimpleError::new(1, e)),
+        Err(e) => Err(SGSimpleError::new(1, e)),
     }
 }
 
@@ -597,13 +577,6 @@ pub fn sg_app() -> Command {
         .about(translate!("cut-about"))
         .after_help(translate!("cut-after-help"))
         .infer_long_args(true)
-        // While `args_override_self(true)` for some arguments, such as `-d`
-        // and `--output-delimiter`, is consistent to the behavior of GNU cut,
-        // arguments related to cutting mode, i.e. `-b`, `-c`, `-f`, should
-        // cause an error when there is more than one of them, as described in
-        // the manual of GNU cut: "Use one, and only one of -b, -c or -f".
-        // `ArgAction::Append` is used on `-b`, `-c`, `-f` arguments, so that
-        // the occurrences of those could be counted and be handled accordingly.
         .args_override_self(true)
         .arg(
             Arg::new(options::BYTES)
@@ -688,3 +661,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
 }
+

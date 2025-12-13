@@ -1,6 +1,6 @@
 [package]
 name = "sg_chmod"
-description = "chmod ~ (uutils) change mode of FILE"
+description = "chmod ~ (stargate) change mode of FILE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -11,7 +11,7 @@ use simd::process_input;
 use std::ffi::OsString;
 use std::io::{stdin, stdout};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError};
 use sgcore::fs::is_stdin_directory;
 use sgcore::libc;
 use sgcore::translate;
@@ -26,11 +26,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // When we receive a SIGPIPE signal, we want to terminate the process so
-    // that we don't print any error messages to stderr. Rust ignores SIGPIPE
-    // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
-    // default action here.
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
@@ -43,8 +39,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let squeeze_flag = matches.get_flag(options::SQUEEZE);
     let truncate_set1_flag = matches.get_flag(options::TRUNCATE_SET1);
 
-    // Ultimately this should be OsString, but we might want to wait for the
-    // pattern API on OsStr
     let sets: Vec<_> = matches
         .get_many::<OsString>(options::SETS)
         .into_iter()
@@ -53,20 +47,20 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .collect();
 
     if sets.is_empty() {
-        return Err(UUsageError::new(1, translate!("tr-error-missing-operand")));
+        return Err(SGUsageError::new(1, translate!("tr-error-missing-operand")));
     }
 
     let sets_len = sets.len();
 
     if !(delete_flag || squeeze_flag) && sets_len == 1 {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("tr-error-missing-operand-translating", "set" => sets[0].quote())
         ));
     }
 
     if delete_flag && squeeze_flag && sets_len == 1 {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("tr-error-missing-operand-deleting-squeezing", "set" => sets[0].quote())
         ));
@@ -80,12 +74,12 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             } else {
                 translate!("tr-error-extra-operand-simple", "operand" => op)
             };
-            return Err(UUsageError::new(1, msg));
+            return Err(SGUsageError::new(1, msg));
         }
         if sets_len > 2 {
             let op = sets[2].quote();
             let msg = translate!("tr-error-extra-operand-simple", "operand" => op);
-            return Err(UUsageError::new(1, msg));
+            return Err(SGUsageError::new(1, msg));
         }
     }
 
@@ -93,8 +87,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         let slice = os_str_as_bytes(first)?;
         let trailing_backslashes = slice.iter().rev().take_while(|&&c| c == b'\\').count();
         if trailing_backslashes % 2 == 1 {
-            // The trailing backslash has a non-backslash character before it.
-            show!(USimpleError::new(
+            show!(SGSimpleError::new(
                 0,
                 translate!("tr-warning-unescaped-backslash")
             ));
@@ -105,23 +98,20 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut locked_stdin = stdin.lock();
     let mut locked_stdout = stdout().lock();
 
-    // According to the man page: translating only happens if deleting or if a second set is given
     let translating = !delete_flag && sets.len() > 1;
     let mut sets_iter = sets.iter().map(|c| c.as_os_str());
     let (set1, set2) = Sequence::solve_set_characters(
         os_str_as_bytes(sets_iter.next().unwrap_or_default())?,
         os_str_as_bytes(sets_iter.next().unwrap_or_default())?,
         complement_flag,
-        // if we are not translating then we don't truncate set1
         truncate_set1_flag && translating,
         translating
     )?;
 
     if is_stdin_directory(&stdin) {
-        return Err(USimpleError::new(1, translate!("tr-error-read-directory")));
+        return Err(SGSimpleError::new(1, translate!("tr-error-read-directory")));
     }
 
-    // '*_op' are the operations that need to be applied, in order.
     if delete_flag {
         if squeeze_flag {
             let delete_op = DeleteOperation::new(set1);
@@ -200,3 +190,4 @@ pub fn sg_app() -> Command {
                 .value_parser(value_parser!(OsString))
         )
 }
+

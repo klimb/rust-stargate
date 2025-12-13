@@ -1,6 +1,6 @@
 [package]
 name = "sg_comm"
-description = "comm ~ (uutils) compare sorted inputs"
+description = "comm ~ (stargate) compare sorted inputs"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

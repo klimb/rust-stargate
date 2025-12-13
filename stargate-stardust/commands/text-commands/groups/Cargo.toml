@@ -1,6 +1,6 @@
 [package]
 name = "sg_groups"
-description = "groups ~ (uutils) display group memberships for USERNAME"
+description = "groups ~ (stargate) display group memberships for USERNAME"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "sg_dirname"
-description = "dirname ~ (uutils) display parent directory of PATHNAME"
+description = "dirname ~ (stargate) display parent directory of PATHNAME"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

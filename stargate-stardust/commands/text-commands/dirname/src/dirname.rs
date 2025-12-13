@@ -1,9 +1,10 @@
-    //
+
+
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::path::Path;
 use sgcore::display::print_verbatim;
-use sgcore::error::{UResult, UUsageError};
+use sgcore::error::{SGResult, SGUsageError};
 use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
 
@@ -34,13 +35,10 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
         return None;
     }
 
-    // Strip the "/." suffix and print the result
     if path_bytes.len() == 2 {
-        // Special case: "/." -> "/"
         print!("/");
         Some(())
     } else {
-        // General case: "/home/dos/." -> "/home/dos"
         let stripped = &path_bytes[..path_bytes.len() - 2];
         {
             use std::os::unix::ffi::OsStrExt;
@@ -50,12 +48,10 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
         }
         #[cfg(not(unix))]
         {
-            // On non-Unix, fall back to lossy conversion
             if let Ok(s) = std::str::from_utf8(stripped) {
                 print!("{s}");
                 Some(())
             } else {
-                // Can't handle non-UTF-8 on non-Unix, fall through to normal logic
                 None
             }
         }
@@ -63,7 +59,7 @@ fn handle_trailing_dot(path_bytes: &[u8]) -> Option<()> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
@@ -78,11 +74,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .collect();
 
     if dirnames.is_empty() {
-        return Err(UUsageError::new(1, translate!("dirname-missing-operand")));
+        return Err(SGUsageError::new(1, translate!("dirname-missing-operand")));
     }
 
     if opts.stardust_output {
-        // For object (JSON) output, collect results into a vector without printing
         let mut results = Vec::new();
         for path in &dirnames {
             let path_bytes = sgcore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
@@ -101,7 +96,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                         match std::str::from_utf8(stripped) {
                             Ok(s) => s.to_string(),
                             Err(_) => {
-                                // Fallback to Path::parent logic
                                 let p = Path::new(path);
                                 match p.parent() {
                                     Some(d) => {
@@ -136,7 +130,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             let path_bytes = sgcore::os_str_as_bytes(path.as_os_str()).unwrap_or(&[]);
 
             if handle_trailing_dot(path_bytes).is_none() {
-                // Normal path handling using Path::parent()
                 let p = Path::new(path);
                 match p.parent() {
                     Some(d) => {
@@ -188,3 +181,4 @@ pub fn sg_app() -> Command {
 
     stardust_output::add_json_args(cmd)
 }
+

@@ -1,6 +1,6 @@
 [package]
 name = "sg_realpath"
-description = "realpath ~ (uutils) display resolved absolute path of PATHNAME"
+description = "realpath ~ (stargate) display resolved absolute path of PATHNAME"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,7 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Result as IoResult};
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::{json, Value};
 
@@ -26,7 +26,6 @@ pub struct FileSearchResults {
     pub match_count: usize,
     pub matches: Vec<Match>,
 }
-
 
 /// Search for pattern in a file
 pub fn search_file(
@@ -72,34 +71,28 @@ pub fn search_file(
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
 
-    // Get pattern (required)
     let pattern = matches
         .get_one::<String>(options::PATTERN)
-        .ok_or_else(|| USimpleError::new(1, "Pattern is required"))?;
+        .ok_or_else(|| SGSimpleError::new(1, "Pattern is required"))?;
 
-    // Try to get files from stdin JSON first, then from command line args
     let files: Vec<String> = if atty::isnt(atty::Stream::Stdin) {
-        // We have data on stdin, try to parse as JSON
         let mut stdin_data = String::new();
         std::io::stdin()
             .read_to_string(&mut stdin_data)
-            .map_err(|e| USimpleError::new(1, format!("Failed to read stdin: {}", e)))?;
+            .map_err(|e| SGSimpleError::new(1, format!("Failed to read stdin: {}", e)))?;
 
         if !stdin_data.trim().is_empty() {
-            // Try to parse as JSON
             match serde_json::from_str::<Value>(&stdin_data) {
                 Ok(json_value) => {
-                    // Extract file paths from list-directory style JSON
                     if let Some(entries) = json_value.get("entries").and_then(|e| e.as_array()) {
                         entries
                             .iter()
                             .filter_map(|entry| {
-                                // Only include files (not directories)
                                 if entry.get("type").and_then(|t| t.as_str()) == Some("file") {
                                     entry.get("path").and_then(|p| p.as_str()).map(String::from)
                                 } else {
@@ -108,44 +101,40 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                             })
                             .collect()
                     } else {
-                        // Not the expected format, fall back to command line args
                         matches
                             .get_many::<String>(options::FILE)
                             .ok_or_else(|| {
-                                USimpleError::new(1, "At least one file is required")
+                                SGSimpleError::new(1, "At least one file is required")
                             })?
                             .map(|s| s.to_string())
                             .collect()
                     }
                 }
                 Err(_) => {
-                    // Not valid JSON, fall back to command line args
                     matches
                         .get_many::<String>(options::FILE)
-                        .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+                        .ok_or_else(|| SGSimpleError::new(1, "At least one file is required"))?
                         .map(|s| s.to_string())
                         .collect()
                 }
             }
         } else {
-            // Empty stdin, fall back to command line args
             matches
                 .get_many::<String>(options::FILE)
-                .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+                .ok_or_else(|| SGSimpleError::new(1, "At least one file is required"))?
                 .map(|s| s.to_string())
                 .collect()
         }
     } else {
-        // No stdin, use command line args
         matches
             .get_many::<String>(options::FILE)
-            .ok_or_else(|| USimpleError::new(1, "At least one file is required"))?
+            .ok_or_else(|| SGSimpleError::new(1, "At least one file is required"))?
             .map(|s| s.to_string())
             .collect()
     };
 
     if files.is_empty() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "No files to search (no files found in JSON input or command line)",
         ));
@@ -154,7 +143,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let case_insensitive = matches.get_flag(options::INSENSITIVE);
 
     if opts.stardust_output {
-        // Object (JSON) output mode
         let mut all_results = Vec::new();
         let mut total_matches = 0;
 
@@ -177,7 +165,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     }));
                 }
                 Err(e) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         format!("Error reading file {}: {}", file_path, e),
                     ))
@@ -197,7 +185,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             || Ok(()),
         )?;
     } else {
-        // Normal output mode - grep-like format
         for file_path in &files {
             match search_file(file_path, pattern, case_insensitive) {
                 Ok(result) => {
@@ -209,7 +196,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     }
                 }
                 Err(e) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         format!("Error reading file {}: {}", file_path, e),
                     ))
@@ -237,7 +224,7 @@ pub fn sg_app() -> Command {
             Arg::new(options::FILE)
                 .help("Files to search in")
                 .value_name("FILE")
-                .required(false)  // Optional when stdin has JSON
+                .required(false)
                 .action(ArgAction::Append)
                 .index(2),
         )
@@ -251,3 +238,4 @@ pub fn sg_app() -> Command {
 
     stardust_output::add_json_args(cmd)
 }
+

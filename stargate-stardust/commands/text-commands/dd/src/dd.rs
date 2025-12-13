@@ -1,4 +1,4 @@
-// spell-checker:ignore fname, ftype, tname, fpath, specfile, testfile, unspec, ifile, ofile, outfile, fullblock, urand, fileio, atoe, atoibm, behaviour, bmax, bremain, cflags, creat, ctable, ctty, datastructures, doesnt, etoa, fileout, fname, gnudd, iconvflags, iseek, nocache, noctty, noerror, nofollow, nolinks, nonblock, oconvflags, oseek, outfile, parseargs, rlen, rmax, rremain, rsofar, rstat, sigusr, wlen, wstat seekable oconv canonicalized fadvise Fadvise FADV DONTNEED ESPIPE bufferedoutput, SETFL
+
 
 mod blocks;
 mod bufferedoutput;
@@ -49,8 +49,8 @@ use nix::{
     fcntl::{PosixFadviseAdvice, posix_fadvise},
 };
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult};
-use sgcore::error::{USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGResult};
+use sgcore::error::{SGSimpleError, set_exit_code};
 #[cfg(target_os = "linux")]
 use sgcore::show_if_err;
 use sgcore::{format_usage, show_error};
@@ -136,7 +136,6 @@ impl Alarm {
         self.trigger.swap(ALARM_TRIGGER_NONE, Relaxed)
     }
 
-    // Getter function for the configured interval duration
     pub fn get_interval(&self) -> Duration {
         self.interval
     }
@@ -236,8 +235,6 @@ impl Source {
             Self::StdinFile(f) => {
                 if let Ok(Some(len)) = try_get_len_of_block_device(f) {
                     if len < n {
-                        // GNU compatibility:
-                        // this case prints the stats but sets the exit code to 1
                         show_error!(
                             "{}",
                             translate!("dd-error-cannot-skip-invalid", "file" => "standard input")
@@ -277,7 +274,7 @@ impl Source {
                 let advice = PosixFadviseAdvice::POSIX_FADV_DONTNEED;
                 posix_fadvise(f.as_fd(), offset, len, advice)
             }
-            _ => Err(Errno::ESPIPE), // "Illegal seek"
+            _ => Err(Errno::ESPIPE),
         }
     }
 }
@@ -310,11 +307,11 @@ struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Instantiate this struct with stdin as a source.
-    fn new_stdin(settings: &'a Settings) -> UResult<Self> {
+    fn new_stdin(settings: &'a Settings) -> SGResult<Self> {
         let mut src = Source::stdin_as_file();
         if let Source::StdinFile(f) = &src {
             if settings.iflags.directory && !f.metadata()?.is_dir() {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("dd-error-not-directory", "file" => "standard input")
                 ));
@@ -327,7 +324,7 @@ impl<'a> Input<'a> {
     }
 
     /// Instantiate this struct with the named file as a source.
-    fn new_file(filename: &Path, settings: &'a Settings) -> UResult<Self> {
+    fn new_file(filename: &Path, settings: &'a Settings) -> SGResult<Self> {
         let src = {
             let mut opts = OpenOptions::new();
             opts.read(true);
@@ -350,7 +347,7 @@ impl<'a> Input<'a> {
     }
 
     /// Instantiate this struct with the named pipe as a source.
-    fn new_fifo(filename: &Path, settings: &'a Settings) -> UResult<Self> {
+    fn new_fifo(filename: &Path, settings: &'a Settings) -> SGResult<Self> {
         let mut opts = OpenOptions::new();
         opts.read(true);
         #[cfg(any(target_os = "linux"))]
@@ -438,8 +435,6 @@ impl Input<'_> {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            // TODO Is there a way to discard filesystem cache on
-            // these other operating systems?
         }
     }
 
@@ -468,7 +463,6 @@ impl Input<'_> {
         Ok(ReadStat {
             reads_complete,
             reads_partial,
-            // Records are not truncated when filling.
             records_truncated: 0,
             bytes_total: bytes_total.try_into().unwrap(),
         })
@@ -574,8 +568,6 @@ impl Dest {
             Self::File(f, _) => {
                 if let Ok(Some(len)) = try_get_len_of_block_device(f) {
                     if len < n {
-                        // GNU compatibility:
-                        // this case prints the stats but sets the exit code to 1
                         show_error!(
                             "{}",
                             translate!("dd-error-cannot-seek-invalid", "output" => "standard output")
@@ -587,7 +579,6 @@ impl Dest {
                 f.seek(SeekFrom::Current(n.try_into().unwrap()))
             }
             Self::Fifo(f) => {
-                // Seeking in a named pipe means *reading* from the pipe.
                 io::copy(&mut f.take(n), &mut io::sink())
             }
             Self::Sink => Ok(0),
@@ -619,7 +610,7 @@ impl Dest {
                 let advice = PosixFadviseAdvice::POSIX_FADV_DONTNEED;
                 posix_fadvise(f.as_fd(), offset, len, advice)
             }
-            _ => Err(Errno::ESPIPE), // "Illegal seek"
+            _ => Err(Errno::ESPIPE),
         }
     }
 
@@ -646,34 +637,26 @@ fn is_sparse(buf: &[u8]) -> bool {
 fn handle_o_direct_write(f: &mut File, buf: &[u8], original_error: io::Error) -> io::Result<usize> {
     use nix::fcntl::{FcntlArg, OFlag, fcntl};
 
-    // Get current flags using nix
     let oflags = match fcntl(&mut *f, FcntlArg::F_GETFL) {
         Ok(flags) => OFlag::from_bits_retain(flags),
         Err(_) => return Err(original_error),
     };
 
-    // If O_DIRECT is set, try removing it temporarily
     if oflags.contains(OFlag::O_DIRECT) {
         let flags_without_direct = oflags - OFlag::O_DIRECT;
 
-        // Remove O_DIRECT flag using nix
         if fcntl(&mut *f, FcntlArg::F_SETFL(flags_without_direct)).is_err() {
             return Err(original_error);
         }
 
-        // Retry the write without O_DIRECT
         let write_result = f.write(buf);
 
-        // Restore O_DIRECT flag using nix (GNU doesn't restore it, but we'll be safer)
-        // Log any restoration errors without failing the operation
         if let Err(os_err) = fcntl(&mut *f, FcntlArg::F_SETFL(oflags)) {
-            // Just log the error, don't fail the whole operation
             show_error!("Failed to restore O_DIRECT flag: {}", os_err);
         }
 
         write_result
     } else {
-        // O_DIRECT wasn't set, return original error
         Err(original_error)
     }
 }
@@ -700,15 +683,12 @@ impl Write for Dest {
                 Ok(buf.len())
             }
             Self::File(f, _) => {
-                // Try the write first
                 match f.write(buf) {
                     Ok(len) => Ok(len),
                     Err(e)
                         if e.kind() == io::ErrorKind::InvalidInput
                             && e.raw_os_error() == Some(libc::EINVAL) =>
                     {
-                        // This might be an O_DIRECT alignment issue.
-                        // Try removing O_DIRECT temporarily and retry.
                         handle_o_direct_write(f, buf, e)
                     }
                     Err(e) => Err(e),
@@ -746,7 +726,7 @@ struct Output<'a> {
 
 impl<'a> Output<'a> {
     /// Instantiate this struct with stdout as a destination.
-    fn new_stdout(settings: &'a Settings) -> UResult<Self> {
+    fn new_stdout(settings: &'a Settings) -> SGResult<Self> {
         let mut dst = Dest::Stdout(io::stdout());
         dst.seek(settings.seek)
             .map_err_context(|| translate!("dd-error-write-error"))?;
@@ -754,7 +734,7 @@ impl<'a> Output<'a> {
     }
 
     /// Instantiate this struct with the named file as a destination.
-    fn new_file(filename: &Path, settings: &'a Settings) -> UResult<Self> {
+    fn new_file(filename: &Path, settings: &'a Settings) -> SGResult<Self> {
         fn open_dst(path: &Path, cflags: &OConvFlags, oflags: &OFlags) -> Result<File, io::Error> {
             let mut opts = OpenOptions::new();
             opts.write(true)
@@ -774,14 +754,6 @@ impl<'a> Output<'a> {
             || translate!("dd-error-failed-to-open", "path" => filename.quote())
         )?;
 
-        // Seek to the index in the output file, truncating if requested.
-        //
-        // Calling `set_len()` may result in an error (for example,
-        // when calling it on `/dev/null`), but we don't want to
-        // terminate the process when that happens.  Instead, we
-        // suppress the error by calling `Result::ok()`. This matches
-        // the behavior of GNU `dd` when given the command-line
-        // argument `of=/dev/null`.
         if !settings.oconv.notrunc {
             dst.set_len(settings.seek).ok();
         }
@@ -789,7 +761,7 @@ impl<'a> Output<'a> {
         Self::prepare_file(dst, settings)
     }
 
-    fn prepare_file(dst: File, settings: &'a Settings) -> UResult<Self> {
+    fn prepare_file(dst: File, settings: &'a Settings) -> SGResult<Self> {
         let density = if settings.oconv.sparse {
             Density::Sparse
         } else {
@@ -806,7 +778,7 @@ impl<'a> Output<'a> {
     /// This is useful e.g. for the case when the file descriptor was
     /// already opened by the system (stdout) and has a state
     /// (current position) that shall be used.
-    fn new_file_from_stdout(settings: &'a Settings) -> UResult<Self> {
+    fn new_file_from_stdout(settings: &'a Settings) -> SGResult<Self> {
         let fx = OwnedFileDescriptorOrHandle::from(io::stdout())?;
         #[cfg(any(target_os = "linux"))]
         if let Some(libc_flags) = make_linux_oflags(&settings.oflags) {
@@ -820,22 +792,14 @@ impl<'a> Output<'a> {
     }
 
     /// Instantiate this struct with the given named pipe as a destination.
-    fn new_fifo(filename: &Path, settings: &'a Settings) -> UResult<Self> {
-        // We simulate seeking in a FIFO by *reading*, so we open the
-        // file for reading. But then we need to close the file and
-        // re-open it for writing.
+    fn new_fifo(filename: &Path, settings: &'a Settings) -> SGResult<Self> {
         if settings.seek > 0 {
             Dest::Fifo(File::open(filename)?).seek(settings.seek)?;
         }
-        // If `count=0`, then we don't bother opening the file for
-        // writing because that would cause this process to block
-        // indefinitely.
         if let Some(Num::Blocks(0) | Num::Bytes(0)) = settings.count {
             let dst = Dest::Sink;
             return Ok(Self { dst, settings });
         }
-        // At this point, we know there is at least one block to write
-        // to the output, so we open the file for writing.
         let mut opts = OpenOptions::new();
         opts.write(true)
             .create(!settings.oconv.nocreat)
@@ -866,8 +830,6 @@ impl<'a> Output<'a> {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            // TODO Is there a way to discard filesystem cache on
-            // these other operating systems?
         }
     }
 
@@ -884,7 +846,6 @@ impl<'a> Output<'a> {
             match self.dst.write(&chunk[base_idx..]) {
                 Ok(wlen) => {
                     base_idx += wlen;
-                    // take iflags.fullblock as oflags shall not have this option
                     if (base_idx >= full_len) || !self.settings.iflags.fullblock {
                         return Ok(base_idx);
                     }
@@ -931,7 +892,6 @@ impl<'a> Output<'a> {
         } else if self.settings.oconv.fdatasync {
             self.dst.fdatasync()
         } else {
-            // Intentionally do nothing in this case.
             Ok(())
         }
     }
@@ -979,12 +939,6 @@ impl BlockWriter<'_> {
 
     /// Truncate the file to the final cursor location.
     fn truncate(&mut self) {
-        // Calling `set_len()` may result in an error (for example,
-        // when calling it on `/dev/null`), but we don't want to
-        // terminate the process when that happens. Instead, we
-        // suppress the error by calling `Result::ok()`. This matches
-        // the behavior of GNU `dd` when given the command-line
-        // argument `of=/dev/null`.
         match self {
             Self::Unbuffered(o) => o.truncate().ok(),
             Self::Buffered(o) => o.truncate().ok(),
@@ -1002,16 +956,12 @@ impl BlockWriter<'_> {
 /// depending on the command line arguments, this function
 /// informs the OS to flush/discard the caches for input and/or output file.
 fn flush_caches_full_length(i: &Input, o: &Output) -> io::Result<()> {
-    // TODO Better error handling for overflowing `len`.
     if i.settings.iflags.nocache {
         let offset = 0;
         #[allow(clippy::useless_conversion)]
         let len = i.src.len()?.try_into().unwrap();
         i.discard_cache(offset, len);
     }
-    // Similarly, discard the system cache for the output file.
-    //
-    // TODO Better error handling for overflowing `len`.
     if i.settings.oflags.nocache {
         let offset = 0;
         #[allow(clippy::useless_conversion)]
@@ -1034,53 +984,19 @@ fn flush_caches_full_length(i: &Input, o: &Output) -> io::Result<()> {
 /// If there is a problem reading from the input or writing to
 /// this output.
 fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
-    // The read and write statistics.
-    //
-    // These objects are counters, initialized to zero. After each
-    // iteration of the main loop, each will be incremented by the
-    // number of blocks read and written, respectively.
     let mut rstat = ReadStat::default();
     let mut wstat = WriteStat::default();
 
-    // The time at which the main loop starts executing.
-    //
-    // When `status=progress` is given on the command-line, the
-    // `dd` program reports its progress every second or so. Part
-    // of its report includes the throughput in bytes per second,
-    // which requires knowing how long the process has been
-    // running.
     let start = Instant::now();
 
-    // A good buffer size for reading.
-    //
-    // This is an educated guess about a good buffer size based on
-    // the input and output block sizes.
     let bsize = calc_bsize(i.settings.ibs, o.settings.obs);
 
-    // Start a thread that reports transfer progress.
-    //
-    // The `dd` program reports its progress after every block is written,
-    // at most every 1 second, and only if `status=progress` is given on
-    // the command-line or a SIGUSR1 signal is received. We
-    // perform this reporting in a new thread so as not to take
-    // any CPU time away from the actual reading and writing of
-    // data. We send a `ProgUpdate` from the transmitter `prog_tx`
-    // to the receives `rx`, and the receiver prints the transfer
-    // information.
     let (prog_tx, rx) = mpsc::channel();
     let output_thread = thread::spawn(gen_prog_updater(rx, i.settings.status));
 
-    // Whether to truncate the output file after all blocks have been written.
     let truncate = !o.settings.oconv.notrunc;
 
-    // Optimization: if no blocks are to be written, then don't
-    // bother allocating any buffers.
     if let Some(Num::Blocks(0) | Num::Bytes(0)) = i.settings.count {
-        // Even though we are not reading anything from the input
-        // file, we still need to honor the `nocache` flag, which
-        // requests that we inform the system that we no longer
-        // need the contents of the input file in a system cache.
-        //
         flush_caches_full_length(&i, &o)?;
         return finalize(
             BlockWriter::Unbuffered(o),
@@ -1093,19 +1009,10 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
         );
     }
 
-    // Create a common buffer with a capacity of the block size.
-    // This is the max size needed.
     let mut buf = vec![BUF_INIT_BYTE; bsize];
 
-    // Spawn a timer thread to provide a scheduled signal indicating when we
-    // should send an update of our progress to the reporting thread.
-    //
-    // This avoids the need to query the OS monotonic clock for every block.
     let alarm = Alarm::with_interval(Duration::from_secs(1));
 
-    // The signal handler spawns an own thread that waits for signals.
-    // When the signal is received, it calls a handler function.
-    // We inject a handler function that manually triggers the alarm.
     #[cfg(target_os = "linux")]
     let signal_handler = progress::SignalHandler::install_signal_handler(alarm.manual_trigger_fn());
     #[cfg(target_os = "linux")]
@@ -1115,35 +1022,19 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
         }
     }
 
-    // Index in the input file where we are reading bytes and in
-    // the output file where we are writing bytes.
-    //
-    // These are updated on each iteration of the main loop.
     let mut read_offset = 0;
     let mut write_offset = 0;
 
     let input_nocache = i.settings.iflags.nocache;
     let output_nocache = o.settings.oflags.nocache;
 
-    // Add partial block buffering, if needed.
     let mut o = if o.settings.buffered {
         BlockWriter::Buffered(BufferedOutput::new(o))
     } else {
         BlockWriter::Unbuffered(o)
     };
 
-    // The main read/write loop.
-    //
-    // Each iteration reads blocks from the input and writes
-    // blocks to this output. Read/write statistics are updated on
-    // each iteration and cumulative statistics are reported to
-    // the progress reporting thread.
     while below_count_limit(i.settings.count, &rstat) {
-        // Read a block from the input then write the block to the output.
-        //
-        // As an optimization, make an educated guess about the
-        // best buffer size for reading based on the number of
-        // blocks already read and the number of blocks remaining.
         let loop_bsize = calc_loop_bsize(i.settings.count, &rstat, &wstat, i.settings.ibs, bsize);
         let rstat_update = read_helper(&mut i, &mut buf, loop_bsize)?;
         if rstat_update.is_empty() {
@@ -1151,10 +1042,6 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
         }
         let wstat_update = o.write_blocks(&buf)?;
 
-        // Discard the system file cache for the read portion of
-        // the input file.
-        //
-        // TODO Better error handling for overflowing `offset` and `len`.
         let read_len = rstat_update.bytes_total;
         if input_nocache {
             let offset = read_offset.try_into().unwrap();
@@ -1163,10 +1050,6 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
         }
         read_offset += read_len;
 
-        // Discard the system file cache for the written portion
-        // of the output file.
-        //
-        // TODO Better error handling for overflowing `offset` and `len`.
         let write_len = wstat_update.bytes_total;
         if output_nocache {
             let offset = write_offset.try_into().unwrap();
@@ -1175,12 +1058,6 @@ fn dd_copy(mut i: Input, o: Output) -> io::Result<()> {
         }
         write_offset += write_len;
 
-        // Update the read/write stats and inform the progress thread once per second.
-        //
-        // If the receiver is disconnected, `send()` returns an
-        // error. Since it is just reporting progress and is not
-        // crucial to the operation of `dd`, let's just ignore the
-        // error.
         rstat += rstat_update;
         wstat += wstat_update;
         match alarm.get_trigger() {
@@ -1210,23 +1087,17 @@ fn finalize<T>(
     output_thread: thread::JoinHandle<T>,
     truncate: bool
 ) -> io::Result<()> {
-    // Flush the output in case a partial write has been buffered but
-    // not yet written.
     let wstat_update = output.flush()?;
 
-    // Sync the output, if configured to do so.
     output.sync()?;
 
-    // Truncate the file to the final cursor location.
     if truncate {
         output.truncate();
     }
 
-    // Print the final read/write statistics.
     let wstat = wstat + wstat_update;
     let prog_update = ProgUpdate::new(rstat, wstat, start.elapsed(), ProgUpdateType::Final);
     prog_tx.send(prog_update).unwrap_or(());
-    // Wait for the output thread to finish
     output_thread
         .join()
         .expect("Failed to join with the output thread.");
@@ -1239,7 +1110,6 @@ fn finalize<T>(
 fn make_linux_oflags(oflags: &OFlags) -> Option<libc::c_int> {
     let mut flag = 0;
 
-    // oflag=FLAG
     if oflags.append {
         flag |= libc::O_APPEND;
     }
@@ -1278,27 +1148,21 @@ fn make_linux_oflags(oflags: &OFlags) -> Option<libc::c_int> {
 /// mutates the `buf` argument in-place. The returned [`ReadStat`]
 /// indicates how many blocks were read.
 fn read_helper(i: &mut Input, buf: &mut Vec<u8>, bsize: usize) -> io::Result<ReadStat> {
-    // Local Helper Fns -------------------------------------------------
     fn perform_swab(buf: &mut [u8]) {
         for base in (1..buf.len()).step_by(2) {
             buf.swap(base, base - 1);
         }
     }
-    // ------------------------------------------------------------------
-    // Read
-    // Resize the buffer to the bsize. Any garbage data in the buffer is overwritten or truncated, so there is no need to fill with BUF_INIT_BYTE first.
     buf.resize(bsize, BUF_INIT_BYTE);
 
     let mut rstat = match i.settings.iconv.sync {
         Some(ch) => i.fill_blocks(buf, ch)?,
         _ => i.fill_consecutive(buf)?,
     };
-    // Return early if no data
     if rstat.reads_complete == 0 && rstat.reads_partial == 0 {
         return Ok(rstat);
     }
 
-    // Perform any conv=x[,x...] options
     if i.settings.iconv.swab {
         perform_swab(buf);
     }
@@ -1312,15 +1176,8 @@ fn read_helper(i: &mut Input, buf: &mut Vec<u8>, bsize: usize) -> io::Result<Rea
     }
 }
 
-// Calculate a 'good' internal buffer size.
-// For performance of the read/write functions, the buffer should hold
-// both an integral number of reads and an integral number of writes. For
-// sane real-world memory use, it should not be too large. I believe
-// the least common multiple is a good representation of these interests.
-// https://en.wikipedia.org/wiki/Least_common_multiple#Using_the_greatest_common_divisor
 fn calc_bsize(ibs: usize, obs: usize) -> usize {
     let gcd = Gcd::gcd(ibs, obs);
-    // calculate the lcm from gcd
     (ibs / gcd) * obs
 }
 
@@ -1406,7 +1263,6 @@ fn try_get_len_of_block_device(file: &mut File) -> io::Result<Option<u64>> {
         return Ok(None);
     }
 
-    // FIXME: this can be replaced by file.stream_len() when stable.
     let len = file.seek(SeekFrom::End(0))?;
     file.rewind()?;
     Ok(Some(len))
@@ -1423,7 +1279,7 @@ fn is_fifo(filename: &str) -> bool {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
@@ -1543,3 +1399,4 @@ mod tests {
         );
     }
 }
+

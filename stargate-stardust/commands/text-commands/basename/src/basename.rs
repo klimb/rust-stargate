@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) fullname
+
 
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, Command};
@@ -6,7 +6,7 @@ use std::ffi::OsString;
 use std::io::{Write, stdout};
 use std::path::PathBuf;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, UUsageError};
+use sgcore::error::{SGResult, SGUsageError};
 use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
 
@@ -22,12 +22,9 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    //
-    // Argument parsing
-    //
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO));
@@ -39,7 +36,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .unwrap_or_default()
         .collect::<Vec<_>>();
     if name_args.is_empty() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("basename-error-missing-operand")
         ));
@@ -52,13 +49,12 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             .cloned()
             .unwrap_or_default()
     } else {
-        // "simple format"
         match name_args.len() {
             0 => panic!("already checked"),
             1 => OsString::default(),
             2 => name_args.pop().unwrap().clone(),
             _ => {
-                return Err(UUsageError::new(
+                return Err(SGUsageError::new(
                     1,
                     translate!("basename-error-extra-operand",
                                "operand" => name_args[2].quote())
@@ -66,10 +62,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
         }
     };
-
-    //
-    // Main Program Processing
-    //
 
     if opts.stardust_output {
         let mut results = Vec::new();
@@ -134,17 +126,13 @@ pub fn sg_app() -> Command {
     stardust_output::add_json_args(cmd)
 }
 
-// We return a Vec<u8>. Returning a seemingly more proper `OsString` would
-// require back and forth conversions as we need a &[u8] for printing anyway.
-fn basename(fullname: &OsString, suffix: &OsString) -> UResult<Vec<u8>> {
+fn basename(fullname: &OsString, suffix: &OsString) -> SGResult<Vec<u8>> {
     let fullname_bytes = sgcore::os_str_as_bytes(fullname)?;
 
-    // Handle special case where path ends with /.
     if fullname_bytes.ends_with(b"/.") {
         return Ok(b".".into());
     }
 
-    // Convert to path buffer and get last path component
     let pb = PathBuf::from(fullname);
 
     pb.components().next_back().map_or(Ok([].into()), |c| {
@@ -161,3 +149,4 @@ fn basename(fullname: &OsString, suffix: &OsString) -> UResult<Vec<u8>> {
         }
     })
 }
+

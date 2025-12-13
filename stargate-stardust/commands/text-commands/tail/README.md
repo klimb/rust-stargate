@@ -41,7 +41,7 @@ flag name: `--use-polling`.
 The functionality for the test "gnu/tests/tail-2/follow-stdin.sh" is implemented.
 It fails because it is provoking closing a file descriptor with `tail -f <&-`
 and as part of a workaround, Rust's stdlib reopens closed FDs as `/dev/null`
-which means uu_tail cannot detect this.
+which means sg_tail cannot detect this.
 See also, e.g. the discussion at:
 <https://github.com/uutils/coreutils/issues/2873>
 
@@ -49,7 +49,7 @@ The functionality for the test "gnu/tests/tail-2/inotify-rotate-resources.sh"
 is implemented.
 It fails with an error because it is using `strace` to look for calls to
 `inotify_add_watch` and `inotify_rm_watch`,
-however in uu_tail these system calls are invoked from a separate thread.
+however in sg_tail these system calls are invoked from a separate thread.
 If the GNU test would follow threads, i.e. use `strace -f`, this issue could be
 resolved.
 

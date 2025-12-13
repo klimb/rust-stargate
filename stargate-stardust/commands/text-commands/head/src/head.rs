@@ -1,4 +1,4 @@
-// spell-checker:ignore (vars) seekable memrchr
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use memchr::memrchr_iter;
@@ -9,7 +9,7 @@ use std::num::TryFromIntError;
 use std::os::fd::{AsRawFd, FromRawFd};
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult};
+use sgcore::error::{FromIo, SGError, SGResult};
 use sgcore::line_ending::LineEnding;
 use sgcore::translate;
 use sgcore::{format_usage, show};
@@ -51,7 +51,7 @@ enum HeadError {
     MatchOption(String),
 }
 
-impl UError for HeadError {
+impl SGError for HeadError {
     fn code(&self) -> i32 {
         1
     }
@@ -165,7 +165,6 @@ impl Mode {
 fn arg_iterate<'a>(
     mut args: impl sgcore::Args + 'a
 ) -> HeadResult<Box<dyn Iterator<Item = OsString> + 'a>> {
-    // argv[0] is always present
     let first = args.next().unwrap();
     if let Some(second) = args.next() {
         if let Some(s) = second.to_str() {
@@ -177,13 +176,9 @@ fn arg_iterate<'a>(
                     )),
                 }
             } else {
-                // The second argument contains non-UTF-8 sequences, so it can't be an obsolete option
-                // like "-5". Treat it as a regular file argument.
                 Ok(Box::new(vec![first, second].into_iter().chain(args)))
             }
         } else {
-            // The second argument contains non-UTF-8 sequences, so it can't be an obsolete option
-            // like "-5". Treat it as a regular file argument.
             Ok(Box::new(vec![first, second].into_iter().chain(args)))
         }
     } else {
@@ -231,37 +226,27 @@ fn wrap_in_stdout_error(err: io::Error) -> io::Error {
 }
 
 fn read_n_bytes(input: impl Read, n: u64) -> io::Result<u64> {
-    // Read the first `n` bytes from the `input` reader.
     let mut reader = input.take(n);
 
-    // Write those bytes to `stdout`.
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
 
     let bytes_written = io::copy(&mut reader, &mut stdout).map_err(wrap_in_stdout_error)?;
 
-    // Make sure we finish writing everything to the target before
-    // exiting. Otherwise, when Rust is implicitly flushing, any
-    // error will be silently ignored.
     stdout.flush().map_err(wrap_in_stdout_error)?;
 
     Ok(bytes_written)
 }
 
 fn read_n_lines(input: &mut impl io::BufRead, n: u64, separator: u8) -> io::Result<u64> {
-    // Read the first `n` lines from the `input` reader.
     let mut reader = take_lines(input, n, separator);
 
-    // Write those bytes to `stdout`.
     let stdout = io::stdout();
     let stdout = stdout.lock();
     let mut writer = BufWriter::with_capacity(BUF_SIZE, stdout);
 
     let bytes_written = io::copy(&mut reader, &mut writer).map_err(wrap_in_stdout_error)?;
 
-    // Make sure we finish writing everything to the target before
-    // exiting. Otherwise, when Rust is implicitly flushing, any
-    // error will be silently ignored.
     writer.flush().map_err(wrap_in_stdout_error)?;
 
     Ok(bytes_written)
@@ -282,9 +267,6 @@ fn read_but_last_n_bytes(mut input: impl Read, n: u64) -> io::Result<u64> {
             .try_into()
             .unwrap();
 
-        // Make sure we finish writing everything to the target before
-        // exiting. Otherwise, when Rust is implicitly flushing, any
-        // error will be silently ignored.
         stdout.flush().map_err(wrap_in_stdout_error)?;
     }
     Ok(bytes_written)
@@ -302,9 +284,6 @@ fn read_but_last_n_lines(mut input: impl Read, n: u64, separator: u8) -> io::Res
             .map_err(wrap_in_stdout_error)?
             .try_into()
             .unwrap();
-        // Make sure we finish writing everything to the target before
-        // exiting. Otherwise, when Rust is implicitly flushing, any
-        // error will be silently ignored.
         stdout.flush().map_err(wrap_in_stdout_error)?;
     }
     Ok(bytes_written)
@@ -356,7 +335,6 @@ where
     let mut bytes_remaining_to_search = file_size;
 
     loop {
-        // the casts here are ok, `buffer.len()` should never be above a few k
         let bytes_to_read_this_loop =
             bytes_remaining_to_search.min(buffer.len().try_into().unwrap());
         let read_start_offset = bytes_remaining_to_search - bytes_to_read_this_loop;
@@ -366,11 +344,6 @@ where
         input.seek(SeekFrom::Start(read_start_offset))?;
         input.read_exact(buffer)?;
 
-        // Unfortunately need special handling for the case that the input file doesn't have
-        // a terminating `separator` character.
-        // If the input file doesn't end with a `separator` character, add an extra line to our
-        // `line` counter. In the case that `n` is 0 we need to return here since we've
-        // obviously found our 0th-line-from-the-end offset.
         if check_last_byte_first_loop {
             check_last_byte_first_loop = false;
             if let Some(last_byte_of_file) = buffer.last() {
@@ -458,7 +431,7 @@ fn head_file(input: &mut File, options: &HeadOptions) -> io::Result<u64> {
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn sg_head(options: &HeadOptions) -> UResult<()> {
+fn sg_head(options: &HeadOptions) -> SGResult<()> {
     let mut first = true;
     for file in &options.files {
         let res = if file == "-" {
@@ -474,9 +447,6 @@ fn sg_head(options: &HeadOptions) -> UResult<()> {
                 let mut stdin_file = unsafe { File::from_raw_fd(stdin_raw_fd) };
                 let current_pos = stdin_file.stream_position();
                 if let Ok(current_pos) = current_pos {
-                    // We have a seekable file. Ensure we set the input stream to the
-                    // last byte read so that any tools that parse the remainder of
-                    // the stdin stream read from the correct place.
 
                     let bytes_read = head_file(&mut stdin_file, options)?;
                     stdin_file.seek(SeekFrom::Start(current_pos + bytes_read))?;
@@ -532,15 +502,11 @@ fn sg_head(options: &HeadOptions) -> UResult<()> {
         }
         first = false;
     }
-    // Even though this is returning `Ok`, it is possible that a call
-    // to `show!()` and thus a call to `set_exit_code()` has been
-    // called above. If that happens, then this process will exit with
-    // a non-zero exit code.
     Ok(())
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let args: Vec<_> = arg_iterate(args)?.collect();
@@ -574,7 +540,7 @@ mod tests {
 
     #[test]
     fn test_gnu_compatibility() {
-        let args = options("-n 1 -c 1 -n 5 -c kiB -vqvqv").unwrap(); // spell-checker:disable-line
+        let args = options("-n 1 -c 1 -n 5 -c kiB -vqvqv").unwrap();
         assert_eq!(args.mode, Mode::FirstBytes(1024));
         assert!(args.verbose);
         assert_eq!(options("-5").unwrap().mode, Mode::FirstLines(5));
@@ -633,26 +599,20 @@ mod tests {
 
     #[test]
     fn test_arg_iterate() {
-        // test that normal args remain unchanged
         assert_eq!(
             arg_outputs("head -n -5 -zv"),
             Ok("head -n -5 -zv".to_owned())
         );
-        // tests that nonsensical args are unchanged
         assert_eq!(
             arg_outputs("head -to_be_or_not_to_be,..."),
             Ok("head -to_be_or_not_to_be,...".to_owned())
         );
-        //test that the obsolete syntax is unrolled
         assert_eq!(
-            arg_outputs("head -123qvqvqzc"), // spell-checker:disable-line
+            arg_outputs("head -123qvqvqzc"),
             Ok("head -q -z -c 123".to_owned())
         );
-        //test that bad obsoletes are an error
         assert!(arg_outputs("head -123FooBar").is_err());
-        //test overflow
         assert!(arg_outputs("head -100000000000000000000000000000000000000000").is_ok());
-        //test that empty args remain unchanged
         assert_eq!(arg_outputs("head"), Ok("head".to_owned()));
     }
 
@@ -661,7 +621,6 @@ mod tests {
     fn test_arg_iterate_bad_encoding() {
         use std::os::unix::ffi::OsStringExt;
         let invalid = OsString::from_vec(vec![b'\x80', b'\x81']);
-        // this arises from a conversion from OsString to &str
         assert!(arg_iterate(vec![OsString::from("head"), invalid].into_iter()).is_ok());
     }
 
@@ -674,17 +633,6 @@ mod tests {
 
     #[test]
     fn test_find_nth_line_from_end() {
-        // Make sure our input buffer is several multiples of BUF_SIZE in size
-        // such that we can be reasonably confident we've exercised all logic paths.
-        // Make the contents of the buffer look like...
-        // aaaa\n
-        // aaaa\n
-        // aaaa\n
-        // aaaa\n
-        // aaaa\n
-        // ...
-        // This will make it easier to validate the results since each line will have
-        // 5 bytes in it.
 
         let minimum_buffer_size = BUF_SIZE * 4;
         let mut input_buffer = vec![];
@@ -701,21 +649,14 @@ mod tests {
         let input_length = lines_in_input_file * 5;
         assert_eq!(input_length, TryInto::<u64>::try_into(input_buffer.len()).unwrap());
         let mut input = Cursor::new(input_buffer);
-        // We now have loop_iteration lines in the buffer Now walk backwards through the buffer
-        // to confirm everything parses correctly.
-        // Use a large step size to prevent the test from taking too long, but don't use a power
-        // of 2 in case we miss some corner case.
         let step_size = 511;
         for n in (0..lines_in_input_file).filter(|v| v % step_size == 0) {
-            // The 5*n comes from 5-bytes per row.
             assert_eq!(
                 find_nth_line_from_end(&mut input, n, b'\n').unwrap(),
                 input_length - 5 * n
             );
         }
 
-        // Now confirm that if we query with a value >= lines_in_input_file we get an offset
-        // of 0
         assert_eq!(
             find_nth_line_from_end(&mut input, lines_in_input_file, b'\n').unwrap(),
             0
@@ -732,8 +673,6 @@ mod tests {
 
     #[test]
     fn test_find_nth_line_from_end_non_terminated() {
-        // Validate the find_nth_line_from_end for files that are not terminated with a final
-        // newline character.
         let input_file = "a\nb";
         let mut input = Cursor::new(input_file);
         assert_eq!(find_nth_line_from_end(&mut input, 0, b'\n').unwrap(), 3);
@@ -742,10 +681,10 @@ mod tests {
 
     #[test]
     fn test_find_nth_line_from_end_empty() {
-        // Validate the find_nth_line_from_end for files that are empty.
         let input_file = "";
         let mut input = Cursor::new(input_file);
         assert_eq!(find_nth_line_from_end(&mut input, 0, b'\n').unwrap(), 0);
         assert_eq!(find_nth_line_from_end(&mut input, 1, b'\n').unwrap(), 0);
     }
 }
+

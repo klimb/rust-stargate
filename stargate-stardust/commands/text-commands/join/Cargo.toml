@@ -1,6 +1,6 @@
 [package]
 name = "sg_join"
-description = "join ~ (uutils) merge lines from inputs with matching join fields"
+description = "join ~ (stargate) merge lines from inputs with matching join fields"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

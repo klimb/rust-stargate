@@ -1,7 +1,7 @@
 # spell-checker:ignore bigdecimal extendedbigdecimal
 [package]
 name = "sg_get_range"
-description = "get-range ~ (uutils) display a sequence of numbers"
+description = "get-range ~ (stargate) display a sequence of numbers"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

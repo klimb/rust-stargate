@@ -1,8 +1,8 @@
-// spell-checker:ignore (ToDO) ttyname filedesc
+
 
 use clap::{Arg, ArgAction, Command};
 use std::io::{IsTerminal, Write};
-use sgcore::error::{UResult, set_exit_code};
+use sgcore::error::{SGResult, set_exit_code};
 use sgcore::format_usage;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 
@@ -13,14 +13,13 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
     sgcore::pledge::apply_pledge(&["stdio", "tty"])?;
     let object_output = StardustOutputOptions::from_matches(&matches);
 
     let silent = matches.get_flag(options::SILENT);
 
-    // If silent, we don't need the name, only whether or not stdin is a tty.
     if silent {
         return if std::io::stdin().is_terminal() {
             Ok(())
@@ -58,8 +57,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         };
 
         if write_result.is_err() || stdout.flush().is_err() {
-            // Don't return to prevent a panic later when another flush is attempted
-            // because the `sgcore_procs::main` macro inserts a flush after execution for every utility.
             std::process::exit(3);
         }
     }
@@ -81,6 +78,7 @@ pub fn sg_app() -> Command {
             .help(translate!("tty-help-silent"))
             .action(ArgAction::SetTrue)
     );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

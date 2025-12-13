@@ -1,12 +1,12 @@
-// spell-checker:ignore (ToDO) seekable seek'd tail'ing ringbuffer ringbuf unwatch
-// spell-checker:ignore (ToDO) Uncategorized filehandle Signum memrchr
-// spell-checker:ignore (libs) kqueue
-// spell-checker:ignore (acronyms)
-// spell-checker:ignore (env/flags)
-// spell-checker:ignore (jargon) tailable untailable stdlib
-// spell-checker:ignore (names)
-// spell-checker:ignore (shell/tools)
-// spell-checker:ignore (misc)
+
+
+
+
+
+
+
+
+
 
 pub mod args;
 pub mod chunks;
@@ -28,17 +28,13 @@ use std::fs::File;
 use std::io::{self, BufReader, BufWriter, ErrorKind, Read, Seek, SeekFrom, Write, stdin, stdout};
 use std::path::{Path, PathBuf};
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError, get_exit_code, set_exit_code};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, get_exit_code, set_exit_code};
 use sgcore::translate;
 
 use sgcore::{show, show_error};
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // When we receive a SIGPIPE signal, we want to terminate the process so
-    // that we don't print any error messages to stderr. Rust ignores SIGPIPE
-    // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
-    // default action here.
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
@@ -50,13 +46,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     match settings.verify() {
         args::VerificationResult::CannotFollowStdinByName => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("tail-error-cannot-follow-stdin-by-name", "stdin" => text::DASH.quote())
             ));
         }
-        // Exit early if we do not output anything. Note, that this may break a pipe
-        // when tail is on the receiving side.
         args::VerificationResult::NoOutput => return Ok(()),
         args::VerificationResult::Ok => {}
     }
@@ -64,13 +58,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     sg_tail(&settings)
 }
 
-fn sg_tail(settings: &Settings) -> UResult<()> {
+fn sg_tail(settings: &Settings) -> SGResult<()> {
     let mut printer = HeaderPrinter::new(settings.verbose, true);
     let mut observer = Observer::from(settings);
 
     observer.start(settings)?;
-    // Do an initial tail print of each path's content.
-    // Add `path` and `reader` to `files` map if `--follow` is selected.
     for input in &settings.inputs.clone() {
         match input.kind() {
             InputKind::Stdin => {
@@ -86,15 +78,6 @@ fn sg_tail(settings: &Settings) -> UResult<()> {
     }
 
     if settings.follow.is_some() {
-        /*
-        POSIX specification regarding tail -f
-        If the input file is a regular file or if the file operand specifies a FIFO, do not
-        terminate after the last line of the input file has been copied, but read and copy
-        further bytes from the input file when they become available. If no file operand is
-        specified and standard input is a pipe or FIFO, the -f option shall be ignored. If
-        the input file is not a FIFO, pipe, or regular file, it is unspecified whether or
-        not the -f option shall be ignored.
-        */
         if !settings.has_only_stdin() || settings.pid != 0 {
             follow::follow(observer, settings)?;
         }
@@ -114,7 +97,7 @@ fn tail_file(
     path: &Path,
     observer: &mut Observer,
     offset: u64
-) -> UResult<()> {
+) -> SGResult<()> {
     if !path.exists() {
         set_exit_code(1);
         show_error!(
@@ -144,7 +127,6 @@ fn tail_file(
             );
         }
         if !observer.follow_name_retry() {
-            // skip directory if not retry
             return Ok(());
         }
         observer.add_bad_path(path, input.display_name.as_str(), false)?;
@@ -199,13 +181,7 @@ fn tail_stdin(
     header_printer: &mut HeaderPrinter,
     input: &Input,
     observer: &mut Observer
-) -> UResult<()> {
-    // on macOS, resolve() will always return None for stdin,
-    // we need to detect if stdin is a directory ourselves.
-    // fstat-ing certain descriptors under /dev/fd fails with
-    // bad file descriptor or might not catch directory cases
-    // e.g. see the differences between running ls -l /dev/stdin /dev/fd/0
-    // on macOS and Linux.
+) -> SGResult<()> {
     #[cfg(target_os = "macos")]
     {
         if let Ok(mut stdin_handle) = Handle::stdin() {
@@ -223,12 +199,9 @@ fn tail_stdin(
     }
 
     match input.resolve() {
-        // fifo
         Some(path) => {
             let mut stdin_offset = 0;
             if cfg!(unix) {
-                // Save the current seek position/offset of a stdin redirected file.
-                // This is needed to pass "gnu/tests/tail-2/start-middle.sh"
                 if let Ok(mut stdin_handle) = Handle::stdin() {
                     if let Ok(offset) = stdin_handle.as_file_mut().stream_position() {
                         stdin_offset = offset;
@@ -244,7 +217,6 @@ fn tail_stdin(
                 stdin_offset
             )?;
         }
-        // pipe
         None => {
             header_printer.print_input(input);
             if paths::stdin_is_bad_fd() {
@@ -322,28 +294,19 @@ fn forwards_thru_file(
     num_delimiters: u64,
     delimiter: u8
 ) -> io::Result<usize> {
-    // If num_delimiters == 0, always return 0.
     if num_delimiters == 0 {
         return Ok(0);
     }
-    // Use a 32K buffer.
     let mut buf = [0; 32 * 1024];
     let mut total = 0;
     let mut count = 0;
-    // Iterate through the input, using `count` to record the number of times `delimiter`
-    // is seen. Once we find `num_delimiters` instances, return the offset of the byte
-    // immediately following that delimiter.
     loop {
         match reader.read(&mut buf) {
-            // Ok(0) => EoF before we found `num_delimiters` instance of `delimiter`.
-            // Return the total number of bytes read in that case.
             Ok(0) => return Ok(total),
             Ok(n) => {
-                // Use memchr_iter since it greatly improves search performance.
                 for offset in memchr_iter(delimiter, &buf[..n]) {
                     count += 1;
                     if count == num_delimiters {
-                        // Return offset of the byte after the `delimiter` instance.
                         return Ok(total + offset + 1);
                     }
                 }
@@ -359,15 +322,11 @@ fn forwards_thru_file(
 /// `num_delimiters` instance of `delimiter`. The `file` is left seek'd to the
 /// position just after that delimiter.
 fn backwards_thru_file(file: &mut File, num_delimiters: u64, delimiter: u8) {
-    // This variable counts the number of delimiters found in the file
-    // so far (reading from the end of the file toward the beginning).
     let mut counter = 0;
     let mut first_slice = true;
     for slice in ReverseChunks::new(file) {
-        // Iterate over each byte in the slice in reverse order.
         let mut iter = memrchr_iter(delimiter, &slice);
 
-        // Ignore a trailing newline in the last block, if there is one.
         if first_slice {
             if let Some(c) = slice.last() {
                 if *c == delimiter {
@@ -377,19 +336,10 @@ fn backwards_thru_file(file: &mut File, num_delimiters: u64, delimiter: u8) {
             first_slice = false;
         }
 
-        // For each byte, increment the count of the number of
-        // delimiters found. If we have found more than the specified
-        // number of delimiters, terminate the search and seek to the
-        // appropriate location in the file.
         for i in iter {
             counter += 1;
             if counter >= num_delimiters {
-                // We should never over-count - assert that.
                 assert_eq!(counter, num_delimiters);
-                // After each iteration of the outer loop, the
-                // cursor in the file is at the *beginning* of the
-                // block, so seeking forward by `i + 1` bytes puts
-                // us right after the found delimiter.
                 file.seek(SeekFrom::Current((i + 1) as i64)).unwrap();
                 return;
             }
@@ -406,7 +356,6 @@ fn bounded_tail(file: &mut File, settings: &Settings) {
     debug_assert!(!settings.presume_input_pipe);
     let mut limit = None;
 
-    // Find the position in the file to start printing from.
     match &settings.mode {
         FilterMode::Lines(Signum::Negative(count), delimiter) => {
             backwards_thru_file(file, *count, *delimiter);
@@ -423,8 +372,6 @@ fn bounded_tail(file: &mut File, settings: &Settings) {
             limit = Some(*count);
         }
         FilterMode::Bytes(Signum::Positive(count)) if count > &1 => {
-            // GNU `tail` seems to index bytes and lines starting at 1, not
-            // at 0. It seems to treat `+0` and `+1` as the same thing.
             file.seek(SeekFrom::Start(*count - 1)).unwrap();
         }
         FilterMode::Bytes(Signum::MinusZero) => {
@@ -436,7 +383,7 @@ fn bounded_tail(file: &mut File, settings: &Settings) {
     print_target_section(file, limit);
 }
 
-fn unbounded_tail<T: Read>(reader: &mut BufReader<T>, settings: &Settings) -> UResult<()> {
+fn unbounded_tail<T: Read>(reader: &mut BufReader<T>, settings: &Settings) -> SGResult<()> {
     let mut writer = BufWriter::new(stdout().lock());
     match &settings.mode {
         FilterMode::Lines(Signum::Negative(count), sep) => {
@@ -498,7 +445,6 @@ fn unbounded_tail<T: Read>(reader: &mut BufReader<T>, settings: &Settings) -> UR
     }
     writer.flush()?;
 
-    // SIGPIPE is not available on Windows.
     Ok(())
 }
 
@@ -506,7 +452,6 @@ fn print_target_section<R>(file: &mut R, limit: Option<u64>)
 where
     R: Read + ?Sized,
 {
-    // Print the target section of the file.
     let stdout = stdout();
     let mut stdout = stdout.lock();
     if let Some(limit) = limit {
@@ -532,7 +477,6 @@ mod tests {
 
     #[test]
     fn test_forwards_thru_file_basic() {
-        //                   01 23 45 67 89
         let mut reader = Cursor::new("a\nb\nc\nd\ne\n");
         let i = forwards_thru_file(&mut reader, 2, b'\n').unwrap();
         assert_eq!(i, 4);
@@ -545,3 +489,4 @@ mod tests {
         assert_eq!(i, 2);
     }
 }
+

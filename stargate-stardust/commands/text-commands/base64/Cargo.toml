@@ -1,6 +1,6 @@
 [package]
 name = "sg_base64"
-description = "base64 ~ (uutils) decode/encode input (base64-encoding)"
+description = "base64 ~ (stargate) decode/encode input (base64-encoding)"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

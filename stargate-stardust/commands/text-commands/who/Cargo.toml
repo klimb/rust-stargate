@@ -3,7 +3,7 @@
 
 [package]
 name = "sg_who"
-description = "who ~ (uutils) display information about currently logged-in users"
+description = "who ~ (stargate) display information about currently logged-in users"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

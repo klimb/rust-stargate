@@ -1,6 +1,6 @@
 [package]
 name = "sg_truncate"
-description = "truncate ~ (uutils) truncate (or extend) FILE to SIZE"
+description = "truncate ~ (stargate) truncate (or extend) FILE to SIZE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,11 +1,11 @@
-// spell-checker:ignore (ToDO) errno
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
 use std::fs;
 use std::io::{Write, stdout};
 use std::path::{Path, PathBuf};
-use sgcore::error::{FromIo, UResult, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGUsageError};
 use sgcore::fs::{MissingHandling, ResolveMode, canonicalize};
 use sgcore::libc::EINVAL;
 use sgcore::line_ending::LineEnding;
@@ -25,7 +25,7 @@ const OPT_ZERO: &str = "zero";
 const ARG_FILES: &str = "files";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let object_output = StardustOutputOptions::from_matches(&matches);
@@ -37,7 +37,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 }
 
-fn readlink_text(matches: &ArgMatches) -> UResult<()> {
+fn readlink_text(matches: &ArgMatches) -> SGResult<()> {
 
     let mut no_trailing_delimiter = matches.get_flag(OPT_NO_NEWLINE);
     let use_zero = matches.get_flag(OPT_ZERO);
@@ -67,7 +67,7 @@ fn readlink_text(matches: &ArgMatches) -> UResult<()> {
         .unwrap_or_default();
 
     if files.is_empty() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("readlink-error-missing-operand")
         ));
@@ -114,7 +114,7 @@ fn readlink_text(matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn readlink_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
+fn readlink_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> SGResult<()> {
     let res_mode = if matches.get_flag(OPT_CANONICALIZE)
         || matches.get_flag(OPT_CANONICALIZE_EXISTING)
         || matches.get_flag(OPT_CANONICALIZE_MISSING)
@@ -138,7 +138,7 @@ fn readlink_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> 
         .unwrap_or_default();
 
     if files.is_empty() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("readlink-error-missing-operand")
         ));
@@ -254,7 +254,7 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
                 .value_hint(clap::ValueHint::AnyPath)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -265,3 +265,4 @@ fn show(path: &Path, line_ending: Option<LineEnding>) -> std::io::Result<()> {
     }
     stdout().flush()
 }
+

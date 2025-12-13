@@ -1,6 +1,6 @@
 [package]
 name = "sg_csplit"
-description = "csplit ~ (uutils) Output pieces of FILE separated by PATTERN(s) to files 'xx00', 'xx01', ..., and output byte counts of each piece to standard output"
+description = "csplit ~ (stargate) Output pieces of FILE separated by PATTERN(s) to files 'xx00', 'xx01', ..., and output byte counts of each piece to standard output"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

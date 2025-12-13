@@ -1,10 +1,10 @@
-// spell-checker:ignore (ToDO) getlogin userlogin
+
 
 use clap::Command;
 use std::ffi::CStr;
 use sgcore::translate;
 use sgcore::{
-    error::UResult,
+    error::SGResult,
     show_error,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -21,7 +21,7 @@ fn get_userlogin() -> Option<String> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let object_output = StardustOutputOptions::from_matches(&matches);
@@ -50,6 +50,7 @@ pub fn sg_app() -> Command {
         .override_usage(sgcore::util_name())
         .about(translate!("get_username-about"))
         .infer_long_args(true);
-    
+
     stardust_output::add_json_args(cmd)
 }
+

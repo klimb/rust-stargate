@@ -1,6 +1,6 @@
 [package]
 name = "sg_paste"
-description = "paste ~ (uutils) merge lines from inputs"
+description = "paste ~ (stargate) merge lines from inputs"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

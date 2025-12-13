@@ -1,6 +1,6 @@
 [package]
 name = "sg_od"
-description = "od ~ (uutils) display formatted representation of input"
+description = "od ~ (stargate) display formatted representation of input"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

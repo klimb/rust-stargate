@@ -1,25 +1,24 @@
-// spell-checker:ignore (ToDO) asid auditid auditinfo auid cstr egid emod euid getaudit getlogin gflag nflag pline rflag termid uflag gsflag zflag cflag
 
-// README:
-// This was originally based on BSD's `id`
-// (noticeable in functionality, usage text, options text, etc.)
-// and synced with:
-//  http://ftp-archive.freebsd.org/mirror/FreeBSD-Archive/old-releases/i386/1.0-RELEASE/ports/shellutils/src/id.c
-//  http://www.opensource.apple.com/source/shell_cmds/shell_cmds-118/id/id.c
-//
-// * This was partially rewritten in order for stdout/stderr/exit_code
-//   to be conform with GNU coreutils (8.32) test suite for `id`.
-//
-// * This supports multiple users (a feature that was introduced in coreutils 8.31)
-//
-// * This passes GNU's coreutils Test suite (8.32)
-//   for "tests/id/uid.sh" and "tests/id/zero/sh".
-//
-// * Option '--zero' does not exist for BSD's `id`, therefore '--zero' is only
-//   allowed together with other options that are available on GNU's `id`.
-//
-// * Help text based on BSD's `id` manpage and GNU's `id` manpage.
-//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #![allow(non_camel_case_types)]
@@ -29,8 +28,8 @@ use clap::{Arg, ArgAction, Command};
 use std::ffi::CStr;
 use sgcore::display::Quotable;
 use sgcore::entries::{self, Group, Locate, Passwd};
-use sgcore::error::UResult;
-use sgcore::error::{USimpleError, set_exit_code};
+use sgcore::error::SGResult;
+use sgcore::error::{SGSimpleError, set_exit_code};
 pub use sgcore::libc;
 use sgcore::libc::{getlogin, uid_t};
 use sgcore::line_ending::LineEnding;
@@ -45,7 +44,6 @@ macro_rules! cstr2cow {
     ($v:expr) => {
         unsafe {
             let ptr = $v;
-            // Must be not null to call cstr2cow
             if ptr.is_null() {
                 None
             } else {
@@ -61,39 +59,39 @@ fn get_context_help_text() -> String {
 
 mod options {
     pub const OPT_IGNORE: &str = "ignore";
-    pub const OPT_AUDIT: &str = "audit"; // GNU's id does not have this
+    pub const OPT_AUDIT: &str = "audit";
     pub const OPT_CONTEXT: &str = "context";
     pub const OPT_EFFECTIVE_USER: &str = "user";
     pub const OPT_GROUP: &str = "group";
     pub const OPT_GROUPS: &str = "groups";
-    pub const OPT_HUMAN_READABLE: &str = "human-readable"; // GNU's id does not have this
+    pub const OPT_HUMAN_READABLE: &str = "human-readable";
     pub const OPT_NAME: &str = "name";
-    pub const OPT_PASSWORD: &str = "password"; // GNU's id does not have this
+    pub const OPT_PASSWORD: &str = "password";
     pub const OPT_REAL_ID: &str = "real";
-    pub const OPT_ZERO: &str = "zero"; // BSD's id does not have this
+    pub const OPT_ZERO: &str = "zero";
     pub const ARG_USERS: &str = "USER";
 }
 
 struct Ids {
-    uid: u32,  // user id
-    gid: u32,  // group id
-    euid: u32, // effective uid
-    egid: u32, // effective gid
+    uid: u32,
+    gid: u32,
+    euid: u32,
+    egid: u32,
 }
 
 struct State {
-    nflag: bool,  // --name
-    uflag: bool,  // --user
-    gflag: bool,  // --group
-    gsflag: bool, // --groups
-    rflag: bool,  // --real
+    nflag: bool,
+    uflag: bool,
+    gflag: bool,
+    gsflag: bool,
+    rflag: bool,
     ids: Option<Ids>,
     user_specified: bool,
 }
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
@@ -116,12 +114,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let default_format = {
-        // "default format" is when none of '-ugG' was used
         !(state.uflag || state.gflag || state.gsflag)
     };
 
     if (state.nflag || state.rflag) && default_format {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("id-error-names-real-ids-require-flags")
         ));
@@ -129,7 +126,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let zero_flag = matches.get_flag(options::OPT_ZERO);
     if zero_flag && default_format {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "option --zero not permitted in default format"
         ));
@@ -161,19 +158,15 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             None
         };
 
-        // GNU's `id` does not support the flags: -p/-P/-A.
         if matches.get_flag(options::OPT_PASSWORD) {
-            // BSD's `id` ignores all but the first specified user
             pline(possible_pw.as_ref().map(|v| v.uid));
             return Ok(());
         }
         if matches.get_flag(options::OPT_HUMAN_READABLE) {
-            // BSD's `id` ignores all but the first specified user
             pretty(possible_pw);
             return Ok(());
         }
         if matches.get_flag(options::OPT_AUDIT) {
-            // BSD's `id` ignores specified users
             auditid();
             return Ok(());
         }
@@ -266,7 +259,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
         if default_format {
             if opts.stardust_output {
-                // Object output for default format
                 let user_name = entries::uid2usr(uid).ok();
                 let group_name = entries::gid2grp(gid).ok();
                 let groups_array: Vec<serde_json::Value> = groups
@@ -417,7 +409,7 @@ pub fn sg_app() -> Command {
                 .value_name(options::ARG_USERS)
                 .value_hint(clap::ValueHint::Username)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -531,7 +523,6 @@ fn auditid() {
         return;
     }
 
-    // SAFETY: getaudit wrote a valid struct to auditinfo
     let auditinfo = unsafe { auditinfo.assume_init() };
 
     println!("auid={}", auditinfo.ai_auid);
@@ -583,7 +574,6 @@ fn id_print(state: &State, groups: &[u32]) {
         );
     }
     if !state.user_specified && (egid != gid) {
-        // BUG?  printing egid={euid} ?
         print!(
             " egid={egid}({})",
             entries::gid2grp(egid).unwrap_or_else(|_| {
@@ -643,11 +633,11 @@ mod audit {
     #[repr(C)]
     #[expect(clippy::struct_field_names)]
     pub struct c_auditinfo_addr {
-        pub ai_auid: au_id_t,         // Audit user ID
-        pub ai_mask: au_mask_t,       // Audit masks.
-        pub ai_termid: au_tid_addr_t, // Terminal ID.
-        pub ai_asid: au_asid_t,       // Audit session ID.
-        pub ai_flags: au_flag_t,      // Audit session flags
+        pub ai_auid: au_id_t,
+        pub ai_mask: au_mask_t,
+        pub ai_termid: au_tid_addr_t,
+        pub ai_asid: au_asid_t,
+        pub ai_flags: au_flag_t,
     }
     pub type c_auditinfo_addr_t = c_auditinfo_addr;
 
@@ -655,3 +645,4 @@ mod audit {
         pub fn getaudit(auditinfo_addr: *mut c_auditinfo_addr_t) -> c_int;
     }
 }
+

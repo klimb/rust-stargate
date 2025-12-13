@@ -1,6 +1,6 @@
 use clap::{Arg, ArgAction, Command};
 use serde_json::json;
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format_usage;
 use std::fs::File;
 use std::io::{self, Read, Write};
@@ -12,7 +12,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sg_app().try_get_matches_from(args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
@@ -20,30 +20,22 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let object_output = matches.get_flag(options::STARDUST_OUTPUT);
     let pretty = matches.get_flag(options::PRETTY);
 
-    // Read all input from stdin
     let mut input = String::new();
     io::stdin().read_to_string(&mut input)?;
 
-    // Check if input is JSON from another stargate command
-    // If so, extract the text content from the "output" field
     let content_to_write = if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&input) {
-        // If it's JSON with an "output" field, extract that
         if let Some(output) = json_value.get("output").and_then(|v| v.as_str()) {
             output.to_string()
         } else {
-            // Otherwise write the JSON as-is
             input
         }
     } else {
-        // Not JSON, write as-is
         input
     };
 
-    // Write to file
     let mut file = File::create(path)?;
     file.write_all(content_to_write.as_bytes())?;
 
-    // Output result
     if object_output {
         let output = json!({
             "path": path,
@@ -57,7 +49,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             println!("{}", output);
         }
     }
-    // Silent operation for normal mode (like traditional file redirection)
 
     Ok(())
 }
@@ -98,3 +89,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue),
         )
 }
+

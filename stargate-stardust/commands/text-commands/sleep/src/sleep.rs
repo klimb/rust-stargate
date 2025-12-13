@@ -5,7 +5,7 @@ use serde_json::json;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
-    error::{UResult, USimpleError, UUsageError},
+    error::{SGResult, SGSimpleError, SGUsageError},
     format_usage,
     parser::parse_time,
     show_error,
@@ -16,16 +16,16 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    
+
     let json_output_options = StardustOutputOptions::from_matches(&matches);
 
     let numbers = matches
         .get_many::<String>(options::NUMBER)
         .ok_or_else(|| {
-            USimpleError::new(
+            SGSimpleError::new(
                 1,
                 translate!("sleep-error-missing-operand", "program" => sgcore::execution_phrase())
             )
@@ -50,11 +50,11 @@ pub fn sg_app() -> Command {
                 .value_name(options::NUMBER)
                 .action(ArgAction::Append)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-fn sleep(args: &[&str], json_output_options: StardustOutputOptions) -> UResult<()> {
+fn sleep(args: &[&str], json_output_options: StardustOutputOptions) -> SGResult<()> {
     let mut arg_error = false;
 
     let sleep_dur = args
@@ -70,9 +70,9 @@ fn sleep(args: &[&str], json_output_options: StardustOutputOptions) -> UResult<(
         .fold(Duration::ZERO, |acc, n| acc.saturating_add(n));
 
     if arg_error {
-        return Err(UUsageError::new(1, ""));
+        return Err(SGUsageError::new(1, ""));
     }
-    
+
     if json_output_options.stardust_output {
         let output = json!({
             "duration_seconds": sleep_dur.as_secs(),
@@ -80,7 +80,8 @@ fn sleep(args: &[&str], json_output_options: StardustOutputOptions) -> UResult<(
         });
         stardust_output::output(json_output_options, output, || Ok(()))?;
     }
-    
+
     thread::sleep(sleep_dur);
     Ok(())
 }
+

@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) ctype cwidth iflag nbytes nspaces nums tspaces uflag Preprocess
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
@@ -10,7 +10,7 @@ use std::str::from_utf8;
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult, set_exit_code};
+use sgcore::error::{FromIo, SGError, SGResult, set_exit_code};
 use sgcore::translate;
 use sgcore::{format_usage, show_error};
 
@@ -69,7 +69,7 @@ enum ParseError {
     TabSizesMustBeAscending,
 }
 
-impl UError for ParseError {}
+impl SGError for ParseError {}
 
 /// Parse a list of tabstops from a `--tabs` argument.
 ///
@@ -80,11 +80,8 @@ impl UError for ParseError {}
 /// number of spaces to use for columns beyond the end of the tab stop
 /// list specified here.
 fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
-    // Leading commas and spaces are ignored.
     let s = s.trim_start_matches(is_space_or_comma);
 
-    // If there were only commas and spaces in the string, just use the
-    // default tabstops.
     if s.is_empty() {
         return Ok((RemainingMode::None, vec![DEFAULT_TABSTOP]));
     }
@@ -99,16 +96,13 @@ fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
                 b'+' => remaining_mode = RemainingMode::Plus,
                 b'/' => remaining_mode = RemainingMode::Slash,
                 _ => {
-                    // Parse a number from the byte sequence.
                     let s = from_utf8(&bytes[i..]).unwrap();
                     match s.parse::<usize>() {
                         Ok(num) => {
-                            // Tab size must be positive.
                             if num == 0 {
                                 return Err(ParseError::TabSizeCannotBeZero);
                             }
 
-                            // Tab sizes must be ascending.
                             if let Some(last_stop) = nums.last() {
                                 if *last_stop >= num {
                                     return Err(ParseError::TabSizesMustBeAscending);
@@ -128,7 +122,6 @@ fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
                                 is_specifier_already_used = true;
                             }
 
-                            // Append this tab stop to the list of all tabstops.
                             nums.push(num);
                             break;
                         }
@@ -152,8 +145,6 @@ fn tabstops_parse(s: &str) -> Result<(RemainingMode, Vec<usize>), ParseError> {
             }
         }
     }
-    // If no numbers could be parsed (for example, if `s` were "+,+,+"),
-    // then just use the default tabstops.
     if nums.is_empty() {
         nums = vec![DEFAULT_TABSTOP];
     }
@@ -186,8 +177,6 @@ impl Options {
         let iflag = matches.get_flag(options::INITIAL);
         let uflag = !matches.get_flag(options::NO_UTF8);
 
-        // avoid allocations when dumping out long sequences of spaces
-        // by precomputing the longest string of spaces we will ever need
         let nspaces = tabstops
             .iter()
             .scan(0, |pr, &it| {
@@ -196,7 +185,7 @@ impl Options {
                 ret
             })
             .max()
-            .unwrap(); // length of tabstops is guaranteed >= 1
+            .unwrap();
         let tspaces = " ".repeat(nspaces);
 
         let files: Vec<OsString> = match matches.get_many::<OsString>(options::FILES) {
@@ -237,7 +226,7 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app(), expand_shortcuts(args.collect()))?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
@@ -286,7 +275,7 @@ pub fn sg_app() -> Command {
     )
 }
 
-fn open(path: &OsString) -> UResult<BufReader<Box<dyn Read + 'static>>> {
+fn open(path: &OsString) -> SGResult<BufReader<Box<dyn Read + 'static>>> {
     let file_buf;
     if path == "-" {
         Ok(BufReader::new(Box::new(stdin()) as Box<dyn Read>))
@@ -354,8 +343,6 @@ fn expand_line(
 ) -> std::io::Result<()> {
     use self::CharType::{Backspace, Other, Tab};
 
-    // Fast path: if there are no tabs, backspaces, and (in UTF-8 mode or no carriage returns),
-    // we can write the buffer directly without character-by-character processing
     if !buf.contains(&b'\t') && !buf.contains(&b'\x08') && (options.uflag || !buf.contains(&b'\r'))
     {
         output.write_all(buf)?;
@@ -372,7 +359,6 @@ fn expand_line(
             let nbytes = char::from(buf[byte]).len_utf8();
 
             if byte + nbytes > buf.len() {
-                // don't overrun buffer because of invalid UTF-8
                 (Other, 1, 1)
             } else if let Ok(t) = from_utf8(&buf[byte..byte + nbytes]) {
                 match t.chars().next() {
@@ -380,17 +366,15 @@ fn expand_line(
                     Some('\x08') => (Backspace, 0, nbytes),
                     Some(c) => (Other, UnicodeWidthChar::width(c).unwrap_or(0), nbytes),
                     None => {
-                        // no valid char at start of t, so take 1 byte
                         (Other, 1, 1)
                     }
                 }
             } else {
-                (Other, 1, 1) // implicit assumption: non-UTF-8 char is 1 col wide
+                (Other, 1, 1)
             }
         } else {
             (
                 match buf.get(byte) {
-                    // always take exactly 1 byte in strict ASCII mode
                     Some(0x09) => Tab,
                     Some(0x08) => Backspace,
                     _ => Other,
@@ -400,14 +384,11 @@ fn expand_line(
             )
         };
 
-        // figure out how many columns this char takes up
         match ctype {
             Tab => {
-                // figure out how many spaces to the next tabstop
                 let nts = next_tabstop(tabstops, col, &options.remaining_mode);
                 col += nts;
 
-                // now dump out either spaces if we're expanding, or a literal tab if we're not
                 if init || !options.iflag {
                     if nts <= options.tspaces.len() {
                         output.write_all(&options.tspaces.as_bytes()[..nts])?;
@@ -427,8 +408,6 @@ fn expand_line(
                     0
                 };
 
-                // if we're writing anything other than a space, then we're
-                // done with the line's leading spaces
                 if buf[byte] != 0x20 {
                     init = false;
                 }
@@ -437,15 +416,15 @@ fn expand_line(
             }
         }
 
-        byte += nbytes; // advance the pointer
+        byte += nbytes;
     }
 
-    buf.truncate(0); // clear the buffer
+    buf.truncate(0);
 
     Ok(())
 }
 
-fn expand(options: &Options) -> UResult<()> {
+fn expand(options: &Options) -> SGResult<()> {
     let mut output = BufWriter::new(stdout());
     let ts = options.tabstops.as_ref();
     let mut buf = Vec::new();
@@ -475,7 +454,6 @@ fn expand(options: &Options) -> UResult<()> {
             }
         }
     }
-    // Flush once at the end
     output
         .flush()
         .map_err_context(|| translate!("expand-error-failed-to-write-output"))?;
@@ -517,3 +495,4 @@ mod tests {
         assert!(!is_digit_or_comma('a'));
     }
 }
+

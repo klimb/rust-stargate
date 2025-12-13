@@ -5,7 +5,7 @@ use sg_tr::sgmain;
 
 use rand::Rng;
 
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd,
 };
 static CMD_PATH: &str = "tr";
@@ -14,7 +14,6 @@ fn generate_tr_args() -> Vec<String> {
     let mut rng = rand::rng();
     let mut args = Vec::new();
 
-    // Translate, squeeze, and/or delete characters
     let opts = ["-c", "-d", "-s", "-t"];
     for opt in &opts {
         if rng.random_bool(0.25) {
@@ -22,11 +21,9 @@ fn generate_tr_args() -> Vec<String> {
         }
     }
 
-    // Generating STRING1 and optionally STRING2
     let string1 = generate_random_string(rng.random_range(1..=20));
     args.push(string1);
     if rng.random_bool(0.7) {
-        // Higher chance to add STRING2 for translation
         let string2 = generate_random_string(rng.random_range(1..=20));
         args.push(string2);
     }
@@ -65,3 +62,4 @@ fuzz_target!(|_data: &[u8]| {
         false,
     );
 });
+

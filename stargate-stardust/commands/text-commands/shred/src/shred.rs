@@ -1,4 +1,4 @@
-// spell-checker:ignore (words) wipesync prefill couldnt
+
 
 use clap::{Arg, ArgAction, Command};
 use libc::S_IWUSR;
@@ -9,7 +9,7 @@ use std::io::{self, Read, Seek, Write};
 use std::os::unix::prelude::PermissionsExt;
 use std::path::{Path, PathBuf};
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, SGUsageError};
 use sgcore::parser::parse_size::parse_size_u64;
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::translate;
@@ -34,7 +34,6 @@ pub mod options {
     }
 }
 
-// This block size seems to match GNU (2^16 = 65536)
 const BLOCK_SIZE: usize = 1 << 16;
 const NAME_CHARSET: &[u8] = b"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.";
 
@@ -88,15 +87,14 @@ enum PassType {
 
 #[derive(PartialEq, Clone, Copy)]
 enum RemoveMethod {
-    None,     // Default method. Only obfuscate the file data
-    Unlink,   // The same as 'None' + unlink the file
-    Wipe,     // The same as 'Unlink' + obfuscate the file name before unlink
-    WipeSync, // The same as 'Wipe' sync the file name changes
+    None,
+    Unlink,
+    Wipe,
+    WipeSync,
 }
 
 /// Iterates over all possible filenames of a certain length using [`NAME_CHARSET`] as an alphabet
 struct FilenameIter {
-    // Store the indices of the letters of our filename in NAME_CHARSET
     name_charset_indices: Vec<usize>,
     exhausted: bool,
 }
@@ -118,18 +116,14 @@ impl Iterator for FilenameIter {
             return None;
         }
 
-        // First, make the return value using the current state
         let ret: String = self
             .name_charset_indices
             .iter()
             .map(|i| char::from(NAME_CHARSET[*i]))
             .collect();
 
-        // Now increment the least significant index and possibly each next
-        // index if necessary.
         for index in self.name_charset_indices.iter_mut().rev() {
             if *index == NAME_CHARSET.len() - 1 {
-                // Carry the 1
                 *index = 0;
             } else {
                 *index += 1;
@@ -137,7 +131,6 @@ impl Iterator for FilenameIter {
             }
         }
 
-        // If we get here, we flipped all bits back to 0, so we exhausted all options.
         self.exhausted = true;
         Some(ret)
     }
@@ -150,8 +143,6 @@ enum RandomSource {
 
 /// Used to generate blocks of bytes of size <= [`BLOCK_SIZE`] based on either a give pattern
 /// or randomness
-// The lint warns about a large difference because StdRng is big, but the buffers are much
-// larger anyway, so it's fine.
 #[allow(clippy::large_enum_variant)]
 enum BytesWriter<'a> {
     Random {
@@ -162,15 +153,6 @@ enum BytesWriter<'a> {
         rng_file: &'a File,
         buffer: [u8; BLOCK_SIZE],
     },
-    // To write patterns, we only write to the buffer once. To be able to do
-    // this, we need to extend the buffer with 2 bytes. We can then easily
-    // obtain a buffer starting with any character of the pattern that we
-    // want with an offset of either 0, 1 or 2.
-    //
-    // For example, if we have the pattern ABC, but we want to write a block
-    // of BLOCK_SIZE starting with B, we just pick the slice [1..BLOCK_SIZE+1]
-    // This means that we only have to fill the buffer once and can just reuse
-    // it afterward.
     Pattern {
         offset: usize,
         buffer: [u8; PATTERN_BUFFER_SIZE],
@@ -191,9 +173,6 @@ impl<'a> BytesWriter<'a> {
                 },
             },
             PassType::Pattern(pattern) => {
-                // Copy the pattern in chunks rather than simply one byte at a time
-                // We prefill the pattern so that the buffer can be reused at each
-                // iteration as a small optimization.
                 let buffer = match pattern {
                     Pattern::Single(byte) => [*byte; PATTERN_BUFFER_SIZE],
                     Pattern::Multi(bytes) => {
@@ -231,12 +210,12 @@ impl<'a> BytesWriter<'a> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     if !matches.contains_id(options::FILE) {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("shred-missing-file-operand")
         ));
@@ -246,7 +225,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Some(s) => match s.parse::<usize>() {
             Ok(u) => u,
             Err(_) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("shred-invalid-number-of-passes", "passes" => s.quote())
                 ));
@@ -257,14 +236,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let random_source = match matches.get_one::<String>(options::RANDOM_SOURCE) {
         Some(filepath) => RandomSource::Read(File::open(filepath).map_err(|_| {
-            USimpleError::new(
+            SGSimpleError::new(
                 1,
                 translate!("shred-cannot-open-random-source", "source" => filepath.quote())
             )
         })?),
         None => RandomSource::System,
     };
-    // TODO: implement --random-source
 
     let remove_method = if matches.get_flag(options::WIPESYNC) {
         RemoveMethod::WipeSync
@@ -386,7 +364,6 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
                 .action(ArgAction::Set)
         )
-        // Positional arguments
         .arg(
             Arg::new(options::FILE)
                 .action(ArgAction::Append)
@@ -405,7 +382,6 @@ fn get_size(size_str_opt: Option<String>) -> Option<u64> {
                     "{}",
                     translate!("shred-invalid-file-size", "size" => size.quote())
                 );
-                // TODO: replace with our error management
                 std::process::exit(1);
             }
             None
@@ -432,17 +408,16 @@ fn wipe_file(
     random_source: &RandomSource,
     verbose: bool,
     force: bool
-) -> UResult<()> {
-    // Get these potential errors out of the way first
+) -> SGResult<()> {
     let path = Path::new(path_str);
     if !path.exists() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("shred-no-such-file-or-directory", "file" => path.maybe_quote())
         ));
     }
     if !path.is_file() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("shred-not-a-file", "file" => path.maybe_quote())
         ));
@@ -450,42 +425,33 @@ fn wipe_file(
 
     let metadata = fs::metadata(path).map_err_context(String::new)?;
 
-    // If force is true, set file permissions to not-readonly.
     if force {
         let mut perms = metadata.permissions();
         #[allow(clippy::useless_conversion, clippy::unnecessary_cast)]
         {
-            // NOTE: set_readonly(false) makes the file world-writable on Unix.
-            // NOTE: S_IWUSR type is u16 on macOS.
             if (perms.mode() & (S_IWUSR as u32)) == 0 {
                 perms.set_mode(S_IWUSR as u32);
             }
         }
         #[cfg(not(unix))]
-        // TODO: Remove the following once https://github.com/rust-lang/rust-clippy/issues/10477 is resolved.
         #[allow(clippy::permissions_set_readonly_false)]
         perms.set_readonly(false);
         fs::set_permissions(path, perms).map_err_context(String::new)?;
     }
 
-    // Fill up our pass sequence
     let mut pass_sequence = Vec::new();
     if metadata.len() != 0 {
-        // Only add passes if the file is non-empty
 
         if n_passes <= 3 {
-            // Only random passes if n_passes <= 3
             for _ in 0..n_passes {
                 pass_sequence.push(PassType::Random);
             }
         } else {
-            // Add initial random to avoid O(n) operation later
             pass_sequence.push(PassType::Random);
-            let n_random = (n_passes / 10).max(3); // Minimum 3 random passes; ratio of 10 after
+            let n_random = (n_passes / 10).max(3);
             let n_fixed = n_passes - n_random;
-            // Fill it with Patterns and all but the first and last random, then shuffle it
-            let n_full_arrays = n_fixed / PATTERNS.len(); // How many times can we go through all the patterns?
-            let remainder = n_fixed % PATTERNS.len(); // How many do we get through on our last time through, excluding randoms?
+            let n_full_arrays = n_fixed / PATTERNS.len();
+            let remainder = n_fixed % PATTERNS.len();
 
             for _ in 0..n_full_arrays {
                 for p in PATTERNS {
@@ -495,17 +461,15 @@ fn wipe_file(
             for pattern in PATTERNS.into_iter().take(remainder) {
                 pass_sequence.push(PassType::Pattern(pattern));
             }
-            // add random passes except one each at the beginning and end
             for _ in 0..n_random - 2 {
                 pass_sequence.push(PassType::Random);
             }
 
             let mut rng = rand::rng();
-            pass_sequence[1..].shuffle(&mut rng); // randomize the order of application
-            pass_sequence.push(PassType::Random); // add the last random pass
+            pass_sequence[1..].shuffle(&mut rng);
+            pass_sequence.push(PassType::Random);
         }
 
-        // --zero specifies whether we want one final pass of 0x00 on our file
         if zero {
             pass_sequence.push(PassType::Pattern(PATTERNS[0]));
         }
@@ -534,8 +498,6 @@ fn wipe_file(
                 (i + 1).to_string()
             );
         }
-        // size is an optional argument for exactly how many bytes we want to shred
-        // Ignore failed writes; just keep trying
         show_if_err!(
             do_pass(&mut file, &pass_type, exact, random_source, size).map_err_context(|| {
                 translate!("shred-file-write-pass-failed", "file" => path.maybe_quote())
@@ -552,17 +514,11 @@ fn wipe_file(
 }
 
 fn split_on_blocks(file_size: u64, exact: bool) -> (u64, u64) {
-    // OPTIMAL_IO_BLOCK_SIZE must not exceed BLOCK_SIZE. Violating this may cause overflows due
-    // to alignment or performance issues.This kind of misconfiguration is
-    // highly unlikely but would indicate a serious error.
     const _: () = assert!(OPTIMAL_IO_BLOCK_SIZE <= BLOCK_SIZE);
 
     let file_size = if exact {
         file_size
     } else {
-        // The main idea here is to align the file size to the OPTIMAL_IO_BLOCK_SIZE, and then
-        // split it into BLOCK_SIZE + remaining bytes. Since the input data is already aligned to N
-        // * OPTIMAL_IO_BLOCK_SIZE, the output file size will also be aligned and correct.
         file_size.div_ceil(OPTIMAL_IO_BLOCK_SIZE as u64) * OPTIMAL_IO_BLOCK_SIZE as u64
     };
     (file_size / BLOCK_SIZE as u64, file_size % BLOCK_SIZE as u64)
@@ -575,19 +531,16 @@ fn do_pass(
     random_source: &RandomSource,
     file_size: u64
 ) -> Result<(), io::Error> {
-    // We might be at the end of the file due to a previous iteration, so rewind.
     file.rewind()?;
 
     let mut writer = BytesWriter::from_pass_type(pass_type, random_source);
     let (number_of_blocks, bytes_left) = split_on_blocks(file_size, exact);
 
-    // We start by writing BLOCK_SIZE times as many time as possible.
     for _ in 0..number_of_blocks {
         let block = writer.bytes_for_pass(BLOCK_SIZE)?;
         file.write_all(block)?;
     }
 
-    // Then we write remaining data which is smaller than the BLOCK_SIZE
     let block = writer.bytes_for_pass(bytes_left as usize)?;
     file.write_all(block)?;
 
@@ -604,12 +557,8 @@ fn wipe_name(orig_path: &Path, verbose: bool, remove_method: RemoveMethod) -> Op
     let mut last_path = PathBuf::from(orig_path);
 
     for length in (1..=file_name_len).rev() {
-        // Try all filenames of a given length.
-        // If every possible filename already exists, just reduce the length and try again
         for name in FilenameIter::new(length) {
             let new_path = orig_path.with_file_name(name);
-            // We don't want the filename to already exist (don't overwrite)
-            // If it does, find another name that doesn't
             if new_path.exists() {
                 continue;
             }
@@ -625,7 +574,6 @@ fn wipe_name(orig_path: &Path, verbose: bool, remove_method: RemoveMethod) -> Op
                     }
 
                     if remove_method == RemoveMethod::WipeSync {
-                        // Sync every file rename
                         let new_file = OpenOptions::new()
                             .write(true)
                             .open(new_path.clone())
@@ -639,7 +587,6 @@ fn wipe_name(orig_path: &Path, verbose: bool, remove_method: RemoveMethod) -> Op
                 Err(e) => {
                     let msg = translate!("shred-couldnt-rename", "file" => last_path.maybe_quote(), "new_name" => new_path.quote(), "error" => e);
                     show_error!("{msg}");
-                    // TODO: replace with our error management
                     std::process::exit(1);
                 }
             }
@@ -689,8 +636,6 @@ mod tests {
 
     #[test]
     fn test_align_non_exact_control_values() {
-        // Note: This test only makes sense for the default values of BLOCK_SIZE and
-        // OPTIMAL_IO_BLOCK_SIZE.
         assert_eq!(split_on_blocks(1, false), (0, 4096));
         assert_eq!(split_on_blocks(4095, false), (0, 4096));
         assert_eq!(split_on_blocks(4096, false), (0, 4096));
@@ -718,3 +663,4 @@ mod tests {
         }
     }
 }
+

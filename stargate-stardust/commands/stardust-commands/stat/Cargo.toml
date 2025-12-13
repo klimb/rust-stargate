@@ -1,6 +1,6 @@
 [package]
 name = "sg_stat"
-description = "stat ~ (uutils) display FILE status"
+description = "stat ~ (stargate) display FILE status"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

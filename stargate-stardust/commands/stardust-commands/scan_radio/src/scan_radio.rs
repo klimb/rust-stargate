@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::stardust_output::StardustOutputOptions;
 use serde_json::json;
 use std::process::{Command as ProcessCommand, Stdio};
@@ -42,23 +42,23 @@ struct RFSignal {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgmain_impl(args)
 }
 
-fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
+fn sgmain_impl(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-    
+
     let opts = StardustOutputOptions::from_matches(&matches);
-    
+
     let phone_mode = matches.get_flag(ARG_PHONE);
-    
+
     let (default_start, default_end, bin_size) = if phone_mode {
         (PHONE_FREQ_START, PHONE_FREQ_END, PHONE_BIN_SIZE)
     } else {
         (DEFAULT_FREQ_START, DEFAULT_FREQ_END, DEFAULT_BIN_SIZE)
     };
-    
+
     let freq_start = matches.get_one::<u32>(ARG_FREQUENCY_START)
         .copied()
         .unwrap_or(default_start);
@@ -71,7 +71,7 @@ fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
     let ppm = matches.get_one::<i32>(ARG_PPM)
         .copied()
         .unwrap_or(DEFAULT_PPM);
-    
+
     if !opts.stardust_output {
         eprintln!("RF Signal Scanner using RTL-SDR");
         eprintln!("================================");
@@ -84,29 +84,29 @@ fn sgmain_impl(args: impl sgcore::Args) -> UResult<()> {
         eprintln!("Duration: {} seconds", duration);
         eprintln!("PPM correction: {}", ppm);
     }
-    
+
     let signals = scan_rf_signals(freq_start, freq_end, duration, ppm, bin_size)?;
-    
+
     if opts.stardust_output {
         output_json(&signals, opts)?;
     } else {
         output_text(&signals);
     }
-    
+
     Ok(())
 }
 
-fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32, bin_size: u32) -> UResult<Vec<RFSignal>> {
+fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32, bin_size: u32) -> SGResult<Vec<RFSignal>> {
     if !command_exists("rtl_power") {
-        return Err(sgcore::error::USimpleError::new(
+        return Err(sgcore::error::SGSimpleError::new(
             1,
             "rtl-sdr is not installed. Linux: sudo apt-get install rtl-sdr\n  macOS: brew install librtlsdr".to_string()
         ));
     }
-    
+
     eprintln!("Scanning RF spectrum...");
     eprintln!("This may take a moment...");
-    
+
     let mut cmd = ProcessCommand::new("rtl_power");
     cmd.arg("-f")
         .arg(format!("{}:{}:{}", freq_start, freq_end, bin_size))
@@ -118,11 +118,11 @@ fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32, bin_
         .arg("-")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    
+
     if ppm != 0 {
         cmd.arg("-p").arg(ppm.to_string());
     }
-    
+
     let signals = match cmd.output() {
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -137,37 +137,37 @@ fn scan_rf_signals(freq_start: u32, freq_end: u32, duration: u64, ppm: i32, bin_
             parse_rtl_power_output(&stdout, freq_start)?
         }
         Err(e) => {
-            return Err(sgcore::error::USimpleError::new(
+            return Err(sgcore::error::SGSimpleError::new(
                 1,
                 format!("failed to run rtl_power: {}", e)
             ));
         }
     };
-    
+
     let mut sorted_signals = signals;
     sorted_signals.sort_by(|a, b| b.signal_strength.partial_cmp(&a.signal_strength).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     Ok(sorted_signals)
 }
 
-fn parse_rtl_power_output(output: &str, _freq_start: u32) -> UResult<Vec<RFSignal>> {
+fn parse_rtl_power_output(output: &str, _freq_start: u32) -> SGResult<Vec<RFSignal>> {
     let mut signals = Vec::new();
     let mut freq_map: HashMap<u64, f64> = HashMap::new();
-    
+
     for line in output.lines() {
         if line.trim().is_empty() || line.starts_with('#') {
             continue;
         }
-        
+
         let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
         if parts.len() < 7 {
             continue;
         }
-        
+
         let freq_low = parts[2].parse::<f64>().ok();
         let freq_high = parts[3].parse::<f64>().ok();
         let step = parts[4].parse::<f64>().ok();
-        
+
         if let (Some(low), Some(high), Some(step_hz)) = (freq_low, freq_high, step) {
             for (idx, power_str) in parts[6..].iter().enumerate() {
                 if let Ok(power) = power_str.parse::<f64>() {
@@ -181,7 +181,7 @@ fn parse_rtl_power_output(output: &str, _freq_start: u32) -> UResult<Vec<RFSigna
             }
         }
     }
-    
+
     for (freq_hz, power) in freq_map.iter() {
         signals.push(RFSignal {
             frequency: format_frequency(*freq_hz),
@@ -191,9 +191,9 @@ fn parse_rtl_power_output(output: &str, _freq_start: u32) -> UResult<Vec<RFSigna
             band: detect_cellular_band(*freq_hz),
         });
     }
-    
+
     signals.sort_by(|a, b| b.signal_strength.partial_cmp(&a.signal_strength).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     Ok(signals)
 }
 
@@ -240,24 +240,24 @@ fn output_text(signals: &[RFSignal]) {
         println!("no RF signals detected in the specified frequency range.");
         return;
     }
-    
+
     println!();
     println!("Detected RF Signals:");
     println!("====================");
     println!("{:<20} {:<15} {:<12}", "Frequency", "Signal Strength", "Band");
     println!("{:-<20} {:-<15} {:-<12}", "", "", "");
-    
+
     for signal in signals.iter().take(50) {
         let band_str = signal.band.as_ref().map(|s| s.as_str()).unwrap_or("-");
         println!("{:<20} {:<15} {:<12}", signal.frequency, signal.signal_dbm, band_str);
     }
-    
+
     if signals.len() > 50 {
         println!("... and {} more signals", signals.len() - 50);
     }
 }
 
-fn output_json(signals: &[RFSignal], _opts: StardustOutputOptions) -> UResult<()> {
+fn output_json(signals: &[RFSignal], _opts: StardustOutputOptions) -> SGResult<()> {
     let json_signals: Vec<serde_json::Value> = signals.iter()
         .map(|s| {
             let mut obj = json!({
@@ -271,13 +271,13 @@ fn output_json(signals: &[RFSignal], _opts: StardustOutputOptions) -> UResult<()
             obj
         })
         .collect();
-    
+
     let output = json!({
         "scan_type": "rf_spectrum",
         "signals_detected": signals.len(),
         "signals": json_signals
     });
-    
+
     let json_str = serde_json::to_string_pretty(&output)
         .unwrap_or_else(|_| "{}".to_string());
     println!("{}", json_str);
@@ -326,6 +326,7 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(i32))
                 .help("PPM frequency correction")
         );
-    
+
     sgcore::stardust_output::add_json_args(cmd)
 }
+

@@ -1,4 +1,5 @@
-// spell-checker:ignore (ToDO) sbytes slen dlen memmem memmap Mmap mmap SIGBUS
+
+
 mod error;
 
 use clap::{Arg, ArgAction, Command};
@@ -10,8 +11,8 @@ use std::{
     fs::{File, read},
     path::Path,
 };
-use sgcore::error::UError;
-use sgcore::error::UResult;
+use sgcore::error::SGError;
+use sgcore::error::SGResult;
 use sgcore::{format_usage, show};
 
 use crate::error::TacError;
@@ -26,7 +27,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -112,39 +113,14 @@ fn buffer_tac_regex(
     let out = stdout();
     let mut out = BufWriter::new(out.lock());
 
-    // The index of the line separator for the current line.
-    //
-    // As we scan through the `data` from right to left, we update this
-    // variable each time we find a new line separator. We restrict our
-    // regular expression search to only those bytes up to the line
-    // separator.
     let mut this_line_end = data.len();
 
-    // The index of the start of the next line in the `data`.
-    //
-    // As we scan through the `data` from right to left, we update this
-    // variable each time we find a new line.
-    //
-    // If `before` is `true`, then each line starts immediately before
-    // the line separator. Otherwise, each line starts immediately after
-    // the line separator.
     let mut following_line_start = data.len();
 
-    // Iterate over each byte in the buffer in reverse. When we find a
-    // line separator, write the line to stdout.
-    //
-    // The `before` flag controls whether the line separator appears at
-    // the end of the line (as in "abc\ndef\n") or at the beginning of
-    // the line (as in "/abc/def").
     for i in (0..data.len()).rev() {
-        // Determine if there is a match for `pattern` starting at index
-        // `i` in `data`. Only search up to the line ending that was
-        // found previously.
         if let Some(match_) = pattern.find_at(&data[..this_line_end], i) {
-            // Record this index as the ending of the current line.
             this_line_end = i;
 
-            // The length of the match (that is, the line separator), in bytes.
             let slen = match_.end() - match_.start();
 
             if before {
@@ -157,8 +133,6 @@ fn buffer_tac_regex(
         }
     }
 
-    // After the loop terminates, write whatever bytes are remaining at
-    // the beginning of the buffer.
     out.write_all(&data[0..following_line_start])?;
     out.flush()?;
     Ok(())
@@ -180,25 +154,10 @@ fn buffer_tac(data: &[u8], before: bool, separator: &str) -> std::io::Result<()>
     let out = stdout();
     let mut out = BufWriter::new(out.lock());
 
-    // The number of bytes in the line separator.
     let slen = separator.len();
 
-    // The index of the start of the next line in the `data`.
-    //
-    // As we scan through the `data` from right to left, we update this
-    // variable each time we find a new line.
-    //
-    // If `before` is `true`, then each line starts immediately before
-    // the line separator. Otherwise, each line starts immediately after
-    // the line separator.
     let mut following_line_start = data.len();
 
-    // Iterate over each byte in the buffer in reverse. When we find a
-    // line separator, write the line to stdout.
-    //
-    // The `before` flag controls whether the line separator appears at
-    // the end of the line (as in "abc\ndef\n") or at the beginning of
-    // the line (as in "/abc/def").
     for i in memmem::rfind_iter(data, separator) {
         if before {
             out.write_all(&data[i..following_line_start])?;
@@ -209,16 +168,13 @@ fn buffer_tac(data: &[u8], before: bool, separator: &str) -> std::io::Result<()>
         }
     }
 
-    // After the loop terminates, write whatever bytes are remaining at
-    // the beginning of the buffer.
     out.write_all(&data[0..following_line_start])?;
     out.flush()?;
     Ok(())
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UResult<()> {
-    // Compile the regular expression pattern if it is provided.
+fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> SGResult<()> {
     let maybe_pattern = if regex {
         match regex::bytes::Regex::new(separator) {
             Ok(p) => Some(p),
@@ -239,7 +195,7 @@ fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UR
             } else {
                 let mut buf1 = Vec::new();
                 if let Err(e) = stdin().read_to_end(&mut buf1) {
-                    let e: Box<dyn UError> = TacError::ReadError(OsString::from("stdin"), e).into();
+                    let e: Box<dyn SGError> = TacError::ReadError(OsString::from("stdin"), e).into();
                     show!(e);
                     continue;
                 }
@@ -249,13 +205,13 @@ fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UR
         } else {
             let path = Path::new(filename);
             if path.is_dir() {
-                let e: Box<dyn UError> = TacError::InvalidArgument(filename.clone()).into();
+                let e: Box<dyn SGError> = TacError::InvalidArgument(filename.clone()).into();
                 show!(e);
                 continue;
             }
 
             if path.metadata().is_err() {
-                let e: Box<dyn UError> = TacError::FileNotFound(filename.clone()).into();
+                let e: Box<dyn SGError> = TacError::FileNotFound(filename.clone()).into();
                 show!(e);
                 continue;
             }
@@ -270,7 +226,7 @@ fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UR
                         &buf
                     }
                     Err(e) => {
-                        let e: Box<dyn UError> = TacError::ReadError(filename.clone(), e).into();
+                        let e: Box<dyn SGError> = TacError::ReadError(filename.clone(), e).into();
                         show!(e);
                         continue;
                     }
@@ -278,14 +234,11 @@ fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UR
             }
         };
 
-        // Select the appropriate `tac` algorithm based on whether the
-        // separator is given as a regular expression or a fixed string.
         let result = match maybe_pattern {
             Some(ref pattern) => buffer_tac_regex(data, pattern, before),
             None => buffer_tac(data, before, separator),
         };
 
-        // If there is any error in writing the output, terminate immediately.
         if let Err(e) = result {
             return Err(TacError::WriteError(e).into());
         }
@@ -294,17 +247,14 @@ fn tac(filenames: &[OsString], before: bool, regex: bool, separator: &str) -> UR
 }
 
 fn try_mmap_stdin() -> Option<Mmap> {
-    // SAFETY: If the file is truncated while we map it, SIGBUS will be raised
-    // and our process will be terminated, thus preventing access of invalid memory.
     unsafe { Mmap::map(&stdin()).ok() }
 }
 
 fn try_mmap_path(path: &Path) -> Option<Mmap> {
     let file = File::open(path).ok()?;
 
-    // SAFETY: If the file is truncated while we map it, SIGBUS will be raised
-    // and our process will be terminated, thus preventing access of invalid memory.
     let mmap = unsafe { Mmap::map(&file).ok()? };
 
     Some(mmap)
 }
+

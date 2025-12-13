@@ -1,11 +1,11 @@
-// spell-checker:ignore lsbf msbf
+
 
 use clap::{Arg, ArgAction, Command};
 use sg_base32::base_common::{self, BASE_CMD_PARSE_ERROR, Config};
 use sgcore::translate;
 use sgcore::{
     encoding::Format,
-    error::{UResult, UUsageError},
+    error::{SGResult, SGUsageError},
 };
 
 fn get_encodings() -> Vec<(&'static str, Format, String)> {
@@ -58,7 +58,7 @@ pub fn sg_app() -> Command {
     command
 }
 
-fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
+fn parse_cmd_args(args: impl sgcore::Args) -> SGResult<(Config, Format)> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let encodings = get_encodings();
@@ -66,7 +66,7 @@ fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
         .iter()
         .find(|encoding| matches.get_flag(encoding.0))
         .ok_or_else(|| {
-            UUsageError::new(
+            SGUsageError::new(
                 BASE_CMD_PARSE_ERROR,
                 translate!("basenc-error-missing-encoding-type")
             )
@@ -77,7 +77,7 @@ fn parse_cmd_args(args: impl sgcore::Args) -> UResult<(Config, Format)> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let (config, format) = parse_cmd_args(args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -85,3 +85,4 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     base_common::handle_input(&mut input, format, config)
 }
+

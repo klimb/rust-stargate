@@ -15,7 +15,7 @@ pub fn print_subsection<S: fmt::Display>(s: S) {
 pub fn print_test_begin<S: fmt::Display>(msg: S) {
     println!(
         "{} {} {}",
-        style("===").bold(), // Kind of gray
+        style("===").bold(),
         style("TEST").black().on_yellow().bold(),
         style(msg).bold()
     );
@@ -30,7 +30,7 @@ pub fn print_end_with_status<S: fmt::Display>(msg: S, ok: bool) {
 
     println!(
         "{} {ok} {}",
-        style("===").bold(), // Kind of gray
+        style("===").bold(),
         style(msg).bold()
     );
 }
@@ -62,3 +62,4 @@ pub fn print_diff(got: &str, expected: &str) {
     print_subsection("END diff");
     println!();
 }
+

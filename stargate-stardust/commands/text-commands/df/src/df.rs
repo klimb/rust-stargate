@@ -1,4 +1,5 @@
-// spell-checker:ignore itotal iused iavail ipcent pcent tmpfs squashfs lofs
+
+
 mod blocks;
 mod columns;
 mod filesystem;
@@ -8,7 +9,7 @@ use blocks::HumanReadable;
 use clap::builder::ValueParser;
 use table::HeaderMode;
 use sgcore::display::Quotable;
-use sgcore::error::{UError, UResult, USimpleError, get_exit_code};
+use sgcore::error::{SGError, SGResult, SGSimpleError, get_exit_code};
 use sgcore::fsext::{MountInfo, read_fs_list};
 use sgcore::parser::parse_size::ParseSizeError;
 use sgcore::translate;
@@ -105,16 +106,10 @@ impl Default for Options {
 
 #[derive(Debug, Error)]
 enum OptionsError {
-    // TODO This needs to vary based on whether `--block-size`
-    // or `-B` were provided.
     #[error("{}", translate!("df-error-block-size-too-large", "size" => .0.clone()))]
     BlockSizeTooLarge(String),
-    // TODO This needs to vary based on whether `--block-size`
-    // or `-B` were provided.,
     #[error("{}", translate!("df-error-invalid-block-size", "size" => .0.clone()))]
     InvalidBlockSize(String),
-    // TODO This needs to vary based on whether `--block-size`
-    // or `-B` were provided.
     #[error("{}", translate!("df-error-invalid-suffix", "size" => .0.clone()))]
     InvalidSuffix(String),
 
@@ -166,8 +161,6 @@ impl Options {
                     HeaderMode::HumanReadable
                 } else if matches.get_flag(OPT_PORTABILITY) {
                     HeaderMode::PosixPortability
-                // get_flag() doesn't work here, it always returns true because OPT_OUTPUT has
-                // default values and hence is always present
                 } else if matches.value_source(OPT_OUTPUT) == Some(ValueSource::CommandLine) {
                     HeaderMode::Output
                 } else {
@@ -205,20 +198,14 @@ impl Options {
 
 /// Whether to display the mount info given the inclusion settings.
 fn is_included(mi: &MountInfo, opt: &Options) -> bool {
-    // Don't show remote filesystems if `--local` has been given.
     if mi.remote && opt.show_local_fs {
         return false;
     }
 
-    // Don't show pseudo filesystems unless `--all` has been given.
-    // The "lofs" filesystem is a loopback
-    // filesystem present on Solaris and FreeBSD systems. It
-    // is similar to a symbolic link.
     if (mi.dummy || mi.fs_type == "lofs") && !opt.show_all_fs {
         return false;
     }
 
-    // Don't show filesystems if they have been explicitly excluded.
     if let Some(ref excludes) = opt.exclude {
         if excludes.contains(&mi.fs_type) {
             return false;
@@ -238,25 +225,18 @@ fn is_included(mi: &MountInfo, opt: &Options) -> bool {
 /// The "lt" in the function name is in analogy to the
 /// [`std::cmp::PartialOrd::lt`].
 fn mount_info_lt(m1: &MountInfo, m2: &MountInfo) -> bool {
-    // let "real" devices with '/' in the name win.
     if m1.dev_name.starts_with('/') && !m2.dev_name.starts_with('/') {
         return false;
     }
 
     let m1_nearer_root = m1.mount_dir.len() < m2.mount_dir.len();
-    // With bind mounts, prefer items nearer the root of the source
     let m2_below_root = !m1.mount_root.is_empty()
         && !m2.mount_root.is_empty()
         && m1.mount_root.len() > m2.mount_root.len();
-    // let points towards the root of the device win.
     if m1_nearer_root && !m2_below_root {
         return false;
     }
 
-    // let an entry over-mounted on a new device win, but only when
-    // matching an existing mnt point, to avoid problematic
-    // replacement when given inaccurate mount lists, seen with some
-    // chroot environments for example.
     if m1.dev_name != m2.dev_name && m1.mount_dir == m2.mount_dir {
         return false;
     }
@@ -281,14 +261,9 @@ fn is_best(previous: &[MountInfo], mi: &MountInfo) -> bool {
 ///
 /// `opt` excludes certain filesystems from consideration and allows for the synchronization of filesystems before running; see
 /// [`Options`] for more information.
-fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
+fn get_all_filesystems(opt: &Options) -> SGResult<Vec<Filesystem>> {
     let mut mounts = vec![];
     for mut mi in read_fs_list()? {
-        // TODO The running time of the `is_best()` function is linear
-        // in the length of `result`. That makes the running time of
-        // this loop quadratic in the length of `vmi`. This could be
-        // improved by a more efficient implementation of `is_best()`,
-        // but `vmi` is probably not very long in practice.
         if is_included(&mi, opt) && is_best(&mounts, &mi) {
             let dev_path: &Path = Path::new(&mi.dev_name);
             if dev_path.is_symlink() {
@@ -305,8 +280,6 @@ fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
         }
     }
 
-    // Convert each `MountInfo` into a `Filesystem`, which contains
-    // both the mount information and usage information.
     {
         let maybe_mount = |m| Filesystem::from_mount(&mounts, &m, None).ok();
         Ok(mounts
@@ -319,17 +292,14 @@ fn get_all_filesystems(opt: &Options) -> UResult<Vec<Filesystem>> {
 }
 
 /// For each path, get the filesystem that contains that path.
-fn get_named_filesystems<P>(paths: &[P], opt: &Options) -> UResult<Vec<Filesystem>>
+fn get_named_filesystems<P>(paths: &[P], opt: &Options) -> SGResult<Vec<Filesystem>>
 where
     P: AsRef<Path>,
 {
-    // The list of all mounted filesystems.
     let mounts: Vec<MountInfo> = read_fs_list()?;
 
     let mut result = vec![];
 
-    // Convert each path into a `Filesystem`, which contains
-    // both the mount information and usage information.
     for path in paths {
         match Filesystem::from_path(&mounts, path) {
             Ok(fs) => {
@@ -338,20 +308,20 @@ where
                 }
             }
             Err(FsError::InvalidPath) => {
-                show!(USimpleError::new(
+                show!(SGSimpleError::new(
                     1,
                     translate!("df-error-no-such-file-or-directory", "path" => path.as_ref().display())
                 ));
             }
             Err(FsError::MountMissing) => {
-                show!(USimpleError::new(
+                show!(SGSimpleError::new(
                     1,
                     translate!("df-error-no-file-systems-processed")
                 ));
             }
 
             Err(FsError::OverMounted) => {
-                show!(USimpleError::new(
+                show!(SGSimpleError::new(
                     1,
                     translate!("df-error-cannot-access-over-mounted", "path" => path.as_ref().quote())
                 ));
@@ -359,7 +329,7 @@ where
         }
     }
     if get_exit_code() == 0 && result.is_empty() {
-        show!(USimpleError::new(
+        show!(SGSimpleError::new(
             1,
             translate!("df-error-no-file-systems-processed")
         ));
@@ -376,28 +346,27 @@ enum DfError {
     OptionsError(OptionsError),
 }
 
-impl UError for DfError {
+impl SGError for DfError {
     fn usage(&self) -> bool {
         matches!(self, Self::OptionsError(OptionsError::ColumnError(_)))
     }
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let opt = Options::from(&matches).map_err(DfError::OptionsError)?;
-    // Get the list of filesystems to display in the output table.
     let filesystems: Vec<Filesystem> = match matches.get_many::<OsString>(OPT_PATHS) {
         None => {
             let filesystems = get_all_filesystems(&opt).map_err(|e| {
                 let context = translate!("df-error-cannot-read-table-of-mounted-filesystems");
-                USimpleError::new(e.code(), format!("{context}: {e}"))
+                SGSimpleError::new(e.code(), format!("{context}: {e}"))
             })?;
 
             if filesystems.is_empty() {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("df-error-no-file-systems-processed")
                 ));
@@ -409,11 +378,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             let paths: Vec<_> = paths.collect();
             let filesystems = get_named_filesystems(&paths, &opt).map_err(|e| {
                 let context = translate!("df-error-cannot-read-table-of-mounted-filesystems");
-                USimpleError::new(e.code(), format!("{context}: {e}"))
+                SGSimpleError::new(e.code(), format!("{context}: {e}"))
             })?;
 
-            // This can happen if paths are given as command-line arguments
-            // but none of the paths exist.
             if filesystems.is_empty() {
                 return Ok(());
             }
@@ -599,7 +566,6 @@ mod tests {
 
         #[test]
         fn test_absolute() {
-            // Prefer device name "/dev/foo" over "dev_foo".
             let m1 = mount_info("/dev/foo", "/", "/mnt/bar");
             let m2 = mount_info("dev_foo", "/", "/mnt/bar");
             assert!(!mount_info_lt(&m1, &m2));
@@ -607,12 +573,10 @@ mod tests {
 
         #[test]
         fn test_shorter() {
-            // Prefer mount directory "/mnt/bar" over "/mnt/bar/baz"...
             let m1 = mount_info("/dev/foo", "/", "/mnt/bar");
             let m2 = mount_info("/dev/foo", "/", "/mnt/bar/baz");
             assert!(!mount_info_lt(&m1, &m2));
 
-            // ..but prefer mount root "/root" over "/".
             let m1 = mount_info("/dev/foo", "/root", "/mnt/bar");
             let m2 = mount_info("/dev/foo", "/", "/mnt/bar/baz");
             assert!(mount_info_lt(&m1, &m2));
@@ -620,8 +584,6 @@ mod tests {
 
         #[test]
         fn test_over_mounted() {
-            // Prefer the earlier entry if the devices are different but
-            // the mount directory is the same.
             let m1 = mount_info("/dev/foo", "/", "/mnt/baz");
             let m2 = mount_info("/dev/bar", "/", "/mnt/baz");
             assert!(!mount_info_lt(&m1, &m2));
@@ -663,9 +625,6 @@ mod tests {
 
         #[test]
         fn test_same_dev_id() {
-            // There are several conditions under which a `MountInfo` is
-            // considered "better" than the others, we're just checking
-            // one condition in this test.
             let m1 = mount_info("0", "/mnt/bar");
             let m2 = mount_info("0", "/mnt/bar/baz");
             assert!(!is_best(std::slice::from_ref(&m1), &m2));
@@ -810,3 +769,4 @@ mod tests {
         }
     }
 }
+

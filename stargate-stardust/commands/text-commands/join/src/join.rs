@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) autoformat FILENUM whitespaces pairable unpairable nocheck memmem
+
 
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, Command};
@@ -11,7 +11,7 @@ use std::num::IntErrorKind;
 use std::os::unix::ffi::OsStrExt;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGError, SGResult, SGSimpleError, set_exit_code};
 use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
 use sgcore::translate;
@@ -25,8 +25,7 @@ enum JoinError {
     UnorderedInput(String),
 }
 
-// If you still need the UError implementation for compatibility:
-impl UError for JoinError {
+impl SGError for JoinError {
     fn code(&self) -> i32 {
         1
     }
@@ -128,10 +127,7 @@ impl Separator for WhitespaceSep {
         let mut field_ranges = Vec::with_capacity(len_guess);
         let mut last_end = 0;
 
-        // GNU join used Bourne shell field splitters by default
-        // FIXME: but now uses locale-dependent whitespace
         for i in Memchr3::new(b' ', b'\t', b'\n', haystack) {
-            // leading whitespace should be dropped, contiguous whitespace merged
             if i > last_end {
                 field_ranges.push((last_end, i));
             }
@@ -277,12 +273,10 @@ impl Ord for CaseInsensitiveSlice<'_> {
         if let Some((s, o)) =
             std::iter::zip(self.v.iter(), other.v.iter()).find(|(s, o)| !s.eq_ignore_ascii_case(o))
         {
-            // first characters that differ, return the case-insensitive comparison
             let s = s.to_ascii_lowercase();
             let o = o.to_ascii_lowercase();
             s.cmp(&o)
         } else {
-            // one of the strings is a substring or equal of the other
             self.v.len().cmp(&other.v.len())
         }
     }
@@ -343,16 +337,15 @@ enum Spec {
 }
 
 impl Spec {
-    fn parse(format: &str) -> UResult<Self> {
+    fn parse(format: &str) -> SGResult<Self> {
         let mut chars = format.chars();
 
         let file_num = match chars.next() {
             Some('0') => {
-                // Must be all alone without a field specifier.
                 if chars.next().is_none() {
                     return Ok(Self::Key);
                 }
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("join-error-invalid-field-specifier", "spec" => format.quote())
                 ));
@@ -360,7 +353,7 @@ impl Spec {
             Some('1') => FileNum::File1,
             Some('2') => FileNum::File2,
             _ => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("join-error-invalid-file-number", "spec" => format.quote())
                 ));
@@ -371,7 +364,7 @@ impl Spec {
             return Ok(Self::Field(file_num, parse_field_number(chars.as_str())?));
         }
 
-        Err(USimpleError::new(
+        Err(SGSimpleError::new(
             1,
             translate!("join-error-invalid-field-specifier", "spec" => format.quote())
         ))
@@ -425,7 +418,7 @@ impl<'a> State<'a> {
         key: usize,
         line_ending: LineEnding,
         print_unpaired: bool
-    ) -> UResult<Self> {
+    ) -> SGResult<Self> {
         let file_buf = if name == "-" {
             Box::new(stdin.lock()) as Box<dyn BufRead>
         } else {
@@ -454,7 +447,7 @@ impl<'a> State<'a> {
         writer: &mut impl Write,
         input: &Input<Sep>,
         repr: &Repr<'a, Sep>
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         if self.print_unpaired {
             self.print_first_line(writer, repr)?;
         }
@@ -465,7 +458,7 @@ impl<'a> State<'a> {
 
     /// Keep reading line sequence until the key does not change, return
     /// the first line whose key differs.
-    fn extend<Sep: Separator>(&mut self, input: &Input<Sep>) -> UResult<Option<Line>> {
+    fn extend<Sep: Separator>(&mut self, input: &Input<Sep>) -> SGResult<Option<Line>> {
         while let Some(line) = self.next_line(input)? {
             let diff = input.compare(self.get_current_key(), line.get_field(self.key));
 
@@ -586,7 +579,7 @@ impl<'a> State<'a> {
         writer: &mut impl Write,
         input: &Input<Sep>,
         repr: &Repr<'a, Sep>
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         if self.has_line() {
             if self.print_unpaired {
                 self.print_first_line(writer, repr)?;
@@ -634,7 +627,6 @@ impl<'a> State<'a> {
                     || (self.has_unpaired && !self.has_failed))
             {
                 let err_msg = translate!("join-error-not-sorted", "file" => self.file_name.to_string_lossy().maybe_quote(), "line_num" => self.line_num, "content" => String::from_utf8_lossy(&line.string));
-                // This is fatal if the check is enabled.
                 if input.check_order == CheckOrder::Enabled {
                     return Err(JoinError::UnorderedInput(err_msg));
                 }
@@ -687,13 +679,7 @@ impl<'a> State<'a> {
     }
 }
 
-fn parse_separator(value_os: &OsString) -> UResult<SepSetting> {
-    // Five possible separator values:
-    // No argument supplied, separate on whitespace; handled implicitly as the default elsewhere
-    // An empty string arg, whole line separation
-    // On unix-likes only, a single arbitrary byte
-    // The two-character "\0" string, interpreted as a single 0 byte
-    // A single scalar valid in the locale encoding (currently only UTF-8)
+fn parse_separator(value_os: &OsString) -> SGResult<SepSetting> {
 
     if value_os.is_empty() {
         return Ok(SepSetting::Line);
@@ -706,9 +692,9 @@ fn parse_separator(value_os: &OsString) -> UResult<SepSetting> {
     }
 
     let Some(value) = value_os.to_str() else {
-        return Err(USimpleError::new(1, translate!("join-error-non-utf8-tab")));
+        return Err(SGSimpleError::new(1, translate!("join-error-non-utf8-tab")));
         #[cfg(not(unix))]
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("join-error-unprintable-separators")
         ));
@@ -719,14 +705,14 @@ fn parse_separator(value_os: &OsString) -> UResult<SepSetting> {
     match chars.next() {
         None => Ok(SepSetting::Char(value.into())),
         Some('0') if c == '\\' => Ok(SepSetting::Byte(0)),
-        _ => Err(USimpleError::new(
+        _ => Err(SGSimpleError::new(
             1,
             translate!("join-error-multi-character-tab", "value" => value)
         )),
     }
 }
 
-fn parse_print_settings(matches: &clap::ArgMatches) -> UResult<(bool, bool, bool)> {
+fn parse_print_settings(matches: &clap::ArgMatches) -> SGResult<(bool, bool, bool)> {
     let mut print_joined = true;
     let mut print_unpaired1 = false;
     let mut print_unpaired2 = false;
@@ -749,7 +735,7 @@ fn parse_print_settings(matches: &clap::ArgMatches) -> UResult<(bool, bool, bool
     Ok((print_joined, print_unpaired1, print_unpaired2))
 }
 
-fn get_and_parse_field_number(matches: &clap::ArgMatches, key: &str) -> UResult<Option<usize>> {
+fn get_and_parse_field_number(matches: &clap::ArgMatches, key: &str) -> SGResult<Option<usize>> {
     let value = matches.get_one::<String>(key).map(|s| s.as_str());
     parse_field_number_option(value)
 }
@@ -759,7 +745,7 @@ fn get_and_parse_field_number(matches: &clap::ArgMatches, key: &str) -> UResult<
 /// This function takes the matches from the command-line arguments, processes them,
 /// and returns a `Settings` struct that encapsulates the configuration for the program.
 #[allow(clippy::field_reassign_with_default)]
-fn parse_settings(matches: &clap::ArgMatches) -> UResult<Settings> {
+fn parse_settings(matches: &clap::ArgMatches) -> SGResult<Settings> {
     let keys = get_and_parse_field_number(matches, "j")?;
     let key1 = get_and_parse_field_number(matches, "1")?;
     let key2 = get_and_parse_field_number(matches, "2")?;
@@ -812,7 +798,7 @@ fn parse_settings(matches: &clap::ArgMatches) -> UResult<Settings> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -822,7 +808,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let file2 = matches.get_one::<OsString>("file2").unwrap();
 
     if file1 == "-" && file2 == "-" {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("join-error-both-files-stdin")
         ));
@@ -961,7 +947,7 @@ fn exec<Sep: Separator>(
     file2: &OsString,
     settings: Settings,
     sep: Sep
-) -> UResult<()> {
+) -> SGResult<()> {
     let stdin = stdin();
 
     let mut state1 = State::new(
@@ -986,7 +972,7 @@ fn exec<Sep: Separator>(
 
     let format = if settings.autoformat {
         let mut format = vec![Spec::Key];
-        let mut initialize = |state: &mut State| -> UResult<()> {
+        let mut initialize = |state: &mut State| -> SGResult<()> {
             let max_fields = state.initialize(&sep, settings.autoformat)?;
             for i in 0..max_fields {
                 if i != state.key {
@@ -1085,12 +1071,11 @@ fn exec<Sep: Separator>(
 
 /// Check that keys for both files and for a particular file are not
 /// contradictory and return the key index.
-fn get_field_number(keys: Option<usize>, key: Option<usize>) -> UResult<usize> {
+fn get_field_number(keys: Option<usize>, key: Option<usize>) -> SGResult<usize> {
     if let Some(keys) = keys {
         if let Some(key) = key {
             if keys != key {
-                // Show zero-based field numbers as one-based.
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("join-error-incompatible-fields", "field1" => (keys + 1), "field2" => (key + 1))
                 ));
@@ -1105,31 +1090,32 @@ fn get_field_number(keys: Option<usize>, key: Option<usize>) -> UResult<usize> {
 
 /// Parse the specified field string as a natural number and return
 /// the zero-based field number.
-fn parse_field_number(value: &str) -> UResult<usize> {
+fn parse_field_number(value: &str) -> SGResult<usize> {
     match value.parse::<usize>() {
         Ok(result) if result > 0 => Ok(result - 1),
         Err(e) if e.kind() == &IntErrorKind::PosOverflow => Ok(usize::MAX),
-        _ => Err(USimpleError::new(
+        _ => Err(SGSimpleError::new(
             1,
             translate!("join-error-invalid-field-number", "value" => value.quote())
         )),
     }
 }
 
-fn parse_file_number(value: &str) -> UResult<FileNum> {
+fn parse_file_number(value: &str) -> SGResult<FileNum> {
     match value {
         "1" => Ok(FileNum::File1),
         "2" => Ok(FileNum::File2),
-        value => Err(USimpleError::new(
+        value => Err(SGSimpleError::new(
             1,
             translate!("join-error-invalid-file-number-simple", "value" => value.quote())
         )),
     }
 }
 
-fn parse_field_number_option(value: Option<&str>) -> UResult<Option<usize>> {
+fn parse_field_number_option(value: Option<&str>) -> SGResult<Option<usize>> {
     match value {
         None => Ok(None),
         Some(val) => Ok(Some(parse_field_number(val)?)),
     }
 }
+

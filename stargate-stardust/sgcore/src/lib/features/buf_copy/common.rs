@@ -1,4 +1,4 @@
-use crate::error::UError;
+use crate::error::SGError;
 
 /// Error types used by buffer-copying functions from the `buf_copy` module.
 #[derive(Debug)]
@@ -18,7 +18,7 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl UError for Error {
+impl SGError for Error {
     fn code(&self) -> i32 {
         1
     }
@@ -27,3 +27,4 @@ impl UError for Error {
         false
     }
 }
+

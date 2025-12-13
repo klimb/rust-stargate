@@ -1,6 +1,6 @@
 [package]
 name = "sg_pr"
-description = "pr ~ (uutils) convert text files for printing"
+description = "pr ~ (stargate) convert text files for printing"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

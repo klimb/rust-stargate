@@ -1,4 +1,4 @@
-// spell-checker:ignore tailable seekable stdlib (stdlib)
+
 
 use crate::args::Settings;
 use crate::chunks::BytesChunkBuffer;
@@ -9,7 +9,7 @@ use std::collections::hash_map::Keys;
 use std::fs::{File, Metadata};
 use std::io::{BufRead, BufReader, BufWriter, Write, stdout};
 use std::path::{Path, PathBuf};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 
 /// Data structure to keep a handle on files to follow.
 /// `last` always holds the path/key of the last file that was printed from.
@@ -107,13 +107,7 @@ impl FileHandling {
     }
 
     /// Reopen the file at the monitored `path`
-    pub fn update_reader(&mut self, path: &Path) -> UResult<()> {
-        /*
-        BUG: If it's not necessary to reopen a file, GNU's tail calls seek to offset 0.
-        However, we can't call seek here because `BufRead` does not implement `Seek`.
-        As a workaround, we always reopen the file even though this might not always
-        be necessary.
-        */
+    pub fn update_reader(&mut self, path: &Path) -> SGResult<()> {
         self.get_mut(path)
             .reader
             .replace(Box::new(BufReader::new(File::open(path)?)));
@@ -130,7 +124,7 @@ impl FileHandling {
     }
 
     /// Read new data from `path` and print it to stdout
-    pub fn tail_file(&mut self, path: &Path, verbose: bool) -> UResult<bool> {
+    pub fn tail_file(&mut self, path: &Path, verbose: bool) -> SGResult<bool> {
         let mut chunks = BytesChunkBuffer::new(u64::MAX);
         if let Some(reader) = self.get_mut(path).reader.as_mut() {
             chunks.fill(reader)?;
@@ -188,19 +182,16 @@ impl PathData {
         }
     }
     pub fn from_other_with_path(data: Self, path: &Path) -> Self {
-        // Remove old reader
         let old_reader = data.reader;
         let reader = if old_reader.is_some() {
-            // Use old reader with the same file descriptor if there is one
             old_reader
         } else if let Ok(file) = File::open(path) {
-            // Open new file tail from start
             Some(Box::new(BufReader::new(file)) as Box<dyn BufRead>)
         } else {
-            // Probably file was renamed/moved or removed again
             None
         };
 
         Self::new(reader, path.metadata().ok(), data.display_name.as_str())
     }
 }
+

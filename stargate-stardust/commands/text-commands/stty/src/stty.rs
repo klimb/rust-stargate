@@ -1,11 +1,11 @@
-// spell-checker:ignore clocal erange tcgetattr tcsetattr tcsanow tiocgwinsz tiocswinsz cfgetospeed cfsetospeed ushort vmin vtime cflag lflag ispeed ospeed
-// spell-checker:ignore parenb parodd cmspar hupcl cstopb cread clocal crtscts CSIZE
-// spell-checker:ignore ignbrk brkint ignpar parmrk inpck istrip inlcr igncr icrnl ixoff ixon iuclc ixany imaxbel iutf
-// spell-checker:ignore opost olcuc ocrnl onlcr onocr onlret ofdel nldly crdly tabdly bsdly vtdly ffdly ofill
-// spell-checker:ignore isig icanon iexten echoe crterase echok echonl noflsh xcase tostop echoprt prterase echoctl ctlecho echoke crtkill flusho extproc
-// spell-checker:ignore lnext rprnt susp swtch vdiscard veof veol verase vintr vkill vlnext vquit vreprint vstart vstop vsusp vswtc vwerase werase
-// spell-checker:ignore sigquit sigtstp
-// spell-checker:ignore cbreak decctlq evenp litout oddp tcsadrain
+
+
+
+
+
+
+
+
 
 mod flags;
 
@@ -24,7 +24,7 @@ use std::num::IntErrorKind;
 use std::os::fd::{AsFd, BorrowedFd};
 use std::os::unix::fs::OpenOptionsExt;
 use std::os::unix::io::{AsRawFd, RawFd};
-use sgcore::error::{UError, UResult, USimpleError};
+use sgcore::error::{SGError, SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -34,20 +34,19 @@ use flags::{CONTROL_CHARS, CONTROL_FLAGS, INPUT_FLAGS, LOCAL_FLAGS, OUTPUT_FLAGS
 
 const ASCII_DEL: u8 = 127;
 
-// Sane defaults for control characters.
 const SANE_CONTROL_CHARS: [(S, u8); 12] = [
-    (S::VINTR, 3),     // ^C
-    (S::VQUIT, 28),    // ^\
-    (S::VERASE, 127),  // DEL
-    (S::VKILL, 21),    // ^U
-    (S::VEOF, 4),      // ^D
-    (S::VSTART, 17),   // ^Q
-    (S::VSTOP, 19),    // ^S
-    (S::VSUSP, 26),    // ^Z
-    (S::VREPRINT, 18), // ^R
-    (S::VWERASE, 23),  // ^W
-    (S::VLNEXT, 22),   // ^V
-    (S::VDISCARD, 15), // ^O
+    (S::VINTR, 3),
+    (S::VQUIT, 28),
+    (S::VERASE, 127),
+    (S::VKILL, 21),
+    (S::VEOF, 4),
+    (S::VSTART, 17),
+    (S::VSTOP, 19),
+    (S::VSUSP, 26),
+    (S::VREPRINT, 18),
+    (S::VWERASE, 23),
+    (S::VLNEXT, 22),
+    (S::VDISCARD, 15),
 ];
 
 #[derive(Clone, Copy, Debug)]
@@ -169,22 +168,12 @@ impl<'a> Options<'a> {
             all: matches.get_flag(options::ALL),
             save: matches.get_flag(options::SAVE),
             file: match matches.get_one::<String>(options::FILE) {
-                // Two notes here:
-                // 1. O_NONBLOCK is needed because according to GNU docs, a
-                //    POSIX tty can block waiting for carrier-detect if the
-                //    "clocal" flag is not set. If your TTY is not connected
-                //    to a modem, it is probably not relevant though.
-                // 2. We never close the FD that we open here, but the OS
-                //    will clean up the FD for us on exit, so it doesn't
-                //    matter. The alternative would be to have an enum of
-                //    BorrowedFd/OwnedFd to handle both cases.
                 Some(f) => Device::File(
                     std::fs::OpenOptions::new()
                         .read(true)
                         .custom_flags(O_NONBLOCK)
                         .open(f)?
                 ),
-                // default to /dev/tty, if that does not exist then default to stdout
                 None => {
                     if let Ok(f) = std::fs::OpenOptions::new()
                         .read(true)
@@ -204,7 +193,6 @@ impl<'a> Options<'a> {
     }
 }
 
-// Needs to be repr(C) because we pass it to the ioctl calls.
 #[repr(C)]
 #[derive(Default, Debug)]
 pub struct TermSize {
@@ -229,7 +217,7 @@ ioctl_write_ptr_bad!(
 );
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "tty"])?;
 
@@ -238,16 +226,16 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     stty(&opts)
 }
 
-fn stty(opts: &Options) -> UResult<()> {
+fn stty(opts: &Options) -> SGResult<()> {
     if opts.save && opts.all {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("stty-error-options-mutually-exclusive")
         ));
     }
 
     if opts.settings.is_some() && (opts.save || opts.all) {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("stty-error-output-style-no-modes")
         ));
@@ -265,7 +253,7 @@ fn stty(opts: &Options) -> UResult<()> {
                         if let Some(baud_flag) = string_to_baud(speed) {
                             valid_args.push(ArgOptions::Flags(baud_flag));
                         } else {
-                            return Err(USimpleError::new(
+                            return Err(SGSimpleError::new(
                                 1,
                                 translate!(
                                     "stty-error-invalid-speed",
@@ -282,7 +270,7 @@ fn stty(opts: &Options) -> UResult<()> {
                 "line" => match args_iter.next() {
                     Some(line) => match parse_u8_or_err(line) {
                         Ok(n) => valid_args.push(ArgOptions::Special(SpecialSetting::Line(n))),
-                        Err(e) => return Err(USimpleError::new(1, e)),
+                        Err(e) => return Err(SGSimpleError::new(1, e)),
                     },
                     None => {
                         return missing_arg(arg);
@@ -293,7 +281,7 @@ fn stty(opts: &Options) -> UResult<()> {
                         Ok(n) => {
                             valid_args.push(ArgOptions::Mapping((S::VMIN, n)));
                         }
-                        Err(e) => return Err(USimpleError::new(1, e)),
+                        Err(e) => return Err(SGSimpleError::new(1, e)),
                     },
                     None => {
                         return missing_arg(arg);
@@ -302,7 +290,7 @@ fn stty(opts: &Options) -> UResult<()> {
                 "time" => match args_iter.next() {
                     Some(time) => match parse_u8_or_err(time) {
                         Ok(n) => valid_args.push(ArgOptions::Mapping((S::VTIME, n))),
-                        Err(e) => return Err(USimpleError::new(1, e)),
+                        Err(e) => return Err(SGSimpleError::new(1, e)),
                     },
                     None => {
                         return missing_arg(arg);
@@ -340,7 +328,6 @@ fn stty(opts: &Options) -> UResult<()> {
                     valid_args.push(ArgOptions::Print(PrintSetting::Size));
                 }
                 _ => {
-                    // control char
                     if let Some(char_index) = cc_to_index(arg) {
                         if let Some(mapping) = args_iter.next() {
                             let cc_mapping = string_to_control_char(mapping).map_err(|e| {
@@ -358,16 +345,14 @@ fn stty(opts: &Options) -> UResult<()> {
                                         )
                                     }
                                 };
-                                USimpleError::new(1, message)
+                                SGSimpleError::new(1, message)
                             })?;
                             valid_args.push(ArgOptions::Mapping((char_index, cc_mapping)));
                         } else {
                             return missing_arg(arg);
                         }
-                    // baud rate
                     } else if let Some(baud_flag) = string_to_baud(arg) {
                         valid_args.push(ArgOptions::Flags(baud_flag));
-                    // non control char flag
                     } else if let Some(flag) = string_to_flag(arg) {
                         let remove_group = match flag {
                             AllFlags::Baud(_) => false,
@@ -382,7 +367,6 @@ fn stty(opts: &Options) -> UResult<()> {
                             return invalid_arg(arg);
                         }
                         valid_args.push(flag.into());
-                    // combination setting
                     } else if let Some(combo) = string_to_combo(arg) {
                         valid_args.append(&mut combo_to_flags(combo));
                     } else {
@@ -392,10 +376,8 @@ fn stty(opts: &Options) -> UResult<()> {
             }
         }
 
-        // TODO: Figure out the right error message for when tcgetattr fails
         let mut termios = tcgetattr(opts.file.as_fd())?;
 
-        // iterate over valid_args, match on the arg type, do the matching apply function
         for arg in &valid_args {
             match arg {
                 ArgOptions::Mapping(mapping) => apply_char_mapping(&mut termios, mapping),
@@ -410,15 +392,14 @@ fn stty(opts: &Options) -> UResult<()> {
         }
         tcsetattr(opts.file.as_fd(), set_arg, &termios)?;
     } else {
-        // TODO: Figure out the right error message for when tcgetattr fails
         let termios = tcgetattr(opts.file.as_fd())?;
         print_settings(&termios, opts)?;
     }
     Ok(())
 }
 
-fn missing_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
-    Err::<T, Box<dyn UError>>(USimpleError::new(
+fn missing_arg<T>(arg: &str) -> Result<T, Box<dyn SGError>> {
+    Err::<T, Box<dyn SGError>>(SGSimpleError::new(
         1,
         translate!(
             "stty-error-missing-argument",
@@ -427,8 +408,8 @@ fn missing_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
     ))
 }
 
-fn invalid_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
-    Err::<T, Box<dyn UError>>(USimpleError::new(
+fn invalid_arg<T>(arg: &str) -> Result<T, Box<dyn SGError>> {
+    Err::<T, Box<dyn SGError>>(SGSimpleError::new(
         1,
         translate!(
             "stty-error-invalid-argument",
@@ -437,8 +418,8 @@ fn invalid_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
     ))
 }
 
-fn invalid_integer_arg<T>(arg: &str) -> Result<T, Box<dyn UError>> {
-    Err::<T, Box<dyn UError>>(USimpleError::new(
+fn invalid_integer_arg<T>(arg: &str) -> Result<T, Box<dyn SGError>> {
+    Err::<T, Box<dyn SGError>>(SGSimpleError::new(
         1,
         translate!(
             "stty-error-invalid-integer-argument",
@@ -484,7 +465,6 @@ fn print_special_setting(setting: &PrintSetting, fd: i32) -> nix::Result<()> {
 fn print_terminal_size(termios: &Termios, opts: &Options) -> nix::Result<()> {
     let speed = cfgetospeed(termios);
 
-    // BSDs use a u32 for the baud rate, so we can simply print it.
     #[cfg(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -495,8 +475,6 @@ fn print_terminal_size(termios: &Termios, opts: &Options) -> nix::Result<()> {
     ))]
     print!("{} ", translate!("stty-output-speed", "speed" => speed));
 
-    // Other platforms need to use the baud rate enum, so printing the right value
-    // becomes slightly more complicated.
     #[cfg(not(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -523,8 +501,6 @@ fn print_terminal_size(termios: &Termios, opts: &Options) -> nix::Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        // For some reason the normal nix Termios struct does not expose the line,
-        // so we get the underlying libc::termios struct to get that information.
         let libc_termios: nix::libc::termios = termios.clone().into();
         let line = libc_termios.c_line;
         print!("{}", translate!("stty-output-line", "line" => line));
@@ -553,7 +529,6 @@ fn string_to_combo(arg: &str) -> Option<&str> {
 }
 
 fn string_to_baud(arg: &str) -> Option<AllFlags<'_>> {
-    // BSDs use a u32 for the baud rate, so any decimal number applies.
     #[cfg(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -621,15 +596,10 @@ fn control_char_to_string(cc: nix::libc::cc_t) -> nix::Result<String> {
         ("", cc)
     };
 
-    // Determine the '^'-prefix if applicable and character based on the code
     let (ctrl_prefix, character) = match code {
-        // Control characters in ASCII range
         0..=0x1f => Ok(("^", (b'@' + code) as char)),
-        // Printable ASCII characters
         0x20..=0x7e => Ok(("", code as char)),
-        // DEL character
         0x7f => Ok(("^", '?')),
-        // Out of range (above 8 bits)
         _ => Err(nix::errno::Errno::ERANGE),
     }?;
 
@@ -638,7 +608,6 @@ fn control_char_to_string(cc: nix::libc::cc_t) -> nix::Result<String> {
 
 fn print_control_chars(termios: &Termios, opts: &Options) -> nix::Result<()> {
     if !opts.all {
-        // Print only control chars that differ from sane defaults
         let mut printed = false;
         for (text, cc_index) in CONTROL_CHARS {
             let current_val = termios.control_chars[*cc_index as usize];
@@ -752,7 +721,6 @@ fn apply_setting(termios: &mut Termios, setting: &AllFlags) {
 }
 
 fn apply_baud_rate_flag(termios: &mut Termios, input: &AllFlags) {
-    // BSDs use a u32 for the baud rate, so any decimal number applies.
     #[cfg(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -765,7 +733,6 @@ fn apply_baud_rate_flag(termios: &mut Termios, input: &AllFlags) {
         cfsetospeed(termios, *n).expect("Failed to set baud rate");
     }
 
-    // Other platforms use an enum.
     #[cfg(not(any(
         target_os = "freebsd",
         target_os = "dragonfly",
@@ -794,7 +761,6 @@ fn apply_special_setting(
         SpecialSetting::Rows(n) => size.rows = *n,
         SpecialSetting::Cols(n) => size.columns = *n,
         SpecialSetting::Line(_n) => {
-            // nix only defines Termios's `line_discipline` field on these platforms
             #[cfg(any(target_os = "linux"))]
             {
                 _termios.line_discipline = *_n;
@@ -819,7 +785,6 @@ fn string_to_control_char(s: &str) -> Result<u8, ControlCharMappingError> {
         return Ok(0);
     }
 
-    // try to parse integer (hex, octal, or decimal)
     let ascii_num = if let Some(hex) = s.strip_prefix("0x") {
         u32::from_str_radix(hex, 16).ok()
     } else if let Some(octal) = s.strip_prefix("0") {
@@ -838,15 +803,12 @@ fn string_to_control_char(s: &str) -> Result<u8, ControlCharMappingError> {
         }
         return Ok(val as u8);
     }
-    // try to parse ^<char> or just <char>
     let mut chars = s.chars();
     match (chars.next(), chars.next()) {
         (Some('^'), Some(c)) => {
-            // special case: ascii value of '^?' is greater than '?'
             if c == '?' {
                 return Ok(ASCII_DEL);
             }
-            // subtract by '@' to turn the char into the ascii value of '^<char>'
             Ok((c.to_ascii_uppercase() as u8).wrapping_sub(b'@'))
         }
         (Some(c), None) => Ok(c as u8),
@@ -855,7 +817,6 @@ fn string_to_control_char(s: &str) -> Result<u8, ControlCharMappingError> {
     }
 }
 
-// decomposes a combination argument into a vec of corresponding flags
 fn combo_to_flags(combo: &str) -> Vec<ArgOptions<'_>> {
     let mut flags = Vec::new();
     let mut ccs = Vec::new();
@@ -979,7 +940,6 @@ fn get_sane_control_char(cc_index: S) -> u8 {
             return sane_val;
         }
     }
-    // Default values for control chars not in the sane list
     match cc_index {
         S::VEOL => 0,
         S::VEOL2 => 0,
@@ -1071,3 +1031,4 @@ impl TermiosFlag for LocalFlags {
         termios.local_flags.set(*self, val);
     }
 }
+

@@ -1,9 +1,10 @@
-// spell-checker:ignore NEWROOT Userspec userspec
+
 //! Errors returned by chroot.
+
 use std::io::Error;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::libc;
 use sgcore::translate;
 
@@ -63,7 +64,7 @@ pub enum ChrootError {
     SetUserFailed(String, #[source] Error),
 }
 
-impl UError for ChrootError {
+impl SGError for ChrootError {
     /// 125 if chroot itself fails
     /// 126 if command is found but cannot be invoked
     /// 127 if command cannot be found
@@ -75,3 +76,4 @@ impl UError for ChrootError {
         }
     }
 }
+

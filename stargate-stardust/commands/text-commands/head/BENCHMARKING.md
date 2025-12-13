@@ -12,7 +12,7 @@ sudo apt-get install hyperfine
 Next, build the `head` binary under the release profile:
 
 ```shell
-cargo build --release -p uu_head
+cargo build --release -p sg_head
 ```
 
 Now, get a text file to test `head` on. I used the *Complete Works of

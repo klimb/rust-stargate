@@ -1,6 +1,6 @@
 [package]
 name = "sg_nproc"
-description = "nproc ~ (uutils) display the number of processing units available"
+description = "nproc ~ (stargate) display the number of processing units available"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

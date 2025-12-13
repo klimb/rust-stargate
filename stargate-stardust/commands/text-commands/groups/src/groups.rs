@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) passwd
+
 
 use clap::{Arg, ArgAction, Command};
 use serde_json::json;
@@ -7,7 +7,7 @@ use sgcore::translate;
 use sgcore::{
     display::Quotable,
     entries::{Locate, Passwd, get_groups_gnu, gid2grp},
-    error::{UError, UResult},
+    error::{SGError, SGResult},
     format_usage, show,
 };
 use std::collections::HashMap;
@@ -29,13 +29,12 @@ enum GroupsError {
     UserNotFound(String),
 }
 
-impl UError for GroupsError {}
+impl SGError for GroupsError {}
 
 fn infallible_gid2grp(gid: &u32) -> String {
     match gid2grp(*gid) {
         Ok(grp) => grp,
         Err(_) => {
-            // The `show!()` macro sets the global exit code for the program.
             show!(GroupsError::GroupNotFound(*gid));
             gid.to_string()
         }
@@ -43,7 +42,7 @@ fn infallible_gid2grp(gid: &u32) -> String {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
@@ -59,7 +58,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             return Err(GroupsError::GetGroupsFailed.into());
         };
         let groups: Vec<String> = gids.iter().map(infallible_gid2grp).collect();
-        
+
         if json_output_options.stardust_output {
             let output = json!({ "groups": groups });
             stardust_output::output(json_output_options, output, || Ok(()))?;
@@ -94,7 +93,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     println!("{user} : {}", groups.join(" "));
                 }
                 Err(_) => {
-                    // The `show!()` macro sets the global exit code for the program.
                     show!(GroupsError::UserNotFound(user));
                 }
             }
@@ -118,3 +116,4 @@ pub fn sg_app() -> Command {
         );
     stardust_output::add_json_args(cmd)
 }
+

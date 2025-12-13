@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) sysv
+
 
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
@@ -7,7 +7,7 @@ use std::io::{ErrorKind, Read, Write, stdin, stdout};
 use std::path::Path;
 use serde_json::json;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 
@@ -32,7 +32,6 @@ fn bsd_sum(mut reader: impl Read) -> std::io::Result<(usize, u16)> {
         }
     }
 
-    // Report blocks read in terms of 1024-byte blocks.
     let blocks_read = bytes_read.div_ceil(1024);
     Ok((blocks_read, checksum))
 }
@@ -59,25 +58,23 @@ fn sysv_sum(mut reader: impl Read) -> std::io::Result<(usize, u16)> {
     ret = (ret & 0xffff) + (ret >> 16);
     ret = (ret & 0xffff) + (ret >> 16);
 
-    // Report blocks read in terms of 512-byte blocks.
     let blocks_read = bytes_read.div_ceil(512);
     Ok((blocks_read, ret as u16))
 }
 
-fn open(name: &OsString) -> UResult<Box<dyn Read>> {
+fn open(name: &OsString) -> SGResult<Box<dyn Read>> {
     if name == "-" {
         Ok(Box::new(stdin()) as Box<dyn Read>)
     } else {
         let path = Path::new(name);
         if path.is_dir() {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 2,
                 translate!("sum-error-is-directory", "name" => name.to_string_lossy().maybe_quote())
             ));
         }
-        // Silent the warning as we want to the error message
         if path.metadata().is_err() {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 2,
                 translate!("sum-error-no-such-file-or-directory", "name" => name.to_string_lossy().maybe_quote())
             ));
@@ -94,7 +91,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let json_output_options = StardustOutputOptions::from_matches(&matches);
@@ -108,7 +105,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     if json_output_options.stardust_output {
         let mut results = Vec::new();
-        
+
         for file in &files {
             let reader = match open(file) {
                 Ok(f) => f,
@@ -126,7 +123,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             } else {
                 bsd_sum(reader)
             }?;
-            
+
             results.push(json!({
                 "file": file.to_string_lossy(),
                 "checksum": sum,
@@ -135,13 +132,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 "success": true
             }));
         }
-        
+
         let output = if results.len() == 1 {
             results.into_iter().next().unwrap()
         } else {
             json!({ "files": results })
         };
-        
+
         stardust_output::output(json_output_options, output, || Ok(()))?;
     } else {
         let print_names = files.len() > 1 || files[0] != "-";
@@ -203,6 +200,7 @@ pub fn sg_app() -> Command {
                 .help(translate!("sum-help-sysv-compatible"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

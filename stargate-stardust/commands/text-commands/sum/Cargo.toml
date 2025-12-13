@@ -1,6 +1,6 @@
 [package]
 name = "sg_sum"
-description = "sum ~ (uutils) display checksum and block counts for input"
+description = "sum ~ (stargate) display checksum and block counts for input"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,9 +1,9 @@
-// spell-checker:ignore (paths) GPGHome findxs
+
 
 use clap::builder::{TypedValueParser, ValueParserFactory};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use sgcore::display::{Quotable, println_verbatim};
-use sgcore::error::{FromIo, UError, UResult, UUsageError};
+use sgcore::error::{FromIo, SGError, SGResult, SGUsageError};
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
@@ -62,7 +62,7 @@ enum MkTempError {
     NotFound(String, String),
 }
 
-impl UError for MkTempError {
+impl SGError for MkTempError {
     fn usage(&self) -> bool {
         matches!(self, Self::TooManyTemplates)
     }
@@ -105,17 +105,12 @@ impl Options {
             .get_one::<Option<PathBuf>>(OPT_TMPDIR)
             .or_else(|| matches.get_one::<Option<PathBuf>>(OPT_P))
             .map(|dir| match dir {
-                // If the argument of -p/--tmpdir is non-empty, use it as the
-                // tmpdir.
                 Some(d) => d.clone(),
-                // Otherwise use $TMPDIR if set, else use the system's default
-                // temporary directory.
                 None => env::var(TMPDIR_ENV_VAR)
                     .ok()
                     .map_or_else(env::temp_dir, PathBuf::from),
             });
         let (tmpdir, template) = match matches.get_one::<OsString>(ARG_TEMPLATE) {
-            // If no template argument is given, `--tmpdir` is implied.
             None => {
                 let tmpdir = Some(tmpdir.unwrap_or_else(env::temp_dir));
                 let template = DEFAULT_TEMPLATE;
@@ -127,8 +122,6 @@ impl Options {
                 } else if tmpdir.is_some() {
                     tmpdir
                 } else if matches.get_flag(OPT_T) || matches.contains_id(OPT_TMPDIR) {
-                    // If --tmpdir is given without an argument, or -t is given
-                    // export in TMPDIR
                     Some(env::temp_dir())
                 } else {
                     None
@@ -191,25 +184,18 @@ fn find_last_contiguous_block_of_xs(s: &str) -> Option<(usize, usize)> {
 
 impl Params {
     fn from(options: Options) -> Result<Self, MkTempError> {
-        // Convert OsString template to string for processing
         let Some(template_str) = options.template.to_str() else {
-            // For non-UTF-8 templates, return an error
             return Err(MkTempError::InvalidTemplate(
                 options.template.to_string_lossy().into_owned()
             ));
         };
 
-        // The template argument must end in 'X' if a suffix option is given.
         if options.suffix.is_some() && !template_str.ends_with('X') {
             return Err(MkTempError::MustEndInX(template_str.to_string()));
         }
 
-        // Get the start and end indices of the randomized part of the template.
-        //
-        // For example, if the template is "abcXXXXyz", then `i` is 3 and `j` is 7.
         let Some((i, j)) = find_last_contiguous_block_of_xs(template_str) else {
             let s = match options.suffix {
-                // If a suffix is specified, the error message includes the template without the suffix.
                 Some(_) => template_str
                     .chars()
                     .take(template_str.len())
@@ -219,10 +205,6 @@ impl Params {
             return Err(MkTempError::TooFewXs(s));
         };
 
-        // Combine the directory given as an option and the prefix of the template.
-        //
-        // For example, if `tmpdir` is "a/b" and the template is "c/dXXX",
-        // then `prefix` is "a/b/c/d".
         let tmpdir = options.tmpdir;
         let prefix_from_option = tmpdir.clone().unwrap_or_default();
         let prefix_from_template = &template_str[..i];
@@ -236,10 +218,6 @@ impl Params {
             return Err(MkTempError::InvalidTemplate(template_str.to_string()));
         }
 
-        // Split the parent directory from the file part of the prefix.
-        //
-        // For example, if `prefix_path` is "a/b/c/d", then `directory` is
-        // "a/b/c" and `prefix` gets reassigned to "d".
         let (directory, prefix) = {
             let prefix_str = prefix_path.to_string_lossy();
             if prefix_str.ends_with(MAIN_SEPARATOR) {
@@ -257,10 +235,6 @@ impl Params {
             }
         };
 
-        // Combine the suffix from the template with the suffix given as an option.
-        //
-        // For example, if the suffix command-line argument is ".txt" and
-        // the template is "XXXabc", then `suffix` is "abc.txt".
         let suffix_from_option = options.suffix.unwrap_or_default();
         let suffix_from_template = &template_str[j..];
         let suffix = format!("{suffix_from_template}{suffix_from_option}");
@@ -268,10 +242,6 @@ impl Params {
             return Err(MkTempError::SuffixContainsDirSeparator(suffix));
         }
 
-        // The number of random characters in the template.
-        //
-        // For example, if the template is "abcXXXXyz", then the number of
-        // random characters is four.
         let num_rand_chars = j - i;
 
         Ok(Self {
@@ -327,7 +297,7 @@ impl ValueParserFactory for OptionalPathBufParser {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args: Vec<_> = args.collect();
     let matches = match sg_app().try_get_matches_from(&args) {
         Ok(m) => m,
@@ -343,7 +313,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                         && val == &clap::error::ContextValue::String("[template]".into())
                 })
             {
-                return Err(UUsageError::new(
+                return Err(SGUsageError::new(
                     1,
                     translate!("mktemp-error-too-many-templates")
                 ));
@@ -353,20 +323,15 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let opts = StardustOutputOptions::from_matches(&matches);
-    // Stardust output is the default for this command
     let mut opts = opts;
     if !matches.contains_id("stardust_output") {
         opts.stardust_output = true;
     }
 
-    // Parse command-line options into a format suitable for the
-    // application logic.
     let options = Options::from(&matches);
 
     if env::var("POSIXLY_CORRECT").is_ok() {
-        // If POSIXLY_CORRECT was set, template MUST be the last argument.
         if matches.contains_id(ARG_TEMPLATE) {
-            // Template argument was provided, check if was the last one.
             if args.last().unwrap() != &options.template {
                 return Err(Box::new(MkTempError::TooManyTemplates));
             }
@@ -377,7 +342,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let suppress_file_err = options.quiet;
     let make_dir = options.directory;
 
-    // Parse file path parameters from the command-line options.
     let Params {
         directory: tmpdir,
         prefix,
@@ -385,7 +349,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         suffix,
     } = Params::from(options)?;
 
-    // Create the temporary file or directory, or simulate creating it.
     let res = if dry_run {
         dry_exec(&tmpdir, &prefix, rand, &suffix)
     } else {
@@ -393,7 +356,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let res = if suppress_file_err {
-        // Mapping all UErrors to ExitCodes prevents the errors from being printed
         res.map_err(|e| e.code().into())
     } else {
         res
@@ -464,10 +426,7 @@ pub fn sg_app() -> Command {
                 .long(OPT_TMPDIR)
                 .help(translate!("mktemp-help-tmpdir"))
                 .value_name("DIR")
-                // Allows use of default argument just by setting --tmpdir. Else,
-                // use provided input to generate tmpdir
                 .num_args(0..=1)
-                // Require an equals to avoid ambiguity if no tmpdir is supplied
                 .require_equals(true)
                 .overrides_with(OPT_P)
                 .value_parser(OptionalPathBufParser)
@@ -484,18 +443,17 @@ pub fn sg_app() -> Command {
                 .num_args(..=1)
                 .value_parser(clap::value_parser!(OsString))
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<PathBuf> {
+fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> SGResult<PathBuf> {
     let len = prefix.len() + suffix.len() + rand;
     let mut buf = Vec::with_capacity(len);
     buf.extend(prefix.as_bytes());
     buf.extend(iter::repeat_n(b'X', rand));
     buf.extend(suffix.as_bytes());
 
-    // Randomize.
     let bytes = &mut buf[prefix.len()..prefix.len() + rand];
     rand::rng().fill(bytes);
     for byte in bytes {
@@ -506,7 +464,6 @@ fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<P
             _ => unreachable!(),
         }
     }
-    // We guarantee utf8.
     let buf = String::from_utf8(buf).unwrap();
     let tmpdir = Path::new(tmpdir).join(buf);
     Ok(tmpdir)
@@ -523,19 +480,14 @@ fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<P
 ///
 /// If the temporary directory could not be written to disk or if the
 /// given directory `dir` does not exist.
-fn make_temp_dir(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<PathBuf> {
+fn make_temp_dir(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> SGResult<PathBuf> {
     let mut builder = Builder::new();
     builder.prefix(prefix).rand_bytes(rand).suffix(suffix);
 
-    // On *nix platforms grant read-write-execute for owner only.
-    // The directory is created with these permission at creation time, using mkdir(3) syscall.
-    // This is not relevant on Windows systems. See: https://docs.rs/tempfile/latest/tempfile/#security
-    // `fs` is not imported on Windows anyways.
     builder.permissions(fs::Permissions::from_mode(0o700));
 
     match builder.tempdir_in(dir) {
         Ok(d) => {
-            // `keep` consumes the TempDir without removing it
             let path = d.keep();
             Ok(path)
         }
@@ -560,11 +512,10 @@ fn make_temp_dir(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult
 ///
 /// If the file could not be written to disk or if the directory does
 /// not exist.
-fn make_temp_file(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<PathBuf> {
+fn make_temp_file(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> SGResult<PathBuf> {
     let mut builder = Builder::new();
     builder.prefix(prefix).rand_bytes(rand).suffix(suffix);
     match builder.tempfile_in(dir) {
-        // `keep` ensures that the file is not deleted
         Ok(named_tempfile) => match named_tempfile.keep() {
             Ok((_, pathbuf)) => Ok(pathbuf),
             Err(e) => Err(MkTempError::PersistError(e.file.path().to_path_buf()).into()),
@@ -579,23 +530,16 @@ fn make_temp_file(dir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResul
     }
 }
 
-fn exec(dir: &Path, prefix: &str, rand: usize, suffix: &str, make_dir: bool) -> UResult<PathBuf> {
+fn exec(dir: &Path, prefix: &str, rand: usize, suffix: &str, make_dir: bool) -> SGResult<PathBuf> {
     let path = if make_dir {
         make_temp_dir(dir, prefix, rand, suffix)?
     } else {
         make_temp_file(dir, prefix, rand, suffix)?
     };
 
-    // Get just the last component of the path to the created
-    // temporary file or directory.
     let filename = path.file_name();
     let filename = filename.unwrap().to_str().unwrap();
 
-    // Join the directory to the path to get the path to print. We
-    // cannot use the path returned by the `Builder` because it gives
-    // the absolute path and we need to return a filename that matches
-    // the template given on the command-line which might be a
-    // relative path.
     let path = Path::new(dir).join(filename);
 
     Ok(path)
@@ -604,8 +548,7 @@ fn exec(dir: &Path, prefix: &str, rand: usize, suffix: &str, make_dir: bool) -> 
 /// Create a temporary file or directory
 ///
 /// Behavior is determined by the `options` parameter, see [`Options`] for details.
-pub fn mktemp(options: &Options) -> UResult<PathBuf> {
-    // Parse file path parameters from the command-line options.
+pub fn mktemp(options: &Options) -> SGResult<PathBuf> {
     let Params {
         directory: tmpdir,
         prefix,
@@ -613,7 +556,6 @@ pub fn mktemp(options: &Options) -> UResult<PathBuf> {
         suffix,
     } = Params::from(options.clone())?;
 
-    // Create the temporary file or directory, or simulate creating it.
     if options.dry_run {
         dry_exec(&tmpdir, &prefix, rand, &suffix)
     } else {
@@ -638,3 +580,4 @@ mod tests {
         assert_eq!(findxs("aXXbXXcXX"), None);
     }
 }
+

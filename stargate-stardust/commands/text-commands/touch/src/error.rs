@@ -1,9 +1,10 @@
-// spell-checker:ignore (misc) uioerror
+
+
 use filetime::FileTime;
 use std::path::PathBuf;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{UError, UIoError};
+use sgcore::error::{SGError, SGIoError};
 use sgcore::translate;
 
 #[derive(Debug, Error)]
@@ -28,17 +29,18 @@ pub enum TouchError {
     TouchFileError {
         path: PathBuf,
         index: usize,
-        error: Box<dyn UError>,
+        error: Box<dyn SGError>,
     },
 }
 
-fn to_uioerror(err: &std::io::Error) -> UIoError {
+fn to_uioerror(err: &std::io::Error) -> SGIoError {
     let copy = if let Some(code) = err.raw_os_error() {
         std::io::Error::from_raw_os_error(code)
     } else {
         std::io::Error::from(err.kind())
     };
-    UIoError::from(copy)
+    SGIoError::from(copy)
 }
 
-impl UError for TouchError {}
+impl SGError for TouchError {}
+

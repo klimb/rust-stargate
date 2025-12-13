@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) execvp SIGHUP cproc vprocmgr cstrs homeout
+
 
 use clap::{Arg, ArgAction, Command};
 use libc::{SIG_IGN, SIGHUP};
@@ -11,12 +11,11 @@ use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{UError, UResult, set_exit_code};
+use sgcore::error::{SGError, SGResult, set_exit_code};
 use sgcore::translate;
 use sgcore::{format_usage, show_error};
 
 static NOHUP_OUT: &str = "nohup.out";
-// exit codes that match the GNU implementation
 static EXIT_CANCELED: i32 = 125;
 static EXIT_CANNOT_INVOKE: i32 = 126;
 static EXIT_ENOENT: i32 = 127;
@@ -41,7 +40,7 @@ enum NohupError {
     OpenFailed2(i32, #[source] Error, String, Error),
 }
 
-impl UError for NohupError {
+impl SGError for NohupError {
     fn code(&self) -> i32 {
         match self {
             Self::OpenFailed(code, _) | Self::OpenFailed2(code, _, _, _) => *code,
@@ -51,7 +50,7 @@ impl UError for NohupError {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
@@ -98,7 +97,7 @@ pub fn sg_app() -> Command {
         .infer_long_args(true)
 }
 
-fn replace_fds() -> UResult<()> {
+fn replace_fds() -> SGResult<()> {
     if std::io::stdin().is_terminal() {
         let new_stdin = File::open(Path::new("/dev/null"))
             .map_err(|e| NohupError::CannotReplace("STDIN", e))?;
@@ -122,7 +121,7 @@ fn replace_fds() -> UResult<()> {
     Ok(())
 }
 
-fn find_stdout() -> UResult<File> {
+fn find_stdout() -> SGResult<File> {
     let internal_failure_code = match env::var("POSIXLY_CORRECT") {
         Ok(_) => POSIX_NOHUP_FAILURE,
         Err(_) => EXIT_CANCELED,
@@ -174,7 +173,7 @@ unsafe extern "C" {
 
 #[cfg(any(
     target_os = "linux",
-    
+
     target_os = "freebsd",
     target_os = "openbsd"
 ))]
@@ -183,3 +182,4 @@ unsafe extern "C" {
 unsafe fn _vprocmgr_detach_from_console(_: u32) -> *const libc::c_int {
     std::ptr::null()
 }
+

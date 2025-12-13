@@ -1,6 +1,6 @@
 [package]
 name = "sg_rmdir"
-description = "rmdir ~ (uutils) remove empty DIRECTORY"
+description = "rmdir ~ (stargate) remove empty DIRECTORY"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

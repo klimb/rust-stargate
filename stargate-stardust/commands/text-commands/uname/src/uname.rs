@@ -1,4 +1,4 @@
-// spell-checker:ignore (API) nodename osname sysname (options) mnrsv mnrsvo
+
 
 use clap::{Arg, ArgAction, Command};
 use platform_info::*;
@@ -6,7 +6,7 @@ use serde::Serialize;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
 };
 
@@ -61,9 +61,9 @@ impl UNameOutput {
         .join(" ")
     }
 
-    pub fn new(opts: &Options) -> UResult<Self> {
+    pub fn new(opts: &Options) -> SGResult<Self> {
         let uname = PlatformInfo::new()
-            .map_err(|_e| USimpleError::new(1, translate!("uname-error-cannot-get-system-name")))?;
+            .map_err(|_e| SGSimpleError::new(1, translate!("uname-error-cannot-get-system-name")))?;
         let none = !(opts.all
             || opts.kernel_name
             || opts.nodename
@@ -91,12 +91,8 @@ impl UNameOutput {
 
         let os = (opts.os || opts.all).then(|| uname.osname().to_string_lossy().to_string());
 
-        // This option is unsupported on modern Linux systems
-        // See: https://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00063.html
         let processor = opts.processor.then(|| translate!("uname-unknown"));
 
-        // This option is unsupported on modern Linux systems
-        // See: https://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00063.html
         let hardware_platform = opts.hardware_platform.then(|| translate!("uname-unknown"));
 
         Ok(Self {
@@ -125,7 +121,7 @@ pub struct Options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
@@ -143,7 +139,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         os: matches.get_flag(options::OS),
     };
     let output = UNameOutput::new(&options)?;
-    
+
     if json_output_options.stardust_output {
         let json_value = serde_json::to_value(&output)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
@@ -172,7 +168,7 @@ pub fn sg_app() -> Command {
             Arg::new(options::KERNEL_NAME)
                 .short('s')
                 .long(options::KERNEL_NAME)
-                .alias("sysname") // Obsolescent option in GNU uname
+                .alias("sysname")
                 .help(translate!("uname-help-kernel-name"))
                 .action(ArgAction::SetTrue)
         )
@@ -187,7 +183,7 @@ pub fn sg_app() -> Command {
             Arg::new(options::KERNEL_RELEASE)
                 .short('r')
                 .long(options::KERNEL_RELEASE)
-                .alias("release") // Obsolescent option in GNU uname
+                .alias("release")
                 .help(translate!("uname-help-kernel-release"))
                 .action(ArgAction::SetTrue)
         )
@@ -230,3 +226,4 @@ pub fn sg_app() -> Command {
         );
     stardust_output::add_json_args(cmd)
 }
+

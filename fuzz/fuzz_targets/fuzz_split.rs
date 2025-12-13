@@ -1,4 +1,4 @@
-// spell-checker:ignore parens
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -7,7 +7,7 @@ use sg_split::sgmain;
 use rand::Rng;
 use std::ffi::OsString;
 
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd,
 };
 static CMD_PATH: &str = "split";
@@ -18,36 +18,36 @@ fn generate_split_args() -> String {
 
     match rng.random_range(0..=9) {
         0 => {
-            args.push(String::from("-a")); // Suffix length
+            args.push(String::from("-a"));
             args.push(rng.random_range(1..=8).to_string());
         }
         1 => {
             args.push(String::from("--additional-suffix"));
-            args.push(generate_random_string(5)); // Random suffix
+            args.push(generate_random_string(5));
         }
         2 => {
-            args.push(String::from("-b")); // Bytes per output file
+            args.push(String::from("-b"));
             args.push(rng.random_range(1..=1024).to_string() + "K");
         }
         3 => {
-            args.push(String::from("-C")); // Line bytes
+            args.push(String::from("-C"));
             args.push(rng.random_range(1..=1024).to_string());
         }
-        4 => args.push(String::from("-d")), // Use numeric suffixes
-        5 => args.push(String::from("-x")), // Use hex suffixes
+        4 => args.push(String::from("-d")),
+        5 => args.push(String::from("-x")),
         6 => {
-            args.push(String::from("-l")); // Number of lines per output file
+            args.push(String::from("-l"));
             args.push(rng.random_range(1..=1000).to_string());
         }
         7 => {
             args.push(String::from("--filter"));
-            args.push(String::from("cat > /dev/null")); // Example filter command
+            args.push(String::from("cat > /dev/null"));
         }
         8 => {
-            args.push(String::from("-t")); // Separator
-            args.push(String::from("\n")); // Newline as separator
+            args.push(String::from("-t"));
+            args.push(String::from("\n"));
         }
-        9 => args.push(String::from("--verbose")), // Verbose
+        9 => args.push(String::from("--verbose")),
         _ => (),
     }
 
@@ -95,6 +95,7 @@ fuzz_target!(|_data: &[u8]| {
         None,
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

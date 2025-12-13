@@ -1,6 +1,6 @@
 [package]
 name = "sg_factor"
-description = "factor ~ (uutils) display the prime factors of each NUMBER"
+description = "factor ~ (stargate) display the prime factors of each NUMBER"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

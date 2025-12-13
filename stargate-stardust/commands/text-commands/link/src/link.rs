@@ -5,7 +5,7 @@ use std::fs::hard_link;
 use std::path::Path;
 use serde_json::json;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::format_usage;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
@@ -15,11 +15,11 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
     let json_output_options = StardustOutputOptions::from_matches(&matches);
-    
+
     let files: Vec<_> = matches
         .get_many::<OsString>(options::FILES)
         .unwrap_or_default()
@@ -31,7 +31,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let result = hard_link(old, new).map_err_context(
         || translate!("link-error-cannot-create-link", "new" => new.quote(), "old" => old.quote())
     );
-    
+
     if json_output_options.stardust_output {
         let output = json!({
             "source": old.to_string_lossy(),
@@ -40,7 +40,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         });
         stardust_output::output(json_output_options, output, || Ok(()))?;
     }
-    
+
     result
 }
 
@@ -59,6 +59,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(ValueParser::os_string())
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

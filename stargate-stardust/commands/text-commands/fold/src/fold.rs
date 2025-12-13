@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDOs) ncount routput
+
 
 use clap::{Arg, ArgAction, Command};
 use std::fs::File;
@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader, BufWriter, Read, Write, stdin, stdout};
 use std::path::Path;
 use unicode_width::UnicodeWidthChar;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -40,7 +40,7 @@ struct FoldContext<'a, W: Write> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args = args.collect_lossy();
 
     let (args, obs_width) = handle_obsolete(&args[..]);
@@ -57,7 +57,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let width = match poss_width {
         Some(inp_width) => inp_width.parse::<usize>().map_err(|e| {
-            USimpleError::new(
+            SGSimpleError::new(
                 1,
                 translate!("fold-error-illegal-width", "width" => inp_width.quote(), "error" => e)
             )
@@ -135,7 +135,7 @@ fn fold(
     characters: bool,
     spaces: bool,
     width: usize
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut output = BufWriter::new(stdout());
 
     for filename in filenames {
@@ -181,7 +181,7 @@ fn fold_file_bytewise<T: Read, W: Write>(
     spaces: bool,
     width: usize,
     output: &mut W
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut line = Vec::new();
 
     loop {
@@ -221,9 +221,6 @@ fn fold_file_bytewise<T: Read, W: Write>(
                 }
             };
 
-            // Don't duplicate trailing newlines: if the slice is "\n", the
-            // previous iteration folded just before the end of the line and
-            // has already printed this newline.
             if slice == [NL] {
                 break;
             }
@@ -283,7 +280,7 @@ fn compute_col_count(buffer: &[u8], mode: WidthMode) -> usize {
     }
 }
 
-fn emit_output<W: Write>(ctx: &mut FoldContext<'_, W>) -> UResult<()> {
+fn emit_output<W: Write>(ctx: &mut FoldContext<'_, W>) -> SGResult<()> {
     let consume = match *ctx.last_space {
         Some(index) => index + 1,
         None => ctx.output.len(),
@@ -318,7 +315,7 @@ fn emit_output<W: Write>(ctx: &mut FoldContext<'_, W>) -> UResult<()> {
     Ok(())
 }
 
-fn process_ascii_line<W: Write>(line: &[u8], ctx: &mut FoldContext<'_, W>) -> UResult<()> {
+fn process_ascii_line<W: Write>(line: &[u8], ctx: &mut FoldContext<'_, W>) -> SGResult<()> {
     let mut idx = 0;
     let len = line.len();
 
@@ -384,7 +381,7 @@ fn process_ascii_line<W: Write>(line: &[u8], ctx: &mut FoldContext<'_, W>) -> UR
     Ok(())
 }
 
-fn push_ascii_segment<W: Write>(segment: &[u8], ctx: &mut FoldContext<'_, W>) -> UResult<()> {
+fn push_ascii_segment<W: Write>(segment: &[u8], ctx: &mut FoldContext<'_, W>) -> SGResult<()> {
     if segment.is_empty() {
         return Ok(());
     }
@@ -421,7 +418,7 @@ fn push_ascii_segment<W: Write>(segment: &[u8], ctx: &mut FoldContext<'_, W>) ->
     Ok(())
 }
 
-fn process_utf8_line<W: Write>(line: &str, ctx: &mut FoldContext<'_, W>) -> UResult<()> {
+fn process_utf8_line<W: Write>(line: &str, ctx: &mut FoldContext<'_, W>) -> SGResult<()> {
     if line.is_ascii() {
         return process_ascii_line(line.as_bytes(), ctx);
     }
@@ -501,7 +498,7 @@ fn process_utf8_line<W: Write>(line: &str, ctx: &mut FoldContext<'_, W>) -> URes
     Ok(())
 }
 
-fn process_non_utf8_line<W: Write>(line: &[u8], ctx: &mut FoldContext<'_, W>) -> UResult<()> {
+fn process_non_utf8_line<W: Write>(line: &[u8], ctx: &mut FoldContext<'_, W>) -> SGResult<()> {
     for &byte in line {
         if byte == NL {
             *ctx.last_space = None;
@@ -558,7 +555,7 @@ fn fold_file<T: Read, W: Write>(
     width: usize,
     mode: WidthMode,
     writer: &mut W
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut line = Vec::new();
     let mut output = Vec::new();
     let mut col_count = 0;
@@ -598,3 +595,4 @@ fn fold_file<T: Read, W: Write>(
 
     Ok(())
 }
+

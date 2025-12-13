@@ -1,8 +1,8 @@
-// spell-checker:ignore (ToDO) COMFOLLOW Chowner RFILE RFILE's derefer dgid nonblank nonprint nonprinting
+
 
 use sgcore::display::Quotable;
 use sgcore::entries;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
 use sgcore::translate;
@@ -14,15 +14,12 @@ use std::os::unix::fs::MetadataExt;
 
 fn parse_gid_from_str(group: &str) -> Result<u32, String> {
     if let Some(gid_str) = group.strip_prefix(':') {
-        // Handle :gid format
         gid_str
             .parse::<u32>()
             .map_err(|_| translate!("change_group-error-invalid-group-id", "gid_str" => gid_str))
     } else {
-        // Try as group name first
         match entries::grp2gid(group) {
             Ok(g) => Ok(g),
-            // If group name lookup fails, try parsing as raw number
             Err(_) => group
                 .parse::<u32>()
                 .map_err(|_| translate!("change_group-error-invalid-group", "group" => group)),
@@ -30,7 +27,7 @@ fn parse_gid_from_str(group: &str) -> Result<u32, String> {
     }
 }
 
-fn get_dest_gid(matches: &ArgMatches) -> UResult<(Option<u32>, String)> {
+fn get_dest_gid(matches: &ArgMatches) -> SGResult<(Option<u32>, String)> {
     let mut raw_group = String::new();
     let dest_gid = if let Some(file) = matches.get_one::<std::ffi::OsString>(options::REFERENCE) {
         let path = std::path::Path::new(file);
@@ -54,22 +51,21 @@ fn get_dest_gid(matches: &ArgMatches) -> UResult<(Option<u32>, String)> {
         } else {
             match parse_gid_from_str(group) {
                 Ok(g) => Some(g),
-                Err(e) => return Err(USimpleError::new(1, e)),
+                Err(e) => return Err(SGSimpleError::new(1, e)),
             }
         }
     };
     Ok((dest_gid, raw_group))
 }
 
-fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
+fn parse_gid_and_uid(matches: &ArgMatches) -> SGResult<GidUidOwnerFilter> {
     let (dest_gid, raw_group) = get_dest_gid(matches)?;
 
-    // Handle --from option
     let filter = if let Some(from_group) = matches.get_one::<String>(options::FROM) {
         match parse_gid_from_str(from_group) {
             Ok(g) => IfFrom::Group(g),
             Err(_) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("change_group-error-invalid-user", "from_group" => from_group)
                 ));
@@ -88,7 +84,7 @@ fn parse_gid_and_uid(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "fattr"])?;
     chown_base(sg_app(), args, options::ARG_GROUP, parse_gid_and_uid, true)
 }
@@ -166,6 +162,6 @@ pub fn sg_app() -> Command {
                 .help(translate!("change_group-help-recursive"))
                 .action(ArgAction::SetTrue)
         )
-        // Add common arguments with chgrp, change_owner & chmod
         .args(sgcore::perms::common_args())
 }
+

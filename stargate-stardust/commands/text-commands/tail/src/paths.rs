@@ -1,4 +1,4 @@
-// spell-checker:ignore tailable seekable stdlib (stdlib)
+
 
 use crate::text;
 use std::ffi::OsStr;
@@ -6,7 +6,7 @@ use std::fs::{File, Metadata};
 use std::io::{Seek, SeekFrom};
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::path::{Path, PathBuf};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::translate;
 
 #[derive(Debug, Clone)]
@@ -71,10 +71,6 @@ impl Input {
                 path.canonicalize().ok()
             }
             InputKind::File(_) | InputKind::Stdin => {
-                // on macOS, /dev/fd isn't backed by /proc and canonicalize()
-                // on dev/fd/0 (or /dev/stdin) will fail (NotFound),
-                // so we treat stdin as a pipe here
-                // https://github.com/rust-lang/rust/issues/95239
                 #[cfg(target_os = "macos")]
                 {
                     None
@@ -149,7 +145,7 @@ impl FileExtTail for File {
 
 pub trait MetadataExtTail {
     fn is_tailable(&self) -> bool;
-    fn got_truncated(&self, other: &Metadata) -> UResult<bool>;
+    fn got_truncated(&self, other: &Metadata) -> SGResult<bool>;
     fn file_id_eq(&self, other: &Metadata) -> bool;
 }
 
@@ -166,7 +162,7 @@ impl MetadataExtTail for Metadata {
     }
 
     /// Return true if the file was modified and is now shorter
-    fn got_truncated(&self, other: &Metadata) -> UResult<bool> {
+    fn got_truncated(&self, other: &Metadata) -> SGResult<bool> {
         Ok(other.len() < self.len() && other.modified()? != self.modified()?)
     }
 
@@ -205,12 +201,6 @@ pub fn path_is_tailable(path: &Path) -> bool {
 
 #[inline]
 pub fn stdin_is_bad_fd() -> bool {
-    // FIXME : Rust's stdlib is reopening fds as /dev/null
-    // see also: https://github.com/uutils/coreutils/issues/2873
-    // (gnu/tests/tail-2/follow-stdin.sh fails because of this)
-    //{
-        //platform::stdin_is_bad_fd()
-    //}
-    //#[cfg(not(unix))]
     false
 }
+

@@ -1,4 +1,4 @@
-// spell-checker:ignore ctty, ctable, iseek, oseek, iconvflags, oconvflags parseargs outfile oconv
+
 
 #[cfg(test)]
 mod unit_tests;
@@ -7,7 +7,7 @@ use super::{ConversionMode, IConvFlags, IFlags, Num, OConvFlags, OFlags, Setting
 use crate::conversion_tables::ConversionTable;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::parser::parse_size::{ParseSizeError, Parser as SizeParser};
 use sgcore::show_warning;
 use sgcore::translate;
@@ -165,16 +165,6 @@ impl Parser {
             return Err(ParseError::MultipleExclNoCreate);
         }
 
-        // The GNU docs state that
-        // - ascii implies unblock
-        // - ebcdic and ibm imply block
-        // This has a side effect in how it's implemented in GNU, because this errors:
-        //     conv=block,unblock
-        // but these don't:
-        //     conv=ascii,block,unblock
-        //     conv=block,ascii,unblock
-        //     conv=block,unblock,ascii
-        //     conv=block conv=unblock conv=ascii
         let block = if let Some(cbs) = self.cbs {
             match conversion {
                 Some(Conversion::Ascii) => Some(Block::Unblock(cbs)),
@@ -216,23 +206,11 @@ impl Parser {
             fsync: conv.fsync,
         };
 
-        // Input and output block sizes.
-        //
-        // The `bs` option takes precedence. If either is not
-        // provided, `ibs` and `obs` are each 512 bytes by default.
         let (ibs, obs) = match self.bs {
             None => (self.ibs.unwrap_or(512), self.obs.unwrap_or(512)),
             Some(bs) => (bs, bs),
         };
 
-        // Whether to buffer partial output blocks until they are completed.
-        //
-        // From the GNU `dd` documentation for the `bs=BYTES` option:
-        //
-        // > [...] if no data-transforming 'conv' option is specified,
-        // > input is copied to the output as soon as it's read, even if
-        // > it is smaller than the block size.
-        //
         let buffered = self.bs.is_none() || self.is_conv_specified;
 
         let skip = self
@@ -319,7 +297,6 @@ impl Parser {
         let i = &mut self.iflag;
         for f in val.split(',') {
             match f {
-                // Common flags
                 "cio" => return Err(ParseError::Unimplemented(f.to_string())),
                 "direct" => linux_only!(f, i.direct = true),
                 "directory" => linux_only!(f, i.directory = true),
@@ -334,11 +311,9 @@ impl Parser {
                 "binary" => return Err(ParseError::Unimplemented(f.to_string())),
                 "text" => return Err(ParseError::Unimplemented(f.to_string())),
 
-                // Input-only flags
                 "fullblock" => i.fullblock = true,
                 "count_bytes" => i.count_bytes = true,
                 "skip_bytes" => i.skip_bytes = true,
-                // GNU silently ignores oflags given as iflag.
                 "append" | "seek_bytes" => {}
                 _ => return Err(ParseError::FlagNoMatch(f.to_string())),
             }
@@ -351,7 +326,6 @@ impl Parser {
         let o = &mut self.oflag;
         for f in val.split(',') {
             match f {
-                // Common flags
                 "cio" => return Err(ParseError::Unimplemented(val.to_string())),
                 "direct" => linux_only!(f, o.direct = true),
                 "directory" => linux_only!(f, o.directory = true),
@@ -366,10 +340,8 @@ impl Parser {
                 "binary" => return Err(ParseError::Unimplemented(f.to_string())),
                 "text" => return Err(ParseError::Unimplemented(f.to_string())),
 
-                // Output-only flags
                 "append" => o.append = true,
                 "seek_bytes" => o.seek_bytes = true,
-                // GNU silently ignores iflags given as oflag.
                 "fullblock" | "count_bytes" | "skip_bytes" => {}
                 _ => return Err(ParseError::FlagNoMatch(f.to_string())),
             }
@@ -381,25 +353,20 @@ impl Parser {
         let c = &mut self.conv;
         for f in val.split(',') {
             match f {
-                // Conversion
                 "ascii" => c.ascii = true,
                 "ebcdic" => c.ebcdic = true,
                 "ibm" => c.ibm = true,
 
-                // Case
                 "lcase" => c.lcase = true,
                 "ucase" => c.ucase = true,
 
-                // Block
                 "block" => c.block = true,
                 "unblock" => c.unblock = true,
 
-                // Other input
                 "swab" => c.swab = true,
                 "sync" => c.sync = true,
                 "noerror" => c.noerror = true,
 
-                // Output
                 "sparse" => c.sparse = true,
                 "excl" => c.excl = true,
                 "nocreat" => c.nocreat = true,
@@ -413,7 +380,7 @@ impl Parser {
     }
 }
 
-impl UError for ParseError {
+impl SGError for ParseError {
     fn code(&self) -> i32 {
         1
     }
@@ -485,20 +452,7 @@ fn parse_bytes_no_x(full: &str, s: &str) -> Result<u64, ParseError> {
 /// Uses [`sgcore::parser::parse_size`], and adds the 'w' and 'c' suffixes which are mentioned
 /// in dd's info page.
 pub fn parse_bytes_with_opt_multiplier(s: &str) -> Result<u64, ParseError> {
-    // TODO On my Linux system, there seems to be a maximum block size of 4096 bytes:
-    //
-    //     $ printf "%0.sa" {1..10000} | dd bs=4095 count=1 status=none | wc -c
-    //     4095
-    //     $ printf "%0.sa" {1..10000} | dd bs=4k count=1 status=none | wc -c
-    //     4096
-    //     $ printf "%0.sa" {1..10000} | dd bs=4097 count=1 status=none | wc -c
-    //     4096
-    //     $ printf "%0.sa" {1..10000} | dd bs=5k count=1 status=none | wc -c
-    //     4096
-    //
 
-    // Split on the 'x' characters. Each component will be parsed
-    // individually, then multiplied together.
     let parts: Vec<&str> = s.split('x').collect();
     if parts.len() == 1 {
         parse_bytes_no_x(s, parts[0])
@@ -596,7 +550,7 @@ mod tests {
     #[test]
     fn test_parse_bytes_with_opt_multiplier_without_x() {
         assert_eq!(parse_bytes_with_opt_multiplier("123").unwrap(), 123);
-        assert_eq!(parse_bytes_with_opt_multiplier("123c").unwrap(), 123); // 123 * 1
+        assert_eq!(parse_bytes_with_opt_multiplier("123c").unwrap(), 123);
         assert_eq!(parse_bytes_with_opt_multiplier("123w").unwrap(), 123 * 2);
         assert_eq!(parse_bytes_with_opt_multiplier("123b").unwrap(), 123 * 512);
         assert_eq!(parse_bytes_with_opt_multiplier("123k").unwrap(), 123 * 1024);
@@ -606,10 +560,10 @@ mod tests {
     #[test]
     fn test_parse_bytes_with_opt_multiplier_with_x() {
         assert_eq!(parse_bytes_with_opt_multiplier("123x3").unwrap(), 123 * 3);
-        assert_eq!(parse_bytes_with_opt_multiplier("1x2x3").unwrap(), 6); // 1 * 2 * 3
+        assert_eq!(parse_bytes_with_opt_multiplier("1x2x3").unwrap(), 6);
         assert_eq!(
             parse_bytes_with_opt_multiplier("1wx2cx3w").unwrap(),
-            2 * 2 * (3 * 2) // (1 * 2) * (2 * 1) * (3 * 2)
+            2 * 2 * (3 * 2)
         );
     }
     #[test]
@@ -622,3 +576,4 @@ mod tests {
         }
     }
 }
+

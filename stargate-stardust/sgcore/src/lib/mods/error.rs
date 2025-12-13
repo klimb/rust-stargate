@@ -6,7 +6,7 @@
 //! This module provides types to reconcile these exit codes with idiomatic Rust error
 //! handling. This has a couple advantages over manually using [`std::process::exit`]:
 //! 1. It enables the use of `?`, `map_err`, `unwrap_or`, etc. in `sgmain`.
-//! 1. It encourages the use of [`UResult`]/[`Result`] in functions in the utils.
+//! 1. It encourages the use of [`SGResult`]/[`Result`] in functions in the utils.
 //! 1. The error messages are largely standardized across utils.
 //! 1. Standardized error messages can be created from external result types
 //!    (i.e. [`std::io::Result`] & `clap::ClapResult`).
@@ -15,12 +15,12 @@
 //! # Usage
 //! The signature of a typical util should be:
 //! ```ignore
-//! fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+//! fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
 //!     ...
 //! }
 //! ```
-//! [`UResult`] is a simple wrapper around [`Result`] with a custom error trait: [`UError`]. The
-//! most important difference with types implementing [`std::error::Error`] is that [`UError`]s
+//! [`SGResult`] is a simple wrapper around [`Result`] with a custom error trait: [`SGError`]. The
+//! most important difference with types implementing [`std::error::Error`] is that [`SGError`]s
 //! can specify the exit code of the program when they are returned from `sgmain`:
 //! * When `Ok` is returned, the code set with [`set_exit_code`] is used as exit code. If
 //!   [`set_exit_code`] was not used, then `0` is used.
@@ -29,7 +29,7 @@
 //!
 //! Additionally, the errors can be displayed manually with the [`crate::show`] and [`crate::show_if_err`] macros:
 //! ```ignore
-//! let res = Err(USimpleError::new(1, "Error!!"));
+//! let res = Err(SGSimpleError::new(1, "Error!!"));
 //! show_if_err!(res);
 //! // or
 //! if let Err(e) = res {
@@ -43,12 +43,12 @@
 //! # Guidelines
 //! * Use error types from `sgcore` where possible.
 //! * Add error types to `sgcore` if an error appears in multiple utils.
-//! * Prefer proper custom error types over [`ExitCode`] and [`USimpleError`].
-//! * [`USimpleError`] may be used in small utils with simple error handling.
+//! * Prefer proper custom error types over [`ExitCode`] and [`SGSimpleError`].
+//! * [`SGSimpleError`] may be used in small utils with simple error handling.
 //! * Using [`ExitCode`] is not recommended but can be useful for converting utils to use
-//!   [`UResult`].
+//!   [`SGResult`].
 
-// spell-checker:ignore uioerror rustdoc
+
 
 use std::{
     error::Error,
@@ -69,9 +69,9 @@ pub fn get_exit_code() -> i32 {
 /// This function is most useful for non-fatal errors, for example when applying an operation to
 /// multiple files:
 /// ```ignore
-/// use sgcore::error::{UResult, set_exit_code};
+/// use sgcore::error::{SGResult, set_exit_code};
 ///
-/// fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+/// fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
 ///     ...
 ///     for file in files {
 ///         let res = some_operation_that_might_fail(file);
@@ -88,7 +88,7 @@ pub fn set_exit_code(code: i32) {
 }
 
 /// Result type that should be returned by all utils.
-pub type UResult<T> = Result<T, Box<dyn UError>>;
+pub type SGResult<T> = Result<T, Box<dyn SGError>>;
 
 /// Custom errors defined by the utils and `sgcore`.
 ///
@@ -101,7 +101,7 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 /// ```
 /// use sgcore::{
 ///     display::Quotable,
-///     error::{UError, UResult}
+///     error::{SGError, SGResult}
 /// };
 /// use std::{
 ///     error::Error,
@@ -115,7 +115,7 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 ///     NoMetadata(PathBuf),
 /// }
 ///
-/// impl UError for LsError {
+/// impl SGError for LsError {
 ///     fn code(&self) -> i32 {
 ///         match self {
 ///             LsError::InvalidLineWidth(_) => 2,
@@ -140,18 +140,18 @@ pub type UResult<T> = Result<T, Box<dyn UError>>;
 ///
 /// ```ignore
 /// #[sgcore::main]
-/// pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+/// pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
 ///     // Perform computations here ...
 ///     return Err(LsError::InvalidLineWidth(String::from("test")).into())
 /// }
 /// ```
 ///
 /// The call to `into()` is required to convert the `LsError` to
-/// [`Box<dyn UError>`]. The implementation for `From` is provided automatically.
+/// [`Box<dyn SGError>`]. The implementation for `From` is provided automatically.
 ///
 /// A crate like [`quick_error`](https://crates.io/crates/quick-error) might
 /// also be used, but will still require an `impl` for the `code` method.
-pub trait UError: Error + Send {
+pub trait SGError: Error + Send {
     /// Error code of a custom error.
     ///
     /// Set a return value for each variant of an enum-type to associate an
@@ -163,7 +163,7 @@ pub trait UError: Error + Send {
     /// ```
     /// use sgcore::{
     ///     display::Quotable,
-    ///     error::UError
+    ///     error::SGError
     /// };
     /// use std::{
     ///     error::Error,
@@ -178,7 +178,7 @@ pub trait UError: Error + Send {
     ///     Bing(),
     /// }
     ///
-    /// impl UError for MyError {
+    /// impl SGError for MyError {
     ///     fn code(&self) -> i32 {
     ///         match self {
     ///             MyError::Foo(_) => 2,
@@ -217,7 +217,7 @@ pub trait UError: Error + Send {
     /// ```
     /// use sgcore::{
     ///     display::Quotable,
-    ///     error::UError
+    ///     error::SGError
     /// };
     /// use std::{
     ///     error::Error,
@@ -232,7 +232,7 @@ pub trait UError: Error + Send {
     ///     Bing(),
     /// }
     ///
-    /// impl UError for MyError {
+    /// impl SGError for MyError {
     ///     fn usage(&self) -> bool {
     ///         match self {
     ///             // This will have a short usage help appended
@@ -261,26 +261,26 @@ pub trait UError: Error + Send {
     }
 }
 
-impl<T> From<T> for Box<dyn UError>
+impl<T> From<T> for Box<dyn SGError>
 where
-    T: UError + 'static,
+    T: SGError + 'static,
 {
     fn from(t: T) -> Self {
         Box::new(t)
     }
 }
 
-/// A simple error type with an exit code and a message that implements [`UError`].
+/// A simple error type with an exit code and a message that implements [`SGError`].
 ///
 /// ```
-/// use sgcore::error::{UResult, USimpleError};
-/// let err = USimpleError { code: 1, message: "error!".into()};
-/// let res: UResult<()> = Err(err.into());
+/// use sgcore::error::{SGResult, SGSimpleError};
+/// let err = SGSimpleError { code: 1, message: "error!".into()};
+/// let res: SGResult<()> = Err(err.into());
 /// // or using the `new` method:
-/// let res: UResult<()> = Err(USimpleError::new(1, "error!"));
+/// let res: SGResult<()> = Err(SGSimpleError::new(1, "error!"));
 /// ```
 #[derive(Debug)]
-pub struct USimpleError {
+pub struct SGSimpleError {
     /// Exit code of the error.
     pub code: i32,
 
@@ -288,10 +288,10 @@ pub struct USimpleError {
     pub message: String,
 }
 
-impl USimpleError {
-    /// Create a new `USimpleError` with a given exit code and message.
+impl SGSimpleError {
+    /// Create a new `SGSimpleError` with a given exit code and message.
     #[allow(clippy::new_ret_no_self)]
-    pub fn new<S: Into<String>>(code: i32, message: S) -> Box<dyn UError> {
+    pub fn new<S: Into<String>>(code: i32, message: S) -> Box<dyn SGError> {
         Box::new(Self {
             code,
             message: message.into(),
@@ -299,15 +299,15 @@ impl USimpleError {
     }
 }
 
-impl Error for USimpleError {}
+impl Error for SGSimpleError {}
 
-impl Display for USimpleError {
+impl Display for SGSimpleError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.message.fmt(f)
     }
 }
 
-impl UError for USimpleError {
+impl SGError for SGSimpleError {
     fn code(&self) -> i32 {
         self.code
     }
@@ -315,7 +315,7 @@ impl UError for USimpleError {
 
 /// Wrapper type around [`std::io::Error`].
 #[derive(Debug)]
-pub struct UUsageError {
+pub struct SGUsageError {
     /// Exit code of the error.
     pub code: i32,
 
@@ -323,10 +323,10 @@ pub struct UUsageError {
     pub message: String,
 }
 
-impl UUsageError {
+impl SGUsageError {
     #[allow(clippy::new_ret_no_self)]
-    /// Create a new `UUsageError` with a given exit code and message.
-    pub fn new<S: Into<String>>(code: i32, message: S) -> Box<dyn UError> {
+    /// Create a new `SGUsageError` with a given exit code and message.
+    pub fn new<S: Into<String>>(code: i32, message: S) -> Box<dyn SGError> {
         Box::new(Self {
             code,
             message: message.into(),
@@ -334,15 +334,15 @@ impl UUsageError {
     }
 }
 
-impl Error for UUsageError {}
+impl Error for SGUsageError {}
 
-impl Display for UUsageError {
+impl Display for SGUsageError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.message.fmt(f)
     }
 }
 
-impl UError for UUsageError {
+impl SGError for SGUsageError {
     fn code(&self) -> i32 {
         self.code
     }
@@ -354,40 +354,40 @@ impl UError for UUsageError {
 
 /// Wrapper type around [`std::io::Error`].
 ///
-/// The messages displayed by [`UIoError`] should match the error messages displayed by GNU
+/// The messages displayed by [`SGIoError`] should match the error messages displayed by GNU
 /// coreutils.
 ///
-/// There are two ways to construct this type: with [`UIoError::new`] or by calling the
+/// There are two ways to construct this type: with [`SGIoError::new`] or by calling the
 /// [`FromIo::map_err_context`] method on a [`std::io::Result`] or [`std::io::Error`].
 /// ```
 /// use sgcore::{
 ///     display::Quotable,
-///     error::{FromIo, UResult, UIoError, UError}
+///     error::{FromIo, SGResult, SGIoError, SGError}
 /// };
 /// use std::fs::File;
 /// use std::path::Path;
 /// let path = Path::new("test.txt");
 ///
 /// // Manual construction
-/// let e: Box<dyn UError> = UIoError::new(
+/// let e: Box<dyn SGError> = SGIoError::new(
 ///     std::io::ErrorKind::NotFound,
 ///     format!("cannot access {}", path.quote())
 /// );
-/// let res: UResult<()> = Err(e.into());
+/// let res: SGResult<()> = Err(e.into());
 ///
 /// // Converting from an `std::io::Error`.
-/// let res: UResult<File> = File::open(path).map_err_context(|| format!("cannot access {}", path.quote()));
+/// let res: SGResult<File> = File::open(path).map_err_context(|| format!("cannot access {}", path.quote()));
 /// ```
 #[derive(Debug)]
-pub struct UIoError {
+pub struct SGIoError {
     context: Option<String>,
     inner: std::io::Error,
 }
 
-impl UIoError {
+impl SGIoError {
     #[allow(clippy::new_ret_no_self)]
-    /// Create a new `UIoError` with a given exit code and message.
-    pub fn new<S: Into<String>>(kind: std::io::ErrorKind, context: S) -> Box<dyn UError> {
+    /// Create a new `SGIoError` with a given exit code and message.
+    pub fn new<S: Into<String>>(kind: std::io::ErrorKind, context: S) -> Box<dyn SGError> {
         Box::new(Self {
             context: Some(context.into()),
             inner: kind.into(),
@@ -395,19 +395,16 @@ impl UIoError {
     }
 }
 
-impl UError for UIoError {}
+impl SGError for SGIoError {}
 
-impl Error for UIoError {}
+impl Error for SGIoError {}
 
-impl Display for UIoError {
+impl Display for SGIoError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         use std::io::ErrorKind::*;
 
         let message;
         let message = if self.inner.raw_os_error().is_some() {
-            // These are errors that come directly from the OS.
-            // We want to normalize their messages across systems,
-            // and we want to strip the "(os error X)" suffix.
             match self.inner.kind() {
                 NotFound => "No such file or directory",
                 PermissionDenied => "Permission denied",
@@ -427,19 +424,11 @@ impl Display for UIoError {
                 Interrupted => "Interrupted",
                 UnexpectedEof => "Unexpected end of file",
                 _ => {
-                    // TODO: When the new error variants
-                    // (https://github.com/rust-lang/rust/issues/86442)
-                    // are stabilized, we should add them to the match statement.
                     message = strip_errno(&self.inner);
                     &message
                 }
             }
         } else {
-            // These messages don't need as much normalization, and the above
-            // messages wouldn't always be a good substitute.
-            // For example, ErrorKind::NotFound doesn't necessarily mean it was
-            // a file that was not found.
-            // There are also errors with entirely custom messages.
             message = self.inner.to_string();
             &message
         };
@@ -460,38 +449,38 @@ pub fn strip_errno(err: &std::io::Error) -> String {
     msg
 }
 
-/// Enables the conversion from [`std::io::Error`] to [`UError`] and from [`std::io::Result`] to
-/// [`UResult`].
+/// Enables the conversion from [`std::io::Error`] to [`SGError`] and from [`std::io::Result`] to
+/// [`SGResult`].
 pub trait FromIo<T> {
     /// Map the error context of an [`std::io::Error`] or [`std::io::Result`] to a custom error
     fn map_err_context(self, context: impl FnOnce() -> String) -> T;
 }
 
-impl FromIo<Box<UIoError>> for std::io::Error {
-    fn map_err_context(self, context: impl FnOnce() -> String) -> Box<UIoError> {
-        Box::new(UIoError {
+impl FromIo<Box<SGIoError>> for std::io::Error {
+    fn map_err_context(self, context: impl FnOnce() -> String) -> Box<SGIoError> {
+        Box::new(SGIoError {
             context: Some(context()),
             inner: self,
         })
     }
 }
 
-impl<T> FromIo<UResult<T>> for std::io::Result<T> {
-    fn map_err_context(self, context: impl FnOnce() -> String) -> UResult<T> {
-        self.map_err(|e| e.map_err_context(context) as Box<dyn UError>)
+impl<T> FromIo<SGResult<T>> for std::io::Result<T> {
+    fn map_err_context(self, context: impl FnOnce() -> String) -> SGResult<T> {
+        self.map_err(|e| e.map_err_context(context) as Box<dyn SGError>)
     }
 }
 
-impl FromIo<Box<UIoError>> for std::io::ErrorKind {
-    fn map_err_context(self, context: impl FnOnce() -> String) -> Box<UIoError> {
-        Box::new(UIoError {
+impl FromIo<Box<SGIoError>> for std::io::ErrorKind {
+    fn map_err_context(self, context: impl FnOnce() -> String) -> Box<SGIoError> {
+        Box::new(SGIoError {
             context: Some(context()),
             inner: std::io::Error::new(self, ""),
         })
     }
 }
 
-impl From<std::io::Error> for UIoError {
+impl From<std::io::Error> for SGIoError {
     fn from(f: std::io::Error) -> Self {
         Self {
             context: None,
@@ -500,14 +489,14 @@ impl From<std::io::Error> for UIoError {
     }
 }
 
-impl From<std::io::Error> for Box<dyn UError> {
+impl From<std::io::Error> for Box<dyn SGError> {
     fn from(f: std::io::Error) -> Self {
-        let u_error: UIoError = f.into();
+        let u_error: SGIoError = f.into();
         Box::new(u_error) as Self
     }
 }
 
-/// Enables the conversion from [`Result<T, nix::Error>`] to [`UResult<T>`].
+/// Enables the conversion from [`Result<T, nix::Error>`] to [`SGResult<T>`].
 ///
 /// # Examples
 ///
@@ -521,25 +510,25 @@ impl From<std::io::Error> for Box<dyn UError> {
 /// // prints "fix me please!: Permission denied"
 /// println!("{}", uio_result.unwrap_err());
 /// ```
-impl<T> FromIo<UResult<T>> for Result<T, nix::Error> {
-    fn map_err_context(self, context: impl FnOnce() -> String) -> UResult<T> {
+impl<T> FromIo<SGResult<T>> for Result<T, nix::Error> {
+    fn map_err_context(self, context: impl FnOnce() -> String) -> SGResult<T> {
         self.map_err(|e| {
-            Box::new(UIoError {
+            Box::new(SGIoError {
                 context: Some(context()),
                 inner: std::io::Error::from_raw_os_error(e as i32),
-            }) as Box<dyn UError>
+            }) as Box<dyn SGError>
         })
     }
 }
-impl<T> FromIo<UResult<T>> for nix::Error {
-    fn map_err_context(self, context: impl FnOnce() -> String) -> UResult<T> {
-        Err(Box::new(UIoError {
+impl<T> FromIo<SGResult<T>> for nix::Error {
+    fn map_err_context(self, context: impl FnOnce() -> String) -> SGResult<T> {
+        Err(Box::new(SGIoError {
             context: Some(context()),
             inner: std::io::Error::from_raw_os_error(self as i32),
-        }) as Box<dyn UError>)
+        }) as Box<dyn SGError>)
     }
 }
-impl From<nix::Error> for UIoError {
+impl From<nix::Error> for SGIoError {
     fn from(f: nix::Error) -> Self {
         Self {
             context: None,
@@ -547,17 +536,17 @@ impl From<nix::Error> for UIoError {
         }
     }
 }
-impl From<nix::Error> for Box<dyn UError> {
+impl From<nix::Error> for Box<dyn SGError> {
     fn from(f: nix::Error) -> Self {
-        let u_error: UIoError = f.into();
+        let u_error: SGIoError = f.into();
         Box::new(u_error) as Self
     }
 }
 
-/// Shorthand to construct [`UIoError`]-instances.
+/// Shorthand to construct [`SGIoError`]-instances.
 ///
 /// This macro serves as a convenience call to quickly construct instances of
-/// [`UIoError`]. It takes:
+/// [`SGIoError`]. It takes:
 ///
 /// - An instance of [`std::io::Error`]
 /// - A `format!`-compatible string and
@@ -569,14 +558,14 @@ impl From<nix::Error> for Box<dyn UError> {
 /// # Examples
 ///
 /// ```
-/// use sgcore::error::UIoError;
+/// use sgcore::error::SGIoError;
 /// use sgcore::uio_error;
 ///
 /// let io_err = std::io::Error::new(
 ///     std::io::ErrorKind::PermissionDenied, "fix me please!"
 /// );
 ///
-/// let uio_err = UIoError::new(
+/// let uio_err = SGIoError::new(
 ///     io_err.kind(),
 ///     format!("Error code: {}", 2)
 /// );
@@ -589,16 +578,16 @@ impl From<nix::Error> for Box<dyn UError> {
 /// println!("{other_uio_err}");
 /// ```
 ///
-/// The [`std::fmt::Display`] impl of [`UIoError`] will then ensure that an
+/// The [`std::fmt::Display`] impl of [`SGIoError`] will then ensure that an
 /// appropriate error message relating to the actual error kind of the
 /// [`std::io::Error`] is appended to whatever error message is defined in
 /// addition (as secondary argument).
 ///
 /// If you want to show only the error message for the [`std::io::ErrorKind`]
-/// that's contained in [`UIoError`], pass the second argument as empty string:
+/// that's contained in [`SGIoError`], pass the second argument as empty string:
 ///
 /// ```
-/// use sgcore::error::UIoError;
+/// use sgcore::error::SGIoError;
 /// use sgcore::uio_error;
 ///
 /// let io_err = std::io::Error::new(
@@ -610,11 +599,10 @@ impl From<nix::Error> for Box<dyn UError> {
 /// // prints: ": Permission denied"
 /// println!("{other_uio_err}");
 /// ```
-//#[macro_use]
 #[macro_export]
 macro_rules! uio_error(
     ($err:expr, $($args:tt)+) => ({
-        UIoError::new(
+        SGIoError::new(
             $err.kind(),
             format!($($args)+)
         )
@@ -622,26 +610,26 @@ macro_rules! uio_error(
 );
 
 /// A special error type that does not print any message when returned from
-/// `sgmain`. Especially useful for porting utilities to using [`UResult`].
+/// `sgmain`. Especially useful for porting utilities to using [`SGResult`].
 ///
 /// There are two ways to construct an [`ExitCode`]:
 /// ```
-/// use sgcore::error::{ExitCode, UResult};
+/// use sgcore::error::{ExitCode, SGResult};
 /// // Explicit
-/// let res: UResult<()> = Err(ExitCode(1).into());
+/// let res: SGResult<()> = Err(ExitCode(1).into());
 ///
 /// // Using into on `i32`:
-/// let res: UResult<()> = Err(1.into());
+/// let res: SGResult<()> = Err(1.into());
 /// ```
 /// This type is especially useful for a trivial conversion from utils returning [`i32`] to
-/// returning [`UResult`].
+/// returning [`SGResult`].
 #[derive(Debug)]
 pub struct ExitCode(pub i32);
 
 impl ExitCode {
     #[allow(clippy::new_ret_no_self)]
     /// Create a new `ExitCode` with a given exit code.
-    pub fn new(code: i32) -> Box<dyn UError> {
+    pub fn new(code: i32) -> Box<dyn SGError> {
         Box::new(Self(code))
     }
 }
@@ -654,19 +642,19 @@ impl Display for ExitCode {
     }
 }
 
-impl UError for ExitCode {
+impl SGError for ExitCode {
     fn code(&self) -> i32 {
         self.0
     }
 }
 
-impl From<i32> for Box<dyn UError> {
+impl From<i32> for Box<dyn SGError> {
     fn from(i: i32) -> Self {
         ExitCode::new(i)
     }
 }
 
-/// A wrapper for `clap::Error` that implements [`UError`]
+/// A wrapper for `clap::Error` that implements [`SGError`]
 ///
 /// Contains a custom error code. When `Display::fmt` is called on this struct
 /// the [`clap::Error`] will be printed _directly to `stdout` or `stderr`_.
@@ -674,16 +662,16 @@ impl From<i32> for Box<dyn UError> {
 ///
 /// [`ClapErrorWrapper`] is generally created by calling the
 /// [`UClapError::with_exit_code`] method on [`clap::Error`] or using the [`From`]
-/// implementation from [`clap::Error`] to `Box<dyn UError>`, which constructs
+/// implementation from [`clap::Error`] to `Box<dyn SGError>`, which constructs
 /// a [`ClapErrorWrapper`] with an exit code of `1`.
 ///
 /// ```rust
-/// use sgcore::error::{ClapErrorWrapper, UError, UClapError};
+/// use sgcore::error::{ClapErrorWrapper, SGError, UClapError};
 /// let command = clap::Command::new("test");
 /// let result: Result<_, ClapErrorWrapper> = command.try_get_matches().with_exit_code(125);
 ///
 /// let command = clap::Command::new("test");
-/// let result: Result<_, Box<dyn UError>> = command.try_get_matches().map_err(Into::into);
+/// let result: Result<_, Box<dyn SGError>> = command.try_get_matches().map_err(Into::into);
 /// ```
 #[derive(Debug)]
 pub struct ClapErrorWrapper {
@@ -697,7 +685,7 @@ pub trait UClapError<T> {
     fn with_exit_code(self, code: i32) -> T;
 }
 
-impl From<clap::Error> for Box<dyn UError> {
+impl From<clap::Error> for Box<dyn SGError> {
     fn from(e: clap::Error) -> Self {
         Box::new(ClapErrorWrapper { code: 1, error: e })
     }
@@ -717,11 +705,8 @@ impl UClapError<Result<clap::ArgMatches, ClapErrorWrapper>>
     }
 }
 
-impl UError for ClapErrorWrapper {
+impl SGError for ClapErrorWrapper {
     fn code(&self) -> i32 {
-        // If the error is a DisplayHelp or DisplayVersion variant,
-        // we don't want to apply the custom error code, but leave
-        // it 0.
         if let clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion =
             self.error.kind()
         {
@@ -734,7 +719,6 @@ impl UError for ClapErrorWrapper {
 
 impl Error for ClapErrorWrapper {}
 
-// This is abuse of the Display trait
 impl Display for ClapErrorWrapper {
     fn fmt(&self, _f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         self.error.print().unwrap();
@@ -746,7 +730,7 @@ impl Display for ClapErrorWrapper {
 mod tests {
     #[test]
     fn test_nix_error_conversion() {
-        use super::{FromIo, UIoError};
+        use super::{FromIo, SGIoError};
         use nix::errno::Errno;
         use std::io::ErrorKind;
 
@@ -755,7 +739,7 @@ mod tests {
             (Errno::ENOENT, ErrorKind::NotFound),
             (Errno::EEXIST, ErrorKind::AlreadyExists),
         ] {
-            let error = UIoError::from(nix_error);
+            let error = SGIoError::from(nix_error);
             assert_eq!(expected_error_kind, error.inner.kind());
         }
         assert_eq!(
@@ -771,7 +755,7 @@ mod tests {
 /// Result type used by commands implementing object output via the `#[sgcore::to_obj]` proc-macro.
 ///
 /// `CommandResult` can hold either a success value `S` or an error `E`.
-/// The default error type is `Box<dyn UError>`, which allows flexible error handling.
+/// The default error type is `Box<dyn SGError>`, which allows flexible error handling.
 /// This type is commonly used with the `#[sgcore::to_obj]` proc-macro attribute, which
 /// expects unqualified `Success` and `Error` variants in scope.
 ///
@@ -785,9 +769,10 @@ mod tests {
 ///     Success(())
 /// }
 /// ```
-pub enum CommandResult<S, E = Box<dyn UError>> {
+pub enum CommandResult<S, E = Box<dyn SGError>> {
     /// Operation succeeded with value `S`
     Success(S),
     /// Operation failed with error `E`
     Error(E),
 }
+

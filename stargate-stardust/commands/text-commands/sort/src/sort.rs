@@ -1,8 +1,8 @@
-// Although these links don't always seem to describe reality, check out the POSIX and GNU specs:
-// https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sort.html
-// https://www.gnu.org/software/coreutils/manual/html_node/sort-invocation.html
 
-// spell-checker:ignore (misc) HFKJFK Mbdfhn getrlimit RLIMIT_NOFILE rlim bigdecimal extendedbigdecimal hexdigit
+
+
+
+
 
 mod buffer_hint;
 mod check;
@@ -39,7 +39,7 @@ use std::str::Utf8Error;
 use thiserror::Error;
 use sgcore::display::Quotable;
 use sgcore::error::{FromIo, strip_errno};
-use sgcore::error::{UError, UResult, USimpleError, UUsageError};
+use sgcore::error::{SGError, SGResult, SGSimpleError, SGUsageError};
 use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 use sgcore::format_usage;
 use sgcore::line_ending::LineEnding;
@@ -112,12 +112,9 @@ const DECIMAL_PT: u8 = b'.';
 const NEGATIVE: &u8 = &b'-';
 const POSITIVE: &u8 = &b'+';
 
-// The automatic buffer heuristics clamp to this range to avoid
-// over-committing memory on constrained systems while still keeping
-// reasonably large chunks for typical workloads.
-const MIN_AUTOMATIC_BUF_SIZE: usize = 512 * 1024; // 512 KiB
-const FALLBACK_AUTOMATIC_BUF_SIZE: usize = 32 * 1024 * 1024; // 32 MiB
-const MAX_AUTOMATIC_BUF_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
+const MIN_AUTOMATIC_BUF_SIZE: usize = 512 * 1024;
+const FALLBACK_AUTOMATIC_BUF_SIZE: usize = 32 * 1024 * 1024;
+const MAX_AUTOMATIC_BUF_SIZE: usize = 1024 * 1024 * 1024;
 
 #[derive(Debug, Error)]
 pub enum SortError {
@@ -175,7 +172,7 @@ pub enum SortError {
     ZeroLengthFileName { file: PathBuf, line_num: usize },
 }
 
-impl UError for SortError {
+impl SGError for SortError {
     fn code(&self) -> i32 {
         match self {
             Self::Disorder { .. } => 1,
@@ -222,11 +219,9 @@ pub struct Output {
 }
 
 impl Output {
-    fn new(name: Option<impl AsRef<OsStr>>) -> UResult<Self> {
+    fn new(name: Option<impl AsRef<OsStr>>) -> SGResult<Self> {
         let file = if let Some(name) = name {
             let path = Path::new(name.as_ref());
-            // This is different from `File::create()` because we don't truncate the output yet.
-            // This allows using the output file as an input file.
             #[allow(clippy::suspicious_open_options)]
             let file = OpenOptions::new()
                 .write(true)
@@ -246,7 +241,6 @@ impl Output {
     fn into_write(self) -> BufWriter<Box<dyn Write>> {
         BufWriter::new(match self.file {
             Some((_name, file)) => {
-                // truncate the file
                 let _ = file.set_len(0);
                 Box::new(file)
             }
@@ -306,8 +300,6 @@ impl GlobalSettings {
     /// The unit may be k, K, m, M, g, G, t, T, P, E, Z, Y (powers of 1024), or b which is 1.
     /// Default is K.
     fn parse_byte_count(input: &str) -> Result<usize, ParseSizeError> {
-        // GNU sort (8.32)   valid: 1b,        k, K, m, M, g, G, t, T, P, E, Z, Y
-        // GNU sort (8.32) invalid:  b, B, 1B,                         p, e, z, y
         let size = Parser::default()
             .with_allow_list(&[
                 "b", "k", "K", "m", "M", "g", "G", "t", "T", "P", "E", "Z", "Y", "R", "Q", "%",
@@ -518,7 +510,6 @@ impl<'a> Line<'a> {
             tokenize(line, settings.separator, token_buffer);
         }
         if settings.mode == SortMode::Numeric {
-            // exclude inf, nan, scientific notation
             let line_num_float = (!line.iter().any(u8::is_ascii_alphabetic))
                 .then(|| std::str::from_utf8(line).ok())
                 .flatten()
@@ -563,9 +554,6 @@ impl<'a> Line<'a> {
         settings: &GlobalSettings,
         writer: &mut impl Write
     ) -> std::io::Result<()> {
-        // We do not consider this function performance critical, as debug output is only useful for small files,
-        // which are not a performance problem in any case. Therefore there aren't any special performance
-        // optimizations here.
 
         let line = self
             .line
@@ -583,7 +571,6 @@ impl<'a> Line<'a> {
             let mut selection = selector.get_range(self.line, Some(&fields));
             match selector.settings.mode {
                 SortMode::Numeric | SortMode::HumanNumeric => {
-                    // find out which range is used for numeric comparisons
                     let (_, num_range) = NumInfo::parse(
                         &self.line[selection.clone()],
                         &NumInfoParseSettings {
@@ -593,13 +580,10 @@ impl<'a> Line<'a> {
                     );
                     let initial_selection = selection.clone();
 
-                    // Shorten selection to num_range.
                     selection.start += num_range.start;
                     selection.end = selection.start + num_range.len();
 
                     if num_range == (0..0) {
-                        // This was not a valid number.
-                        // Report no match at the first non-whitespace character.
                         let leading_whitespace = self.line[selection.clone()]
                             .iter()
                             .position(|c| !c.is_ascii_whitespace())
@@ -607,7 +591,6 @@ impl<'a> Line<'a> {
                         selection.start += leading_whitespace;
                         selection.end += leading_whitespace;
                     } else {
-                        // include a trailing si unit
                         if selector.settings.mode == SortMode::HumanNumeric {
                             if let Some(
                                 b'k' | b'K' | b'M' | b'G' | b'T' | b'P' | b'E' | b'Z' | b'Y' | b'R'
@@ -618,7 +601,6 @@ impl<'a> Line<'a> {
                             }
                         }
 
-                        // include leading zeroes, a leading minus or a leading decimal point
                         while let Some(b'-' | b'0' | b'.') =
                             self.line[initial_selection.start..selection.start].last()
                         {
@@ -631,7 +613,6 @@ impl<'a> Line<'a> {
 
                     let leading = get_leading_gen(initial_selection);
 
-                    // Shorten selection to leading.
                     selection.start += leading.start;
                     selection.end = selection.start + leading.len();
                 }
@@ -644,22 +625,18 @@ impl<'a> Line<'a> {
                         .skip_while(|(_, c)| c.is_ascii_whitespace());
 
                     let month = if month_parse(initial_selection) == Month::Unknown {
-                        // We failed to parse a month, which is equivalent to matching nothing.
-                        // Add the "no match for key" marker to the first non-whitespace character.
                         let first_non_whitespace = month_chars.next();
                         first_non_whitespace.map_or(
                             initial_selection.len()..initial_selection.len(),
                             |(idx, _)| idx..idx
                         )
                     } else {
-                        // We parsed a month. Match the first three non-whitespace characters, which must be the month we parsed.
                         month_chars.next().unwrap().0
                             ..month_chars
                                 .nth(2)
                                 .map_or(initial_selection.len(), |(idx, _)| idx)
                     };
 
-                    // Shorten selection to month.
                     selection.start += month.start;
                     selection.end = selection.start + month.len();
                 }
@@ -690,7 +667,6 @@ impl<'a> Line<'a> {
                     .last()
                     .is_none_or(|selector| selector != &FieldSelector::default()))
         {
-            // A last resort comparator is in use, underline the whole line.
             if self.line.is_empty() {
                 writeln!(writer, "{}", translate!("sort-error-no-match-for-key"))?;
             } else {
@@ -716,7 +692,6 @@ fn tokenize(line: &[u8], separator: Option<u8>, token_buffer: &mut Vec<Field>) {
 /// The result is stored into `token_buffer`.
 fn tokenize_default(line: &[u8], token_buffer: &mut Vec<Field>) {
     token_buffer.push(0..0);
-    // pretend that there was whitespace in front of the line
     let mut previous_was_whitespace = true;
     for (idx, char) in line.iter().enumerate() {
         if char.is_ascii_whitespace() {
@@ -810,9 +785,6 @@ struct FieldSelector {
     to: Option<KeyPosition>,
     settings: KeySettings,
     needs_tokens: bool,
-    // Whether this selector operates on a sub-slice of a line.
-    // Selections are therefore not needed when this selector matches the whole line
-    // or the sort mode is general-numeric.
     needs_selection: bool,
 }
 
@@ -826,17 +798,14 @@ impl FieldSelector {
         }
     }
 
-    fn parse(key: &str, global_settings: &GlobalSettings) -> UResult<Self> {
+    fn parse(key: &str, global_settings: &GlobalSettings) -> SGResult<Self> {
         let mut from_to = key.split(',');
         let (from, from_options) = Self::split_key_options(from_to.next().unwrap());
         let to = from_to.next().map(Self::split_key_options);
         let options_are_empty = from_options.is_empty() && matches!(to, None | Some((_, "")));
 
         if options_are_empty {
-            // Inherit the global settings if there are no options attached to this key.
             (|| {
-                // This would be ideal for a try block, I think. In the meantime this closure allows
-                // to use the `?` operator here.
                 Self::new(
                     KeyPosition::new(from, 1, global_settings.ignore_leading_blanks)?,
                     to.map(|(to, _)| {
@@ -847,7 +816,6 @@ impl FieldSelector {
                 )
             })()
         } else {
-            // Do not inherit from `global_settings`, as there are options attached to this key.
             Self::parse_with_options((from, from_options), to)
         }
         .map_err(|msg| {
@@ -930,7 +898,6 @@ impl FieldSelector {
     /// Get the selection that corresponds to this selector for the line.
     /// If `needs_fields` returned false, tokens may be empty.
     fn get_selection<'a>(&self, line: &'a [u8], tokens: &[Field]) -> Selection<'a> {
-        // `get_range` expects `None` when we don't need tokens and would get confused by an empty vector.
         let tokens = if self.needs_tokens {
             Some(tokens)
         } else {
@@ -938,7 +905,6 @@ impl FieldSelector {
         };
         let mut range_str = &line[self.get_range(line, tokens)];
         if self.settings.mode == SortMode::Numeric || self.settings.mode == SortMode::HumanNumeric {
-            // Parse NumInfo for this number.
             let (info, num_range) = NumInfo::parse(
                 range_str,
                 &NumInfoParseSettings {
@@ -946,14 +912,11 @@ impl FieldSelector {
                     ..Default::default()
                 }
             );
-            // Shorten the range to what we need to pass to numeric_str_cmp later.
             range_str = &range_str[num_range];
             Selection::WithNumInfo(range_str, info)
         } else if self.settings.mode == SortMode::GeneralNumeric {
-            // Parse this number as BigDecimal, as this is the requirement for general numeric sorting.
             Selection::AsBigDecimal(general_bd_parse(&range_str[get_leading_gen(range_str)]))
         } else {
-            // This is not a numeric sort, so we don't need a NumCache.
             Selection::Str(range_str)
         }
     }
@@ -962,14 +925,9 @@ impl FieldSelector {
     /// If `needs_fields` returned false, tokens must be None.
     fn get_range(&self, line: &[u8], tokens: Option<&[Field]>) -> Range<usize> {
         enum Resolution {
-            // The start index of the resolved character, inclusive
             StartOfChar(usize),
-            // The end index of the resolved character, exclusive.
-            // This is only returned if the character index is 0.
             EndOfChar(usize),
-            // The resolved character would be in front of the first character
             TooLow,
-            // The resolved character would be after the last character
             TooHigh,
         }
 
@@ -990,13 +948,10 @@ impl FieldSelector {
                 }
             } else {
                 let mut idx = if position.field == 1 {
-                    // The first field always starts at 0.
-                    // We don't need tokens for this case.
                     0
                 } else {
                     tokens.unwrap()[position.field - 1].start
                 };
-                // strip blanks if needed
                 if position.ignore_blanks {
                     idx += line[idx..]
                         .iter()
@@ -1004,7 +959,6 @@ impl FieldSelector {
                         .find(|(_, c)| !c.is_ascii_whitespace())
                         .map_or(line[idx..].len(), |(idx, _)| idx);
                 }
-                // apply the character index
                 idx += line[idx..]
                     .iter()
                     .enumerate()
@@ -1024,16 +978,11 @@ impl FieldSelector {
 
                 let mut range = match to {
                     Some(Resolution::StartOfChar(mut to)) => {
-                        // We need to include the character at `to`.
                         to += 1;
                         from..to
                     }
                     Some(Resolution::EndOfChar(to)) => from..to,
-                    // If `to` was not given or the match would be after the end of the line,
-                    // match everything until the end of the line.
                     None | Some(Resolution::TooHigh) => from..line.len(),
-                    // If `to` is before the start of the line, report no match.
-                    // This can happen if the line starts with a separator.
                     Some(Resolution::TooLow) => 0..0,
                 };
                 if range.start > range.end {
@@ -1046,8 +995,6 @@ impl FieldSelector {
                     "This should only happen if the field start index is 0, but that should already have caused an error."
                 )
             }
-            // While for comparisons it's only important that this is an empty slice,
-            // to produce accurate debug output we need to match an empty slice at the end of the line.
             Resolution::TooHigh => line.len()..line.len(),
         }
     }
@@ -1068,14 +1015,14 @@ fn make_sort_mode_arg(mode: &'static str, short: char, help: String) -> Arg {
 }
 
 #[cfg(target_os = "linux")]
-fn get_rlimit() -> UResult<usize> {
+fn get_rlimit() -> SGResult<usize> {
     let mut limit = rlimit {
         rlim_cur: 0,
         rlim_max: 0,
     };
     match unsafe { getrlimit(RLIMIT_NOFILE, &raw mut limit) } {
         0 => Ok(limit.rlim_cur as usize),
-        _ => Err(UUsageError::new(2, translate!("sort-failed-fetch-rlimit"))),
+        _ => Err(SGUsageError::new(2, translate!("sort-failed-fetch-rlimit"))),
     }
 }
 
@@ -1090,7 +1037,6 @@ const LINUX_BATCH_MAX: usize = 256;
 fn default_merge_batch_size() -> usize {
     #[cfg(target_os = "linux")]
     {
-        // Adjust merge batch size dynamically based on available file descriptors.
         match get_rlimit() {
             Ok(limit) => {
                 let usable_limit = limit.saturating_div(LINUX_BATCH_DIVISOR);
@@ -1108,13 +1054,12 @@ fn default_merge_batch_size() -> usize {
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let mut settings = GlobalSettings::default();
 
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "tmppath"])?;
 
-    // Prevent -o/--output to be specified multiple times
     if matches
         .get_occurrences::<OsString>(options::OUTPUT)
         .is_some_and(|out| out.len() > 1)
@@ -1124,21 +1069,18 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     settings.debug = matches.get_flag(options::DEBUG);
 
-    // check whether user specified a zero terminated list of files for input, otherwise read files from args
     let mut files: Vec<OsString> = if matches.contains_id(options::FILES0_FROM) {
         let files0_from: PathBuf = matches
             .get_one::<OsString>(options::FILES0_FROM)
             .map(|v| v.into())
             .unwrap_or_default();
 
-        // Cannot combine FILES with FILES0_FROM
         if let Some(s) = matches.get_one::<OsString>(options::FILES) {
             return Err(SortError::FileOperandsCombined { file: s.into() }.into());
         }
 
         let mut files = Vec::new();
 
-        // sort errors with "cannot open: [...]" instead of "cannot read: [...]" here
         let reader = open_with_open_failed_error(&files0_from)?;
         let buf_reader = BufReader::new(reader);
         for (line_num, line) in buf_reader.split(b'\0').flatten().enumerate() {
@@ -1218,7 +1160,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     settings.dictionary_order = matches.get_flag(options::DICTIONARY_ORDER);
     settings.ignore_non_printing = matches.get_flag(options::IGNORE_NONPRINTING);
     if matches.contains_id(options::PARALLEL) {
-        // "0" is default - threads = num of cores
         settings.threads = matches
             .get_one::<String>(options::PARALLEL)
             .map_or_else(|| "0".to_string(), String::from);
@@ -1229,7 +1170,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     if let Some(size_str) = matches.get_one::<String>(options::BUF_SIZE) {
         settings.buffer_size = GlobalSettings::parse_byte_count(size_str).map_err(|e| {
-            USimpleError::new(2, format_error_message(&e, size_str, options::BUF_SIZE))
+            SGSimpleError::new(2, format_error_message(&e, size_str, options::BUF_SIZE))
         })?;
         settings.buffer_size_is_explicit = true;
     } else {
@@ -1255,7 +1196,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                         "{}",
                         translate!("sort-invalid-batch-size-arg", "arg" => n_merge)
                     );
-                    return Err(UUsageError::new(
+                    return Err(SGUsageError::new(
                         2,
                         translate!("sort-minimum-batch-size-two")
                     ));
@@ -1289,7 +1230,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     )
                 };
 
-                return Err(UUsageError::new(2, error_message));
+                return Err(SGUsageError::new(2, error_message));
             }
         }
     }
@@ -1319,10 +1260,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     settings.unique = matches.get_flag(options::UNIQUE);
 
     if files.is_empty() {
-        /* if no file, default to stdin */
         files.push(OsString::from(STDIN_FILE));
     } else if settings.check && files.len() != 1 {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             2,
             translate!("sort-extra-operand-not-allowed-with-c", "operand" => files[1].quote())
         ));
@@ -1330,7 +1270,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     if let Some(arg) = matches.get_one::<OsString>(options::SEPARATOR) {
         let mut separator = arg.to_str().ok_or_else(|| {
-            UUsageError::new(
+            SGUsageError::new(
                 2,
                 translate!("sort-separator-not-valid-unicode", "arg" => arg.quote())
             )
@@ -1338,11 +1278,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         if separator == "\\0" {
             separator = "\0";
         }
-        // This rejects non-ASCII codepoints, but perhaps we don't have to.
-        // On the other hand GNU accepts any single byte, valid unicode or not.
-        // (Supporting multi-byte chars would require changes in tokenize_with_separator().)
         let &[sep_char] = separator.as_bytes() else {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 2,
                 translate!("sort-separator-must-be-one-char", "separator" => separator.quote())
             ));
@@ -1361,7 +1298,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 
     if !matches.contains_id(options::KEY) {
-        // add a default selector matching the whole line
         let key_settings = KeySettings::from(&settings);
         settings.selectors.push(
             FieldSelector::new(
@@ -1377,10 +1313,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         );
     }
 
-    // Verify that we can open all input files.
-    // It is the correct behavior to close all files afterwards,
-    // and to reopen them at a later point. This is different from how the output file is handled,
-    // probably to prevent running out of file descriptors.
     for file in &files {
         open(file)?;
     }
@@ -1390,8 +1322,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     settings.init_precomputed();
 
     let result = exec(&mut files, &settings, output, &mut tmp_dir);
-    // Wait here if `SIGINT` was received,
-    // for signal handler to do its work and terminate the program.
     tmp_dir.wait_if_signal();
     result
 }
@@ -1542,7 +1472,6 @@ pub fn sg_app() -> Command {
             .value_hint(clap::ValueHint::FilePath)
             .num_args(1)
             .allow_hyphen_values(true)
-            // To detect multiple occurrences and raise an error
             .action(ArgAction::Append)
     )
     .arg(
@@ -1649,12 +1578,12 @@ fn exec(
     settings: &GlobalSettings,
     output: Output,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     if settings.merge {
         merge::merge(files, settings, output, tmp_dir)
     } else if settings.check {
         if files.len() > 1 {
-            Err(UUsageError::new(
+            Err(SGUsageError::new(
                 2,
                 translate!("sort-only-one-file-allowed-with-c")
             ))
@@ -1710,9 +1639,7 @@ fn compare_by<'a>(
         a_line_data.line_num_floats.get(a.index),
         b_line_data.line_num_floats.get(b.index)
     ) {
-        // we don't use total_cmp() because it always sorts -0 before 0
         if let Some(cmp) = a_f64.partial_cmp(b_f64) {
-            // don't trust `Ordering::Equal` if lines are not fully equal
             if cmp != Ordering::Equal || a.line == b.line {
                 return if global_settings.reverse {
                     cmp.reverse()
@@ -1734,7 +1661,6 @@ fn compare_by<'a>(
             selection_index += 1;
             selections
         } else {
-            // We can select the whole line.
             (a.line, b.line)
         };
 
@@ -1742,7 +1668,6 @@ fn compare_by<'a>(
 
         let cmp: Ordering = match settings.mode {
             SortMode::Random => {
-                // check if the two strings are equal
                 if custom_str_cmp(
                     a_str,
                     b_str,
@@ -1753,7 +1678,6 @@ fn compare_by<'a>(
                 {
                     Ordering::Equal
                 } else {
-                    // Only if they are not equal compare by the hash
                     random_shuffle(a_str, b_str, &global_settings.salt.unwrap())
                 }
             }
@@ -1796,7 +1720,6 @@ fn compare_by<'a>(
         }
     }
 
-    // Call "last resort compare" if all selectors returned Equal
     let cmp = if global_settings.mode == SortMode::Random
         || global_settings.stable
         || global_settings.unique
@@ -1833,16 +1756,11 @@ fn ascii_case_insensitive_cmp(a: &[u8], b: &[u8]) -> Ordering {
     a.len().cmp(&b.len())
 }
 
-// This function cleans up the initial comparison done by leading_num_common for a general numeric compare.
-// In contrast to numeric compare, GNU general numeric/FP sort *should* recognize positive signs and
-// scientific notation, so we strip those lines only after the end of the following numeric string.
-// For example, 5e10KFD would be 5e10 or 5x10^10 and +10000HFKJFK would become 10000.
 #[allow(clippy::cognitive_complexity)]
 fn get_leading_gen(inp: &[u8]) -> Range<usize> {
     let trimmed = inp.trim_ascii_start();
     let leading_whitespace_len = inp.len() - trimmed.len();
 
-    // check for inf, -inf and nan
     const ALLOWED_PREFIXES: &[&[u8]] = &[b"inf", b"-inf", b"nan"];
     for &allowed_prefix in ALLOWED_PREFIXES {
         if trimmed.len() >= allowed_prefix.len()
@@ -1851,7 +1769,6 @@ fn get_leading_gen(inp: &[u8]) -> Range<usize> {
             return leading_whitespace_len..(leading_whitespace_len + allowed_prefix.len());
         }
     }
-    // Make this iter peekable to see if next char is numeric
     let mut char_indices = itertools::peek_nth(trimmed.iter().enumerate());
 
     let first = char_indices.peek();
@@ -1883,7 +1800,6 @@ fn get_leading_gen(inp: &[u8]) -> Range<usize> {
         let is_decimal_e = (c == b'e' || c == b'E') && !had_hex_notation;
         let is_hex_e = (c == b'p' || c == b'P') && had_hex_notation;
         if (is_decimal_e || is_hex_e) && !had_e_notation {
-            // we can only consume the 'e' if what follow is either a digit, or a sign followed by a digit.
             if let Some(&(_, &next_char)) = char_indices.peek() {
                 if (next_char == b'+' || next_char == b'-')
                     && matches!(
@@ -1891,7 +1807,6 @@ fn get_leading_gen(inp: &[u8]) -> Range<usize> {
                         Some((_, c)) if c.is_ascii_digit()
                     )
                 {
-                    // Consume the sign. The following digits will be consumed by the main loop.
                     char_indices.next();
                     had_e_notation = true;
                     continue;
@@ -1920,12 +1835,10 @@ pub enum GeneralBigDecimalParseResult {
 /// Using a [`GeneralBigDecimalParseResult`] instead of [`ExtendedBigDecimal`] is necessary to correctly order floats.
 #[inline(always)]
 fn general_bd_parse(a: &[u8]) -> GeneralBigDecimalParseResult {
-    // The string should be valid ASCII to be parsed.
     let Ok(a) = std::str::from_utf8(a) else {
         return GeneralBigDecimalParseResult::Invalid;
     };
 
-    // Parse digits, and fold in recoverable errors
     let ebd = match ExtendedBigDecimal::extended_parse(a) {
         Err(ExtendedParserError::NotNumeric) => return GeneralBigDecimalParseResult::Invalid,
         Err(
@@ -1940,7 +1853,6 @@ fn general_bd_parse(a: &[u8]) -> GeneralBigDecimalParseResult {
         ExtendedBigDecimal::BigDecimal(bd) => GeneralBigDecimalParseResult::Number(bd),
         ExtendedBigDecimal::Infinity => GeneralBigDecimalParseResult::Infinity,
         ExtendedBigDecimal::MinusInfinity => GeneralBigDecimalParseResult::MinusInfinity,
-        // Minus zero and zero are equal
         ExtendedBigDecimal::MinusZero => GeneralBigDecimalParseResult::Number(0.into()),
         ExtendedBigDecimal::Nan | ExtendedBigDecimal::MinusNan => GeneralBigDecimalParseResult::Nan,
     }
@@ -2021,7 +1933,7 @@ fn print_sorted<'a, T: Iterator<Item = &'a Line<'a>>>(
     iter: T,
     settings: &GlobalSettings,
     output: Output
-) -> UResult<()> {
+) -> SGResult<()> {
     let output_name = output
         .as_output_name()
         .unwrap_or(OsStr::new("standard output"))
@@ -2036,7 +1948,7 @@ fn print_sorted<'a, T: Iterator<Item = &'a Line<'a>>>(
     Ok(())
 }
 
-fn open(path: impl AsRef<OsStr>) -> UResult<Box<dyn Read + Send>> {
+fn open(path: impl AsRef<OsStr>) -> SGResult<Box<dyn Read + Send>> {
     let path = path.as_ref();
     if path == STDIN_FILE {
         let stdin = stdin();
@@ -2054,8 +1966,7 @@ fn open(path: impl AsRef<OsStr>) -> UResult<Box<dyn Read + Send>> {
     }
 }
 
-fn open_with_open_failed_error(path: impl AsRef<OsStr>) -> UResult<Box<dyn Read + Send>> {
-    // On error, returns an OpenFailed error instead of a ReadFailed error
+fn open_with_open_failed_error(path: impl AsRef<OsStr>) -> SGResult<Box<dyn Read + Send>> {
     let path = path.as_ref();
     if path == STDIN_FILE {
         let stdin = stdin();
@@ -2074,8 +1985,6 @@ fn open_with_open_failed_error(path: impl AsRef<OsStr>) -> UResult<Box<dyn Read 
 }
 
 fn format_error_message(error: &ParseSizeError, s: &str, option: &str) -> String {
-    // NOTE:
-    // GNU's sort echos affected flag, -S or --buffer-size, depending on user's selection
     match error {
         ParseSizeError::InvalidSuffix(_) => {
             translate!("sort-invalid-suffix-in-option-arg", "option" => option, "arg" => s.quote())
@@ -2177,8 +2086,6 @@ mod tests {
     #[test]
     #[cfg(target_pointer_width = "64")]
     fn test_line_size() {
-        // We should make sure to not regress the size of the Line struct because
-        // it is unconditional overhead for every line we sort.
         assert_eq!(size_of::<Line>(), 24);
     }
 
@@ -2196,8 +2103,8 @@ mod tests {
             ("10T", 10 * 1024 * 1024 * 1024 * 1024),
             ("1b", 1),
             ("1024b", 1024),
-            ("1024Mb", 1024 * 1024 * 1024), // NOTE: This might not be how GNU `sort` behaves for 'Mb'
-            ("1", 1024),                    // K is default
+            ("1024Mb", 1024 * 1024 * 1024),
+            ("1", 1024),
             ("50", 50 * 1024),
             ("K", 1024),
             ("k", 1024),
@@ -2212,16 +2119,15 @@ mod tests {
             );
         }
 
-        // SizeTooBig
         let invalid_input = ["500E", "1Y"];
         for input in &invalid_input {
             assert!(GlobalSettings::parse_byte_count(input).is_err());
         }
 
-        // ParseFailure
         let invalid_input = ["nonsense", "1B", "B", "b", "p", "e", "z", "y"];
         for input in &invalid_input {
             assert!(GlobalSettings::parse_byte_count(input).is_err());
         }
     }
 }
+

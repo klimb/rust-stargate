@@ -17,7 +17,7 @@ After you have obtained and uncompressed such a file, you need to build `tac`
 in release mode
 
 ```shell
-cargo build --release --package uu_tac
+cargo build --release --package sg_tac
 ```
 
 and then you can time how it long it takes to extract the last 10M lines by

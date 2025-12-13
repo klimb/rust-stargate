@@ -1,6 +1,6 @@
 [package]
 name = "sg_hashsum"
-description = "hashsum ~ (uutils) display or check input digests"
+description = "hashsum ~ (stargate) display or check input digests"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

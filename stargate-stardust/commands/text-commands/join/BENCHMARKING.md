@@ -19,7 +19,7 @@ A benchmark with `-j` and `-i` shows the following time:
 More detailed profiles can be obtained via [flame graphs](https://github.com/flamegraph-rs/flamegraph):
 
 ```shell
-cargo flamegraph --bin join --package uu_join -- file1 file2 > /dev/null
+cargo flamegraph --bin join --package sg_join -- file1 file2 > /dev/null
 ```
 
 You may need to add the following lines to the top-level `Cargo.toml` to get full stack traces:

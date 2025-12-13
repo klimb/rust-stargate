@@ -1,4 +1,4 @@
-// cSpell:ignore ilog wc wc's
+
 
 mod collected_count;
 mod count_fast;
@@ -25,7 +25,7 @@ use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::json_adapter;
 
 use sgcore::{
-    error::{FromIo, UError, UResult},
+    error::{FromIo, SGError, SGResult},
     format_usage,
     parser::shortcut_value_parser::ShortcutValueParser,
     quoting_style::{self, QuotingStyle},
@@ -55,7 +55,6 @@ struct Settings<'a> {
 
 impl Default for Settings<'_> {
     fn default() -> Self {
-        // Defaults if none of -c, -m, -l, -w, nor -L are specified.
         Self {
             show_bytes: true,
             show_chars: false,
@@ -143,14 +142,13 @@ enum Inputs<'a> {
 }
 
 impl<'a> Inputs<'a> {
-    fn new(matches: &'a ArgMatches) -> UResult<(Self, InputMetadata)> {
+    fn new(matches: &'a ArgMatches) -> SGResult<(Self, InputMetadata)> {
         let arg_files = matches.get_many::<OsString>(ARG_FILES);
         let files0_from = matches.get_one::<OsString>(options::FILES0_FROM);
         let mut metadata = InputMetadata::default();
 
         match (arg_files, files0_from) {
             (None, None) => {
-                // Try to extract file paths from JSON stdin if available
                 if let Some(paths) = Self::try_extract_paths_from_json()? {
                     metadata.json_input_detected = true;
                     return Ok((Self::Paths(paths), metadata));
@@ -171,7 +169,7 @@ impl<'a> Inputs<'a> {
         }
     }
 
-    fn try_extract_paths_from_json() -> UResult<Option<Vec<Input<'static>>>> {
+    fn try_extract_paths_from_json() -> SGResult<Option<Vec<Input<'static>>>> {
         match json_adapter::try_extract_from_stdin() {
             Some(json_adapter::StdinResult::Count(count)) => {
                 println!("{}", count);
@@ -186,11 +184,10 @@ impl<'a> Inputs<'a> {
         }
     }
 
-
     fn try_iter(
         &'a self,
         settings: &'a Settings<'a>
-    ) -> UResult<impl Iterator<Item = InputIterItem<'a>>> {
+    ) -> SGResult<impl Iterator<Item = InputIterItem<'a>>> {
         let base: Box<dyn Iterator<Item = _>> = match self {
             Self::Stdin => Box::new(iter::once(Ok(Input::Stdin(StdinKind::Implicit)))),
             Self::Paths(inputs) => Box::new(inputs.iter().map(|i| Ok(i.as_borrowed()))),
@@ -200,14 +197,12 @@ impl<'a> Inputs<'a> {
             },
         };
 
-        // The 1-based index of each yielded item must be tracked for error reporting.
         let mut with_idx = base.enumerate().map(|(i, v)| (i + 1, v));
         let files0_from_path = settings.files0_from.as_ref().map(Input::as_borrowed);
 
         let iter = iter::from_fn(move || {
             let (idx, next) = with_idx.next()?;
             match next {
-                // filter zero length file names...
                 Ok(Input::Path(p)) if p.as_os_str().is_empty() => Some(Err({
                     let maybe_ctx = files0_from_path.as_ref().map(|p| (p, idx));
                     WcError::zero_len(maybe_ctx).into()
@@ -296,7 +291,7 @@ impl<'a> Input<'a> {
     /// a regular file. If given a file less than 10 MiB, it will be consumed and turned into
     /// a Vec of [`Input::Path`] which can be scanned to determine the widths of the columns that
     /// will ultimately be printed.
-    fn try_as_files0(&self) -> UResult<Option<Vec<Input<'static>>>> {
+    fn try_as_files0(&self) -> SGResult<Option<Vec<Input<'static>>>> {
         match self {
             Self::Path(path) => match fs::metadata(path) {
                 Ok(meta) if meta.is_file() && meta.len() <= (10 << 20) => Ok(Some(
@@ -313,9 +308,6 @@ impl<'a> Input<'a> {
 }
 fn is_stdin_small_file() -> bool {
     use std::os::unix::io::{AsRawFd, FromRawFd};
-    // Safety: we'll rely on Rust to give us a valid RawFd for stdin with which we can attempt to
-    // open a File, but only for the sake of fetching .metadata().  ManuallyDrop will ensure we
-    // don't do anything else to the FD if anything unexpected happens.
     let f = std::mem::ManuallyDrop::new(unsafe { File::from_raw_fd(io::stdin().as_raw_fd()) });
     matches!(f.metadata(), Ok(meta) if meta.is_file() && meta.len() <= (10 << 20))
 }
@@ -383,14 +375,14 @@ impl WcError {
     }
 }
 
-impl UError for WcError {
+impl SGError for WcError {
     fn usage(&self) -> bool {
         matches!(self, Self::FilesDisabled { .. })
     }
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -467,7 +459,7 @@ pub fn sg_app() -> Command {
                 .value_parser(ValueParser::os_string())
                 .value_hint(clap::ValueHint::FilePath)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -482,12 +474,9 @@ fn word_count_from_reader<T: WordCountable>(
         settings.show_max_line_length,
         settings.show_words
     ) {
-        // Specialize scanning loop to improve the performance.
         (false, false, false, false, false) => unreachable!(),
 
-        // show_bytes
         (true, false, false, false, false) => {
-            // Fast path when only show_bytes is true.
             let (bytes, error) = count_bytes_fast(&mut reader);
             (
                 WordCount {
@@ -498,76 +487,57 @@ fn word_count_from_reader<T: WordCountable>(
             )
         }
 
-        // Fast paths that can be computed without Unicode decoding.
-        // show_lines
         (false, false, true, false, false) => {
             count_bytes_chars_and_lines_fast::<_, false, false, true>(&mut reader)
         }
-        // show_chars
         (false, true, false, false, false) => {
             count_bytes_chars_and_lines_fast::<_, false, true, false>(&mut reader)
         }
-        // show_chars, show_lines
         (false, true, true, false, false) => {
             count_bytes_chars_and_lines_fast::<_, false, true, true>(&mut reader)
         }
-        // show_bytes, show_lines
         (true, false, true, false, false) => {
             count_bytes_chars_and_lines_fast::<_, true, false, true>(&mut reader)
         }
-        // show_bytes, show_chars
         (true, true, false, false, false) => {
             count_bytes_chars_and_lines_fast::<_, true, true, false>(&mut reader)
         }
-        // show_bytes, show_chars, show_lines
         (true, true, true, false, false) => {
             count_bytes_chars_and_lines_fast::<_, true, true, true>(&mut reader)
         }
-        // show_words
         (_, false, false, false, true) => {
             word_count_from_reader_specialized::<_, false, false, false, true>(reader)
         }
-        // show_max_line_length
         (_, false, false, true, false) => {
             word_count_from_reader_specialized::<_, false, false, true, false>(reader)
         }
-        // show_max_line_length, show_words
         (_, false, false, true, true) => {
             word_count_from_reader_specialized::<_, false, false, true, true>(reader)
         }
-        // show_lines, show_words
         (_, false, true, false, true) => {
             word_count_from_reader_specialized::<_, false, true, false, true>(reader)
         }
-        // show_lines, show_max_line_length
         (_, false, true, true, false) => {
             word_count_from_reader_specialized::<_, false, true, true, false>(reader)
         }
-        // show_lines, show_max_line_length, show_words
         (_, false, true, true, true) => {
             word_count_from_reader_specialized::<_, false, true, true, true>(reader)
         }
-        // show_chars, show_words
         (_, true, false, false, true) => {
             word_count_from_reader_specialized::<_, true, false, false, true>(reader)
         }
-        // show_chars, show_max_line_length
         (_, true, false, true, false) => {
             word_count_from_reader_specialized::<_, true, false, true, false>(reader)
         }
-        // show_chars, show_max_line_length, show_words
         (_, true, false, true, true) => {
             word_count_from_reader_specialized::<_, true, false, true, true>(reader)
         }
-        // show_chars, show_lines, show_words
         (_, true, true, false, true) => {
             word_count_from_reader_specialized::<_, true, true, false, true>(reader)
         }
-        // show_chars, show_lines, show_max_line_length
         (_, true, true, true, false) => {
             word_count_from_reader_specialized::<_, true, true, true, false>(reader)
         }
-        // show_chars, show_lines, show_max_line_length, show_words
         (_, true, true, true, true) => {
             word_count_from_reader_specialized::<_, true, true, true, true>(reader)
         }
@@ -590,7 +560,6 @@ fn process_chunk<
             if ch.is_whitespace() {
                 *in_word = false;
             } else if !(*in_word) {
-                // This also counts control characters! (As of GNU coreutils 9.5)
                 *in_word = true;
                 total.words += 1;
             }
@@ -750,7 +719,7 @@ fn compute_number_width(inputs: &Inputs, settings: &Settings) -> usize {
     }
 }
 
-type InputIterItem<'a> = Result<Input<'a>, Box<dyn UError>>;
+type InputIterItem<'a> = Result<Input<'a>, Box<dyn SGError>>;
 
 /// To be used with `--files0-from=-`, this applies a filter on the results of [`files0_iter`] to
 /// translate '-' into the appropriate error.
@@ -761,7 +730,7 @@ fn files0_iter_stdin<'a>() -> impl Iterator<Item = InputIterItem<'a>> {
     })
 }
 
-fn files0_iter_file<'a>(path: &Path) -> UResult<impl Iterator<Item = InputIterItem<'a>>> {
+fn files0_iter_file<'a>(path: &Path) -> SGResult<impl Iterator<Item = InputIterItem<'a>>> {
     match File::open(path) {
         Ok(f) => Ok(files0_iter(f, path.into())),
         Err(e) => Err(e.map_err_context(|| {
@@ -788,13 +757,11 @@ fn files0_iter<'a>(
             .map(move |res| match res {
                 Ok(p) if p == STDIN_REPR.as_bytes() => Ok(Input::Stdin(StdinKind::Explicit)),
                 Ok(p) => {
-                    // On Unix systems, OsStrings are just strings of bytes, not necessarily UTF-8.
                     {
                         use std::os::unix::ffi::OsStringExt;
                         Ok(Input::Path(PathBuf::from(OsString::from_vec(p)).into()))
                     }
 
-                    // ...Windows does not, we must go through Strings.
                     #[cfg(not(unix))]
                     {
                         let s = String::from_utf8(p).map_err(io::Error::other)?;
@@ -803,10 +770,9 @@ fn files0_iter<'a>(
                 }
                 Err(e) => Err(e.map_err_context(
                     || translate!("wc-error-read-error", "path" => escape_name_wrapper(&err_path))
-                ) as Box<dyn UError>),
+                ) as Box<dyn SGError>),
             })
     );
-    // Loop until there is an error; yield that error and then nothing else.
     iter::from_fn(move || {
         let next = i.as_mut().and_then(Iterator::next);
         if matches!(next, Some(Err(_)) | None) {
@@ -822,7 +788,7 @@ fn escape_name_wrapper(name: &OsStr) -> String {
         .expect("All escaped names with the escaping option return valid strings.")
 }
 
-fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult<()> {
+fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> SGResult<()> {
     let mut total_word_count = WordCount::default();
     let mut num_inputs: usize = 0;
     let mut results = Vec::new();
@@ -855,9 +821,8 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
             }
         };
         total_word_count += word_count;
-        
+
         if settings.object_output.stardust_output {
-            // Collect results for JSON output
             let title = input.to_title().map(|t| t.to_string_lossy().to_string());
             results.push((title, word_count));
         } else if are_stats_visible {
@@ -871,7 +836,6 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
     }
 
     if settings.object_output.stardust_output {
-        // Create the CollectedCount with all collected data
         let collected_count = CollectedCount::new(
             results,
             &total_word_count,
@@ -879,7 +843,6 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
             metadata,
         );
 
-        // Convert to JSON and output
         let output = collected_count.to_json();
         stardust_output::output(settings.object_output, output, || Ok(()))?;
     } else if settings.total_when.is_total_row_visible(num_inputs) {
@@ -890,8 +853,6 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> UResult
         }
     }
 
-    // Although this appears to be returning `Ok`, the exit code may have been set to a non-zero
-    // value by a call to `record_error!()` above.
     Ok(())
 }
 
@@ -923,3 +884,4 @@ fn print_stats(
     }
     writeln!(stdout)
 }
+

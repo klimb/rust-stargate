@@ -1,4 +1,4 @@
-// spell-checker:ignore hashset Addrs addrs
+
 
 use std::str;
 
@@ -6,7 +6,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use sgcore::translate;
 
 use sgcore::{
-    error::{FromIo, UResult},
+    error::{FromIo, SGResult},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -16,26 +16,18 @@ static DOMAIN_FLAG: &str = "domain";
 static FQDN_FLAG: &str = "fqdn";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    // hostname https://datatracker.ietf.org/doc/html/rfc952
-    //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
-    //    sign (-), and period (.)
-    // in FreeBSD the hostname is the unique name for a specific server, while the domain name
-    // provides a broader organizational context. Together, they form a
-    // Fully Qualified Domain Name (FQDN),
-    
+
     let object_output = StardustOutputOptions::from_matches(&matches);
-    
+
     if object_output.stardust_output {
         produce_json(&matches, object_output)
     } else {
         produce(&matches)
     }
 }
-
-
 
 pub fn sg_app() -> Command {
     let cmd = Command::new(sgcore::util_name())
@@ -67,11 +59,11 @@ pub fn sg_app() -> Command {
                 .help(translate!("get_hostname-help-short"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get hostname".to_owned())?
         .to_string_lossy()
@@ -84,13 +76,13 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         if let Some(dot) = it.next() {
             if has_short_flag {
                 let short_name = &fqdn[0..dot.0];
-                println!("{}", short_name); // up to dot
+                println!("{}", short_name);
             } else {
-                let domain_name = &fqdn[dot.0 + 1..]; // from dot to end
+                let domain_name = &fqdn[dot.0 + 1..];
                 println!("{}", domain_name);
             }
-        } else if has_short_flag { // happens when domain is not set (it can be empty)
-            println!("{fqdn}");    // in that case fqdn is the short name
+        } else if has_short_flag {
+            println!("{fqdn}");
         }
         return Ok(());
     }
@@ -100,7 +92,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get hostname".to_owned())?
         .to_string_lossy()
@@ -139,6 +131,4 @@ fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> U
     stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
-
-
 

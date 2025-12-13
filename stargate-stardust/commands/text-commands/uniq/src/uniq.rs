@@ -1,4 +1,5 @@
-// spell-checker:ignore badoption
+
+
 use clap::{
     Arg, ArgAction, ArgMatches, Command, builder::ValueParser, error::ContextKind, error::Error,
     error::ErrorKind,
@@ -8,7 +9,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write, stdin, stdout};
 use std::num::IntErrorKind;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult, USimpleError};
+use sgcore::error::{FromIo, SGError, SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::posix::{OBSOLETE, posix_version};
@@ -70,7 +71,7 @@ macro_rules! write_line_terminator {
 }
 
 impl Uniq {
-    pub fn print_uniq(&self, mut reader: impl BufRead, mut writer: impl Write) -> UResult<()> {
+    pub fn print_uniq(&self, mut reader: impl BufRead, mut writer: impl Write) -> SGResult<()> {
         let mut first_line_printed = false;
         let mut group_count = 1;
         let line_terminator = self.get_line_terminator();
@@ -246,7 +247,7 @@ impl Uniq {
         reader: &mut impl BufRead,
         buffer: &mut Vec<u8>,
         line_terminator: u8
-    ) -> UResult<bool> {
+    ) -> SGResult<bool> {
         buffer.clear();
         let bytes_read = reader
             .read_until(line_terminator, buffer)
@@ -261,15 +262,10 @@ impl Uniq {
     }
 
     fn should_print_delimiter(&self, group_count: usize, first_line_printed: bool) -> bool {
-        // if no delimiter option is selected then no other checks needed
         self.delimiters != Delimiters::None
-            // print delimiter only before the first line of a group, not between lines of a group
             && group_count == 1
-            // if at least one line has been output before current group then print delimiter
             && (first_line_printed
-                // or if we need to prepend delimiter then print it even at the start of the output
                 || self.delimiters == Delimiters::Prepend
-                // the 'both' delimit mode should prepend and append delimiters
                 || self.delimiters == Delimiters::Both)
     }
 
@@ -279,7 +275,7 @@ impl Uniq {
         line: &[u8],
         count: usize,
         first_line_printed: bool
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         let line_terminator = self.get_line_terminator();
 
         if self.should_print_delimiter(count, first_line_printed) {
@@ -289,7 +285,6 @@ impl Uniq {
         let mut count_buf = [0u8; Self::COUNT_PREFIX_BUF_SIZE];
 
         if self.show_counts {
-            // Call the associated function (no &self) after the refactor above.
             let prefix = Self::build_count_prefix(count, &mut count_buf);
             writer
                 .write_all(prefix)
@@ -306,8 +301,6 @@ impl Uniq {
     const COUNT_PREFIX_WIDTH: usize = 7;
     const COUNT_PREFIX_BUF_SIZE: usize = 32;
 
-    // This function does not use `self`, so make it an associated function.
-    // Also remove needless explicit lifetimes to satisfy clippy::needless-lifetimes.
     fn build_count_prefix(count: usize, buf: &mut [u8; Self::COUNT_PREFIX_BUF_SIZE]) -> &[u8] {
         let mut digits_buf = [0u8; 20];
         let mut value = count;
@@ -341,13 +334,13 @@ impl Uniq {
     }
 }
 
-fn opt_parsed(opt_name: &str, matches: &ArgMatches) -> UResult<Option<usize>> {
+fn opt_parsed(opt_name: &str, matches: &ArgMatches) -> SGResult<Option<usize>> {
     match matches.get_one::<String>(opt_name) {
         Some(arg_str) => match arg_str.parse::<usize>() {
             Ok(v) => Ok(Some(v)),
             Err(e) => match e.kind() {
                 IntErrorKind::PosOverflow => Ok(Some(usize::MAX)),
-                _ => Err(USimpleError::new(
+                _ => Err(SGSimpleError::new(
                     1,
                     translate!("uniq-error-invalid-argument", "opt_name" => opt_name, "arg" => arg_str.maybe_quote())
                 )),
@@ -390,9 +383,6 @@ fn handle_obsolete(args: impl sgcore::Args) -> (Vec<OsString>, Option<usize>, Op
         })
         .collect();
 
-    // exacted String values (if any) for skip_fields_old and skip_chars_old
-    // are guaranteed to consist of ascii digit chars only at this point
-    // so, it is safe to parse into usize and collapse Result into Option
     let skip_fields_old: Option<usize> = skip_fields_old.and_then(|v| v.parse::<usize>().ok());
     let skip_chars_old: Option<usize> = skip_chars_old.and_then(|v| v.parse::<usize>().ok());
 
@@ -413,25 +403,15 @@ fn filter_args(
             preceding_long_opt_req_value,
             preceding_short_opt_req_value
         ) {
-            // start of the short option string
-            // that can have obsolete skip fields option value in it
             filter = handle_extract_obs_skip_fields(slice, skip_fields_old);
         } else if should_extract_obs_skip_chars(
             slice,
             preceding_long_opt_req_value,
             preceding_short_opt_req_value
         ) {
-            // the obsolete skip chars option
             filter = handle_extract_obs_skip_chars(slice, skip_chars_old);
         } else {
-            // either not a short option
-            // or a short option that cannot have obsolete lines value in it
             filter = Some(OsString::from(slice));
-            // Check and reset to None obsolete values extracted so far
-            // if corresponding new/documented options are encountered next.
-            // NOTE: For skip fields - occurrences of corresponding new/documented options
-            // inside combined short options ike '-u20s4' or '-D1w3', etc
-            // are also covered in `handle_extract_obs_skip_fields()` function
             if slice.starts_with("-f") {
                 *skip_fields_old = None;
             }
@@ -445,10 +425,6 @@ fn filter_args(
             preceding_short_opt_req_value
         );
     } else {
-        // Cannot cleanly convert os_slice to UTF-8
-        // Do not process and return as-is
-        // This will cause failure later on, but we should not handle it here
-        // and let clap panic on invalid UTF-8 argument
         filter = Some(os_slice);
     }
     filter
@@ -493,9 +469,6 @@ fn handle_preceding_options(
     preceding_long_opt_req_value: &mut bool,
     preceding_short_opt_req_value: &mut bool
 ) {
-    // capture if current slice is a preceding long option that requires value and does not use '=' to assign that value
-    // following slice should be treaded as value for this option
-    // even if it starts with '-' (which would be treated as hyphen prefixed value)
     if slice.starts_with("--") {
         use options as O;
         *preceding_long_opt_req_value = &slice[2..] == O::SKIP_CHARS
@@ -504,12 +477,7 @@ fn handle_preceding_options(
             || &slice[2..] == O::GROUP
             || &slice[2..] == O::ALL_REPEATED;
     }
-    // capture if current slice is a preceding short option that requires value and does not have value in the same slice (value separated by whitespace)
-    // following slice should be treaded as value for this option
-    // even if it starts with '-' (which would be treated as hyphen prefixed value)
     *preceding_short_opt_req_value = slice == "-s" || slice == "-f" || slice == "-w";
-    // slice is a value
-    // reset preceding option flags
     if !slice.starts_with('-') {
         *preceding_short_opt_req_value = false;
         *preceding_long_opt_req_value = false;
@@ -530,16 +498,8 @@ fn handle_extract_obs_skip_fields(
         .chars()
         .filter(|c| {
             if c.eq(&'f') {
-                // any extracted obsolete skip fields value up to this point should be discarded
-                // as the new/documented option for skip fields was used after it
-                // i.e. in situation like `-u12f3`
-                // The obsolete skip fields value should still be extracted, filtered out
-                // but the skip_fields_old should be set to None instead of Some(String) later on
                 obs_overwritten_by_new = true;
             }
-            // To correctly process scenario like '-u20s4' or '-D1w3', etc
-            // we need to stop extracting digits once alphabetic character is encountered
-            // after we already have something in obs_extracted
             if c.is_ascii_digit() && !obs_end_reached {
                 obs_extracted.push(*c);
                 false
@@ -553,12 +513,8 @@ fn handle_extract_obs_skip_fields(
         .collect();
 
     if obs_extracted.is_empty() {
-        // no obsolete value found/extracted
         Some(OsString::from(slice))
     } else {
-        // obsolete value was extracted
-        // unless there was new/documented option for skip fields used after it
-        // set the skip_fields_old value (concatenate to it if there was a value there already)
         if obs_overwritten_by_new {
             *skip_fields_old = None;
         } else {
@@ -569,9 +525,6 @@ fn handle_extract_obs_skip_fields(
             *skip_fields_old = Some(extracted);
         }
         if filtered_slice.get(1).is_some() {
-            // there were some short options in front of or after obsolete lines value
-            // i.e. '-u20s4' or '-D1w3' or similar, which after extraction of obsolete lines value
-            // would look like '-us4' or '-Dw3' or similar
             let filtered_slice: String = filtered_slice.iter().collect();
             Some(OsString::from(filtered_slice))
         } else {
@@ -588,37 +541,29 @@ fn handle_extract_obs_skip_chars(
 ) -> Option<OsString> {
     let mut obs_extracted: Vec<char> = vec![];
     let mut slice_chars = slice.chars();
-    slice_chars.next(); // drop leading '+' character
+    slice_chars.next();
     for c in slice_chars {
         if c.is_ascii_digit() {
             obs_extracted.push(c);
         } else {
-            // for obsolete skip chars option the whole value after '+' should be numeric
-            // so, if any non-digit characters are encountered in the slice (i.e. `+1q`, etc)
-            // set skip_chars_old to None and return whole slice back.
-            // It will be parsed by clap and panic with appropriate error message
             *skip_chars_old = None;
             return Some(OsString::from(slice));
         }
     }
     if obs_extracted.is_empty() {
-        // no obsolete value found/extracted
-        // i.e. it was just '+' character alone
         Some(OsString::from(slice))
     } else {
-        // successfully extracted numeric value
-        // capture it and return None to filter out the whole slice
         *skip_chars_old = Some(obs_extracted.iter().collect());
         None
     }
 }
 
-/// Maps Clap errors to [`USimpleError`] and overrides 3 specific ones
+/// Maps Clap errors to [`SGSimpleError`] and overrides 3 specific ones
 /// to meet requirements of GNU tests for `uniq`.
 /// Unfortunately these overrides are necessary, since several GNU tests
 /// for `uniq` hardcode and require the exact wording of the error message
 /// and it is not compatible with how Clap formats and displays those error messages.
-fn map_clap_errors(clap_error: Error) -> Box<dyn UError> {
+fn map_clap_errors(clap_error: Error) -> Box<dyn SGError> {
     let footer = translate!("uniq-error-try-help");
     let override_arg_conflict = translate!("uniq-error-group-mutually-exclusive") + "\n" + &footer;
     let override_group_badoption = translate!("uniq-error-group-badoption") + "\n" + &footer;
@@ -649,11 +594,11 @@ fn map_clap_errors(clap_error: Error) -> Box<dyn UError> {
         }
         _ => return clap_error.into(),
     };
-    USimpleError::new(1, error_message)
+    SGSimpleError::new(1, error_message)
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let (args, skip_fields_old, skip_chars_old) = handle_obsolete(args);
 
     let matches = match sg_app().try_get_matches_from(args) {
@@ -661,10 +606,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Err(clap_error) => {
             if clap_error.exit_code() == 0 {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
-                // Let caller handle help/version
                 return Err(map_clap_errors(clap_error));
             }
-            // Use ErrorFormatter directly to handle error
             let formatter = sgcore::clap_localization::ErrorFormatter::new(sgcore::util_name());
             formatter.print_error_and_exit_with_callback(&clap_error, 1, || {});
         }
@@ -696,7 +639,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     if uniq.show_counts && uniq.all_repeated {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("uniq-error-counts-and-repeated-meaningless")
         ));
@@ -831,8 +774,7 @@ fn get_delimiter(matches: &ArgMatches) -> Delimiters {
     }
 }
 
-// None or "-" means stdin.
-fn open_input_file(in_file_name: Option<&OsStr>) -> UResult<Box<dyn BufRead>> {
+fn open_input_file(in_file_name: Option<&OsStr>) -> SGResult<Box<dyn BufRead>> {
     Ok(match in_file_name {
         Some(path) if path != "-" => {
             let in_file = File::open(path).map_err_context(
@@ -844,8 +786,7 @@ fn open_input_file(in_file_name: Option<&OsStr>) -> UResult<Box<dyn BufRead>> {
     })
 }
 
-// None or "-" means stdout.
-fn open_output_file(out_file_name: Option<&OsStr>) -> UResult<Box<dyn Write>> {
+fn open_output_file(out_file_name: Option<&OsStr>) -> SGResult<Box<dyn Write>> {
     Ok(match out_file_name {
         Some(path) if path != "-" => {
             let out_file = File::create(path).map_err_context(
@@ -859,3 +800,4 @@ fn open_output_file(out_file_name: Option<&OsStr>) -> UResult<Box<dyn Write>> {
         )),
     })
 }
+

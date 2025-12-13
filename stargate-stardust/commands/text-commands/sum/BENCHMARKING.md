@@ -7,7 +7,7 @@ Large sample files can for example be found in the [Wikipedia database dumps](ht
 After you have obtained and uncompressed such a file, you need to build `sum` in release mode
 
 ```shell
-cargo build --release --package uu_sum
+cargo build --release --package sg_sum
 ```
 
 and then you can time how it long it takes to checksum the file by running

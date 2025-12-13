@@ -21,23 +21,21 @@
 //! Here's an overview of the macros sorted by purpose
 //!
 //! - Print errors
-//!   - From types implementing [`crate::error::UError`]: [`crate::show!`],
+//!   - From types implementing [`crate::error::SGError`]: [`crate::show!`],
 //!     [`crate::show_if_err!`]
 //!   - From custom messages: [`crate::show_error!`]
 //! - Print warnings: [`crate::show_warning!`]
 
-// spell-checker:ignore sourcepath targetpath rustdoc
+
 
 use std::sync::atomic::AtomicBool;
 
 /// Whether we were called as a multicall binary (`coreutils <utility>`)
 pub static UTILITY_IS_SECOND_ARG: AtomicBool = AtomicBool::new(false);
 
-//====
-
-/// Display a [`crate::error::UError`] and set global exit code.
+/// Display a [`crate::error::SGError`] and set global exit code.
 ///
-/// Prints the error message contained in an [`crate::error::UError`] to stderr
+/// Prints the error message contained in an [`crate::error::SGError`] to stderr
 /// and sets the exit code through [`crate::error::set_exit_code`]. The printed
 /// error message is prepended with the calling utility's name. A call to this
 /// macro will not finish program execution.
@@ -51,16 +49,16 @@ pub static UTILITY_IS_SECOND_ARG: AtomicBool = AtomicBool::new(false);
 /// # #[macro_use]
 /// # extern crate sgcore;
 ///
-/// use sgcore::error::{self, USimpleError};
+/// use sgcore::error::{self, SGSimpleError};
 ///
 /// fn main() {
-///     let err = USimpleError::new(2, "Some error occurred.");
+///     let err = SGSimpleError::new(2, "Some error occurred.");
 ///     show!(err);
 ///     assert_eq!(error::get_exit_code(), 2);
 /// }
 /// ```
 ///
-/// If not using [`crate::error::UError`], one may achieve the same behavior
+/// If not using [`crate::error::SGError`], one may achieve the same behavior
 /// like this:
 ///
 /// ```
@@ -78,7 +76,7 @@ pub static UTILITY_IS_SECOND_ARG: AtomicBool = AtomicBool::new(false);
 macro_rules! show(
     ($err:expr) => ({
         #[allow(unused_imports)]
-        use $crate::error::UError;
+        use $crate::error::SGError;
         let e = $err;
         $crate::error::set_exit_code(e.code());
         eprintln!("{}: {e}", $crate::util_name());
@@ -87,9 +85,9 @@ macro_rules! show(
 
 /// Display an error and set global exit code in error case.
 ///
-/// Wraps around [`crate::show!`] and takes a [`crate::error::UResult`] instead of a
-/// [`crate::error::UError`] type. This macro invokes [`crate::show!`] if the
-/// [`crate::error::UResult`] is an `Err`-variant. This can be invoked directly
+/// Wraps around [`crate::show!`] and takes a [`crate::error::SGResult`] instead of a
+/// [`crate::error::SGError`] type. This macro invokes [`crate::show!`] if the
+/// [`crate::error::SGResult`] is an `Err`-variant. This can be invoked directly
 /// on the result of a function call, like in the `install` utility:
 ///
 /// ```ignore
@@ -101,15 +99,15 @@ macro_rules! show(
 /// ```ignore
 /// # #[macro_use]
 /// # extern crate sgcore;
-/// # use sgcore::error::{UError, UIoError, UResult, USimpleError};
+/// # use sgcore::error::{SGError, SGIoError, SGResult, SGSimpleError};
 ///
 /// # fn main() {
 /// let is_ok = Ok(1);
 /// // This does nothing at all
 /// show_if_err!(is_ok);
 ///
-/// let is_err = Err(USimpleError::new(1, "I'm an error").into());
-/// // Calls `show!` on the contained USimpleError
+/// let is_err = Err(SGSimpleError::new(1, "I'm an error").into());
+/// // Calls `show!` on the contained SGSimpleError
 /// show_if_err!(is_err);
 /// # }
 /// ```
@@ -177,3 +175,4 @@ macro_rules! show_warning_caps(
         eprintln!($($args)+);
     })
 );
+

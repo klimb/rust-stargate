@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) ugoa cmode
+
 
 use clap::builder::ValueParser;
 use clap::parser::ValuesRef;
@@ -6,7 +6,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use sgcore::error::FromIo;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::translate;
 
 use sgcore::mode;
@@ -35,7 +35,6 @@ pub struct Config<> {
 }
 
 fn get_mode(matches: &ArgMatches) -> Result<u32, String> {
-    // Not tested on Windows
     let mut new_mode = DEFAULT_PERM;
 
     if let Some(m) = matches.get_one::<String>(options::MODE) {
@@ -48,13 +47,12 @@ fn get_mode(matches: &ArgMatches) -> Result<u32, String> {
         }
         Ok(new_mode)
     } else {
-        // If no mode argument is specified return the mode derived from umask
         Ok(!mode::get_umask() & 0o0777)
     }
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
@@ -73,7 +71,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             };
             exec(dirs, &config)
         }
-        Err(f) => Err(USimpleError::new(1, f)),
+        Err(f) => Err(SGSimpleError::new(1, f)),
     }
 }
 
@@ -118,10 +116,7 @@ pub fn sg_app() -> Command {
         )
 }
 
-/**
- * Create the list of new directories
- */
-fn exec(dirs: ValuesRef<OsString>, config: &Config) -> UResult<()> {
+fn exec(dirs: ValuesRef<OsString>, config: &Config) -> SGResult<()> {
     for dir in dirs {
         let path_buf = PathBuf::from(dir);
         let path = path_buf.as_path();
@@ -144,21 +139,18 @@ fn exec(dirs: ValuesRef<OsString>, config: &Config) -> UResult<()> {
 ///
 /// To match the GNU behavior, a path with the last directory being a single dot
 /// (like `some/path/to/.`) is created (with the dot stripped).
-pub fn mkdir(path: &Path, config: &Config) -> UResult<()> {
+pub fn mkdir(path: &Path, config: &Config) -> SGResult<()> {
     if path.as_os_str().is_empty() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("mkdir-error-empty-directory-name")
         ));
     }
-    // Special case to match GNU's behavior:
-    // mkdir -p foo/. should work and just create foo/
-    // std::fs::create_dir("foo/."); fails in pure Rust
     let path_buf = dir_strip_dot_for_creation(path);
     let path = path_buf.as_path();
     create_dir(path, false, config)
 }
-fn chmod(path: &Path, mode: u32) -> UResult<()> {
+fn chmod(path: &Path, mode: u32) -> SGResult<()> {
     use std::fs::{Permissions, set_permissions};
     use std::os::unix::fs::PermissionsExt;
     let mode = Permissions::from_mode(mode);
@@ -167,12 +159,10 @@ fn chmod(path: &Path, mode: u32) -> UResult<()> {
     )
 }
 
-// Create a directory at the given path.
-// Uses iterative approach instead of recursion to avoid stack overflow with deep nesting.
-fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
+fn create_dir(path: &Path, is_parent: bool, config: &Config) -> SGResult<()> {
     let path_exists = path.exists();
     if path_exists && !config.recursive {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("mkdir-error-file-exists", "path" => path.to_string_lossy())
         ));
@@ -181,14 +171,10 @@ fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
         return Ok(());
     }
 
-    // Iterative implementation: collect all directories to create, then create them
-    // This avoids stack overflow with deeply nested directories
     if config.recursive {
-        // Pre-allocate approximate capacity to avoid reallocations
         let mut dirs_to_create = Vec::with_capacity(16);
         let mut current = path;
 
-        // First pass: collect all parent directories
         while let Some(parent) = current.parent() {
             if parent == Path::new("") {
                 break;
@@ -197,8 +183,6 @@ fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
             current = parent;
         }
 
-        // Second pass: create directories from root to leaf
-        // Only create those that don't exist
         for dir in dirs_to_create.iter().rev() {
             if !dir.exists() {
                 create_single_dir(dir, true, config)?;
@@ -206,14 +190,11 @@ fn create_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
         }
     }
 
-    // Create the target directory
     create_single_dir(path, is_parent, config)
 }
 
-// Helper function to create a single directory with appropriate permissions
-// `is_parent` argument is not used on windows
 #[allow(unused_variables)]
-fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<()> {
+fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> SGResult<()> {
     let path_exists = path.exists();
 
     match std::fs::create_dir(path) {
@@ -229,8 +210,6 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             let new_mode = if path_exists {
                 config.mode
             } else {
-                // TODO: Make this macos and freebsd compatible by creating a function to get permission bits from
-                // acl in extended attributes
                 let acl_perm_bits = sgcore::fsxattr::get_acl_perm_bits_from_xattr(path);
 
                 if is_parent {
@@ -247,20 +226,16 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
             };
 
             chmod(path, new_mode)?;
-            
+
             Ok(())
         }
 
         Err(_) if path.is_dir() => {
-            // Directory already exists - check if this is a logical directory creation
-            // (i.e., not just a parent reference like "test_dir/..")
             let ends_with_parent_dir = matches!(
                 path.components().next_back(),
                 Some(std::path::Component::ParentDir)
             );
 
-            // Print verbose message for logical directories, even if they exist
-            // This matches GNU behavior for paths like "test_dir/../test_dir_a"
             if config.verbose && is_parent && config.recursive && !ends_with_parent_dir {
                 println!(
                     "{}",
@@ -272,3 +247,4 @@ fn create_single_dir(path: &Path, is_parent: bool, config: &Config) -> UResult<(
         Err(e) => Err(e.into()),
     }
 }
+

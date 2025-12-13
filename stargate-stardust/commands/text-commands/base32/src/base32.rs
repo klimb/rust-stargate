@@ -1,10 +1,10 @@
 pub mod base_common;
 
 use clap::Command;
-use sgcore::{encoding::Format, error::UResult, translate};
+use sgcore::{encoding::Format, error::SGResult, translate};
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let format = Format::Base32;
     let (about, usage) = get_info();
     let config = base_common::parse_base_cmd_args(args, about, usage)?;
@@ -23,3 +23,4 @@ fn get_info() -> (&'static str, &'static str) {
     let usage: &'static str = Box::leak(translate!("base32-usage").into_boxed_str());
     (about, usage)
 }
+

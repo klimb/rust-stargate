@@ -1,6 +1,6 @@
 [package]
 name = "sg_dircolors"
-description = "dircolors ~ (uutils) display commands to set LS_COLORS"
+description = "dircolors ~ (stargate) display commands to set LS_COLORS"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

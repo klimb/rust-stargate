@@ -1,6 +1,6 @@
 [package]
 name = "sg_sleep"
-description = "sleep ~ (uutils) pause for DURATION"
+description = "sleep ~ (stargate) pause for DURATION"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

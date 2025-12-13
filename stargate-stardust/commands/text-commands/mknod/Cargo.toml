@@ -1,6 +1,6 @@
 [package]
 name = "sg_mknod"
-description = "mknod ~ (uutils) create special file NAME of TYPE"
+description = "mknod ~ (stargate) create special file NAME of TYPE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "sg_ln"
-description = "ln ~ (uutils) create a (file system) link to TARGET"
+description = "ln ~ (stargate) create a (file system) link to TARGET"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

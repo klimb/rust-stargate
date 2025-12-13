@@ -1,6 +1,6 @@
 [package]
 name = "sg_cp"
-description = "cp ~ (uutils) copy SOURCE to DESTINATION"
+description = "cp ~ (stargate) copy SOURCE to DESTINATION"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

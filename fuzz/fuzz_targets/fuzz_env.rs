@@ -1,4 +1,4 @@
-// spell-checker:ignore chdir
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -7,7 +7,7 @@ use sg_env::sgmain;
 use std::ffi::OsString;
 
 use rand::Rng;
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd,
 };
 
@@ -32,22 +32,17 @@ fn generate_env_args() -> Vec<String> {
     }
 
     if rng.random_bool(0.2) {
-        args.push(format!("--chdir={}", "/tmp")); // Simplified example
+        args.push(format!("--chdir={}", "/tmp"));
     }
 
-    /*
-        Options not implemented for now
-    if rng.random_bool(0.15) {
-        let sig_opts = ["--block-signal"];//, /*"--default-signal",*/ "--ignore-signal"];
+ "--ignore-signal"];
         let chosen_sig_opt = sig_opts[rng.random_range(0..sig_opts.len())];
         args.push(chosen_sig_opt.to_string());
-        // Simplify by assuming SIGPIPE for demonstration
         if !chosen_sig_opt.ends_with("list-signal-handling") {
             args.push(String::from("SIGPIPE"));
         }
     }*/
 
-    // Adding a few random NAME=VALUE pairs
     for _ in 0..rng.random_range(0..3) {
         args.push(format!(
             "{}={}",
@@ -90,3 +85,4 @@ fuzz_target!(|_data: &[u8]| {
         false,
     );
 });
+

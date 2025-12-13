@@ -1,12 +1,12 @@
-// Copyright (C) 2025 Dmitry Kalashnikov
-// say-text: macOS-only stargate command to speak text using the system's text-to-speech
+
+
 
 use std::process::Command;
 
 use clap::{Arg, ArgAction, ArgMatches, Command as ClapCommand};
 
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -16,10 +16,10 @@ static VOICE_FLAG: &str = "voice";
 static RATE_FLAG: &str = "rate";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     #[cfg(not(target_os = "macos"))]
     {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "say-text is only available on macOS".to_string(),
         ));
@@ -28,7 +28,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     #[cfg(target_os = "macos")]
     {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-        //sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
         let object_output = StardustOutputOptions::from_matches(&matches);
 
         if object_output.object_output {
@@ -74,7 +73,7 @@ pub fn sg_app() -> ClapCommand {
 }
 
 #[cfg(target_os = "macos")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     let text_parts: Vec<&String> = matches
         .get_many::<String>(TEXT_ARG)
         .unwrap()
@@ -94,10 +93,10 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 
     let status = cmd
         .status()
-        .map_err(|e| USimpleError::new(1, format!("Failed to execute 'say' command: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("Failed to execute 'say' command: {}", e)))?;
 
     if !status.success() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             status.code().unwrap_or(1),
             "Speech synthesis failed".to_string(),
         ));
@@ -107,7 +106,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> SGResult<()> {
     let text_parts: Vec<&String> = matches
         .get_many::<String>(TEXT_ARG)
         .unwrap()
@@ -134,7 +133,7 @@ fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> U
 
     let status = cmd
         .status()
-        .map_err(|e| USimpleError::new(1, format!("Failed to execute 'say' command: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("Failed to execute 'say' command: {}", e)))?;
 
     let success = status.success();
     let exit_code = status.code().unwrap_or(1);
@@ -150,7 +149,7 @@ fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> U
     stardust_output::output(object_output, output, || Ok(()))?;
 
     if !success {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             exit_code,
             "Speech synthesis failed".to_string(),
         ));
@@ -158,3 +157,4 @@ fn produce_json(matches: &ArgMatches, object_output: StardustOutputOptions) -> U
 
     Ok(())
 }
+

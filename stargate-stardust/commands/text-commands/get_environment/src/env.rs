@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) chdir execvp progname subcommand subcommands unsets setenv putenv spawnp SIGSEGV SIGBUS sigaction
+
 
 pub mod native_int_str;
 pub mod split_iterator;
@@ -23,7 +23,7 @@ use std::io::{self, Write};
 use std::os::unix::ffi::OsStrExt;
 
 use sgcore::display::Quotable;
-use sgcore::error::{ExitCode, UError, UResult, USimpleError, UUsageError};
+use sgcore::error::{ExitCode, SGError, SGResult, SGSimpleError, SGUsageError};
 use sgcore::line_ending::LineEnding;
 use sgcore::signals::signal_by_name_or_value;
 use sgcore::translate;
@@ -101,37 +101,34 @@ fn print_env(line_ending: LineEnding) {
 }
 
 /// produce JSON output of all environment variables
-fn produce_json(object_output: StardustOutputOptions) -> UResult<()> {
+fn produce_json(object_output: StardustOutputOptions) -> SGResult<()> {
     let env_vars: serde_json::Map<String, serde_json::Value> = env::vars()
         .map(|(k, v)| (k, serde_json::Value::String(v)))
         .collect();
-    
+
     let output = serde_json::json!({
         "environment": env_vars,
         "count": env_vars.len()
     });
-    
+
     stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
 
-fn parse_name_value_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<bool> {
-    // is it a NAME=VALUE like opt ?
+fn parse_name_value_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> SGResult<bool> {
     let wrap = NativeStr::<'a>::new(opt);
     let split_o = wrap.split_once(&'=');
     if let Some((name, value)) = split_o {
-        // yes, so push name, value pair
         opts.sets.push((name, value));
         Ok(false)
     } else {
-        // no, it's a program-like opt
         parse_program_opt(opts, opt).map(|_| true)
     }
 }
 
-fn parse_program_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
+fn parse_program_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> SGResult<()> {
     if opts.line_ending == LineEnding::Nul {
-        Err(UUsageError::new(
+        Err(SGUsageError::new(
             125,
             translate!("env-error-cannot-specify-null-with-command")
         ))
@@ -140,10 +137,10 @@ fn parse_program_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> 
         Ok(())
     }
 }
-fn parse_signal_value(signal_name: &str) -> UResult<usize> {
+fn parse_signal_value(signal_name: &str) -> SGResult<usize> {
     let signal_name_upcase = signal_name.to_uppercase();
     let optional_signal_value = signal_by_name_or_value(&signal_name_upcase);
-    let error = USimpleError::new(
+    let error = SGSimpleError::new(
         125,
         translate!("env-error-invalid-signal", "signal" => signal_name.quote())
     );
@@ -158,7 +155,7 @@ fn parse_signal_value(signal_name: &str) -> UResult<usize> {
         None => Err(error),
     }
 }
-fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
+fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> SGResult<()> {
     if opt.is_empty() {
         return Ok(());
     }
@@ -176,7 +173,7 @@ fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
     }
     for sig in sig_vec {
         let Some(sig_str) = sig.to_str() else {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("env-error-invalid-signal", "signal" => sig.quote())
             ));
@@ -190,9 +187,7 @@ fn parse_signal_opt<'a>(opts: &mut Options<'a>, opt: &'a OsStr) -> UResult<()> {
     Ok(())
 }
 
-fn load_config_file(opts: &mut Options) -> UResult<()> {
-    // NOTE: config files are parsed using an INI parser b/c it's available and compatible with ".env"-style files
-    //   ... * but support for actual INI files, although working, is not intended, nor claimed
+fn load_config_file(opts: &mut Options) -> SGResult<()> {
     for &file in &opts.files {
         let conf = if file == "-" {
             let stdin = io::stdin();
@@ -203,14 +198,13 @@ fn load_config_file(opts: &mut Options) -> UResult<()> {
         };
 
         let conf = conf.map_err(|e| {
-            USimpleError::new(
+            SGSimpleError::new(
                 1,
                 translate!("env-error-config-file", "file" => file.maybe_quote(), "error" => e)
             )
         })?;
 
         for (_, prop) in &conf {
-            // ignore all INI section lines (treat them as comments)
             for (key, value) in prop {
                 unsafe {
                     env::set_var(key, value);
@@ -237,41 +231,41 @@ pub fn sg_app() -> Command {
                 .help(translate!("env-help-null"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-pub fn parse_args_from_str(text: &NativeIntStr) -> UResult<Vec<NativeIntString>> {
+pub fn parse_args_from_str(text: &NativeIntStr) -> SGResult<Vec<NativeIntString>> {
     split_iterator::split(text).map_err(|e| match e {
-        EnvError::EnvBackslashCNotAllowedInDoubleQuotes(_) => USimpleError::new(125, e.to_string()),
+        EnvError::EnvBackslashCNotAllowedInDoubleQuotes(_) => SGSimpleError::new(125, e.to_string()),
         EnvError::EnvInvalidBackslashAtEndOfStringInMinusS(_, _) => {
-            USimpleError::new(125, e.to_string())
+            SGSimpleError::new(125, e.to_string())
         }
         EnvError::EnvInvalidSequenceBackslashXInMinusS(_, _) => {
-            USimpleError::new(125, e.to_string())
+            SGSimpleError::new(125, e.to_string())
         }
-        EnvError::EnvMissingClosingQuote(_, _) => USimpleError::new(125, e.to_string()),
-        EnvError::EnvParsingOfVariableMissingClosingBrace(pos) => USimpleError::new(
+        EnvError::EnvMissingClosingQuote(_, _) => SGSimpleError::new(125, e.to_string()),
+        EnvError::EnvParsingOfVariableMissingClosingBrace(pos) => SGSimpleError::new(
             125,
             translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
-        EnvError::EnvParsingOfMissingVariable(pos) => USimpleError::new(
+        EnvError::EnvParsingOfMissingVariable(pos) => SGSimpleError::new(
             125,
             translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
-        EnvError::EnvParsingOfVariableMissingClosingBraceAfterValue(pos) => USimpleError::new(
+        EnvError::EnvParsingOfVariableMissingClosingBraceAfterValue(pos) => SGSimpleError::new(
             125,
             translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
-        EnvError::EnvParsingOfVariableUnexpectedNumber(pos, _) => USimpleError::new(
+        EnvError::EnvParsingOfVariableUnexpectedNumber(pos, _) => SGSimpleError::new(
             125,
             translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
-        EnvError::EnvParsingOfVariableExceptedBraceOrColon(pos, _) => USimpleError::new(
+        EnvError::EnvParsingOfVariableExceptedBraceOrColon(pos, _) => SGSimpleError::new(
             125,
             translate!("env-error-variable-name-issue", "position" => pos, "error" => e)
         ),
-        _ => USimpleError::new(
+        _ => SGSimpleError::new(
             125,
             translate!("env-error-generic", "error" => format!("{e:?}"))
         ),
@@ -290,11 +284,11 @@ fn check_and_handle_string_args(
     prefix_to_test: &str,
     all_args: &mut Vec<OsString>,
     do_debug_print_args: Option<&Vec<OsString>>
-) -> UResult<bool> {
+) -> SGResult<bool> {
     let native_arg = NCvt::convert(arg);
     if let Some(remaining_arg) = native_arg.strip_prefix(&*NCvt::convert(prefix_to_test)) {
         if let Some(input_args) = do_debug_print_args {
-            debug_print_args(input_args); // do it here, such that its also printed when we get an error/panic during parsing
+            debug_print_args(input_args);
         }
 
         let arg_strings = parse_args_from_str(remaining_arg)?;
@@ -318,7 +312,7 @@ struct EnvAppData {
 }
 
 impl EnvAppData {
-    fn make_error_no_such_file_or_dir(&self, prog: &OsStr) -> Box<dyn UError> {
+    fn make_error_no_such_file_or_dir(&self, prog: &OsStr) -> Box<dyn SGError> {
         sgcore::show_error!(
             "{}",
             translate!("env-error-no-such-file", "program" => prog.quote())
@@ -332,11 +326,10 @@ impl EnvAppData {
     fn process_all_string_arguments(
         &mut self,
         original_args: &Vec<OsString>
-    ) -> UResult<Vec<OsString>> {
+    ) -> SGResult<Vec<OsString>> {
         let mut all_args: Vec<OsString> = Vec::new();
         let mut process_flags = true;
         let mut expecting_arg = false;
-        // Leave out split-string since it's a special case below
         let flags_with_args = [
             options::ARGV0,
             options::CHDIR,
@@ -347,7 +340,6 @@ impl EnvAppData {
         let short_flags_with_args = ['a', 'C', 'f', 'u'];
         for (n, arg) in original_args.iter().enumerate() {
             let arg_str = arg.to_string_lossy();
-            // Stop processing env flags once we reach the command or -- argument
             if 0 < n
                 && !expecting_arg
                 && (arg == "--" || !(arg_str.starts_with('-') || arg_str.contains('=')))
@@ -378,7 +370,7 @@ impl EnvAppData {
                 )? =>
                 {
                     self.do_debug_printing = true;
-                    self.do_input_debug_printing = Some(false); // already done
+                    self.do_input_debug_printing = Some(false);
                     self.had_string_argument = true;
                 }
                 _ => {
@@ -391,13 +383,12 @@ impl EnvAppData {
                             expecting_arg = short_flags_with_args.contains(&c);
                         }
                     }
-                    // Short unset option (-u) is not allowed to contain '='
                     if arg_str.contains('=')
                         && arg_str.starts_with("-u")
                         && !arg_str.starts_with("--")
                     {
                         let name = &arg_str[arg_str.find('=').unwrap()..];
-                        return Err(USimpleError::new(
+                        return Err(SGSimpleError::new(
                             125,
                             translate!("env-error-cannot-unset", "name" => name)
                         ));
@@ -414,7 +405,7 @@ impl EnvAppData {
     fn parse_arguments(
         &mut self,
         original_args: impl sgcore::Args
-    ) -> Result<(Vec<OsString>, clap::ArgMatches), Box<dyn UError>> {
+    ) -> Result<(Vec<OsString>, clap::ArgMatches), Box<dyn SGError>> {
         let original_args: Vec<OsString> = original_args.collect();
         let args = self.process_all_string_arguments(&original_args)?;
         let app = sg_app();
@@ -425,7 +416,6 @@ impl EnvAppData {
                     clap::error::ErrorKind::DisplayHelp
                     | clap::error::ErrorKind::DisplayVersion => return Err(e.into()),
                     _ => {
-                        // Use ErrorFormatter directly to handle error with shebang message callback
                         let formatter =
                             sgcore::clap_localization::ErrorFormatter::new(sgcore::util_name());
                         formatter.print_error_and_exit_with_callback(&e, 125, || {
@@ -442,13 +432,12 @@ impl EnvAppData {
         Ok((original_args, matches))
     }
 
-    fn run_env(&mut self, original_args: impl sgcore::Args) -> UResult<()> {
+    fn run_env(&mut self, original_args: impl sgcore::Args) -> SGResult<()> {
         let (_, matches) = self.parse_arguments(original_args)?;
 
         let object_output = StardustOutputOptions::from_matches(&matches);
         let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::NULL));
 
-        // Just output all env vars
         if object_output.stardust_output {
             produce_json(object_output)
         } else {
@@ -470,7 +459,7 @@ impl EnvAppData {
         &mut self,
         opts: &Options<'_>,
         do_debug_printing: bool
-    ) -> Result<(), Box<dyn UError>> {
+    ) -> Result<(), Box<dyn SGError>> {
         let prog = Cow::from(opts.program[0]);
         let mut arg0 = prog.clone();
         #[cfg(not(unix))]
@@ -486,7 +475,7 @@ impl EnvAppData {
             }
 
             #[cfg(not(unix))]
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 2,
                 translate!("env-error-argv0-not-supported")
             ));
@@ -501,21 +490,17 @@ impl EnvAppData {
             }
         }
         {
-            // Convert program name to CString.
             let Ok(prog_cstring) = CString::new(prog.as_bytes()) else {
                 return Err(self.make_error_no_such_file_or_dir(&prog));
             };
 
-            // Prepare arguments for execvp.
             let mut argv = Vec::new();
 
-            // Convert arg0 to CString.
             let Ok(arg0_cstring) = CString::new(arg0.as_bytes()) else {
                 return Err(self.make_error_no_such_file_or_dir(&prog));
             };
             argv.push(arg0_cstring);
 
-            // Convert remaining arguments to CString.
             for arg in args {
                 let Ok(arg_cstring) = CString::new(arg.as_bytes()) else {
                     return Err(self.make_error_no_such_file_or_dir(&prog));
@@ -523,9 +508,6 @@ impl EnvAppData {
                 argv.push(arg_cstring);
             }
 
-            // Execute the program using execvp. this replaces the current
-            // process. The execvp function takes care of appending a NULL
-            // argument to the argument list so that we don't have to.
             match execvp(&prog_cstring, &argv) {
                 Err(nix::errno::Errno::ENOENT) => Err(self.make_error_no_such_file_or_dir(&prog)),
                 Err(nix::errno::Errno::EACCES) => {
@@ -556,7 +538,6 @@ impl EnvAppData {
 
         #[cfg(not(unix))]
         {
-            // Fallback to Command::status for non-Unix systems
             let mut cmd = std::process::Command::new(&*prog);
             cmd.args(args);
 
@@ -588,7 +569,6 @@ impl EnvAppData {
 }
 
 fn apply_removal_of_all_env_vars(opts: &Options<'_>) {
-    // remove all env vars if told to ignore presets
     if opts.ignore_env {
         for (ref name, _) in env::vars_os() {
             unsafe {
@@ -598,7 +578,7 @@ fn apply_removal_of_all_env_vars(opts: &Options<'_>) {
     }
 }
 
-fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
+fn make_options(matches: &clap::ArgMatches) -> SGResult<Options<'_>> {
     let ignore_env = matches.get_flag("ignore-environment");
     let line_ending = LineEnding::from_zero_flag(matches.get_flag("null"));
     let running_directory = matches.get_one::<OsString>("chdir").map(|s| s.as_os_str());
@@ -631,7 +611,6 @@ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
 
     let mut begin_prog_opts = false;
     if let Some(mut iter) = matches.get_many::<OsString>("vars") {
-        // read NAME=VALUE arguments (and up to a single program argument)
         while !begin_prog_opts {
             if let Some(opt) = iter.next() {
                 if opt == "-" {
@@ -644,7 +623,6 @@ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
             }
         }
 
-        // read any leftover program arguments
         for opt in iter {
             parse_program_opt(&mut opts, opt)?;
         }
@@ -653,14 +631,14 @@ fn make_options(matches: &clap::ArgMatches) -> UResult<Options<'_>> {
     Ok(opts)
 }
 
-fn apply_unset_env_vars(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
+fn apply_unset_env_vars(opts: &Options<'_>) -> Result<(), Box<dyn SGError>> {
     for name in &opts.unsets {
         let native_name = NativeStr::new(name);
         if name.is_empty()
             || native_name.contains(&'\0').unwrap()
             || native_name.contains(&'=').unwrap()
         {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 125,
                 translate!("env-error-cannot-unset-invalid", "name" => name.quote())
             ));
@@ -672,10 +650,9 @@ fn apply_unset_env_vars(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
     Ok(())
 }
 
-fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
-    // GNU env tests this behavior
+fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn SGError>> {
     if opts.program.is_empty() && opts.running_directory.is_some() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             125,
             translate!("env-error-must-specify-command-with-chdir")
         ));
@@ -685,7 +662,7 @@ fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
         match env::set_current_dir(d) {
             Ok(()) => d,
             Err(error) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     125,
                     translate!("env-error-cannot-change-directory", "directory" => d.quote(), "error" => error)
                 ));
@@ -696,29 +673,7 @@ fn apply_change_directory(opts: &Options<'_>) -> Result<(), Box<dyn UError>> {
 }
 
 fn apply_specified_env_vars(opts: &Options<'_>) {
-    // set specified env vars
     for (name, val) in &opts.sets {
-        /*
-         * set_var panics if name is an empty string
-         * set_var internally calls setenv (on unix at least), while GNU env calls putenv instead.
-         *
-         * putenv returns successfully if provided with something like "=a" and modifies the environ
-         * variable to contain "=a" inside it, effectively modifying the process' current environment
-         * to contain a malformed string in it. Using GNU's implementation, the command `env =a`
-         * prints out the malformed string and even invokes the child process with that environment.
-         * This can be seen by using `env -i =a env` or `env -i =a cat /proc/self/environ`
-         *
-         * POSIX.1-2017 doesn't seem to mention what to do if the string is malformed (at least
-         * not in "Chapter 8, Environment Variables" or in the definition for environ and various
-         * exec*'s or in the description of env in the "Shell & Utilities" volume).
-         *
-         * It also doesn't specify any checks for putenv before modifying the environ variable, which
-         * is likely why glibc doesn't do so. However, the first set_var argument cannot point to
-         * an empty string or a string containing '='.
-         *
-         * There is no benefit in replicating GNU's env behavior, since it will only modify the
-         * environment in weird ways
-         */
 
         if name.is_empty() {
             show_warning!(
@@ -732,7 +687,7 @@ fn apply_specified_env_vars(opts: &Options<'_>) {
         }
     }
 }
-fn apply_ignore_signal(opts: &Options<'_>) -> UResult<()> {
+fn apply_ignore_signal(opts: &Options<'_>) -> SGResult<()> {
     for &sig_value in &opts.ignore_signal {
         let sig: Signal = (sig_value as i32)
             .try_into()
@@ -742,11 +697,10 @@ fn apply_ignore_signal(opts: &Options<'_>) -> UResult<()> {
     }
     Ok(())
 }
-fn ignore_signal(sig: Signal) -> UResult<()> {
-    // SAFETY: This is safe because we write the handler for each signal only once, and therefore "the current handler is the default", as the documentation requires it.
+fn ignore_signal(sig: Signal) -> SGResult<()> {
     let result = unsafe { signal(sig, SigIgn) };
     if let Err(err) = result {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             125,
             translate!("env-error-failed-set-signal-action", "signal" => (sig as i32), "error" => err.desc())
         ));
@@ -755,9 +709,7 @@ fn ignore_signal(sig: Signal) -> UResult<()> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // Rust ignores SIGPIPE (see https://github.com/rust-lang/rust/issues/62569).
-    // We restore its default action here.
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
@@ -802,30 +754,26 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: These tests depend on specific error message formats
+    #[ignore]
     fn test_error_cases() {
         let _ = locale::setup_localization("env");
 
-        // Test EnvBackslashCNotAllowedInDoubleQuotes
         let result = parse_args_from_str(&NCvt::convert(r#"sh -c "echo \c""#));
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        // Check that the error contains the key or the translated message
         assert!(
-            error_msg.contains("env-error-backslash-c-not-allowed") || 
+            error_msg.contains("env-error-backslash-c-not-allowed") ||
             error_msg.contains("must not appear in double-quoted")
         );
 
-        // Test EnvInvalidBackslashAtEndOfStringInMinusS
         let result = parse_args_from_str(&NCvt::convert(r#"sh -c "echo \"#));
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("env-error-missing-closing-quote") || 
+            error_msg.contains("env-error-missing-closing-quote") ||
             error_msg.contains("no terminating quote")
         );
 
-        // Test EnvInvalidSequenceBackslashXInMinusS
         let result = parse_args_from_str(&NCvt::convert(r#"sh -c "echo \x""#));
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
@@ -834,16 +782,14 @@ mod tests {
             error_msg.contains("invalid sequence '\\x' in -S")
         );
 
-        // Test EnvMissingClosingQuote
         let result = parse_args_from_str(&NCvt::convert(r#"sh -c "echo "#));
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("env-error-missing-closing-quote") || 
+            error_msg.contains("env-error-missing-closing-quote") ||
             error_msg.contains("no terminating quote")
         );
 
-        // Test variable-related errors
         let result = parse_args_from_str(&NCvt::convert(r"echo ${FOO"));
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
@@ -881,3 +827,4 @@ mod tests {
         );
     }
 }
+

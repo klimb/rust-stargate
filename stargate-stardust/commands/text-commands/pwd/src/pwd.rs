@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use sgcore::format_usage;
 
 use sgcore::display::println_verbatim;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
@@ -15,17 +15,12 @@ const OPT_LOGICAL: &str = "logical";
 const OPT_PHYSICAL: &str = "physical";
 
 fn physical_path() -> io::Result<PathBuf> {
-    // std::env::current_dir() is a thin wrapper around libc::getcwd().
     let path = env::current_dir()?;
 
-    // On Unix, getcwd() must return the physical path:
-    // https://pubs.opengroup.org/onlinepubs/9699919799/functions/getcwd.html
     {
         Ok(path)
     }
 
-    // On Windows we have to resolve it.
-    // On other systems we also resolve it, just in case.
     #[cfg(not(unix))]
     {
         path.canonicalize()
@@ -35,17 +30,10 @@ fn physical_path() -> io::Result<PathBuf> {
 fn logical_path() -> io::Result<PathBuf> {
         use std::path::Path;
         fn looks_reasonable(path: &Path) -> bool {
-            // First, check if it's an absolute path.
             if !path.has_root() {
                 return false;
             }
 
-            // Then, make sure there are no . or .. components.
-            // Path::components() isn't useful here, it normalizes those out.
-
-            // to_string_lossy() may allocate, but that's fine, we call this
-            // only once per run. It may also lose information, but not any
-            // information that we need for this check.
             if path
                 .to_string_lossy()
                 .split(std::path::is_separator)
@@ -54,7 +42,6 @@ fn logical_path() -> io::Result<PathBuf> {
                 return false;
             }
 
-            // Finally, check if it matches the directory we're in.
             {
                 use std::fs::metadata;
                 use std::os::unix::fs::MetadataExt;
@@ -84,15 +71,12 @@ fn logical_path() -> io::Result<PathBuf> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
-    
-    // if POSIXLY_CORRECT is set, we want to a logical resolution.
-    // This produces a different output when doing mkdir -p a/b && ln -s a/b c && cd c && pwd
-    // We should get c in this case instead of a/b at the end of the path
+
     let cwd = if matches.get_flag(OPT_PHYSICAL) {
         physical_path()
     } else if matches.get_flag(OPT_LOGICAL) || env::var("POSIXLY_CORRECT").is_ok() {
@@ -101,14 +85,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         physical_path()
     }
     .map_err_context(|| translate!("pwd-error-failed-to-get-current-directory"))?;
-    
+
     if opts.stardust_output {
         let path_str = cwd.to_string_lossy().to_string();
         let output = json!({
             "path": path_str,
             "absolute": cwd.is_absolute(),
-            "mode": if matches.get_flag(OPT_PHYSICAL) { "physical" } 
-                    else if matches.get_flag(OPT_LOGICAL) { "logical" } 
+            "mode": if matches.get_flag(OPT_PHYSICAL) { "physical" }
+                    else if matches.get_flag(OPT_LOGICAL) { "logical" }
                     else { "physical" }
         });
         let filtered = stardust_output::filter_fields(output, field_filter);
@@ -142,6 +126,7 @@ pub fn sg_app() -> Command {
                 .help(translate!("pwd-help-physical"))
                 .action(ArgAction::SetTrue)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::io::stdout;
 use std::ops::ControlFlow;
-use sgcore::error::{UResult, UUsageError};
+use sgcore::error::{SGResult, SGUsageError};
 use sgcore::format::{FormatArgument, FormatArguments, FormatItem, parse_spec_and_escape};
 use sgcore::translate;
 use sgcore::{format_usage, os_str_as_bytes, show_warning};
@@ -16,14 +16,14 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
     let format = matches
         .get_one::<OsString>(options::FORMAT)
-        .ok_or_else(|| UUsageError::new(1, translate!("printf-error-missing-operand")))?;
+        .ok_or_else(|| SGUsageError::new(1, translate!("printf-error-missing-operand")))?;
     let format = os_str_as_bytes(format)?;
 
     let values: Vec<_> = match matches.get_many::<OsString>(options::ARGUMENT) {
@@ -34,7 +34,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let mut format_seen = false;
-    // Parse and process the format string
     let mut args = FormatArguments::new(&values);
     for item in parse_spec_and_escape(format) {
         if let Ok(FormatItem::Spec(_)) = item {
@@ -47,8 +46,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
     args.start_next_batch();
 
-    // Without format specs in the string, the iter would not consume any args,
-    // leading to an infinite loop. Thus, we exit early.
     if !format_seen {
         if !args.is_exhausted() {
             let Some(FormatArgument::Unparsed(arg_str)) = args.peek_arg() else {
@@ -107,3 +104,4 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
         )
 }
+

@@ -1,6 +1,6 @@
 [package]
 name = "sg_mv"
-description = "mv ~ (uutils) move (rename) SOURCE to DESTINATION"
+description = "mv ~ (stargate) move (rename) SOURCE to DESTINATION"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

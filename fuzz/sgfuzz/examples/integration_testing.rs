@@ -1,7 +1,6 @@
 use std::ffi::OsString;
-use uufuzz::{generate_and_run_uumain, run_gnu_cmd};
+use sgfuzz::{generate_and_run_uumain, run_gnu_cmd};
 
-// Mock sort implementation for demonstration
 fn mock_sort_main(args: std::vec::IntoIter<OsString>) -> i32 {
     use std::io::{self, Read};
 
@@ -9,7 +8,6 @@ fn mock_sort_main(args: std::vec::IntoIter<OsString>) -> i32 {
     let mut numeric_sort = false;
     let mut reverse_sort = false;
 
-    // Parse arguments
     for arg in args.iter().skip(1) {
         let arg_str = arg.to_string_lossy();
         match arg_str.as_ref() {
@@ -19,21 +17,18 @@ fn mock_sort_main(args: std::vec::IntoIter<OsString>) -> i32 {
         }
     }
 
-    // Read from stdin
     let mut input = String::new();
     match io::stdin().read_to_string(&mut input) {
         Ok(_) => {
             let mut lines: Vec<&str> = input.lines().collect();
 
             if numeric_sort {
-                // Sort numerically
                 lines.sort_by(|a, b| {
                     let a_num: f64 = a.trim().parse().unwrap_or(0.0);
                     let b_num: f64 = b.trim().parse().unwrap_or(0.0);
                     a_num.partial_cmp(&b_num).unwrap()
                 });
             } else {
-                // Sort lexically
                 lines.sort();
             }
 
@@ -67,8 +62,6 @@ mod tests {
 
         match run_gnu_cmd("sort", &args[1..], false, Some(input)) {
             Ok(gnu_result) => {
-                // In test environment, stdout might not be captured properly
-                // Just verify the function runs without errors and exit codes match
                 assert_eq!(
                     rust_result.exit_code, gnu_result.exit_code,
                     "Exit codes should match"
@@ -76,7 +69,6 @@ mod tests {
                 println!("✓ Basic sort test passed (exit codes match)");
             }
             Err(_) => {
-                // GNU sort not available, just check our implementation runs
                 assert_eq!(
                     rust_result.exit_code, 0,
                     "Our sort should exit successfully"
@@ -103,7 +95,6 @@ mod tests {
                 println!("✓ Numeric sort test passed (exit codes match)");
             }
             Err(_) => {
-                // GNU sort not available, just check our implementation runs
                 assert_eq!(
                     rust_result.exit_code, 0,
                     "Our numeric sort should exit successfully"
@@ -130,7 +121,6 @@ mod tests {
                 println!("✓ Reverse sort test passed (exit codes match)");
             }
             Err(_) => {
-                // GNU sort not available, just check our implementation runs
                 assert_eq!(
                     rust_result.exit_code, 0,
                     "Our reverse sort should exit successfully"
@@ -157,7 +147,6 @@ mod tests {
                 println!("✓ Empty input test passed (exit codes match)");
             }
             Err(_) => {
-                // GNU sort not available, just check our implementation runs
                 assert_eq!(
                     rust_result.exit_code, 0,
                     "Should exit successfully with empty input"
@@ -169,14 +158,13 @@ mod tests {
 }
 
 fn main() {
-    println!("=== Integration Testing uufuzz Example ===");
-    println!("This demonstrates how to use uufuzz in regular test suites");
+    println!("=== Integration Testing sgfuzz Example ===");
+    println!("This demonstrates how to use sgfuzz in regular test suites");
     println!("to verify compatibility with reference implementations.\n");
 
     println!("Run 'cargo test --example integration_testing' to execute the tests.");
     println!("Or run individual tests below for demonstration:\n");
 
-    // Demonstrate the tests manually
     let test_cases = [
         (
             "Basic lexical sort",
@@ -229,3 +217,4 @@ fn main() {
     println!("=== Example completed ===");
     println!("In a real test suite, assertions would ensure compatibility.");
 }
+

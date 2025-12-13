@@ -3,7 +3,7 @@
 use std::ffi::OsString;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::translate;
 
 #[derive(Debug, Error)]
@@ -31,8 +31,9 @@ pub enum TacError {
     WriteError(std::io::Error),
 }
 
-impl UError for TacError {
+impl SGError for TacError {
     fn code(&self) -> i32 {
         1
     }
 }
+

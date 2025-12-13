@@ -3,31 +3,24 @@ use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write, stdin, stdout};
 use std::path::Path;
-use sgcore::error::{FromIo, UResult, USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, set_exit_code};
 use sgcore::{format_usage, show_error, translate};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 mod helper;
 
-// Settings store options used by nl to produce its output.
 pub struct Settings {
-    // The variables corresponding to the options -h, -b, and -f.
     header_numbering: NumberingStyle,
     body_numbering: NumberingStyle,
     footer_numbering: NumberingStyle,
-    // The variable corresponding to -d
     section_delimiter: OsString,
-    // The variables corresponding to the options -v, -i, -l, -w.
     starting_line_number: i64,
     line_increment: i64,
     join_blank_lines: u64,
-    number_width: usize, // Used with String::from_char, hence usize.
-    // The format of the number and the (default value for)
-    // renumbering each page.
+    number_width: usize,
     number_format: NumberFormat,
     renumber: bool,
-    // The string appended to each line number output.
     number_separator: OsString,
 }
 
@@ -63,12 +56,6 @@ impl Stats {
     }
 }
 
-// NumberingStyle stores which lines are to be numbered.
-// The possible options are:
-// 1. Number all lines
-// 2. Number only nonempty lines
-// 3. Don't number any lines at all
-// 4. Number all lines that match a basic regular expression.
 enum NumberingStyle {
     All,
     NonEmpty,
@@ -93,9 +80,6 @@ impl TryFrom<&str> for NumberingStyle {
     }
 }
 
-// NumberFormat specifies how line numbers are output within their allocated
-// space. They are justified to the left or right, in the latter case with
-// the option of having all unused space to its left turned into leading zeroes.
 #[derive(Default)]
 enum NumberFormat {
     Left,
@@ -182,18 +166,16 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
 
     let mut settings = Settings::default();
 
-    // Update the settings from the command line options, and terminate the
-    // program if some options could not successfully be parsed.
     let parse_errors = helper::parse_options(&mut settings, &matches);
     if !parse_errors.is_empty() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             format!(
                 "{}\n{}",
@@ -359,7 +341,7 @@ pub fn sg_app() -> Command {
                 .value_name("NUMBER")
                 .value_parser(clap::value_parser!(usize))
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -369,7 +351,7 @@ fn nl_collect<T: Read>(
     stats: &mut Stats,
     settings: &Settings,
     output_lines: &mut Vec<serde_json::Value>
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut current_numbering_style = &settings.body_numbering;
     let mut line = Vec::new();
 
@@ -426,21 +408,21 @@ fn nl_collect<T: Read>(
             };
 
             let line_text = String::from_utf8_lossy(&line).to_string();
-            
+
             if is_line_numbered {
                 let Some(line_number) = stats.line_number else {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("nl-error-line-number-overflow")
                     ));
                 };
-                
+
                 output_lines.push(json!({
                     "line": line_text,
                     "number": line_number,
                     "is_delimiter": false
                 }));
-                
+
                 match line_number.checked_add(settings.line_increment) {
                     Some(new_line_number) => stats.line_number = Some(new_line_number),
                     None => stats.line_number = None,
@@ -458,14 +440,13 @@ fn nl_collect<T: Read>(
 }
 
 /// `nl` implements the main functionality for an individual buffer.
-fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings) -> UResult<()> {
+fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings) -> SGResult<()> {
     let mut writer = BufWriter::new(stdout());
     let mut current_numbering_style = &settings.body_numbering;
     let mut line = Vec::new();
 
     loop {
         line.clear();
-        // reads up to and including b'\n'; returns 0 on EOF
         let n = reader
             .read_until(b'\n', &mut line)
             .map_err_context(|| translate!("nl-error-could-not-read-line"))?;
@@ -499,8 +480,6 @@ fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings
             writeln!(writer).map_err_context(|| translate!("nl-error-could-not-write"))?;
         } else {
             let is_line_numbered = match current_numbering_style {
-                // consider $join_blank_lines consecutive empty lines to be one logical line
-                // for numbering, and only number the last one
                 NumberingStyle::All
                     if line.is_empty()
                         && settings.join_blank_lines > 0
@@ -516,7 +495,7 @@ fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings
 
             if is_line_numbered {
                 let Some(line_number) = stats.line_number else {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("nl-error-line-number-overflow")
                     ));
@@ -531,10 +510,9 @@ fn nl<T: Read>(reader: &mut BufReader<T>, stats: &mut Stats, settings: &Settings
                     String::from_utf8_lossy(&line)
                 )
                 .map_err_context(|| translate!("nl-error-could-not-write"))?;
-                // update line number for the potential next line
                 match line_number.checked_add(settings.line_increment) {
                     Some(new_line_number) => stats.line_number = Some(new_line_number),
-                    None => stats.line_number = None, // overflow
+                    None => stats.line_number = None,
                 }
             } else {
                 let spaces = " ".repeat(settings.number_width + 1);
@@ -572,3 +550,4 @@ mod test {
         assert_eq!(NumberFormat::RightZero.format(-12, 4), "-012");
     }
 }
+

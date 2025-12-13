@@ -1,4 +1,5 @@
-//spell-checker:ignore TAOCP indegree
+
+
 use clap::{Arg, Command};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};
@@ -6,7 +7,7 @@ use std::ffi::OsString;
 use std::path::Path;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{UError, UResult};
+use sgcore::error::{SGError, SGResult};
 use sgcore::{format_usage, show};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
@@ -35,16 +36,15 @@ enum TsortError {
     Loop(String),
 }
 
-// Auxiliary struct, just for printing loop nodes via show! macro
 #[derive(Debug, Error)]
 #[error("{0}")]
 struct LoopNode<'a>(&'a str);
 
-impl UError for TsortError {}
-impl UError for LoopNode<'_> {}
+impl SGError for TsortError {}
+impl SGError for LoopNode<'_> {}
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
@@ -64,19 +64,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         std::fs::read_to_string(path)?
     };
 
-    // Create the directed graph from pairs of tokens in the input data.
     let mut g = Graph::new(input.to_string_lossy().to_string());
-    // Input is considered to be in the format
-    // From1 To1 From2 To2 ...
-    // with tokens separated by whitespaces
     let mut edge_tokens = data.split_whitespace();
-    // Note: this is equivalent to iterating over edge_tokens.chunks(2)
-    // but chunks() exists only for slices and would require unnecessary Vec allocation.
-    // Itertools::chunks() is not used due to unnecessary overhead for internal RefCells
     loop {
-        // Try take next pair of tokens
         let Some(from) = edge_tokens.next() else {
-            // no more tokens -> end of input. Graph constructed
             break;
         };
         let Some(to) = edge_tokens.next() else {
@@ -103,7 +94,7 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
                 .value_hint(clap::ValueHint::FilePath)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -117,8 +108,6 @@ where
     })
 }
 
-// We use String as a representation of node here
-// but using integer may improve performance.
 #[derive(Default)]
 struct Node<'input> {
     successor_names: Vec<&'input str>,
@@ -167,9 +156,7 @@ impl<'input> Graph<'input> {
     /// Implementation of algorithm T from TAOCP (Don. Knuth), vol. 1.
     fn run_tsort(&mut self, opts: StardustOutputOptions) {
         let mut sorted_nodes = Vec::new();
-        
-        // First, we find nodes that have no prerequisites (independent nodes).
-        // If no such node exists, then there is a cycle.
+
         let mut independent_nodes_queue: VecDeque<&'input str> = self
             .nodes
             .iter()
@@ -182,35 +169,28 @@ impl<'input> Graph<'input> {
             })
             .collect();
 
-        // To make sure the resulting ordering is deterministic we
-        // need to order independent nodes.
-        //
-        // FIXME: this doesn't comply entirely with the GNU coreutils
-        // implementation.
         independent_nodes_queue.make_contiguous().sort_unstable();
 
         while !self.nodes.is_empty() {
-            // Get the next node (breaking any cycles necessary to do so).
             let v = self.find_next_node(&mut independent_nodes_queue);
-            
+
             if opts.stardust_output {
                 sorted_nodes.push(v.to_string());
             } else {
                 println!("{v}");
             }
-            
+
             if let Some(node_to_process) = self.nodes.remove(v) {
                 for successor_name in node_to_process.successor_names {
                     let successor_node = self.nodes.get_mut(successor_name).unwrap();
                     successor_node.predecessor_count -= 1;
                     if successor_node.predecessor_count == 0 {
-                        // If we find nodes without any other prerequisites, we add them to the queue.
                         independent_nodes_queue.push_back(successor_name);
                     }
                 }
             }
         }
-        
+
         if opts.stardust_output {
             let output = json!({
                 "sorted": sorted_nodes,
@@ -225,21 +205,7 @@ impl<'input> Graph<'input> {
         self.nodes.get(name).map(|data| data.predecessor_count)
     }
 
-    // Pre-condition: self.nodes is non-empty.
     fn find_next_node(&mut self, frontier: &mut VecDeque<&'input str>) -> &'input str {
-        // If there are no nodes of in-degree zero but there are still
-        // un-visited nodes in the graph, then there must be a cycle.
-        // We need to find the cycle, display it, and then break the
-        // cycle.
-        //
-        // A cycle is guaranteed to be of length at least two. We break
-        // the cycle by deleting an arbitrary edge (the first). That is
-        // not necessarily the optimal thing, but it should be enough to
-        // continue making progress in the graph traversal.
-        //
-        // It is possible that deleting the edge does not actually
-        // result in the target node having in-degree zero, so we repeat
-        // the process until such a node appears.
         loop {
             match frontier.pop_front() {
                 None => self.find_and_break_cycle(frontier),
@@ -300,17 +266,14 @@ impl<'input> Graph<'input> {
 
         while let Some((node, pending_successors)) = stack.pop() {
             let Some((&next_node, pending)) = pending_successors.split_first() else {
-                // no more pending successors in the list -> close the node
                 visited.insert(node, VisitedState::Closed);
                 continue;
             };
 
-            // schedule processing for the pending part of successors for this node
             stack.push((node, pending));
 
             match visited.entry(next_node) {
                 Entry::Vacant(v) => {
-                    // It's a first time we enter this node
                     v.insert(VisitedState::Opened);
                     stack.push((
                         next_node,
@@ -321,11 +284,6 @@ impl<'input> Graph<'input> {
                 }
                 Entry::Occupied(o) => {
                     if *o.get() == VisitedState::Opened {
-                        // we are entering the same opened node again -> loop found
-                        // stack contains it
-                        //
-                        // But part of the stack may not be belonging to this loop
-                        // push found node to the stack to be able to trace the beginning of the loop
                         stack.push((next_node, &[]));
                         return true;
                     }
@@ -336,3 +294,4 @@ impl<'input> Graph<'input> {
         false
     }
 }
+

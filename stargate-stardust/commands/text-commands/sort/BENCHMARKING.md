@@ -34,8 +34,8 @@ Run `cargo build --release` before benchmarking after you make a change!
   ```
   hyperfine --warmup 3 \
     '/tmp/gnu-sort -n /tmp/shuffled_numbers.txt'
-    '/tmp/uu_before sort -n /tmp/shuffled_numbers.txt'
-    '/tmp/uu_after sort -n /tmp/shuffled_numbers.txt'
+    '/tmp/sg_before sort -n /tmp/shuffled_numbers.txt'
+    '/tmp/sg_after sort -n /tmp/shuffled_numbers.txt'
   ```
 
 ## Sorting numbers with -g

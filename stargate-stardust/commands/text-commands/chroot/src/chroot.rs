@@ -1,4 +1,5 @@
-// spell-checker:ignore (ToDO) NEWROOT Userspec pstatus chdir
+
+
 mod error;
 
 use crate::error::ChrootError;
@@ -9,7 +10,7 @@ use std::os::unix::prelude::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::process;
 use sgcore::entries::{Locate, Passwd, grp2gid, usr2uid};
-use sgcore::error::{UResult, UUsageError, set_exit_code};
+use sgcore::error::{SGResult, SGUsageError, set_exit_code};
 use sgcore::fs::{MissingHandling, ResolveMode, canonicalize};
 use sgcore::libc::{self, chroot, setgid, setgroups, setuid};
 use sgcore::{format_usage, show};
@@ -49,17 +50,11 @@ struct Options {
 /// error is returned.
 fn parse_userspec(spec: &str) -> UserSpec {
     match spec.split_once(':') {
-        // ""
         None if spec.is_empty() => UserSpec::NeitherGroupNorUser,
-        // "usr"
         None => UserSpec::UserOnly(spec.to_string()),
-        // ":"
         Some(("", "")) => UserSpec::NeitherGroupNorUser,
-        // ":grp"
         Some(("", grp)) => UserSpec::GroupOnly(grp.to_string()),
-        // "usr:"
         Some((usr, "")) => UserSpec::UserOnly(usr.to_string()),
-        // "usr:grp"
         Some((usr, grp)) => UserSpec::UserAndGroup(usr.to_string(), grp.to_string()),
     }
 }
@@ -70,16 +65,11 @@ fn parse_group_list(list_str: &str) -> Result<Vec<String>, ChrootError> {
     if split.len() == 1 {
         let name = split[0].trim();
         if name.is_empty() {
-            // --groups=" "
-            // chroot: invalid group ' '
             Err(ChrootError::InvalidGroup(name.to_string()))
         } else {
-            // --groups="blah"
             Ok(vec![name.to_string()])
         }
     } else if split.iter().all(|s| s.is_empty()) {
-        // --groups=","
-        // chroot: invalid group list ','
         Err(ChrootError::InvalidGroupList(list_str.to_string()))
     } else {
         let mut result = vec![];
@@ -88,21 +78,15 @@ fn parse_group_list(list_str: &str) -> Result<Vec<String>, ChrootError> {
             let trimmed_name = name.trim();
             if trimmed_name.is_empty() {
                 if name.is_empty() {
-                    // --groups=","
                     continue;
                 }
 
-                // --groups=", "
-                // chroot: invalid group ' '
                 show!(ChrootError::InvalidGroup(name.to_string()));
                 err = true;
             } else {
-                // TODO Figure out a better condition here.
                 if trimmed_name.starts_with(char::is_numeric)
                     && trimmed_name.ends_with(|c: char| !c.is_numeric())
                 {
-                    // --groups="0trail"
-                    // chroot: invalid group '0trail'
                     show!(ChrootError::InvalidGroup(name.to_string()));
                     err = true;
                 } else {
@@ -120,7 +104,7 @@ fn parse_group_list(list_str: &str) -> Result<Vec<String>, ChrootError> {
 
 impl Options {
     /// Parse parameters from the command-line arguments.
-    fn from(matches: &clap::ArgMatches) -> UResult<Self> {
+    fn from(matches: &clap::ArgMatches) -> SGResult<Self> {
         let newroot = match matches.get_one::<String>(options::NEWROOT) {
             Some(v) => Path::new(v).to_path_buf(),
             None => return Err(ChrootError::MissingNewRoot.into()),
@@ -149,7 +133,7 @@ impl Options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec", "id", "chown"])?;
@@ -160,7 +144,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let options = Options::from(&matches)?;
 
-    // We are resolving the path in case it is a symlink or /. or /../
     if options.skip_chdir
         && canonicalize(
             &options.newroot,
@@ -171,7 +154,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .to_str()
             != Some("/")
     {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             125,
             translate!("chroot-error-skip-chdir-only-permitted")
         ));
@@ -186,8 +169,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         None => vec![],
     };
 
-    // TODO: refactor the args and command matching
-    // See: https://github.com/uutils/coreutils/pull/2365#discussion_r647849967
     let command: Vec<&str> = match commands.len() {
         0 => {
             let shell: &str = match user_shell {
@@ -203,7 +184,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let chroot_command = command[0];
     let chroot_args = &command[1..];
 
-    // NOTE: Tests can only trigger code beyond this point if they're invoked with root permissions
     set_context(&options)?;
 
     let pstatus = match process::Command::new(chroot_command)
@@ -395,7 +375,7 @@ fn set_supplemental_gids_with_strategy(
 }
 
 /// Change the root, set the user ID, and set the group IDs for this process.
-fn set_context(options: &Options) -> UResult<()> {
+fn set_context(options: &Options) -> SGResult<()> {
     enter_chroot(&options.newroot, options.skip_chdir)?;
     match &options.userspec {
         None | Some(UserSpec::NeitherGroupNorUser) => {
@@ -428,7 +408,7 @@ fn set_context(options: &Options) -> UResult<()> {
     Ok(())
 }
 
-fn enter_chroot(root: &Path, skip_chdir: bool) -> UResult<()> {
+fn enter_chroot(root: &Path, skip_chdir: bool) -> SGResult<()> {
     let err = unsafe {
         chroot(
             CString::new(root.as_os_str().as_bytes().to_vec())
@@ -448,3 +428,4 @@ fn enter_chroot(root: &Path, skip_chdir: bool) -> UResult<()> {
         Err(ChrootError::CannotEnter(format!("{}", root.display()), Error::last_os_error()).into())
     }
 }
+

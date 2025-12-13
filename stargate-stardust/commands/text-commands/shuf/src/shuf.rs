@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) cmdline evec nonrepeating seps shufable rvec fdata
+
 
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, Command};
@@ -13,7 +13,7 @@ use std::ops::RangeInclusive;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use sgcore::display::{OsWrite, Quotable};
-use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, SGUsageError};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -45,7 +45,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -65,7 +65,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             .unwrap_or_default();
         let file = operands.next().cloned().unwrap_or("-".into());
         if let Some(second_file) = operands.next() {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 1,
                 translate!("shuf-error-unexpected-argument", "arg" => second_file.quote())
             ));
@@ -74,10 +74,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let options = Options {
-        // GNU shuf takes the lowest value passed, so we imitate that.
-        // It's probably a bug or an implementation artifact though.
-        // Busybox takes the final value which is more typical: later
-        // options override earlier options.
         head_count: matches
             .get_many::<usize>(options::HEAD_COUNT)
             .unwrap_or_default()
@@ -105,7 +101,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     });
 
     if options.head_count == 0 {
-        // In this case we do want to touch the output file but we can quit immediately.
         return Ok(());
     }
 
@@ -212,7 +207,7 @@ pub fn sg_app() -> Command {
         )
 }
 
-fn read_input_file(filename: &Path) -> UResult<Vec<u8>> {
+fn read_input_file(filename: &Path) -> SGResult<Vec<u8>> {
     if filename.as_os_str() == "-" {
         let mut data = Vec::new();
         stdin()
@@ -225,10 +220,6 @@ fn read_input_file(filename: &Path) -> UResult<Vec<u8>> {
 }
 
 fn split_seps(data: &[u8], sep: u8) -> Vec<&[u8]> {
-    // A single trailing separator is ignored.
-    // If data is empty (and does not even contain a single 'sep'
-    // to indicate the presence of an empty element), then behave
-    // as if the input contained no elements at all.
     let mut elements: Vec<&[u8]> = data.split(|&b| b == sep).collect();
     if elements.last().is_some_and(|e| e.is_empty()) {
         elements.pop();
@@ -255,9 +246,6 @@ impl<'a> Shufable for Vec<&'a [u8]> {
     }
 
     fn choose(&self, rng: &mut WrappedRng) -> Self::Item {
-        // Note: "copied()" only copies the reference, not the entire [u8].
-        // Returns None if the slice is empty. We checked this before, so
-        // this is safe.
         (**self).choose(rng).unwrap()
     }
 
@@ -266,7 +254,6 @@ impl<'a> Shufable for Vec<&'a [u8]> {
         rng: &'b mut WrappedRng,
         amount: usize
     ) -> impl Iterator<Item = Self::Item> {
-        // Note: "copied()" only copies the reference, not the entire [u8].
         (**self).partial_shuffle(rng, amount).0.iter().copied()
     }
 }
@@ -351,9 +338,6 @@ impl<'a> NonrepeatingIterator<'a> {
                         break guess;
                     }
                 };
-                // Once a significant fraction of the interval has already been enumerated,
-                // the number of attempts to find a number that hasn't been chosen yet increases.
-                // Therefore, we need to switch at some point from "set of already returned values" to "list of remaining values".
                 let range_size = (self.range.end() - self.range.start()).saturating_add(1);
                 if number_set_should_list_remaining(already_listed.len(), range_size) {
                     let mut remaining = self
@@ -370,7 +354,6 @@ impl<'a> NonrepeatingIterator<'a> {
             }
             NumberSet::Remaining(remaining_numbers) => {
                 debug_assert!(!remaining_numbers.is_empty());
-                // We only enter produce() when there is at least one actual element remaining, so popping must always return an element.
                 remaining_numbers.pop().unwrap()
             }
         }
@@ -389,14 +372,7 @@ impl Iterator for NonrepeatingIterator<'_> {
     }
 }
 
-// This could be a method, but it is much easier to test as a stand-alone function.
 fn number_set_should_list_remaining(listed_count: usize, range_size: usize) -> bool {
-    // Arbitrarily determine the switchover point to be around 25%. This is because:
-    // - HashSet has a large space overhead for the hash table load factor.
-    // - This means that somewhere between 25-40%, the memory required for a "positive" HashSet and a "negative" Vec should be the same.
-    // - HashSet has a small but non-negligible overhead for each lookup, so we have a slight preference for Vec anyway.
-    // - At 25%, on average 1.33 attempts are needed to find a number that hasn't been taken yet.
-    // - Finally, "24%" is computationally the simplest:
     listed_count >= range_size / 4
 }
 
@@ -427,12 +403,12 @@ fn shuf_exec(
     opts: &Options,
     rng: &mut WrappedRng,
     output: &mut BufWriter<Box<dyn OsWrite>>
-) -> UResult<()> {
+) -> SGResult<()> {
     let ctx = || translate!("shuf-error-write-failed");
 
     if opts.repeat {
         if input.is_empty() {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("shuf-error-no-lines-to-repeat")
             ));
@@ -522,7 +498,6 @@ mod test_split_seps {
 }
 
 #[cfg(test)]
-// Since the computed value is a bool, it is more readable to write the expected value out:
 #[allow(clippy::bool_assert_comparison)]
 mod test_number_set_decision {
     use super::number_set_should_list_remaining;
@@ -562,14 +537,11 @@ mod test_number_set_decision {
         assert_eq!(false, number_set_should_list_remaining(1, 10));
     }
 
-    // Don't want to test close to the border, in case we decide to change the threshold.
-    // However, at 50% coverage, we absolutely should switch:
     #[test]
     fn test_switch_half() {
         assert_eq!(true, number_set_should_list_remaining(1234, 2468));
     }
 
-    // Ensure that the decision is monotonous:
     #[test]
     fn test_switch_late1() {
         assert_eq!(true, number_set_should_list_remaining(12340, 12345));
@@ -580,7 +552,6 @@ mod test_number_set_decision {
         assert_eq!(true, number_set_should_list_remaining(12344, 12345));
     }
 
-    // Ensure that we are overflow-free:
     #[test]
     fn test_no_crash_exceed_max_size1() {
         assert_eq!(false, number_set_should_list_remaining(12345, usize::MAX));
@@ -602,3 +573,4 @@ mod test_number_set_decision {
         );
     }
 }
+

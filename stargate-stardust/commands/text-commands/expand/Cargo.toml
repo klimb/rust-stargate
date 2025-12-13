@@ -1,6 +1,6 @@
 [package]
 name = "sg_expand"
-description = "expand ~ (uutils) convert input tabs to spaces"
+description = "expand ~ (stargate) convert input tabs to spaces"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

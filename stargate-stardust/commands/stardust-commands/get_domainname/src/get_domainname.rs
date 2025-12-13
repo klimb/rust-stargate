@@ -1,28 +1,22 @@
-// spell-checker:ignore hashset Addrs addrs
+
 
 use clap::{ArgMatches, Command};
 
 use sgcore::translate;
 
 use sgcore::{
-    error::{FromIo, UResult},
+    error::{FromIo, SGResult},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
-    // hostname https://datatracker.ietf.org/doc/html/rfc952
-    //    text string up to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
-    //    sign (-), and period (.)
-    // in FreeBSD the hostname is the unique name for a specific server, while the domain name
-    // provides a broader organizational context. Together, they form a
-    // Fully Qualified Domain Name (FQDN),
-    
+
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     let object_output = StardustOutputOptions::from_matches(&matches);
-    
+
     if object_output.stardust_output {
         print_domainname_json(&matches, object_output)
     } else {
@@ -36,11 +30,11 @@ pub fn sg_app() -> Command {
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("get_domainname-about"))
         .override_usage(format_usage(&translate!("get_domainname-usage")));
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-fn print_domainname() -> UResult<()> {
+fn print_domainname() -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get domain name".to_owned())?
         .to_string_lossy()
@@ -48,7 +42,7 @@ fn print_domainname() -> UResult<()> {
 
     let mut it = fqdn.char_indices().filter(|&ci| ci.1 == '.');
     if let Some(dot) = it.next() {
-        let domain_name = &fqdn[dot.0 + 1..]; // from dot to end
+        let domain_name = &fqdn[dot.0 + 1..];
         println!("{}", domain_name);
     }
 
@@ -57,7 +51,7 @@ fn print_domainname() -> UResult<()> {
     Ok(())
 }
 
-fn print_domainname_json(_matches: &ArgMatches, object_output: StardustOutputOptions) -> UResult<()> {
+fn print_domainname_json(_matches: &ArgMatches, object_output: StardustOutputOptions) -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get domain name".to_owned())?
         .to_string_lossy()
@@ -79,3 +73,4 @@ fn print_domainname_json(_matches: &ArgMatches, object_output: StardustOutputOpt
     stardust_output::output(object_output, output, || Ok(()))?;
     Ok(())
 }
+

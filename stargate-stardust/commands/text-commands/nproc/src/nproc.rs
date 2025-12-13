@@ -1,9 +1,9 @@
-// spell-checker:ignore (ToDO) NPROCESSORS nprocs numstr sysconf
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::{env, thread};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
@@ -19,13 +19,13 @@ static OPT_ALL: &str = "all";
 static OPT_IGNORE: &str = "ignore";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let object_output = StardustOutputOptions::from_matches(&matches);
 
     let cores = compute_cores(&matches)?;
-    
+
     if object_output.stardust_output {
         let output = serde_json::json!({
             "nproc": cores,
@@ -38,17 +38,17 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     } else {
         println!("{cores}");
     }
-    
+
     Ok(())
 }
 
-fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
+fn compute_cores(matches: &ArgMatches) -> SGResult<usize> {
 
     let ignore = match matches.get_one::<String>(OPT_IGNORE) {
         Some(numstr) => match numstr.trim().parse::<usize>() {
             Ok(num) => num,
             Err(e) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("nproc-error-invalid-number", "value" => numstr.quote(), "error" => e)
                 ));
@@ -58,29 +58,18 @@ fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
     };
 
     let limit = match env::var("OMP_THREAD_LIMIT") {
-        // Uses the OpenMP variable to limit the number of threads
-        // If the parsing fails, returns the max size (so, no impact)
-        // If OMP_THREAD_LIMIT=0, rejects the value
         Ok(threads) => match threads.parse() {
             Ok(0) | Err(_) => usize::MAX,
             Ok(n) => n,
         },
-        // the variable 'OMP_THREAD_LIMIT' doesn't exist
-        // fallback to the max
         Err(_) => usize::MAX,
     };
 
     let mut cores = if matches.get_flag(OPT_ALL) {
         num_cpus_all()
     } else {
-        // OMP_NUM_THREADS doesn't have an impact on --all
         match env::var("OMP_NUM_THREADS") {
-            // Uses the OpenMP variable to force the number of threads
-            // If the parsing fails, returns the number of CPU
             Ok(threads) => {
-                // In some cases, OMP_NUM_THREADS can be "x,y,z"
-                // In this case, only take the first one (like GNU)
-                // If OMP_NUM_THREADS=0, rejects the value
                 match threads.split_terminator(',').next() {
                     None => available_parallelism(),
                     Some(s) => match s.parse() {
@@ -89,8 +78,6 @@ fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
                     },
                 }
             }
-            // the variable 'OMP_NUM_THREADS' doesn't exist
-            // fallback to the regular CPU detection
             Err(_) => available_parallelism(),
         }
     };
@@ -101,7 +88,7 @@ fn compute_cores(matches: &ArgMatches) -> UResult<usize> {
     } else {
         cores -= ignore;
     }
-    
+
     Ok(cores)
 }
 
@@ -124,7 +111,7 @@ pub fn sg_app() -> Command {
                 .value_name("N")
                 .help(translate!("nproc-help-ignore"))
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -137,8 +124,6 @@ pub fn sg_app() -> Command {
 fn num_cpus_all() -> usize {
     let nprocs = unsafe { libc::sysconf(_SC_NPROCESSORS_CONF) };
     if nprocs == 1 {
-        // In some situation, /proc and /sys are not mounted, and sysconf returns 1.
-        // However, we want to guarantee that `nproc --all` >= `nproc`.
         available_parallelism()
     } else if nprocs > 0 {
         nprocs as usize
@@ -147,7 +132,6 @@ fn num_cpus_all() -> usize {
     }
 }
 
-// Other platforms (e.g., windows), available_parallelism() directly.
 #[cfg(not(any(
     target_os = "linux",
     target_vendor = "apple",
@@ -166,3 +150,4 @@ fn available_parallelism() -> usize {
         Err(_) => 1,
     }
 }
+

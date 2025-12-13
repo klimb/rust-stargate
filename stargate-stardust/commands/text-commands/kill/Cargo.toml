@@ -1,6 +1,6 @@
 [package]
 name = "sg_kill"
-description = "kill ~ (uutils) send a signal to a process"
+description = "kill ~ (stargate) send a signal to a process"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

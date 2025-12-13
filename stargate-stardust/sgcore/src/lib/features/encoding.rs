@@ -1,14 +1,14 @@
-// spell-checker:ignore (encodings) lsbf msbf
-// spell-checker:ignore unpadded
-// spell-checker:ignore ABCDEFGHJKLMNPQRSTUVWXY Zabcdefghijkmnopqrstuvwxyz
 
-use crate::error::{UResult, USimpleError};
+
+
+
+use crate::error::{SGResult, SGSimpleError};
 use base64_simd;
 use data_encoding::Encoding;
 use data_encoding_macro::new_encoding;
 use std::collections::VecDeque;
 
-// SIMD base64 wrapper
+
 pub struct Base64SimdWrapper {
     pub alphabet: &'static [u8],
     pub use_padding: bool,
@@ -61,15 +61,15 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
         self.alphabet
     }
 
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()> {
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()> {
         let original_len = output.len();
 
         let decode_result = if self.use_padding {
-            // GNU coreutils keeps decoding even when '=' appears before the true end
-            // of the stream (e.g. concatenated padded chunks). Mirror that logic
-            // by splitting at each '='-containing quantum, decoding those 4-byte
-            // groups with the padded variant, then letting the remainder fall back
-            // to whichever alphabet fits.
+
+
+
+
+
             let mut start = 0usize;
             while start < input.len() {
                 let remaining = &input[start..];
@@ -83,18 +83,18 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
                     let segment_len = blocks * 4;
 
                     if segment_len > remaining.len() {
-                        return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                        return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
                     }
 
                     if Self::decode_with_standard(&remaining[..segment_len], output).is_err() {
-                        return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                        return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
                     }
 
                     start += segment_len;
                 } else {
-                    // If there are no more '=' bytes the tail might still be padded
-                    // (len % 4 == 0) or purposely unpadded (GNU --ignore-garbage or
-                    // concatenated streams), so select the matching alphabet.
+
+
+
                     let decoder = if remaining.len() % 4 == 0 {
                         Self::decode_with_standard
                     } else {
@@ -102,7 +102,7 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
                     };
 
                     if decoder(remaining, output).is_err() {
-                        return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                        return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
                     }
 
                     break;
@@ -112,7 +112,7 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
             Ok(())
         } else {
             Self::decode_with_no_pad(input, output)
-                .map_err(|_| USimpleError::new(1, "error: invalid input".to_owned()))
+                .map_err(|_| SGSimpleError::new(1, "error: invalid input".to_owned()))
         };
 
         if let Err(err) = decode_result {
@@ -123,7 +123,7 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
         }
     }
 
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()> {
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()> {
         let encoded = if self.use_padding {
             base64_simd::STANDARD.encode_to_string(input)
         } else {
@@ -144,7 +144,7 @@ impl SupportsFastDecodeAndEncode for Base64SimdWrapper {
     }
 }
 
-// Re-export for the faster decoding/encoding logic
+
 pub mod for_base_common {
     pub use data_encoding::*;
 }
@@ -218,9 +218,9 @@ pub trait SupportsFastDecodeAndEncode {
     /// Returns the list of characters used by this encoding
     fn alphabet(&self) -> &'static [u8];
 
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()>;
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()>;
 
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()>;
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()>;
 
     /// Inputs with a length that is a multiple of this number do not have padding when encoded. For instance:
     ///
@@ -262,37 +262,37 @@ pub trait SupportsFastDecodeAndEncode {
 
 impl SupportsFastDecodeAndEncode for Base58Wrapper {
     fn alphabet(&self) -> &'static [u8] {
-        // Base58 alphabet
+
         b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     }
 
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()> {
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()> {
         if input.is_empty() {
             return Ok(());
         }
 
-        // Count leading zeros (will become leading 1s in base58)
+
         let leading_ones = input.iter().take_while(|&&b| b == b'1').count();
 
-        // Skip leading 1s for conversion
+
         let input_trimmed = &input[leading_ones..];
         if input_trimmed.is_empty() {
             output.resize(output.len() + leading_ones, 0);
             return Ok(());
         }
 
-        // Convert base58 to big integer
+
         let mut num: Vec<u32> = vec![0];
         let alphabet = self.alphabet();
 
         for &byte in input_trimmed {
-            // Find position in alphabet
+
             let digit = alphabet
                 .iter()
                 .position(|&b| b == byte)
-                .ok_or_else(|| USimpleError::new(1, "error: invalid input".to_owned()))?;
+                .ok_or_else(|| SGSimpleError::new(1, "error: invalid input".to_owned()))?;
 
-            // Multiply by 58 and add digit
+
             let mut carry = digit as u32;
             for n in &mut num {
                 let tmp = (*n as u64) * 58 + carry as u64;
@@ -304,19 +304,19 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
             }
         }
 
-        // Convert to bytes (little endian, then reverse)
+
         let mut result = Vec::new();
         for &n in &num {
             result.extend_from_slice(&n.to_le_bytes());
         }
 
-        // Remove trailing zeros and reverse to get big endian
+
         while result.last() == Some(&0) && result.len() > 1 {
             result.pop();
         }
         result.reverse();
 
-        // Add leading zeros for leading 1s in input
+
         let mut final_result = vec![0; leading_ones];
         final_result.extend_from_slice(&result);
 
@@ -324,15 +324,15 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
         Ok(())
     }
 
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()> {
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()> {
         if input.is_empty() {
             return Ok(());
         }
 
-        // Count leading zeros
+
         let leading_zeros = input.iter().take_while(|&&b| b == 0).count();
 
-        // Skip leading zeros
+
         let input_trimmed = &input[leading_zeros..];
         if input_trimmed.is_empty() {
             for _ in 0..leading_zeros {
@@ -341,7 +341,7 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
             return Ok(());
         }
 
-        // Convert bytes to big integer (Vec<u32> in little-endian format)
+
         let mut num = Vec::with_capacity(input_trimmed.len().div_ceil(4) + 1);
         for &byte in input_trimmed {
             let mut carry = byte as u64;
@@ -355,13 +355,13 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
             }
         }
 
-        // Convert to base58
+
         let mut result = Vec::with_capacity((input_trimmed.len() * 138 / 100) + 1);
         let alphabet = self.alphabet();
 
-        // Optimized check: stop when all elements are zero
+
         while !num.is_empty() {
-            // Check if we're done (all zeros)
+
             let mut all_zero = true;
             let mut carry = 0u64;
 
@@ -380,7 +380,7 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
                 break;
             }
 
-            // Trim trailing zeros less frequently
+
             if num.len() > 1 && result.len() % 8 == 0 {
                 while num.last() == Some(&0) && num.len() > 1 {
                     num.pop();
@@ -388,12 +388,12 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
             }
         }
 
-        // Add leading 1s for leading zeros in input
+
         for _ in 0..leading_zeros {
             output.push_back(b'1');
         }
 
-        // Add result (reversed because we built it backwards)
+
         for &byte in result.iter().rev() {
             output.push_back(byte);
         }
@@ -402,32 +402,32 @@ impl SupportsFastDecodeAndEncode for Base58Wrapper {
     }
 
     fn unpadded_multiple(&self) -> usize {
-        // Base58 must encode the entire input as one big integer, not in chunks
-        // Use a very large value to effectively disable chunking, but avoid overflow
-        // when multiplied by ENCODE_IN_CHUNKS_OF_SIZE_MULTIPLE (1024) in base_common
+
+
+
         usize::MAX / 2048
     }
 
     fn valid_decoding_multiple(&self) -> usize {
-        1 // Any length is valid for Base58
+        1
     }
 }
 
 impl SupportsFastDecodeAndEncode for Z85Wrapper {
     fn alphabet(&self) -> &'static [u8] {
-        // Z85 alphabet
+
         b"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#"
     }
 
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()> {
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()> {
         if input.first() == Some(&b'#') {
-            return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+            return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
         }
 
         let decode_result = match z85::decode(input) {
             Ok(ve) => ve,
             Err(_de) => {
-                return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
             }
         };
 
@@ -440,11 +440,11 @@ impl SupportsFastDecodeAndEncode for Z85Wrapper {
         5
     }
 
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()> {
-        // According to the spec we should not accept inputs whose len is not a multiple of 4.
-        // However, the z85 crate implements a padded encoding and accepts such inputs. We have to manually check for them.
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()> {
+
+
         if input.len() % 4 != 0 {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 "error: invalid input (length must be multiple of 4 characters)".to_owned()
             ));
@@ -467,12 +467,12 @@ impl SupportsFastDecodeAndEncode for EncodingWrapper {
         self.alphabet
     }
 
-    // Adapted from `decode` in the "data-encoding" crate
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()> {
+
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()> {
         let decode_len_result = match self.encoding.decode_len(input.len()) {
             Ok(us) => us,
             Err(_de) => {
-                return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
             }
         };
 
@@ -482,13 +482,13 @@ impl SupportsFastDecodeAndEncode for EncodingWrapper {
 
         match self.encoding.decode_mut(input, &mut (output[output_len..])) {
             Ok(us) => {
-                // See:
-                // https://docs.rs/data-encoding/latest/data_encoding/struct.Encoding.html#method.decode_mut
-                // "Returns the length of the decoded output. This length may be smaller than the output length if the input contained padding or ignored characters. The output bytes after the returned length are not initialized and should not be read."
+
+
+
                 output.truncate(output_len + us);
             }
             Err(_de) => {
-                return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
             }
         }
 
@@ -499,8 +499,8 @@ impl SupportsFastDecodeAndEncode for EncodingWrapper {
         self.valid_decoding_multiple
     }
 
-    // Adapted from `encode_append` in the "data-encoding" crate
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()> {
+
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()> {
         let output_len = output.len();
 
         output.resize(output_len + self.encoding.encode_len(input.len()), 0);
@@ -545,11 +545,11 @@ impl SupportsFastDecodeAndEncode for Base32Wrapper {
         self.inner.alphabet()
     }
 
-    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> UResult<()> {
+    fn decode_into_vec(&self, input: &[u8], output: &mut Vec<u8>) -> SGResult<()> {
         self.inner.decode_into_vec(input, output)
     }
 
-    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> UResult<()> {
+    fn encode_to_vec_deque(&self, input: &[u8], output: &mut VecDeque<u8>) -> SGResult<()> {
         self.inner.encode_to_vec_deque(input, output)
     }
 
@@ -594,3 +594,4 @@ impl SupportsFastDecodeAndEncode for Base32Wrapper {
         true
     }
 }
+

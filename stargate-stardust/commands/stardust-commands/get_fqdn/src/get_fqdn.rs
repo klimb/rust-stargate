@@ -1,11 +1,11 @@
-// spell-checker:ignore hashset Addrs addrs
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use serde_json::json;
 
 use sgcore::translate;
 use sgcore::{
-    error::{CommandResult, FromIo, UResult, USimpleError},
+    error::{CommandResult, FromIo, SGResult, SGSimpleError},
     format_usage,
 };
 use sgcore::error::CommandResult::{Success, Error};
@@ -13,7 +13,7 @@ use sgcore::error::CommandResult::{Success, Error};
 static OBJ_FLAG: &str = "obj";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "dns"])?;
 
@@ -24,7 +24,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 }
 
-// `CommandResult` is now available in `sgcore::error` for shared use across all commands.
 #[sgcore::to_obj]
 pub fn to_obj(args: impl sgcore::Args) -> CommandResult<()> {
     let matches = match sgcore::clap_localization::handle_clap_result(sg_app(), args) {
@@ -50,7 +49,7 @@ pub fn sg_app() -> Command {
         )
 }
 
-fn produce(_matches: &ArgMatches) -> UResult<()> {
+fn produce(_matches: &ArgMatches) -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get FQDN".to_owned())?
         .to_string_lossy()
@@ -61,13 +60,12 @@ fn produce(_matches: &ArgMatches) -> UResult<()> {
     Ok(())
 }
 
-fn produce_json(_matches: &ArgMatches) -> UResult<()> {
+fn produce_json(_matches: &ArgMatches) -> SGResult<()> {
     let fqdn = hostname::get()
         .map_err_context(|| "failed to get FQDN".to_owned())?
         .to_string_lossy()
         .into_owned();
 
-    // Split FQDN into hostname and domain
     let parts: Vec<&str> = fqdn.splitn(2, '.').collect();
     let hostname = parts.first().map(|s| s.to_string()).unwrap_or_default();
     let domain = if parts.len() > 1 {
@@ -92,10 +90,11 @@ fn produce_json(_matches: &ArgMatches) -> UResult<()> {
 fn produce_object(_matches: &ArgMatches) -> CommandResult<()> {
     let fqdn = match hostname::get() {
         Ok(s) => s.to_string_lossy().into_owned(),
-        Err(e) => return CommandResult::Error(USimpleError::new(1, format!("failed to get FQDN: {}", e))),
+        Err(e) => return CommandResult::Error(SGSimpleError::new(1, format!("failed to get FQDN: {}", e))),
     };
 
     println!("{}", fqdn);
 
     CommandResult::Success(())
 }
+

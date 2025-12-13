@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) strtime
+
 
 //! Set of functions related to time handling
 
@@ -8,16 +8,16 @@ use jiff::fmt::strtime::{BrokenDownTime, Config};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::error::{UResult, USimpleError};
+use crate::error::{SGResult, SGSimpleError};
 use crate::show_error;
 
 /// Format the given date according to this time format style.
-fn format_zoned<W: Write>(out: &mut W, zoned: Zoned, fmt: &str) -> UResult<()> {
+fn format_zoned<W: Write>(out: &mut W, zoned: Zoned, fmt: &str) -> SGResult<()> {
     let tm = BrokenDownTime::from(&zoned);
     let mut out = StdIoWrite(out);
     let config = Config::new().lenient(true);
     tm.format_with_config(&config, fmt, &mut out)
-        .map_err(|x| USimpleError::new(1, x.to_string()))
+        .map_err(|x| SGSimpleError::new(1, x.to_string()))
 }
 
 /// Convert a SystemTime` to a number of seconds since UNIX_EPOCH
@@ -39,9 +39,9 @@ pub mod format {
 
 /// Sets how `format_system_time` behaves if the time cannot be converted.
 pub enum FormatSystemTimeFallback {
-    Integer,      // Just print seconds since epoch (`ls`)
-    IntegerError, // The above, and print an error (`du``)
-    Float,        // Just print seconds+nanoseconds since epoch (`stat`)
+    Integer,
+    IntegerError,
+    Float,
 }
 
 /// Format a `SystemTime` according to given fmt, and append to vector out.
@@ -50,17 +50,11 @@ pub fn format_system_time<W: Write>(
     time: SystemTime,
     fmt: &str,
     mode: FormatSystemTimeFallback
-) -> UResult<()> {
+) -> SGResult<()> {
     let zoned: Result<Zoned, _> = time.try_into();
     match zoned {
         Ok(zoned) => format_zoned(out, zoned, fmt),
         Err(_) => {
-            // Assume that if we cannot build a Zoned element, the timestamp is
-            // out of reasonable range, just print it then.
-            // TODO: The range allowed by jiff is different from what GNU accepts,
-            // but it still far enough in the future/past to be unlikely to matter:
-            //  jiff: Year between -9999 to 9999 (UTC) [-377705023201..=253402207200]
-            //  GNU: Year fits in signed 32 bits (timezone dependent)
             let (mut secs, mut nsecs) = system_time_to_sec(time);
             match mode {
                 FormatSystemTimeFallback::Integer => out.write_all(secs.to_string().as_bytes())?,
@@ -87,7 +81,6 @@ mod tests {
     use crate::time::{FormatSystemTimeFallback, format_system_time};
     use std::time::{Duration, UNIX_EPOCH};
 
-    // Test epoch SystemTime get printed correctly at UTC0, with 2 simple formats.
     #[test]
     fn test_simple_system_time() {
         unsafe { std::env::set_var("TZ", "UTC0") };
@@ -117,7 +110,6 @@ mod tests {
         );
     }
 
-    // Test that very large (positive or negative) lead to just the timestamp being printed.
     #[test]
     fn test_large_system_time() {
         let time = UNIX_EPOCH + Duration::from_secs(67_768_036_191_763_200);
@@ -143,7 +135,6 @@ mod tests {
         assert_eq!(String::from_utf8(out).unwrap(), "-67768040922076800");
     }
 
-    // Test that very large (positive or negative) lead to just the timestamp being printed.
     #[test]
     fn test_large_system_time_float() {
         let time =
@@ -177,3 +168,4 @@ mod tests {
         );
     }
 }
+

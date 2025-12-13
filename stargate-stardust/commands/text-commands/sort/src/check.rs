@@ -14,19 +14,17 @@ use std::{
     sync::mpsc::{Receiver, SyncSender, sync_channel},
     thread,
 };
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 
 /// Check if the file at `path` is ordered.
 ///
 /// # Returns
 ///
 /// The code we should exit with.
-pub fn check(path: &OsStr, settings: &GlobalSettings) -> UResult<()> {
+pub fn check(path: &OsStr, settings: &GlobalSettings) -> SGResult<()> {
     let max_allowed_cmp = if settings.unique {
-        // If `unique` is enabled, the previous line must compare _less_ to the next one.
         Ordering::Less
     } else {
-        // Otherwise, the line previous line must compare _less or equal_ to the next one.
         Ordering::Equal
     };
     let file = open(path)?;
@@ -38,8 +36,6 @@ pub fn check(path: &OsStr, settings: &GlobalSettings) -> UResult<()> {
     });
     for _ in 0..2 {
         let _ = recycled_sender.send(RecycledChunk::new(if settings.buffer_size < 100 * 1024 {
-            // when the buffer size is smaller than 100KiB we choose it instead of the default.
-            // this improves testability.
             settings.buffer_size
         } else {
             100 * 1024
@@ -51,8 +47,6 @@ pub fn check(path: &OsStr, settings: &GlobalSettings) -> UResult<()> {
     for chunk in loaded_receiver {
         line_idx += 1;
         if let Some(prev_chunk) = prev_chunk.take() {
-            // Check if the first element of the new chunk is greater than the last
-            // element from the previous chunk
             let prev_last = prev_chunk.lines().last().unwrap();
             let new_first = chunk.lines().first().unwrap();
 
@@ -99,7 +93,7 @@ fn reader(
     receiver: &Receiver<RecycledChunk>,
     sender: &SyncSender<Chunk>,
     settings: &GlobalSettings
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut carry_over = vec![];
     for recycled_chunk in receiver {
         let should_continue = chunks::read(
@@ -118,3 +112,4 @@ fn reader(
     }
     Ok(())
 }
+

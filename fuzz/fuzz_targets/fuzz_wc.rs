@@ -1,4 +1,4 @@
-// spell-checker:ignore parens
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -7,7 +7,7 @@ use sg_wc::sgmain;
 use rand::Rng;
 use std::ffi::OsString;
 
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd,
 };
 static CMD_PATH: &str = "wc";
@@ -18,7 +18,6 @@ fn generate_wc_args() -> String {
     let mut args = Vec::new();
 
     for _ in 0..arg_count {
-        // Introduce a chance to add invalid arguments
         if rng.random_bool(0.1) {
             args.push(generate_random_string(rng.random_range(1..=20)));
         } else {
@@ -28,11 +27,10 @@ fn generate_wc_args() -> String {
                 2 => args.push(String::from("-l")),
                 3 => args.push(String::from("-L")),
                 4 => args.push(String::from("-w")),
-                // TODO
                 5 => {
                     args.push(String::from("--files0-from"));
                     if rng.random_bool(0.5) {
-                        args.push(generate_random_string(50)); // Longer invalid file name
+                        args.push(generate_random_string(50));
                     } else {
                         args.push(generate_random_string(5));
                     }
@@ -52,7 +50,7 @@ fn generate_random_lines(count: usize) -> String {
 
     for _ in 0..count {
         if rng.random_bool(0.1) {
-            lines.push(generate_random_string(rng.random_range(1000..=5000))); // Very long invalid line
+            lines.push(generate_random_string(rng.random_range(1000..=5000)));
         } else {
             lines.push(generate_random_string(rng.random_range(1..=20)));
         }
@@ -89,6 +87,7 @@ fuzz_target!(|_data: &[u8]| {
         Some(&input_lines),
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

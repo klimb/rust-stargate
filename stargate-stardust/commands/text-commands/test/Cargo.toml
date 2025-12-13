@@ -1,6 +1,6 @@
 [package]
 name = "sg_test"
-description = "test ~ (uutils) evaluate comparison and file type expressions"
+description = "test ~ (stargate) evaluate comparison and file type expressions"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

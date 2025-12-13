@@ -2,7 +2,7 @@
 
 use crate::operation::ChunkProcessor;
 use std::io::{BufRead, Write};
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::translate;
 
 /// Helper to detect single-character operations for optimization
@@ -51,11 +51,10 @@ pub fn process_single_delete(input: &[u8], output: &mut Vec<u8>, delete_char: u8
     } else if count < input.len() {
         output.extend(input.iter().filter(|&&b| b != delete_char).copied());
     }
-    // If count == input.len(), all deleted, output nothing
 }
 
 /// Unified I/O processing for all operations
-pub fn process_input<R, W, P>(input: &mut R, output: &mut W, processor: &P) -> UResult<()>
+pub fn process_input<R, W, P>(input: &mut R, output: &mut W, processor: &P) -> SGResult<()>
 where
     R: BufRead,
     W: Write,
@@ -86,8 +85,9 @@ where
 
 /// Helper function to handle platform-specific write operations
 #[inline]
-pub fn write_output<W: Write>(output: &mut W, buf: &[u8]) -> UResult<()> {
+pub fn write_output<W: Write>(output: &mut W, buf: &[u8]) -> SGResult<()> {
     return output
         .write_all(buf)
         .map_err_context(|| translate!("tr-error-write-error"));
 }
+

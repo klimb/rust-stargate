@@ -1,4 +1,5 @@
-// spell-checker:ignore rustdoc
+
+
 #![allow(rustdoc::private_intra_doc_links)]
 
 use std::cmp::Ordering;
@@ -12,7 +13,7 @@ use std::{
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use regex::Regex;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::format_usage;
 
 mod csplit_error;
@@ -122,11 +123,9 @@ where
         .all(|p| matches!(p, patterns::Pattern::UpToLine(_, _)));
     let ret = do_csplit(&mut split_writer, patterns_vec, &mut input_iter);
 
-    // consume the rest, unless there was an error
     if ret.is_ok() {
         input_iter.rewind_buffer();
         if let Some((_, line)) = input_iter.next() {
-            // There is remaining input: create a final split and copy remainder
             split_writer.new_writer()?;
             split_writer.writeln(&line?)?;
             for (_, line) in input_iter {
@@ -134,13 +133,10 @@ where
             }
             split_writer.finish_split();
         } else if all_up_to_line && options.suppress_matched {
-            // GNU semantics for integer patterns with --suppress-matched:
-            // even if no remaining input, create a final (possibly empty) split
             split_writer.new_writer()?;
             split_writer.finish_split();
         }
     }
-    // delete files on error by default
     if ret.is_err() && !options.keep_files {
         split_writer.delete_all_splits()?;
     }
@@ -153,9 +149,8 @@ fn do_csplit<I>(
     input_iter: &mut InputSplitter<I>
 ) -> Result<(), CsplitError>
 where
-    I: Iterator<Item = (usize, UResult<String>)>,
+    I: Iterator<Item = (usize, SGResult<String>)>,
 {
-    // split the file based on patterns
     for pattern in patterns {
         let pattern_as_str = pattern.to_string();
         let is_skip = matches!(pattern, patterns::Pattern::SkipToMatch(_, _, _));
@@ -165,7 +160,6 @@ where
                 for (_, ith) in ex.iter() {
                     split_writer.new_writer()?;
                     match split_writer.do_to_line(&pattern_as_str, up_to_line, input_iter) {
-                        // the error happened when applying the pattern more than once
                         Err(CsplitError::LineOutOfRange(_)) if ith != 1 => {
                             return Err(CsplitError::LineOutOfRangeOnRepetition(
                                 pattern_as_str,
@@ -173,7 +167,6 @@ where
                             ));
                         }
                         Err(err) => return Err(err),
-                        // continue the splitting process
                         Ok(()) => (),
                     }
                     up_to_line += n;
@@ -183,7 +176,6 @@ where
             | patterns::Pattern::SkipToMatch(regex, offset, ex) => {
                 for (max, ith) in ex.iter() {
                     if is_skip {
-                        // when skipping a part of the input, no writer is created
                         split_writer.as_dev_null();
                     } else {
                         split_writer.new_writer()?;
@@ -192,12 +184,9 @@ where
                         split_writer.do_to_match(&pattern_as_str, &regex, offset, input_iter),
                         max
                     ) {
-                        // in case of ::pattern::ExecutePattern::Always, then it's fine not to find a
-                        // matching line
                         (Err(CsplitError::MatchNotFound(_)), None) => {
                             return Ok(());
                         }
-                        // the error happened when applying the pattern more than once
                         (Err(CsplitError::MatchNotFound(_)), Some(m)) if m != 1 && ith != 1 => {
                             return Err(CsplitError::MatchNotFoundOnRepetition(
                                 pattern_as_str,
@@ -205,7 +194,6 @@ where
                             ));
                         }
                         (Err(err), _) => return Err(err),
-                        // continue the splitting process
                         (Ok(()), _) => (),
                     }
                 }
@@ -234,11 +222,6 @@ impl Drop for SplitWriter<'_> {
     fn drop(&mut self) {
         if self.options.elide_empty_files && self.size == 0 {
             let file_name = self.options.split_name.get(self.counter);
-            // In the case of `echo a | csplit -z - %a%1`, the file
-            // `xx00` does not exist because the positive offset
-            // advanced past the end of the input. Since there is no
-            // file to remove in that case, `remove_file` would return
-            // an error, so we just ignore it.
             let _ = remove_file(file_name);
         }
     }
@@ -345,7 +328,7 @@ impl SplitWriter<'_> {
         input_iter: &mut InputSplitter<I>
     ) -> Result<(), CsplitError>
     where
-        I: Iterator<Item = (usize, UResult<String>)>,
+        I: Iterator<Item = (usize, SGResult<String>)>,
     {
         input_iter.rewind_buffer();
         input_iter.set_size_of_buffer(1);
@@ -398,15 +381,12 @@ impl SplitWriter<'_> {
         input_iter: &mut InputSplitter<I>
     ) -> Result<(), CsplitError>
     where
-        I: Iterator<Item = (usize, UResult<String>)>,
+        I: Iterator<Item = (usize, SGResult<String>)>,
     {
         if offset >= 0 {
-            // The offset is zero or positive, no need for a buffer on the lines read.
-            // NOTE: drain the buffer of input_iter, no match should be done within.
             for line in input_iter.drain_buffer() {
                 self.writeln(&line)?;
             }
-            // retain the matching line
             input_iter.set_size_of_buffer(1);
 
             while let Some((ln, line)) = input_iter.next() {
@@ -417,16 +397,13 @@ impl SplitWriter<'_> {
                 if regex.is_match(l) {
                     let mut next_line_suppress_matched = false;
                     match (self.options.suppress_matched, offset) {
-                        // no offset, add the line to the next split
                         (false, 0) => {
                             assert!(
                                 input_iter.add_line_to_buffer(ln, line).is_none(),
                                 "the buffer is big enough to contain 1 line"
                             );
                         }
-                        // a positive offset, some more lines need to be added to the current split
                         (false, _) => self.writeln(&line)?,
-                        // suppress matched option true, but there is a positive offset, so the line is printed
                         (true, 1..) => {
                             next_line_suppress_matched = true;
                             self.writeln(&line)?;
@@ -435,7 +412,6 @@ impl SplitWriter<'_> {
                     }
                     offset -= 1;
 
-                    // write the extra lines required by the offset
                     while offset > 0 {
                         match input_iter.next() {
                             Some((_, line)) => {
@@ -452,7 +428,6 @@ impl SplitWriter<'_> {
                     }
                     self.finish_split();
 
-                    // if we have to suppress one line after we take the next and do nothing
                     if next_line_suppress_matched {
                         input_iter.next();
                     }
@@ -461,11 +436,6 @@ impl SplitWriter<'_> {
                 self.writeln(&line)?;
             }
         } else {
-            // With a negative offset we use a buffer to keep the lines within the offset.
-            // NOTE: do not drain the buffer of input_iter, in case of an LineOutOfRange error
-            // but do not rewind it either since no match should be done within.
-            // The consequence is that the buffer may already be full with lines from a previous
-            // split, which is taken care of when calling `shrink_buffer_to_size`.
             let offset_usize = -offset as usize;
             input_iter.set_size_of_buffer(offset_usize);
             while let Some((ln, line)) = input_iter.next() {
@@ -478,12 +448,8 @@ impl SplitWriter<'_> {
                         self.writeln(&line)?;
                     }
                     if self.options.suppress_matched {
-                        // since offset_usize is for sure greater than 0
-                        // the first element of the buffer should be removed and this
-                        // line inserted to be coherent with GNU implementation
                         input_iter.add_line_to_buffer(ln, line);
                     } else {
-                        // add 1 to the buffer size to make place for the matched line
                         input_iter.set_size_of_buffer(offset_usize + 1);
                         assert!(
                             input_iter.add_line_to_buffer(ln, line).is_none(),
@@ -501,7 +467,6 @@ impl SplitWriter<'_> {
                     self.writeln(&line)?;
                 }
             }
-            // no match, drain the buffer into the current split
             for line in input_iter.drain_buffer() {
                 self.writeln(&line)?;
             }
@@ -516,7 +481,7 @@ impl SplitWriter<'_> {
 /// This is used to pass matching lines to the next split and to support patterns with a negative offset.
 struct InputSplitter<I>
 where
-    I: Iterator<Item = (usize, UResult<String>)>,
+    I: Iterator<Item = (usize, SGResult<String>)>,
 {
     iter: I,
     buffer: Vec<<I as Iterator>::Item>,
@@ -529,7 +494,7 @@ where
 
 impl<I> InputSplitter<I>
 where
-    I: Iterator<Item = (usize, UResult<String>)>,
+    I: Iterator<Item = (usize, SGResult<String>)>,
 {
     fn new(iter: I) -> Self {
         Self {
@@ -593,7 +558,7 @@ where
 
 impl<I> Iterator for InputSplitter<I>
 where
-    I: Iterator<Item = (usize, UResult<String>)>,
+    I: Iterator<Item = (usize, SGResult<String>)>,
 {
     type Item = <I as Iterator>::Item;
 
@@ -609,14 +574,12 @@ where
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
-    // get the file to split
     let file_name = matches.get_one::<OsString>(options::FILE).unwrap();
 
-    // get the patterns to split on
     let patterns: Vec<String> = matches
         .get_many::<String>(options::PATTERN)
         .unwrap()
@@ -871,3 +834,4 @@ mod tests {
         assert!(input_splitter.next().is_none());
     }
 }
+

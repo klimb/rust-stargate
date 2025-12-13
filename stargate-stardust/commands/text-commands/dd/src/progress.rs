@@ -1,10 +1,11 @@
-// spell-checker:ignore btotal sigval
+
 //! Read and write progress tracking for dd.
 //!
 //! The [`ProgUpdate`] struct represents summary statistics for the
 //! read and write progress of a running `dd` process. The
 //! [`gen_prog_updater`] function can be used to implement a progress
 //! updater that runs in its own thread.
+
 use std::io::Write;
 use std::sync::mpsc;
 #[cfg(target_os = "linux")]
@@ -14,7 +15,7 @@ use std::time::Duration;
 #[cfg(target_os = "linux")]
 use signal_hook::iterator::Handle;
 use sgcore::{
-    error::UResult,
+    error::SGResult,
     format::num_format::{FloatVariant, Formatter},
     locale::setup_localization,
     translate,
@@ -134,36 +135,26 @@ impl ProgUpdate {
     /// prog_update.write_prog_line(&mut cursor, rewrite).unwrap();
     /// assert_eq!(cursor.get_ref(), b"0 bytes copied, 1.0 s, 0.0 B/s\n");
     /// ```
-    fn write_prog_line(&self, w: &mut impl Write, rewrite: bool) -> UResult<()> {
-        // The total number of bytes written as a string, in SI and IEC format.
+    fn write_prog_line(&self, w: &mut impl Write, rewrite: bool) -> SGResult<()> {
         let btotal = self.write_stat.bytes_total;
         let btotal_metric = to_magnitude_and_suffix(btotal, SuffixType::Si);
         let btotal_bin = to_magnitude_and_suffix(btotal, SuffixType::Iec);
 
-        // Compute the throughput (bytes per second) as a string.
         let duration = self.duration.as_secs_f64();
         let safe_millis = std::cmp::max(1, self.duration.as_millis());
         let rate = 1000 * (btotal / safe_millis);
         let transfer_rate = to_magnitude_and_suffix(rate, SuffixType::Si);
 
-        // If we are rewriting the progress line, do write a carriage
-        // return (`\r`) at the beginning and don't write a newline
-        // (`\n`) at the end.
         let (carriage_return, newline) = if rewrite { ("\r", "") } else { ("", "\n") };
 
-        // The duration should be formatted as in `printf %g`.
         let mut duration_str = Vec::new();
         sgcore::format::num_format::Float {
             variant: FloatVariant::Shortest,
             ..Default::default()
         }
         .fmt(&mut duration_str, &duration.into())?;
-        // We assume that printf will output valid UTF-8
         let duration_str = std::str::from_utf8(&duration_str).unwrap();
 
-        // If the number of bytes written is sufficiently large, then
-        // print a more concise representation of the number, like
-        // "1.2 kB" and "1.0 KiB".
         let message = match btotal {
             1 => {
                 translate!("dd-progress-byte-copied", "bytes" => btotal, "duration" => duration_str, "rate" => transfer_rate)
@@ -212,7 +203,7 @@ impl ProgUpdate {
     /// assert_eq!(iter.next().unwrap(), b"");
     /// assert!(iter.next().is_none());
     /// ```
-    fn write_transfer_stats(&self, w: &mut impl Write, new_line: bool) -> UResult<()> {
+    fn write_transfer_stats(&self, w: &mut impl Write, new_line: bool) -> SGResult<()> {
         if new_line {
             writeln!(w)?;
         }
@@ -420,12 +411,10 @@ pub(crate) fn gen_prog_updater(
     print_level: Option<StatusLevel>
 ) -> impl Fn() {
     move || {
-        // As we are in a thread, we need to set up localization independently.
         let _ = setup_localization("dd");
 
         let mut progress_printed = false;
         while let Ok(update) = rx.recv() {
-            // Print the final read/write statistics.
             if update.update_type == ProgUpdateType::Final {
                 update.print_final_stats(print_level, progress_printed);
                 return;
@@ -495,24 +484,17 @@ pub(crate) fn gen_prog_updater(
     rx: mpsc::Receiver<ProgUpdate>,
     print_level: Option<StatusLevel>
 ) -> impl Fn() {
-    // --------------------------------------------------------------
     move || {
-        // As we are in a thread, we need to set up localization independently.
         let _ = setup_localization("dd");
 
-        // Holds the state of whether we have printed the current progress.
-        // This is needed so that we know whether or not to print a newline
-        // character before outputting non-progress data.
         let mut progress_printed = false;
         while let Ok(update) = rx.recv() {
             match update.update_type {
                 ProgUpdateType::Final => {
-                    // Print the final read/write statistics.
                     update.print_final_stats(print_level, progress_printed);
                     return;
                 }
                 ProgUpdateType::Periodic => {
-                    // (Re)print status line if progress is requested.
                     if Some(StatusLevel::Progress) == print_level {
                         update.reprint_prog_line();
                         progress_printed = true;
@@ -520,7 +502,6 @@ pub(crate) fn gen_prog_updater(
                 }
                 ProgUpdateType::Signal => {
                     update.print_transfer_stats(progress_printed);
-                    // Reset the progress printed, since print_transfer_stats always prints a newline.
                     progress_printed = false;
                 }
             }
@@ -550,7 +531,7 @@ mod tests {
                 bytes_total: n,
                 ..Default::default()
             },
-            duration: Duration::new(1, 0), // one second
+            duration: Duration::new(1, 0),
             update_type: super::ProgUpdateType::Periodic,
         }
     }
@@ -616,20 +597,13 @@ mod tests {
         let prog_update = ProgUpdate {
             read_stat: ReadStat::default(),
             write_stat: WriteStat::default(),
-            duration: Duration::new(1, 0), // one second
+            duration: Duration::new(1, 0),
             update_type: super::ProgUpdateType::Periodic,
         };
 
         let mut cursor = Cursor::new(vec![]);
         let rewrite = false;
         prog_update.write_prog_line(&mut cursor, rewrite).unwrap();
-        // TODO The expected output string below is what our code
-        // produces today, but it does not match GNU dd:
-        //
-        //     $ : | dd
-        //     0 bytes copied, 7.9151e-05 s, 0.0 kB/s
-        //
-        // The throughput still does not match GNU dd.
         assert_eq!(
             std::str::from_utf8(cursor.get_ref()).unwrap(),
             "0 bytes copied, 1 s, 0.0 B/s\n"
@@ -682,7 +656,7 @@ mod tests {
         let prog_update = ProgUpdate {
             read_stat: ReadStat::default(),
             write_stat: WriteStat::default(),
-            duration: Duration::new(1, 0), // one second
+            duration: Duration::new(1, 0),
             update_type: super::ProgUpdateType::Periodic,
         };
         let mut cursor = Cursor::new(vec![]);
@@ -701,11 +675,10 @@ mod tests {
     #[test]
     fn write_final_transfer_stats() {
         init();
-        // Tests the formatting of the final statistics written after a progress line.
         let prog_update = ProgUpdate {
             read_stat: ReadStat::default(),
             write_stat: WriteStat::default(),
-            duration: Duration::new(1, 0), // one second
+            duration: Duration::new(1, 0),
             update_type: super::ProgUpdateType::Periodic,
         };
         let mut cursor = Cursor::new(vec![]);
@@ -735,3 +708,4 @@ mod tests {
         );
     }
 }
+

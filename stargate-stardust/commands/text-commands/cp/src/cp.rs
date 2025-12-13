@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) copydir ficlone fiemap ftruncate linkgs lstat nlink nlinks pathbuf pwrite reflink strs xattrs symlinked deduplicated advcpmv nushell IRWXG IRWXO IRWXU IRWXUGO IRWXU IRWXG IRWXO IRWXUGO
+
 
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -19,7 +19,7 @@ use thiserror::Error;
 
 use platform::copy_on_write;
 use sgcore::display::Quotable;
-use sgcore::error::{UError, UResult, UUsageError, set_exit_code};
+use sgcore::error::{SGError, SGResult, SGUsageError, set_exit_code};
 use sgcore::fs::make_fifo;
 use sgcore::fs::{
     FileInformation, MissingHandling, ResolveMode, are_hardlinks_to_same_file, canonicalize,
@@ -27,8 +27,6 @@ use sgcore::fs::{
     paths_refer_to_same_file,
 };
 use sgcore::{backup_control, update_control};
-// These are exposed for projects (e.g. nushell) that want to create an `Options` value, which
-// requires these enum.
 pub use sgcore::{backup_control::BackupMode, update_control::UpdateMode};
 use sgcore::{
     format_usage, parser::shortcut_value_parser::ShortcutValueParser, prompt_yes, show_error,
@@ -92,7 +90,6 @@ pub enum CpError {
     NotADirectory(PathBuf),
 }
 
-// Manual impl for &str
 impl From<&'static str> for CpError {
     fn from(s: &'static str) -> Self {
         Self::Error(s.to_string())
@@ -120,7 +117,7 @@ impl Display for BackupError {
 
 impl std::error::Error for BackupError {}
 
-impl UError for CpError {
+impl SGError for CpError {
     fn code(&self) -> i32 {
         EXIT_ERR
     }
@@ -234,8 +231,6 @@ impl Default for Attributes {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Preserve {
-    // explicit means whether the --no-preserve flag is used or not to distinguish out the default value.
-    // e.g. --no-preserve=mode means mode = No { explicit = true }
     No { explicit: bool },
     Yes { required: bool },
 }
@@ -375,7 +370,7 @@ enum PerformedAction {
 
 /// Enum representing various debug states of the offload and reflink actions.
 #[derive(Debug)]
-#[allow(dead_code)] // All of them are used on Linux
+#[allow(dead_code)]
 enum OffloadReflinkDebug {
     Unknown,
     No,
@@ -386,7 +381,7 @@ enum OffloadReflinkDebug {
 
 /// Enum representing various debug states of the sparse detection.
 #[derive(Debug)]
-#[allow(dead_code)] // silent for now until we use them
+#[allow(dead_code)]
 enum SparseDebug {
     Unknown,
     No,
@@ -443,7 +438,6 @@ fn show_debug(copy_debug: &CopyDebug) {
 
 static EXIT_ERR: i32 = 1;
 
-// Argument constants
 mod options {
     pub const ARCHIVE: &str = "archive";
     pub const ATTRIBUTES_ONLY: &str = "attributes-only";
@@ -563,7 +557,6 @@ pub fn sg_app() -> Command {
                 .short('R')
                 .visible_short_alias('r')
                 .long(options::RECURSIVE)
-                // --archive sets this option
                 .help(translate!("cp-help-recursive"))
                 .action(ArgAction::SetTrue)
         )
@@ -641,8 +634,6 @@ pub fn sg_app() -> Command {
                 .require_equals(true)
                 .value_name("ATTR_LIST")
                 .default_missing_value(PRESERVE_DEFAULT_VALUES)
-                // -d sets this option
-                // --archive sets this option
                 .help(translate!("cp-help-preserve"))
         )
         .arg(
@@ -675,7 +666,6 @@ pub fn sg_app() -> Command {
                 .short('P')
                 .long(options::NO_DEREFERENCE)
                 .overrides_with(options::DEREFERENCE)
-                // -d sets this option
                 .help(translate!("cp-help-no-dereference"))
                 .action(ArgAction::SetTrue)
         )
@@ -731,15 +721,12 @@ pub fn sg_app() -> Command {
                 .default_missing_value("")
         )
         .arg(
-            // The 'g' short flag is modeled after advcpmv
-            // See this repo: https://github.com/jarun/advcpmv
             Arg::new(options::PROGRESS_BAR)
                 .long(options::PROGRESS_BAR)
                 .short('g')
                 .action(ArgAction::SetTrue)
                 .help(translate!("cp-help-progress"))
         )
-        // TODO: implement the following args
         .arg(
             Arg::new(options::COPY_CONTENTS)
                 .long(options::COPY_CONTENTS)
@@ -747,7 +734,6 @@ pub fn sg_app() -> Command {
                 .help(translate!("cp-help-copy-contents"))
                 .action(ArgAction::SetTrue)
         )
-        // END TODO
         .arg(
             Arg::new(options::PATHS)
                 .action(ArgAction::Append)
@@ -759,14 +745,14 @@ pub fn sg_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "fattr"])?;
 
     let options = Options::from_matches(&matches)?;
 
     if options.overwrite == OverwriteMode::NoClobber && options.backup != BackupMode::None {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             EXIT_ERR,
             translate!("cp-error-backup-mutually-exclusive")
         ));
@@ -781,10 +767,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     if let Err(error) = copy(&sources, &target, &options) {
         match error {
-            // Error::NotAllFilesCopied is non-fatal, but the error
-            // code should still be EXIT_ERR as does GNU cp
             CpError::NotAllFilesCopied => {}
-            // Else we caught a fatal bubbled-up error, log it to stderr
             _ => show_error!("{error}"),
         }
         set_exit_code(EXIT_ERR);
@@ -864,7 +847,6 @@ impl Attributes {
         xattr: Preserve::No { explicit: false },
     };
 
-    // TODO: ownership is required if the user is root, for non-root users it's not required.
     pub const DEFAULT: Self = Self {
         ownership: Preserve::Yes { required: true },
         mode: Preserve::Yes { required: true },
@@ -987,7 +969,6 @@ impl Options {
 
         let overwrite = OverwriteMode::from_matches(matches);
 
-        // Parse target directory options
         let no_target_dir = matches.get_flag(options::NO_TARGET_DIRECTORY);
         let target_dir = matches
             .get_one::<PathBuf>(options::TARGET_DIRECTORY)
@@ -998,19 +979,7 @@ impl Options {
                 return Err(CpError::NotADirectory(dir.clone()));
             }
         }
-        // cp follows POSIX conventions for overriding options such as "-a",
-        // "-d", "--preserve", and "--no-preserve". We can use clap's
-        // override-all behavior to achieve this, but there's a challenge: when
-        // clap overrides an argument, it removes all traces of it from the
-        // match. This poses a problem because flags like "-a" expand to "-dR
-        // --preserve=all", and we only want to override the "--preserve=all"
-        // part. Additionally, we need to handle multiple occurrences of the
-        // same flags. To address this, we create an overriding order from the
-        // matches here.
         let mut overriding_order: Vec<(usize, &str, Vec<&String>)> = vec![];
-        // We iterate through each overriding option, adding each occurrence of
-        // the option along with its value and index as a tuple, and push it to
-        // `overriding_order`.
         for option in [
             options::PRESERVE,
             options::NO_PRESERVE,
@@ -1020,12 +989,6 @@ impl Options {
         ] {
             if let (Ok(Some(val)), Some(index)) = (
                 matches.try_get_one::<bool>(option),
-                // even though it says in the doc that `index_of` would give us
-                // the first index of the argument, when it comes to flag it
-                // gives us the last index where the flag appeared (probably
-                // because it overrides itself). Since it is a flag and it would
-                // have same value across the occurrences we just need the last
-                // index.
                 matches.index_of(option)
             ) {
                 if *val {
@@ -1038,12 +1001,6 @@ impl Options {
                 occurrences.for_each(|val| {
                     if let Some(index) = indices.next() {
                         let val = val.collect::<Vec<&String>>();
-                        // As mentioned in the documentation of the indices_of
-                        // function, it provides the indices of the individual
-                        // values. Therefore, to get the index of the first
-                        // value of the next occurrence in the next iteration,
-                        // we need to advance the indices iterator by the length
-                        // of the current occurrence's values.
                         for _ in 1..val.len() {
                             indices.next();
                         }
@@ -1056,7 +1013,6 @@ impl Options {
 
         let mut attributes = Attributes::NONE;
 
-        // Iterate through the `overriding_order` and adjust the attributes accordingly.
         for (_, option, val) in overriding_order {
             match option {
                 options::ARCHIVE => {
@@ -1091,12 +1047,9 @@ impl Options {
             copy_contents: matches.get_flag(options::COPY_CONTENTS),
             cli_dereference: matches.get_flag(options::CLI_SYMBOLIC_LINKS),
             copy_mode: CopyMode::from_matches(matches),
-            // No dereference is set with -p, -d and --archive
             dereference: !(matches.get_flag(options::NO_DEREFERENCE)
                 || matches.get_flag(options::NO_DEREFERENCE_PRESERVE_LINKS)
                 || matches.get_flag(options::ARCHIVE)
-                // cp normally follows the link only when not copying recursively or when
-                // --link (-l) is used
                 || (recursive && CopyMode::from_matches(matches)!= CopyMode::Link ))
                 || matches.get_flag(options::DEREFERENCE),
             one_file_system: matches.get_flag(options::ONE_FILE_SYSTEM),
@@ -1200,17 +1153,13 @@ fn parse_path_args(
     options: &Options
 ) -> CopyResult<(Vec<PathBuf>, PathBuf)> {
     if paths.is_empty() {
-        // No files specified
         return Err(translate!("cp-error-missing-file-operand").into());
     } else if paths.len() == 1 && options.target_dir.is_none() {
-        // Only one file specified
         return Err(translate!("cp-error-missing-destination-operand",
                        "source" => paths[0].quote())
         .into());
     }
 
-    // Return an error if the user requested to copy more than one
-    // file source to a file target
     if options.no_target_dir && options.target_dir.is_none() && paths.len() > 2 {
         return Err(translate!("cp-error-extra-operand",
                               "operand" => paths[2].quote())
@@ -1219,20 +1168,14 @@ fn parse_path_args(
 
     let target = match options.target_dir {
         Some(ref target) => {
-            // All path args are sources, and the target dir was
-            // specified separately
             target.clone()
         }
         None => {
-            // If there was no explicit target-dir, then use the last
-            // path_arg
             paths.pop().unwrap()
         }
     };
 
     if options.strip_trailing_slashes {
-        // clippy::assigning_clones added with Rust 1.78
-        // Rust version = 1.76 on OpenBSD stable/7.5
         #[cfg_attr(not(target_os = "openbsd"), allow(clippy::assigning_clones))]
         for source in &mut paths {
             *source = source.components().as_path().to_owned();
@@ -1245,14 +1188,9 @@ fn parse_path_args(
 /// When handling errors, we don't always want to show them to the user. This function handles that.
 fn show_error_if_needed(error: &CpError) {
     match error {
-        // When using --no-clobber, we don't want to show
-        // an error message
         CpError::NotAllFilesCopied => {
-            // Need to return an error code
         }
         CpError::Skipped(_) => {
-            // touch a b && echo "n"|cp -i a b && echo $?
-            // should return an error from GNU 9.2
         }
         _ => {
             show_error!("{error}");
@@ -1274,16 +1212,7 @@ pub fn copy(sources: &[PathBuf], target: &Path, options: &Options) -> CopyResult
     let mut seen_sources = HashSet::with_capacity(sources.len());
     let mut symlinked_files = HashSet::new();
 
-    // to remember the copied files for further usage.
-    // the FileInformation implemented the Hash trait by using
-    // 1. inode number
-    // 2. device number
-    // the combination of a file's inode number and device number is unique throughout all the file systems.
-    //
-    // key is the source file's information and the value is the destination filepath.
     let mut copied_files: HashMap<FileInformation, PathBuf> = HashMap::with_capacity(sources.len());
-    // remember the copied destinations for further usage.
-    // we can't use copied_files as it is because the key is the source file's information.
     let mut copied_destinations: HashSet<PathBuf> = HashSet::with_capacity(sources.len());
     let mut created_parent_dirs: HashSet<PathBuf> = HashSet::new();
 
@@ -1318,14 +1247,11 @@ pub fn copy(sources: &[PathBuf], target: &Path, options: &Options) -> CopyResult
 
             if fs::metadata(&dest).is_ok()
                 && !fs::symlink_metadata(&dest)?.file_type().is_symlink()
-                // if both `source` and `dest` are symlinks, it should be considered as an overwrite.
                 || fs::metadata(source).is_ok()
                     && fs::symlink_metadata(source)?.file_type().is_symlink()
                 || matches!(options.copy_mode, CopyMode::SymLink)
             {
-                // There is already a file and it isn't a symlink (managed in a different place)
                 if copied_destinations.contains(&dest) && options.backup != BackupMode::Numbered {
-                    // If the target file was already created in this cp call, do not overwrite
                     return Err(CpError::Error(
                         translate!("cp-error-will-not-overwrite-just-created", "dest" => dest.quote(), "source" => source.quote())
                     ));
@@ -1393,10 +1319,6 @@ fn construct_dest_path(
                 }
             } else {
                 if source_path == Path::new(".") && target.is_dir() {
-                    // Special case: when copying current directory (.) to an existing directory,
-                    // return the target path directly instead of trying to construct a path
-                    // relative to the source's parent. This ensures we copy the contents of
-                    // the current directory into the target directory, not create a subdirectory.
                     return Ok(target.to_path_buf());
                 }
                 source_path.parent().unwrap_or(source_path)
@@ -1420,7 +1342,6 @@ fn copy_source(
 ) -> CopyResult<()> {
     let source_path = Path::new(&source);
     if source_path.is_dir() && (options.dereference || !source_path.is_symlink()) {
-        // Copy as directory
         copy_directory(
             progress_bar,
             source,
@@ -1433,7 +1354,6 @@ fn copy_source(
             true
         )
     } else {
-        // Copy as file
         let dest = construct_dest_path(source_path, target, target_type, options)?;
         let res = copy_file(
             progress_bar,
@@ -1464,16 +1384,10 @@ fn copy_source(
 /// the owner (bit `S_IWUSR`), extra information needs to be added to the
 /// interactive mode prompt: the mode (permissions) of the file in octal and
 /// human-readable format.
-// TODO
-// The destination metadata can be read multiple times in the course of a single execution of `cp`.
-// This fix adds yet another metadata read.
-// Should this metadata be read once and then reused throughout the execution?
-// https://github.com/uutils/coreutils/issues/6658
 #[allow(clippy::if_not_else)]
 fn file_mode_for_interactive_overwrite(
     #[cfg_attr(not(unix), allow(unused_variables))] path: &Path
 ) -> Option<(String, String)> {
-    // Retain outer braces to ensure only one branch is included
     {
         {
             use libc::{S_IWUSR, mode_t};
@@ -1481,15 +1395,11 @@ fn file_mode_for_interactive_overwrite(
 
             match path.metadata() {
                 Ok(me) => {
-                    // Cast is necessary on some platforms
                     let mode: mode_t = me.mode() as mode_t;
 
-                    // It looks like this extra information is added to the prompt iff the file's user write bit is 0
-                    //  write permission, owner
                     if sgcore::has!(mode, S_IWUSR) {
                         None
                     } else {
-                        // Discard leading digits
                         let mode_without_leading_digits = mode & 0o7777;
 
                         Some((
@@ -1498,7 +1408,6 @@ fn file_mode_for_interactive_overwrite(
                         ))
                     }
                 }
-                // TODO: How should failure to read the metadata be handled? Ignoring for now.
                 Err(_) => None,
             }
         }
@@ -1567,29 +1476,23 @@ fn handle_preserve<F: Fn() -> CopyResult<()>>(p: &Preserve, f: F) -> CopyResult<
 fn copy_extended_attrs(source: &Path, dest: &Path) -> CopyResult<()> {
     let metadata = fs::symlink_metadata(dest)?;
 
-    // Check if the destination file is currently read-only for the user.
     let mut perms = metadata.permissions();
     let was_readonly = perms.readonly();
 
-    // Temporarily grant user write if it was read-only.
     if was_readonly {
         #[allow(clippy::permissions_set_readonly_false)]
         perms.set_readonly(false);
         fs::set_permissions(dest, perms)?;
     }
 
-    // Perform the xattr copy and capture any potential error,
-    // so we can restore permissions before returning.
     let copy_xattrs_result = copy_xattrs(source, dest);
 
-    // Restore read-only if we changed it.
     if was_readonly {
         let mut revert_perms = fs::symlink_metadata(dest)?.permissions();
         revert_perms.set_readonly(true);
         fs::set_permissions(dest, revert_perms)?;
     }
 
-    // If copying xattrs failed, propagate that error now.
     copy_xattrs_result?;
 
     Ok(())
@@ -1605,7 +1508,6 @@ pub(crate) fn copy_attributes(
     let source_metadata =
         fs::symlink_metadata(source).map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
 
-    // Ownership must be changed first to avoid interfering with mode change.
     handle_preserve(&attributes.ownership, || -> CopyResult<()> {
         use std::os::unix::prelude::MetadataExt;
         use sgcore::perms::Verbosity;
@@ -1633,8 +1535,6 @@ pub(crate) fn copy_attributes(
                 )
             }
         };
-        // gnu compatibility: cp doesn't report an error if it fails to set the ownership,
-        // and will fall back to changing only the gid if possible.
         if try_chown(Some(dest_uid)).is_err() {
             let _ = try_chown(None);
         }
@@ -1642,11 +1542,6 @@ pub(crate) fn copy_attributes(
     })?;
 
     handle_preserve(&attributes.mode, || -> CopyResult<()> {
-        // The `chmod()` system call that underlies the
-        // `fs::set_permissions()` call is unable to change the
-        // permissions of a symbolic link. In that case, we just
-        // do nothing, since every symbolic link has the same
-        // permissions.
         if !dest.is_symlink() {
             fs::set_permissions(dest, source_metadata.permissions())
                 .map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
@@ -1666,7 +1561,6 @@ pub(crate) fn copy_attributes(
 
         Ok(())
     })?;
-
 
     handle_preserve(&attributes.xattr, || -> CopyResult<()> {
         copy_extended_attrs(source, dest)?;
@@ -1691,7 +1585,7 @@ fn symlink_file(
             )
         })?;
     }
-    
+
     if let Ok(file_info) = FileInformation::from_path(dest, false) {
         symlinked_files.insert(file_info);
     }
@@ -1725,11 +1619,8 @@ fn is_forbidden_to_copy_to_same_file(
     options: &Options,
     source_in_command_line: bool
 ) -> bool {
-    // TODO To match the behavior of GNU cp, we also need to check
-    // that the file is a regular file.
     let source_is_symlink = source.is_symlink();
     let dest_is_symlink = dest.is_symlink();
-    // only disable dereference if both source and dest is symlink and dereference flag is disabled
     let dereference_to_compare =
         options.dereference(source_in_command_line) || (!source_is_symlink || !dest_is_symlink);
     if !paths_refer_to_same_file(source, dest, dereference_to_compare) {
@@ -1755,8 +1646,6 @@ fn is_forbidden_to_copy_to_same_file(
     if options.copy_mode == CopyMode::SymLink && dest_is_symlink {
         return false;
     }
-    // If source and dest are both the same symlink but with different names, then allow the copy.
-    // This can occur, for example, if source and dest are both hardlinks to the same symlink.
     if dest_is_symlink
         && source_is_symlink
         && source.file_name() != dest.file_name()
@@ -1775,8 +1664,6 @@ fn handle_existing_dest(
     source_in_command_line: bool,
     copied_files: &HashMap<FileInformation, PathBuf>
 ) -> CopyResult<()> {
-    // Disallow copying a file to itself, unless `--force` and
-    // `--backup` are both specified.
     if is_forbidden_to_copy_to_same_file(source, dest, options, source_in_command_line) {
         return Err(translate!("cp-error-same-file",
                        "source" => source.quote(),
@@ -1834,30 +1721,11 @@ fn delete_dest_if_needed_and_allowed(
         OverwriteMode::Clobber(cl) | OverwriteMode::Interactive(cl) => {
             match cl {
                 ClobberMode::Force => {
-                    // TODO
-                    // Using `readonly` here to check if `dest` needs to be deleted is not correct:
-                    // "On Unix-based platforms this checks if any of the owner, group or others write permission bits are set. It does not check if the current user is in the file's assigned group. It also does not check ACLs. Therefore the return value of this function cannot be relied upon to predict whether attempts to read or write the file will actually succeed."
-                    // This results in some copy operations failing, because this necessary deletion is being skipped.
                     is_symlink_loop(dest) || fs::metadata(dest)?.permissions().readonly()
                 }
                 ClobberMode::RemoveDestination => true,
                 ClobberMode::Standard => {
-                    // Consider the following files:
-                    //
-                    // * `src/f` - a regular file
-                    // * `src/link` - a hard link to `src/f`
-                    // * `dest/src/f` - a different regular file
-                    //
-                    // In this scenario, if we do `cp -a src/ dest/`, it is
-                    // possible that the order of traversal causes `src/link`
-                    // to get copied first (to `dest/src/link`). In that case,
-                    // in order to make sure `dest/src/link` is a hard link to
-                    // `dest/src/f` and `dest/src/f` has the contents of
-                    // `src/f`, we delete the existing file to allow the hard
-                    // linking.
                     options.preserve_hard_links() &&
-                            // only try to remove dest file only if the current source
-                            // is hardlink to a file that is already copied
                             copied_files.contains_key(
                                 &FileInformation::from_path(
                                     source,
@@ -1888,7 +1756,6 @@ fn delete_path(path: &Path, options: &Options) -> CopyResult<()> {
             }
         }
         Err(err) if err.kind() == io::ErrorKind::NotFound => {
-            // target could have been deleted earlier (e.g. same-file with --remove-destination)
         }
         Err(err) => return Err(err.into()),
     }
@@ -1909,23 +1776,15 @@ fn delete_path(path: &Path, options: &Options) -> CopyResult<()> {
 /// assert_eq!(actual, expected);
 /// ```
 fn aligned_ancestors<'a>(source: &'a Path, dest: &'a Path) -> Vec<(&'a Path, &'a Path)> {
-    // Collect the ancestors of each. For example, if `source` is
-    // "a/b/c", then the ancestors are "a/b/c", "a/b", "a/", and "".
     let source_ancestors: Vec<&Path> = source.ancestors().collect();
     let dest_ancestors: Vec<&Path> = dest.ancestors().collect();
 
-    // For this particular application, we don't care about the null
-    // path "" and we don't care about the full path (e.g. "a/b/c"),
-    // so we exclude those.
     let n = source_ancestors.len();
     let source_ancestors = &source_ancestors[1..n - 1];
 
-    // Get the matching number of elements from the ancestors of the
-    // destination path (for example, get "d/a" and "d/a/b").
     let k = source_ancestors.len();
     let dest_ancestors = &dest_ancestors[1..=k];
 
-    // Now we have two slices of the same length, so we zip them.
     let mut result = vec![];
     for (x, y) in source_ancestors
         .iter()
@@ -1944,7 +1803,6 @@ fn print_verbose_output(
     dest: &Path
 ) {
     if let Some(pb) = progress_bar {
-        // Suspend (hide) the progress bar so the println won't overlap with the progress bar.
         pb.suspend(|| {
             print_paths(parents, source, dest);
         });
@@ -1955,12 +1813,6 @@ fn print_verbose_output(
 
 fn print_paths(parents: bool, source: &Path, dest: &Path) {
     if parents {
-        // For example, if copying file `a/b/c` and its parents
-        // to directory `d/`, then print
-        //
-        //     a -> d/a
-        //     a/b -> d/a/b
-        //
         for (x, y) in aligned_ancestors(source, dest) {
             println!(
                 "{}",
@@ -2137,7 +1989,6 @@ fn handle_copy_mode(
 /// * `Ok(Permissions)` - The calculated permissions for the destination file.
 /// * `Err(CopyError)` - An error occurred while getting the metadata of the destination file.
 ///
-// Allow unused variables for Windows (on options)
 #[allow(unused_variables)]
 fn calculate_dest_permissions(
     dest_metadata: Option<&Metadata>,
@@ -2153,7 +2004,6 @@ fn calculate_dest_permissions(
             let mut permissions = source_metadata.permissions();
             let mode = handle_no_preserve_mode(options, permissions.mode());
 
-            // Apply umask
             use sgcore::mode::get_umask;
             let mode = mode & !get_umask();
             permissions.set_mode(mode);
@@ -2196,7 +2046,6 @@ fn copy_file(
         .map(|md| md.file_type().is_symlink())
         .unwrap_or(false);
     let dest_target_exists = dest.try_exists().unwrap_or(false);
-    // Fail if dest is a dangling symlink or a symlink this program created previously
     if dest_is_symlink {
         if FileInformation::from_path(dest, false)
             .map(|info| symlinked_files.contains(&info))
@@ -2206,9 +2055,6 @@ fn copy_file(
                 translate!("cp-error-will-not-copy-through-symlink", "source" => source.quote(), "dest" => dest.quote())
             ));
         }
-        // Fail if cp tries to copy two sources of the same name into a single symlink
-        // Example: "cp file1 dir1/file1 tmp" where "tmp" is a directory containing a symlink "file1" pointing to a file named "foo".
-        // foo will contain the contents of "file1" and "dir1/file1" will not be copied over to "tmp/file1"
         if copied_destinations.contains(dest) {
             return Err(CpError::Error(
                 translate!("cp-error-will-not-copy-through-symlink", "source" => source.quote(), "dest" => dest.quote())
@@ -2297,9 +2143,6 @@ fn copy_file(
     }
 
     if options.preserve_hard_links() {
-        // if we encounter a matching device/inode pair in the source tree
-        // we can arrange to create a hard link between the corresponding names
-        // in the destination tree.
         if let Some(new_source) = copied_files.get(
             &FileInformation::from_path(source, options.dereference(source_in_command_line))
                 .map_err(|e| CpError::IoErrContext(e, format!("cannot stat {}", source.quote())))?
@@ -2314,7 +2157,6 @@ fn copy_file(
         }
     }
 
-    // Calculate the context upfront before canonicalizing the path
     let context = context_for(source, dest);
     let context = context.as_str();
 
@@ -2324,7 +2166,6 @@ fn copy_file(
         } else {
             fs::symlink_metadata(source)
         };
-        // this is just for gnu tests compatibility
         result.map_err(|err| {
             if err.to_string().contains("No such file or directory") {
                 return translate!("cp-error-cannot-stat", "source" => source.quote());
@@ -2369,14 +2210,7 @@ fn copy_file(
         print_verbose_output(options.parents, progress_bar, source, dest);
     }
 
-    // TODO: implement something similar to gnu's lchown
     if !dest_is_symlink {
-        // Here, to match GNU semantics, we quietly ignore an error
-        // if a user does not have the correct ownership to modify
-        // the permissions of a file.
-        //
-        // FWIW, the OS will throw an error later, on the write op, if
-        // the user does not have permission to write to the file.
         fs::set_permissions(dest, dest_permissions).ok();
     }
 
@@ -2387,10 +2221,6 @@ fn copy_file(
             }
         }
     } else if source_is_stream && !source.exists() {
-        // Some stream files may not exist after we have copied it,
-        // like anonymous pipes. Thus, we can't really copy its
-        // attributes. However, this is already handled in the stream
-        // copy function (see `copy_stream` under platform/linux.rs).
     } else {
         copy_attributes(source, dest, &options.attributes)?;
     }
@@ -2502,8 +2332,6 @@ fn copy_helper(
     Ok(())
 }
 
-// "Copies" a FIFO by creating a new one. This workaround is because Rust's
-// built-in fs::copy does not handle FIFOs (see rust-lang/rust/issues/79390).
 fn copy_fifo(dest: &Path, overwrite: OverwriteMode, debug: bool) -> CopyResult<()> {
     if dest.exists() {
         overwrite.verify(dest, debug)?;
@@ -2529,10 +2357,7 @@ fn copy_link(
     symlinked_files: &mut HashSet<FileInformation>,
     options: &Options
 ) -> CopyResult<()> {
-    // Here, we will copy the symlink itself (actually, just recreate it)
     let link = fs::read_link(source)?;
-    // we always need to remove the file to be able to create a symlink,
-    // even if it is writeable.
     if dest.is_symlink() || dest.is_file() {
         delete_path(dest, options)?;
     }
@@ -2675,3 +2500,4 @@ mod tests {
         );
     }
 }
+

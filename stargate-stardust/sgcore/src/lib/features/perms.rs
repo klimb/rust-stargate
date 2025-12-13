@@ -1,9 +1,9 @@
 //! Common functions to manage permissions
 
-// spell-checker:ignore (jargon) TOCTOU fchownat fchown
+
 
 use crate::display::Quotable;
-use crate::error::{UResult, USimpleError, strip_errno};
+use crate::error::{SGResult, SGSimpleError, strip_errno};
 pub use crate::features::entries;
 use crate::show_error;
 
@@ -190,7 +190,7 @@ pub enum TraverseSymlinks {
 pub struct ChownExecutor {
     pub dest_uid: Option<u32>,
     pub dest_gid: Option<u32>,
-    pub raw_owner: String, // The owner of the file as input by the user in the command line.
+    pub raw_owner: String,
     pub traverse_symlinks: TraverseSymlinks,
     pub verbosity: Verbosity,
     pub filter: IfFrom,
@@ -218,13 +218,7 @@ pub fn check_root(path: &Path, would_recurse_symlink: bool) -> bool {
 /// The caller has to evaluate -P/-H/-L into 'would_recurse_symlink'.
 /// Recall that canonicalization resolves both relative paths (e.g. "..") and symlinks.
 fn is_root(path: &Path, would_traverse_symlink: bool) -> bool {
-    // The third clause can be evaluated without any syscalls, so we do that first.
-    // If we would_recurse_symlink, then the clause is true no matter whether the path is a symlink
-    // or not. Otherwise, we only need to check here if the path can syntactically be a symlink:
     if !would_traverse_symlink {
-        // We cannot check path.is_dir() here, as this would resolve symlinks,
-        // which we need to avoid here.
-        // All directory-ish paths match "*/", except ".", "..", "*/.", and "*/..".
         let path_bytes = path.as_os_str().as_encoded_bytes();
         let looks_like_dir = path_bytes == [b'.']
             || path_bytes == [b'.', b'.']
@@ -237,9 +231,6 @@ fn is_root(path: &Path, would_traverse_symlink: bool) -> bool {
         }
     }
 
-    // FIXME: TOCTOU bug! canonicalize() runs at a different time than WalkDir's recursion decision.
-    // However, we're forced to make the decision whether to warn about --preserve-root
-    // *before* even attempting to change_owner the path, let alone doing the stat inside WalkDir.
     if let Ok(p) = path.canonicalize() {
         let path_buf = path.to_path_buf();
         if p.parent().is_none() {
@@ -268,7 +259,7 @@ pub fn get_metadata(file: &Path, follow: bool) -> Result<Metadata, std::io::Erro
 }
 
 impl ChownExecutor {
-    pub fn exec(&self) -> UResult<()> {
+    pub fn exec(&self) -> SGResult<()> {
         let mut ret = 0;
         for f in &self.files {
             ret |= self.traverse(f);
@@ -297,27 +288,21 @@ impl ChownExecutor {
             && self.preserve_root
             && is_root(path, self.traverse_symlinks != TraverseSymlinks::None)
         {
-            // Fail-fast, do not attempt to recurse.
             return 1;
         }
 
         let ret = if self.matched(meta.uid(), meta.gid()) {
-            // Use safe syscalls for root directory to prevent TOCTOU attacks on Linux
             #[cfg(target_os = "linux")]
             let chown_result = if path.is_dir() {
-                // For directories on Linux, use safe traversal from the start
                 match DirFd::open(path) {
                     Ok(dir_fd) => self
                         .safe_chown_dir(&dir_fd, path, &meta)
                         .map(|_| String::new()),
                     Err(_e) => {
-                        // Don't show error here - let safe_dive_into handle directory traversal errors
-                        // This prevents duplicate error messages
                         Ok(String::new())
                     }
                 }
             } else {
-                // For non-directories (files, symlinks), use the regular wrap_chown method
                 wrap_chown(
                     path,
                     &meta,
@@ -380,7 +365,6 @@ impl ChownExecutor {
         let dest_uid = self.dest_uid.unwrap_or_else(|| meta.uid());
         let dest_gid = self.dest_gid.unwrap_or_else(|| meta.gid());
 
-        // Use fchown (safe) to change the directory's ownership
         if let Err(e) = dir_fd.fchown(self.dest_uid, self.dest_gid) {
             let mut error_msg = format!(
                 "changing {} of {}: {}",
@@ -419,7 +403,6 @@ impl ChownExecutor {
             return Err(error_msg);
         }
 
-        // Report the change if verbose (similar to wrap_chown)
         self.report_ownership_change_success(path, meta.uid(), meta.gid());
         Ok(())
     }
@@ -428,19 +411,14 @@ impl ChownExecutor {
     fn safe_dive_into<P: AsRef<Path>>(&self, root: P) -> i32 {
         let root = root.as_ref();
 
-        // Don't traverse into symlinks if configured not to
         if self.traverse_symlinks == TraverseSymlinks::None && root.is_symlink() {
             return 0;
         }
 
-        // Only try to traverse if the root is actually a directory
-        // This matches WalkDir's behavior with min_depth(1) - if root is not a directory,
-        // there are no children to traverse, so we return early with success
         if !root.is_dir() {
             return 0;
         }
 
-        // Open directory with safe traversal
         let Some(dir_fd) = self.try_open_dir(root) else {
             return 1;
         };
@@ -452,7 +430,6 @@ impl ChownExecutor {
 
     #[cfg(target_os = "linux")]
     fn safe_traverse_dir(&self, dir_fd: &DirFd, dir_path: &Path, ret: &mut i32) {
-        // Read directory entries
         let entries = match dir_fd.read_dir() {
             Ok(entries) => entries,
             Err(e) => {
@@ -471,7 +448,6 @@ impl ChownExecutor {
         for entry_name in entries {
             let entry_path = dir_path.join(&entry_name);
 
-            // Get metadata for the entry
             let follow = self.traverse_symlinks == TraverseSymlinks::All;
 
             let meta = match dir_fd.metadata_at(&entry_name, follow) {
@@ -496,13 +472,10 @@ impl ChownExecutor {
                 return;
             }
 
-            // Check if we should change_owner this entry
             if self.matched(meta.uid(), meta.gid()) {
-                // Use fchownat for the actual ownership change
                 let follow_symlinks =
                     self.dereference || self.traverse_symlinks == TraverseSymlinks::All;
 
-                // Only pass the IDs that should actually be changed
                 let chown_uid = self.dest_uid;
                 let chown_gid = self.dest_gid;
 
@@ -523,7 +496,6 @@ impl ChownExecutor {
                         show_error!("{}", msg);
                     }
                 } else {
-                    // Report the successful ownership change using the shared helper
                     self.report_ownership_change_success(&entry_path, meta.uid(), meta.gid());
                 }
             } else {
@@ -534,7 +506,6 @@ impl ChownExecutor {
                 );
             }
 
-            // Recurse into subdirectories
             if meta.is_dir() && (follow || !meta.file_type().is_symlink()) {
                 match dir_fd.open_subdir(&entry_name) {
                     Ok(subdir_fd) => {
@@ -560,7 +531,6 @@ impl ChownExecutor {
     fn dive_into<P: AsRef<Path>>(&self, root: P) -> i32 {
         let root = root.as_ref();
 
-        // walkdir always dereferences the root directory, so we have to check it ourselves
         if self.traverse_symlinks == TraverseSymlinks::None && root.is_symlink() {
             return 0;
         }
@@ -570,7 +540,6 @@ impl ChownExecutor {
             .follow_links(self.traverse_symlinks == TraverseSymlinks::All)
             .min_depth(1)
             .into_iter();
-        // We can't use a for loop because we need to manipulate the iterator inside the loop.
         while let Some(entry) = iterator.next() {
             let entry = match entry {
                 Err(e) => {
@@ -597,8 +566,6 @@ impl ChownExecutor {
             let Some(meta) = self.obtain_meta(path, self.dereference) else {
                 ret = 1;
                 if entry.file_type().is_dir() {
-                    // Instruct walkdir to skip this directory to avoid getting another error
-                    // when walkdir tries to query the children of this directory.
                     iterator.skip_current_dir();
                 }
                 continue;
@@ -606,7 +573,6 @@ impl ChownExecutor {
 
             if self.preserve_root && is_root(path, self.traverse_symlinks == TraverseSymlinks::All)
             {
-                // Fail-fast, do not recurse further.
                 return 1;
             }
 
@@ -799,20 +765,20 @@ pub struct GidUidOwnerFilter {
     pub raw_owner: String,
     pub filter: IfFrom,
 }
-type GidUidFilterOwnerParser = fn(&ArgMatches) -> UResult<GidUidOwnerFilter>;
+type GidUidFilterOwnerParser = fn(&ArgMatches) -> SGResult<GidUidOwnerFilter>;
 
 /// Determines symbolic link traversal and recursion settings based on flags.
 /// Returns the updated `dereference` and `traverse_symlinks` values.
 pub fn configure_symlink_and_recursion(
     matches: &ArgMatches,
     default_traverse_symlinks: TraverseSymlinks
-) -> Result<(bool, bool, TraverseSymlinks), Box<dyn crate::error::UError>> {
+) -> Result<(bool, bool, TraverseSymlinks), Box<dyn crate::error::SGError>> {
     let mut dereference = if matches.get_flag(options::dereference::DEREFERENCE) {
-        Some(true) // Follow symlinks
+        Some(true)
     } else if matches.get_flag(options::dereference::NO_DEREFERENCE) {
-        Some(false) // Do not follow symlinks
+        Some(false)
     } else {
-        None // Default behavior
+        None
     };
 
     let mut traverse_symlinks = if matches.get_flag("L") {
@@ -829,7 +795,7 @@ pub fn configure_symlink_and_recursion(
     if recursive {
         if traverse_symlinks == TraverseSymlinks::None {
             if dereference == Some(true) {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     "-R --dereference requires -H or -L".to_string()
                 ));
@@ -857,25 +823,20 @@ pub fn chown_base(
     add_arg_if_not_reference: &'static str,
     parse_gid_uid_and_filter: GidUidFilterOwnerParser,
     groups_only: bool
-) -> UResult<()> {
+) -> SGResult<()> {
     let args: Vec<_> = args.collect();
     let mut reference = false;
     let mut help = false;
-    // stop processing options on --
     for arg in args.iter().take_while(|s| *s != "--") {
         if arg.to_string_lossy().starts_with("--reference=") || arg == "--reference" {
             reference = true;
         } else if arg == "--help" {
-            // we stop processing once we see --help,
-            // as it doesn't matter if we've seen reference or not
             help = true;
             break;
         }
     }
 
     if help || !reference {
-        // add both positional arguments
-        // arg_group is only required if
         command = command.arg(
             Arg::new(add_arg_if_not_reference)
                 .value_name(add_arg_if_not_reference)
@@ -975,7 +936,6 @@ pub fn common_args() -> Vec<Arg> {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use std::os::unix;
     use std::path::{Component, PathBuf};
@@ -985,8 +945,6 @@ mod tests {
     fn test_empty_string() {
         let path = PathBuf::new();
         assert_eq!(path.to_str(), Some(""));
-        // The main point to test here is that we don't crash.
-        // The result should be 'false', to avoid unnecessary and confusing warnings.
         assert!(!is_root(&path, false));
         assert!(!is_root(&path, true));
     }
@@ -1001,7 +959,6 @@ mod tests {
             Some("/"),
             "cfg(unix) but using non-unix path delimiters?!"
         );
-        // Must return true, this is the main scenario that --preserve-root shall prevent.
         assert!(is_root(&path, false));
         assert!(is_root(&path, true));
     }
@@ -1011,28 +968,16 @@ mod tests {
         let symlink_path = temp_dir.path().join("symlink");
         unix::fs::symlink(PathBuf::from("/"), symlink_path).unwrap();
         let symlink_path_slash = temp_dir.path().join("symlink/");
-        // Must return true, we're about to "accidentally" recurse on "/",
-        // since "symlink/" always counts as an already-entered directory
-        // Output from GNU:
-        //   $ change_owner --preserve-root -RH --dereference $(id -u) slink-to-root/
-        //   change_owner: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
-        //   change_owner: use --no-preserve-root to override this failsafe
-        //   [$? = 1]
-        //   $ change_owner --preserve-root -RH --no-dereference $(id -u) slink-to-root/
-        //   change_owner: it is dangerous to operate recursively on 'slink-to-root/' (same as '/')
-        //   change_owner: use --no-preserve-root to override this failsafe
-        //   [$? = 1]
         assert!(is_root(&symlink_path_slash, false));
         assert!(is_root(&symlink_path_slash, true));
     }
     #[test]
     fn test_symlink_no_slash() {
-        // This covers both the commandline-argument case and the recursion case.
         let temp_dir = tempdir().unwrap();
         let symlink_path = temp_dir.path().join("symlink");
         unix::fs::symlink(PathBuf::from("/"), &symlink_path).unwrap();
-        // Only return true  we're about to "accidentally" recurse on "/".
         assert!(!is_root(&symlink_path, false));
         assert!(is_root(&symlink_path, true));
     }
 }
+

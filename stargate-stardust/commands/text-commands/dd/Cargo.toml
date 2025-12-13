@@ -1,6 +1,6 @@
 [package]
 name = "sg_dd"
-description = "dd ~ (uutils) copy and convert files"
+description = "dd ~ (stargate) copy and convert files"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

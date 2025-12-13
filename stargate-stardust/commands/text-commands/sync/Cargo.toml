@@ -1,6 +1,6 @@
 [package]
 name = "sg_sync"
-description = "sync ~ (uutils) synchronize cache writes to storage"
+description = "sync ~ (stargate) synchronize cache writes to storage"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

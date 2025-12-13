@@ -1,6 +1,6 @@
 use clap::{Arg, ArgAction, Command};
 use serde_json::json;
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format_usage;
 use std::fs::OpenOptions;
 use std::io::{self, Read, Write};
@@ -12,7 +12,7 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sg_app().try_get_matches_from(args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath"])?;
 
@@ -92,3 +92,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue),
         )
 }
+

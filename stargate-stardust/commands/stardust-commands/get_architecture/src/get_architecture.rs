@@ -1,20 +1,20 @@
 use platform_info::*;
 
 use clap::Command;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let opts = StardustOutputOptions::from_matches(&matches);
     let field_filter = matches.get_one::<String>(stardust_output::ARG_FIELD).map(|s| s.as_str());
 
     let uts =
-        PlatformInfo::new().map_err(|_e| USimpleError::new(1, translate!("cannot-get-system")))?;
+        PlatformInfo::new().map_err(|_e| SGSimpleError::new(1, translate!("cannot-get-system")))?;
     let arch = uts.machine().to_string_lossy().trim().to_string();
 
     let output = stardust_output::filter_fields(json!({"architecture": arch}), field_filter);
@@ -36,3 +36,4 @@ pub fn sg_app() -> Command {
 
     stardust_output::add_json_args(cmd)
 }
+

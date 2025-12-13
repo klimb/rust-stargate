@@ -1,6 +1,6 @@
 [package]
 name = "sg_printf"
-description = "printf ~ (uutils) FORMAT and display ARGUMENTS"
+description = "printf ~ (stargate) FORMAT and display ARGUMENTS"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

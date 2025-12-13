@@ -1,6 +1,5 @@
 
-
-use crate::error::UError;
+use crate::error::SGError;
 
 use fluent::{FluentArgs, FluentBundle, FluentResource};
 use fluent_syntax::parser::ParserError;
@@ -45,7 +44,7 @@ impl From<std::io::Error> for LocalizationError {
     }
 }
 
-impl UError for LocalizationError {
+impl SGError for LocalizationError {
     fn code(&self) -> i32 {
         1
     }
@@ -275,14 +274,13 @@ fn detect_system_locale() -> Result<LanguageIdentifier, LocalizationError> {
         .next()
         .unwrap_or(DEFAULT_LOCALE)
         .to_string();
-    
 
     let locale_str = if locale_str == "C" || locale_str == "POSIX" {
         DEFAULT_LOCALE.to_string()
     } else {
         locale_str
     };
-    
+
     LanguageIdentifier::from_str(&locale_str).map_err(|_| {
         LocalizationError::ParseLocale(format!("Failed to parse locale: {locale_str}"))
     })
@@ -340,13 +338,11 @@ fn resolve_locales_dir_from_exe_dir(exe_dir: &Path, p: &str) -> Option<PathBuf> 
 fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
 
     let dir_name = p.replace('-', "_");
-    
+
     #[cfg(debug_assertions)]
     {
 
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
-
-        
 
         let subdirs = ["text-commands", "stardust-commands", "stardust-native"];
         for subdir in &subdirs {
@@ -355,12 +351,11 @@ fn get_locales_dir(p: &str) -> Result<PathBuf, LocalizationError> {
                 .join(subdir)
                 .join(&dir_name)
                 .join("locales");
-            
+
             if organized_path.exists() {
                 return Ok(organized_path);
             }
         }
-        
 
         let dev_path = PathBuf::from(manifest_dir)
             .join("../commands")
@@ -1239,3 +1234,4 @@ mod fhs_tests {
         assert_eq!(result, share_dir);
     }
 }
+

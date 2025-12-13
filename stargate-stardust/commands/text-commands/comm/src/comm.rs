@@ -1,11 +1,11 @@
-// spell-checker:ignore (ToDO) delim mkdelim pairable
+
 
 use std::cmp::Ordering;
 use std::ffi::OsString;
 use std::fs::{File, metadata};
 use std::io::{self, BufRead, BufReader, Read, StdinLock, stdin};
 use std::path::Path;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::fs::paths_refer_to_same_file;
 use sgcore::line_ending::LineEnding;
@@ -120,9 +120,7 @@ impl OrderChecker {
     }
 }
 
-// Check if two files are identical by comparing their contents
 pub fn are_files_identical(path1: &Path, path2: &Path) -> io::Result<bool> {
-    // First compare file sizes
     let metadata1 = metadata(path1)?;
     let metadata2 = metadata(path2)?;
 
@@ -140,9 +138,6 @@ pub fn are_files_identical(path1: &Path, path2: &Path) -> io::Result<bool> {
     let mut buffer2 = [0; 8192];
 
     loop {
-        // Read from first file with EINTR retry handling
-        // This loop retries the read operation if it's interrupted by signals (e.g., SIGUSR1)
-        // instead of failing, which is the POSIX-compliant way to handle interrupted I/O
         let bytes1 = loop {
             match reader1.read(&mut buffer1) {
                 Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
@@ -150,8 +145,6 @@ pub fn are_files_identical(path1: &Path, path2: &Path) -> io::Result<bool> {
             }
         };
 
-        // Read from second file with EINTR retry handling
-        // Same retry logic as above for the second file to ensure consistent behavior
         let bytes2 = loop {
             match reader2.read(&mut buffer2) {
                 Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
@@ -173,7 +166,7 @@ pub fn are_files_identical(path1: &Path, path2: &Path) -> io::Result<bool> {
     }
 }
 
-fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) -> UResult<()> {
+fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) -> SGResult<()> {
     let width_col_1 = usize::from(!opts.get_flag(options::COLUMN_1));
     let width_col_2 = usize::from(!opts.get_flag(options::COLUMN_2));
 
@@ -192,7 +185,6 @@ fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) 
     let check_order = opts.get_flag(options::CHECK_ORDER);
     let no_check_order = opts.get_flag(options::NO_CHECK_ORDER);
 
-    // Determine if we should perform order checking
     let should_check_order = !no_check_order
         && (check_order
             || if let (Some(file1), Some(file2)) = (
@@ -261,7 +253,6 @@ fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) 
             }
         }
 
-        // Track if we've seen any order errors
         if (checker1.has_error || checker2.has_error) && !input_error && !check_order {
             input_error = true;
         }
@@ -276,11 +267,10 @@ fn comm(a: &mut LineReader, b: &mut LineReader, delim: &str, opts: &ArgMatches) 
     }
 
     if should_check_order && (checker1.has_error || checker2.has_error) {
-        // Print the input error message once at the end
         if input_error {
             eprintln!("{}", translate!("comm-error-input-not-sorted"));
         }
-        Err(USimpleError::new(1, ""))
+        Err(SGSimpleError::new(1, ""))
     } else {
         Ok(())
     }
@@ -299,7 +289,7 @@ fn open_file(name: &OsString, line_ending: LineEnding) -> io::Result<LineReader>
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let line_ending = LineEnding::from_zero_flag(matches.get_flag(options::ZERO_TERMINATED));
@@ -310,18 +300,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut f2 = open_file(filename2, line_ending)
         .map_err_context(|| filename2.to_string_lossy().to_string())?;
 
-    // Due to default_value(), there must be at least one value here, thus unwrap() must not panic.
     let all_delimiters = matches
         .get_many::<String>(options::DELIMITER)
         .unwrap()
         .map(String::from)
         .collect::<Vec<_>>();
     for delim in &all_delimiters[1..] {
-        // Note that this check is very different from ".conflicts_with_self(true).action(ArgAction::Set)",
-        // as this accepts duplicate *identical* arguments.
         if delim != &all_delimiters[0] {
-            // Note: This intentionally deviate from the GNU error message by inserting the word "conflicting".
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("comm-error-multiple-conflicting-delimiters")
             ));
@@ -411,3 +397,4 @@ pub fn sg_app() -> Command {
                 .conflicts_with(options::CHECK_ORDER)
         )
 }
+

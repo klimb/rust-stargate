@@ -1,4 +1,4 @@
-// spell-checker:ignore STRINGSTRING INTEGERINTEGER FILEFILE
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -8,8 +8,8 @@ use rand::Rng;
 use rand::prelude::IndexedRandom;
 use std::ffi::OsString;
 
-use uufuzz::CommandResult;
-use uufuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
+use sgfuzz::CommandResult;
+use sgfuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(PartialEq, Debug, Clone)]
@@ -20,7 +20,6 @@ enum ArgType {
     INTEGERINTEGER,
     FILE,
     FILEFILE,
-    // Add any other types as needed
 }
 
 static CMD_PATH: &str = "test";
@@ -205,6 +204,7 @@ fuzz_target!(|_data: &[u8]| {
         None,
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

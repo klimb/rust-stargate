@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) kqueue Signum
+
 
 use crate::paths::Input;
 use crate::{Quotable, parse, platform};
@@ -7,7 +7,7 @@ use same_file::Handle;
 use std::ffi::OsString;
 use std::io::IsTerminal;
 use std::time::Duration;
-use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError};
 use sgcore::parser::parse_size::{ParseSizeError, parse_size_u64};
 use sgcore::parser::parse_time;
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
@@ -25,13 +25,13 @@ pub mod options {
     pub const PID: &str = "pid";
     pub const SLEEP_INT: &str = "sleep-interval";
     pub const ZERO_TERM: &str = "zero-terminated";
-    pub const DISABLE_INOTIFY_TERM: &str = "-disable-inotify"; // NOTE: three hyphens is correct
+    pub const DISABLE_INOTIFY_TERM: &str = "-disable-inotify";
     pub const USE_POLLING: &str = "use-polling";
     pub const RETRY: &str = "retry";
     pub const FOLLOW_RETRY: &str = "F";
     pub const MAX_UNCHANGED_STATS: &str = "max-unchanged-stats";
     pub const ARG_FILES: &str = "files";
-    pub const PRESUME_INPUT_PIPE: &str = "-presume-input-pipe"; // NOTE: three hyphens is correct
+    pub const PRESUME_INPUT_PIPE: &str = "-presume-input-pipe";
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -64,13 +64,13 @@ impl FilterMode {
         }
     }
 
-    fn from(matches: &ArgMatches) -> UResult<Self> {
+    fn from(matches: &ArgMatches) -> SGResult<Self> {
         let zero_term = matches.get_flag(options::ZERO_TERM);
         let mode = if let Some(arg) = matches.get_one::<String>(options::BYTES) {
             match parse_num(arg) {
                 Ok(signum) => Self::Bytes(signum),
                 Err(e) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("tail-error-invalid-number-of-bytes", "arg" => format!("'{e}'"))
                     ));
@@ -83,7 +83,7 @@ impl FilterMode {
                     Self::Lines(signum, delimiter)
                 }
                 Err(_) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("tail-error-invalid-number-of-lines", "arg" => arg.quote())
                     ));
@@ -174,14 +174,8 @@ impl Settings {
         settings
     }
 
-    pub fn from(matches: &ArgMatches) -> UResult<Self> {
-        // We're parsing --follow, -F and --retry under the following conditions:
-        // * -F sets --retry and --follow=name
-        // * plain --follow or short -f is the same like specifying --follow=descriptor
-        // * All these options and flags can occur multiple times as command line arguments
+    pub fn from(matches: &ArgMatches) -> SGResult<Self> {
         let follow_retry = matches.get_flag(options::FOLLOW_RETRY);
-        // We don't need to check for occurrences of --retry if -F was specified which already sets
-        // retry
         let retry = follow_retry || matches.get_flag(options::RETRY);
         let follow = match (
             follow_retry,
@@ -189,24 +183,13 @@ impl Settings {
                 .get_one::<String>(options::FOLLOW)
                 .map(|s| s.as_str())
         ) {
-            // -F and --follow if -F is specified after --follow. We don't need to care about the
-            // value of --follow.
             (true, Some(_))
-                // It's ok to use `index_of` instead of `indices_of` since -F and  --follow
-                // overwrite themselves (not only the value but also the index).
                 if matches.index_of(options::FOLLOW_RETRY) > matches.index_of(options::FOLLOW) =>
             {
                 Some(FollowMode::Name)
             }
-            // * -F and --follow=name if --follow=name is specified after -F
-            // * No occurrences of -F but --follow=name
-            // * -F and no occurrences of --follow
             (_, Some("name")) | (true, None) => Some(FollowMode::Name),
-            // * -F and --follow=descriptor (or plain --follow, -f) if --follow=descriptor is
-            // specified after -F
-            // * No occurrences of -F but --follow=descriptor, --follow, -f
             (_, Some(_)) => Some(FollowMode::Descriptor),
-            // The default for no occurrences of -F or --follow
             (false, None) => None,
         };
 
@@ -222,7 +205,7 @@ impl Settings {
 
         if let Some(source) = matches.get_one::<String>(options::SLEEP_INT) {
             settings.sleep_sec = parse_time::from_str(source, false).map_err(|_| {
-                UUsageError::new(
+                SGUsageError::new(
                     1,
                     translate!("tail-error-invalid-number-of-seconds", "source" => source.clone())
                 )
@@ -233,7 +216,7 @@ impl Settings {
             settings.max_unchanged_stats = match s.parse::<u32>() {
                 Ok(s) => s,
                 Err(_) => {
-                    return Err(UUsageError::new(
+                    return Err(SGUsageError::new(
                         1,
                         translate!("tail-error-invalid-max-unchanged-stats", "value" => s.quote())
                     ));
@@ -244,10 +227,8 @@ impl Settings {
         if let Some(pid_str) = matches.get_one::<String>(options::PID) {
             match pid_str.parse() {
                 Ok(pid) => {
-                    // NOTE: on unix platform::Pid is i32, on windows platform::Pid is u32
                     if pid < 0 {
-                        // NOTE: tail only accepts an unsigned pid
-                        return Err(USimpleError::new(
+                        return Err(SGSimpleError::new(
                             1,
                             translate!("tail-error-invalid-pid", "pid" => pid_str.quote())
                         ));
@@ -256,7 +237,7 @@ impl Settings {
                     settings.pid = pid;
                 }
                 Err(e) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("tail-error-invalid-pid-with-error", "pid" => pid_str.quote(), "error" => e)
                     ));
@@ -306,10 +287,6 @@ impl Settings {
             }
         }
 
-        // This warning originates from gnu's tail implementation of the equivalent warning. If the
-        // user wants to follow stdin, but tail is blocking indefinitely anyways, because of stdin
-        // as `tty` (but no otherwise blocking stdin), then we print a warning that `--follow`
-        // cannot be applied under these circumstances and is therefore ineffective.
         if self.follow.is_some() && self.has_stdin() {
             let blocking_stdin = self.pid == 0
                 && self.follow == Some(FollowMode::Descriptor)
@@ -332,12 +309,10 @@ impl Settings {
     /// misconfigurations usually lead to the immediate exit or abortion of the running `tail`
     /// process.
     pub fn verify(&self) -> VerificationResult {
-        // Mimic GNU's tail for `tail -F`
         if self.inputs.iter().any(|i| i.is_stdin()) && self.follow == Some(FollowMode::Name) {
             return VerificationResult::CannotFollowStdinByName;
         }
 
-        // Mimic GNU's tail for -[nc]0 without -f and exit immediately
         if self.follow.is_none()
             && matches!(
                 self.mode,
@@ -351,13 +326,13 @@ impl Settings {
     }
 }
 
-pub fn parse_obsolete(arg: &OsString, input: Option<&OsString>) -> UResult<Option<Settings>> {
+pub fn parse_obsolete(arg: &OsString, input: Option<&OsString>) -> SGResult<Option<Settings>> {
     match parse::parse_obsolete(arg) {
         Some(Ok(args)) => Ok(Some(Settings::from_obsolete_args(&args, input))),
         None => Ok(None),
         Some(Err(e)) => {
             let arg_str = arg.to_string_lossy();
-            Err(USimpleError::new(
+            Err(SGSimpleError::new(
                 1,
                 match e {
                     parse::ParseError::OutOfRange => {
@@ -366,7 +341,6 @@ pub fn parse_obsolete(arg: &OsString, input: Option<&OsString>) -> UResult<Optio
                     parse::ParseError::Overflow => {
                         translate!("tail-error-invalid-number-overflow", "arg" => arg_str.quote())
                     }
-                    // this ensures compatibility to GNU's error message (as tested in misc/tail)
                     parse::ParseError::Context => {
                         translate!("tail-error-option-used-in-invalid-context", "option" => arg_str.chars().nth(1).unwrap_or_default())
                     }
@@ -385,7 +359,6 @@ fn parse_num(src: &str) -> Result<Signum, ParseSizeError> {
 
     if let Some(c) = size_string.chars().next() {
         if c == '+' || c == '-' {
-            // tail: '-' is not documented (8.32 man pages)
             size_string = &size_string[1..];
             if c == '+' {
                 starting_with = true;
@@ -404,7 +377,7 @@ fn parse_num(src: &str) -> Result<Signum, ParseSizeError> {
     }
 }
 
-pub fn parse_args(args: impl sgcore::Args) -> UResult<Settings> {
+pub fn parse_args(args: impl sgcore::Args) -> SGResult<Settings> {
     let args_vec: Vec<OsString> = args.collect();
     let clap_args = sg_app().try_get_matches_from(args_vec.clone());
     let clap_result = match clap_args {
@@ -412,29 +385,10 @@ pub fn parse_args(args: impl sgcore::Args) -> UResult<Settings> {
         Err(err) => Err(err.into()),
     };
 
-    // clap isn't able to handle obsolete syntax.
-    // therefore, we want to check further for obsolete arguments.
-    // argv[0] is always present, argv[1] might be obsolete arguments
-    // argv[2] might contain an input file, argv[3] isn't allowed in obsolete mode
     if args_vec.len() != 2 && args_vec.len() != 3 {
         return clap_result;
     }
 
-    // At this point, there are a few possible cases:
-    //
-    //    1. clap has succeeded and the arguments would be invalid for the obsolete syntax.
-    //    2. The case of `tail -c 5` is ambiguous. clap parses this as `tail -c5`,
-    //       but it could also be interpreted as valid obsolete syntax (tail -c on file '5').
-    //       GNU chooses to interpret this as `tail -c5`, like clap.
-    //    3. `tail -f foo` is also ambiguous, but has the same effect in both cases. We can safely
-    //        use the clap result here.
-    //    4. clap succeeded for obsolete arguments starting with '+', but misinterprets them as
-    //       input files (e.g. 'tail +f').
-    //    5. clap failed because of unknown flags, but possibly valid obsolete arguments
-    //        (e.g. tail -l; tail -10c).
-    //
-    // In cases 4 & 5, we want to try parsing the obsolete arguments, which corresponds to
-    // checking whether clap succeeded or the first argument starts with '+'.
     let possible_obsolete_args = &args_vec[1];
     if clap_result.is_ok() && !possible_obsolete_args.to_string_lossy().starts_with('+') {
         return clap_result;
@@ -450,7 +404,7 @@ pub fn sg_app() -> Command {
     let polling_help = translate!("tail-help-polling-linux");
     #[cfg(all(unix, not(target_os = "linux")))]
     let polling_help = translate!("tail-help-polling-unix");
-    
+
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -530,8 +484,8 @@ pub fn sg_app() -> Command {
         )
         .arg(
             Arg::new(options::USE_POLLING)
-                .alias(options::DISABLE_INOTIFY_TERM) // NOTE: Used by GNU's test suite
-                .alias("dis") // NOTE: Used by GNU's test suite
+                .alias(options::DISABLE_INOTIFY_TERM)
+                .alias("dis")
                 .long(options::USE_POLLING)
                 .help(polling_help)
                 .action(ArgAction::SetTrue)
@@ -652,3 +606,4 @@ mod tests {
         assert_eq!(settings.retry, expected_retry);
     }
 }
+

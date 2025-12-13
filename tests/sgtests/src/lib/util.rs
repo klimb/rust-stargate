@@ -1,5 +1,5 @@
-//spell-checker: ignore (linux) rlimit prlimit coreutil ggroups uchild uncaptured scmd SHLVL canonicalized openpty
-//spell-checker: ignore (linux) winsize xpixel ypixel setrlimit FSIZE SIGBUS SIGSEGV sigbus tmpfs mksocket
+
+
 
 #![allow(dead_code)]
 #![allow(
@@ -93,7 +93,6 @@ pub struct CmdResult {
     bin_path: PathBuf,
     /// `util_name` provided by `TestScenario` or `UCommand`
     util_name: Option<String>,
-    //tmpd is used for convenience functions for asserts against fixtures
     tmpd: Option<Rc<TempDir>>,
     /// exit status for command (if there is one)
     exit_status: Option<ExitStatus>,
@@ -696,15 +695,15 @@ impl CmdResult {
     /// 1.  the command resulted in stderr stream output that equals the
     ///     the following format
     ///     `"{util_name}: {msg}\nTry '{bin_path} {util_name} --help' for more information."`
-    ///     This the expected format when a `UUsageError` is returned or when `show_error!` is called
-    ///     `msg` should be the same as the one provided to `UUsageError::new` or `show_error!`
+    ///     This the expected format when a `SGUsageError` is returned or when `show_error!` is called
+    ///     `msg` should be the same as the one provided to `SGUsageError::new` or `show_error!`
     ///
     /// 2.  the command resulted in empty (zero-length) stdout stream output
     #[track_caller]
     pub fn usage_error<T: AsRef<str>>(&self, msg: T) -> &Self {
         self.stderr_only(format!(
             "{0}: {2}\nTry '{1} {0} --help' for more information.\n",
-            self.util_name.as_ref().unwrap(), // This shouldn't be called using a normal command
+            self.util_name.as_ref().unwrap(),
             self.bin_path.display(),
             msg.as_ref()
         ))
@@ -1269,13 +1268,6 @@ impl AtPath {
             .unwrap()
             .to_owned();
 
-        // Due to canonicalize()'s use of GetFinalPathNameByHandleW() on Windows, the resolved path
-        // starts with '\\?\' to extend the limit of a given path to 32,767 wide characters.
-        //
-        // To address this issue, we remove this prepended string if available.
-        //
-        // Source:
-        // http://stackoverflow.com/questions/31439011/getfinalpathnamebyhandle-without-prepended
         let prefix = "\\\\?\\";
 
         if let Some(stripped) = s.strip_prefix(prefix) {
@@ -1361,7 +1353,6 @@ impl TestScenario {
     /// test directory.
     pub fn cmd_shell<S: AsRef<OsStr>>(&self, cmd: S) -> UCommand {
         let mut command = UCommand::new();
-        // Intentionally leave bin_path unset.
         command.arg(cmd);
         command.temp_dir(self.tmpd.clone());
         command
@@ -1384,7 +1375,7 @@ impl TestScenario {
             .arg("-t")
             .arg("tmpfs")
             .arg("-o")
-            .arg("size=640k") // ought to be enough
+            .arg("size=640k")
             .arg("tmpfs")
             .arg(mount_point)
             .run();
@@ -1454,7 +1445,7 @@ pub struct UCommand {
     stderr_to_stdout: bool,
     timeout: Option<Duration>,
     terminal_simulation: Option<TerminalSimulation>,
-    tmpd: Option<Rc<TempDir>>, // drop last
+    tmpd: Option<Rc<TempDir>>,
     umask: Option<mode_t>,
 }
 
@@ -1678,7 +1669,6 @@ impl UCommand {
         let result = std::io::copy(&mut reader, &mut writer);
         match result {
             Ok(_) => {}
-            // Input/output error (os error 5) is returned due to pipe closes. Buffer gets content anyway.
             Err(e) if e.raw_os_error().unwrap_or_default() == 5 => {}
             Err(e) => {
                 eprintln!("Unexpected error: {e:?}");
@@ -1744,8 +1734,6 @@ impl UCommand {
         } else if let Some(util_name) = &self.util_name {
             self.bin_path = Some(PathBuf::from(&*get_tests_binary!()));
             self.args.push_front(util_name.into());
-        // neither `bin_path` nor `util_name` was set so we apply the default to run the arguments
-        // in a platform specific shell
         } else if cfg!(unix) {
             #[cfg(target_os = "android")]
             let bin_path = PathBuf::from("/system/bin/sh");
@@ -1770,13 +1758,9 @@ impl UCommand {
             }
         };
 
-        // unwrap is safe here because we have set `self.bin_path` before
         let mut command = Command::new(self.bin_path.as_ref().unwrap());
         command.args(&self.args);
 
-        // We use a temporary directory as working directory if not specified otherwise with
-        // `current_dir()`. If neither `current_dir` nor a temporary directory is available, then we
-        // create our own.
         if let Some(current_dir) = &self.current_dir {
             command.current_dir(current_dir);
         } else if let Some(temp_dir) = &self.tmpd {
@@ -1790,22 +1774,15 @@ impl UCommand {
 
         command.env_clear();
         if cfg!(windows) {
-            // spell-checker:ignore (dll) rsaenh
-            // %SYSTEMROOT% is required on Windows to initialize crypto provider
-            // ... and crypto provider is required for std::rand
-            // From `procmon`: RegQueryValue HKLM\SOFTWARE\Microsoft\Cryptography\Defaults\Provider\Microsoft Strong Cryptographic Provider\Image Path
-            // SUCCESS  Type: REG_SZ, Length: 66, Data: %SystemRoot%\system32\rsaenh.dll"
             if let Some(systemroot) = env::var_os("SYSTEMROOT") {
                 command.env("SYSTEMROOT", systemroot);
             }
         } else {
-            // if someone is setting LD_PRELOAD, there's probably a good reason for it
             if let Some(ld_preload) = env::var_os("LD_PRELOAD") {
                 command.env("LD_PRELOAD", ld_preload);
             }
         }
 
-        // Forward the LLVM_PROFILE_FILE variable to the call, for coverage purposes.
         if let Some(ld_preload) = env::var_os("LLVM_PROFILE_FILE") {
             command.env("LLVM_PROFILE_FILE", ld_preload);
         }
@@ -1901,8 +1878,6 @@ impl UCommand {
         }
 
         if !self.limits.is_empty() {
-            // just to be safe: move a copy of the limits list into the closure.
-            // this way the closure is fully self-contained.
             let limits_copy = self.limits.clone();
             let closure = move || -> Result<()> {
                 for &(resource, soft_limit, hard_limit) in &limits_copy {
@@ -1910,9 +1885,6 @@ impl UCommand {
                 }
                 Ok(())
             };
-            // SAFETY: the closure is self-contained and doesn't do any memory
-            // writes that would need to be propagated back to the parent process.
-            // also, the closure doesn't access stdin, stdout and stderr.
             unsafe {
                 command.pre_exec(closure);
             }
@@ -2025,7 +1997,7 @@ impl std::fmt::Display for UCommand {
 #[derive(Debug)]
 struct CapturedOutput {
     current_file: File,
-    output: tempfile::NamedTempFile, // drop last
+    output: tempfile::NamedTempFile,
     reader_thread_handle: Option<thread::JoinHandle<()>>,
 }
 
@@ -2165,26 +2137,14 @@ impl<'a> UChildAssertion<'a> {
         )
     }
 
-    // Make assertions of [`CmdResult`] with all output from start of the process until now.
-    //
-    // This method runs [`UChild::stdout_all_bytes`] and [`UChild::stderr_all_bytes`] under the
-    // hood. See there for side effects
     pub fn with_all_output(&mut self) -> CmdResult {
         self.with_output(AssertionMode::All)
     }
 
-    // Make assertions of [`CmdResult`] with the current output.
-    //
-    // This method runs [`UChild::stdout_bytes`] and [`UChild::stderr_bytes`] under the hood. See
-    // there for side effects
     pub fn with_current_output(&mut self) -> CmdResult {
         self.with_output(AssertionMode::Current)
     }
 
-    // Make assertions of [`CmdResult`] with the exact output.
-    //
-    // This method runs [`UChild::stdout_exact_bytes`] and [`UChild::stderr_exact_bytes`] under the
-    // hood. See there for side effects
     pub fn with_exact_output(
         &mut self,
         expected_stdout_size: usize,
@@ -2196,7 +2156,6 @@ impl<'a> UChildAssertion<'a> {
         ))
     }
 
-    // Assert that the child process is alive
     #[track_caller]
     pub fn is_alive(&mut self) -> &mut Self {
         match self.uchild.raw.try_wait() {
@@ -2213,7 +2172,6 @@ impl<'a> UChildAssertion<'a> {
         self
     }
 
-    // Assert that the child process has exited
     #[track_caller]
     pub fn is_not_alive(&mut self) -> &mut Self {
         match self.uchild.raw.try_wait() {
@@ -2243,7 +2201,7 @@ pub struct UChild {
     stderr_to_stdout: bool,
     join_handle: Option<JoinHandle<io::Result<()>>>,
     timeout: Option<Duration>,
-    tmpd: Option<Rc<TempDir>>, // drop last
+    tmpd: Option<Rc<TempDir>>,
 }
 
 impl UChild {
@@ -2322,9 +2280,6 @@ impl UChild {
         self.raw.kill()?;
 
         let timeout = self.timeout.unwrap_or(Duration::from_secs(60));
-        // As a side effect, we're cleaning up the killed child process with the implicit call to
-        // `Child::try_wait` in `self.is_alive`, which reaps the process id on unix systems. We
-        // always fail with error on timeout if `self.timeout` is set to zero.
         while self.is_alive() || timeout == Duration::ZERO {
             if start.elapsed() < timeout {
                 self.delay(10);
@@ -2350,7 +2305,6 @@ impl UChild {
     pub fn kill(&mut self) -> &mut Self {
         self.try_kill()
             .or_else(|error| {
-                // We still throw the error on timeout in the `try_kill` function
                 if error.kind() == io::ErrorKind::Other {
                     Err(error)
                 } else {
@@ -2390,9 +2344,6 @@ impl UChild {
         .unwrap();
 
         let timeout = self.timeout.unwrap_or(Duration::from_secs(60));
-        // As a side effect, we're cleaning up the killed child process with the implicit call to
-        // `Child::try_wait` in `self.is_alive`, which reaps the process id on unix systems. We
-        // always fail with error on timeout if `self.timeout` is set to zero.
         while self.is_alive() || timeout == Duration::ZERO {
             if start.elapsed() < timeout {
                 self.delay(10);
@@ -2419,7 +2370,6 @@ impl UChild {
     pub fn kill_with_custom_signal(&mut self, signal_name: sys::signal::Signal) -> &mut Self {
         self.try_kill_with_custom_signal(signal_name)
             .or_else(|error| {
-                // We still throw the error on timeout in the `try_kill` function
                 if error.kind() == io::ErrorKind::Other {
                     Err(error)
                 } else {
@@ -2468,9 +2418,7 @@ impl UChild {
     /// If `self.timeout` is reached while waiting or [`Child::wait_with_output`] returned an
     /// error.
     fn wait_with_output(mut self) -> io::Result<Output> {
-        // some apps do not stop execution until their stdin gets closed.
-        // to prevent a endless waiting here, we close the stdin.
-        self.join(); // ensure that all pending async input is piped in
+        self.join();
         self.close_stdin();
 
         let output = if let Some(timeout) = self.timeout {
@@ -2484,8 +2432,6 @@ impl UChild {
 
             match receiver.recv_timeout(timeout) {
                 Ok(result) => {
-                    // unwraps are safe here because we got a result from the sender and there was no panic
-                    // causing a disconnect.
                     handle.join().unwrap().unwrap();
                     result
                 }
@@ -2815,7 +2761,6 @@ impl UChild {
     pub fn close_stdin(&mut self) -> &mut Self {
         self.raw.stdin.take();
         if self.stdin_pty.is_some() {
-            // a pty can not be closed. We need to send a EOT:
             let _ = self.try_write_in(END_OF_TRANSMISSION_SEQUENCE);
             self.stdin_pty.take();
         }
@@ -2830,19 +2775,7 @@ pub fn vec_of_size(n: usize) -> Vec<u8> {
 }
 
 pub fn whoami() -> String {
-    // Apparently some CI environments have configuration issues, e.g. with 'whoami' and 'id'.
-    //
-    // From the Logs: "Build (ubuntu-18.04, x86_64-unknown-linux-gnu, feat_os_unix, use-cross)"
-    //    whoami: cannot find name for user ID 1001
-    // id --name: cannot find name for user ID 1001
-    // id --name: cannot find name for group ID 116
-    //
-    // However, when running "id" from within "/bin/bash" it looks fine:
-    // id: "uid=1001(runner) gid=118(docker) groups=118(docker),4(adm),101(systemd-journal)"
-    // whoami: "runner"
 
-    // Use environment variable to get current user instead of
-    // invoking `whoami` and fall back to user "nobody" on error.
     std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_else(|e| {
@@ -2854,11 +2787,8 @@ pub fn whoami() -> String {
 /// Add prefix 'g' for `util_name` if not on linux
 #[cfg(unix)]
 pub fn host_name_for(util_name: &str) -> Cow<'_, str> {
-    // In some environments, e.g. macOS/freebsd, the GNU coreutils are prefixed with "g"
-    // to not interfere with the BSD counterparts already in `$PATH`.
     #[cfg(not(target_os = "linux"))]
     {
-        // make call to `host_name_for` idempotent
         if util_name.starts_with('g') && util_name != "groups" {
             util_name.into()
         } else {
@@ -2869,15 +2799,7 @@ pub fn host_name_for(util_name: &str) -> Cow<'_, str> {
     util_name.into()
 }
 
-// GNU coreutils version 8.32 is the reference version since it is the latest version and the
-// GNU test suite in "coreutils/.github/workflows/GnuTests.yml" runs against it.
-// However, here 8.30 was chosen because right now there's no ubuntu image for the github actions
-// CICD available with a higher version than 8.30.
-// GNU coreutils versions from the CICD images for comparison:
-// ubuntu-2004: 8.30 (latest)
-// ubuntu-1804: 8.28
-// macos-latest: 8.32
-const VERSION_MIN: &str = "8.30"; // minimum Version for the reference `coreutil` in `$PATH`
+const VERSION_MIN: &str = "8.30";
 
 const UUTILS_WARNING: &str = "uutils-tests-warning";
 const UUTILS_INFO: &str = "uutils-tests-info";
@@ -2912,9 +2834,6 @@ pub fn check_coreutil_version(
     util_name: &str,
     version_expected: &str,
 ) -> std::result::Result<String, String> {
-    // example:
-    // $ id --version | head -n 1
-    // id (GNU coreutils) 8.32.162-4eda
 
     let util_name = &host_name_for(util_name);
     log_info("run", format!("{util_name} --version"));
@@ -2949,7 +2868,6 @@ pub fn check_coreutil_version(
         )
 }
 
-// simple heuristic to parse the coreutils SemVer string, e.g. "id (GNU coreutils) 8.32.263-0475"
 fn parse_coreutil_version(version_string: &str) -> f32 {
     version_string
         .split_whitespace()
@@ -3012,7 +2930,6 @@ pub fn gnu_cmd_result(
             result.stderr_str_lossy().to_string(),
         )
     } else {
-        // `host_name_for` added prefix, strip 'g' prefix from results:
         let from = util_name.to_string() + ":";
         let to = &from[1..];
         (
@@ -3099,7 +3016,6 @@ pub fn run_ucmd_as_root_with_stdin_stdout(
     if is_ci() {
         Err(format!("{UUTILS_INFO}: {}", "cannot run inside CI"))
     } else {
-        // check if we can run 'sudo'
         log_info("run", "sudo -E --non-interactive whoami");
         match Command::new("sudo")
             .envs(DEFAULT_ENV)
@@ -3107,8 +3023,6 @@ pub fn run_ucmd_as_root_with_stdin_stdout(
             .output()
         {
             Ok(output) if String::from_utf8_lossy(&output.stdout).eq("root\n") => {
-                // we can run sudo and we're root
-                // run ucmd as root:
                 let mut cmd = ts.cmd("sudo");
                 cmd.env("PATH", PATH)
                     .envs(DEFAULT_ENV)
@@ -3139,10 +3053,8 @@ pub fn run_ucmd_as_root_with_stdin_stdout(
 /// Sanity checks for test utils
 #[cfg(test)]
 mod tests {
-    // spell-checker:ignore (tests) asdfsadfa
     use super::*;
 
-    // Create a init for the test with a fake value (not needed)
     #[cfg(test)]
     #[ctor::ctor]
     fn init() {
@@ -3368,7 +3280,6 @@ mod tests {
     #[cfg(unix)]
     fn test_expected_result() {
         let ts = TestScenario::new("id");
-        // assert!(expected_result(&ts, &[]).is_ok());
         match expected_result(&ts, &[]) {
             Ok(r) => assert!(r.succeeded()),
             Err(s) => assert!(s.starts_with("uutils-tests-warning")),
@@ -3388,7 +3299,6 @@ mod tests {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            // spell-checker:ignore (strings) ggroups gwho
             std::assert_eq!(host_name_for("id"), "gid");
             std::assert_eq!(host_name_for("groups"), "ggroups");
             std::assert_eq!(host_name_for("who"), "gwho");
@@ -3457,7 +3367,6 @@ mod tests {
     fn test_altering_umask() {
         use sgcore::mode::get_umask;
         let p_umask = get_umask();
-        // make sure we are not testing against the same umask
         let c_umask = if p_umask == 0o002 { 0o007 } else { 0o002 };
         let expected = if cfg!(target_os = "android") {
             if p_umask == 0o002 { "007\n" } else { "002\n" }
@@ -3472,7 +3381,7 @@ mod tests {
             .umask(c_umask)
             .succeeds()
             .stdout_is(expected);
-        std::assert_eq!(p_umask, get_umask()); // make sure parent umask didn't change
+        std::assert_eq!(p_umask, get_umask());
     }
 
     #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
@@ -3480,7 +3389,6 @@ mod tests {
     fn test_mount_temp_fs() {
         let mut scene = TestScenario::new("util");
         let at = &scene.fixtures;
-        // Test must be run as root (or with `sudo -E`)
         if scene.cmd("whoami").run().stdout_str() != "root\n" {
             return;
         }
@@ -3495,3 +3403,4 @@ mod tests {
             .stdout_contains("tmpfs");
     }
 }
+

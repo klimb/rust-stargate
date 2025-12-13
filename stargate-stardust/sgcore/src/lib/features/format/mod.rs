@@ -1,4 +1,4 @@
-// spell-checker:ignore extendedbigdecimal
+
 
 //! `printf`-style formatting
 //!
@@ -38,7 +38,7 @@ use crate::extendedbigdecimal::ExtendedBigDecimal;
 pub use argument::{FormatArgument, FormatArguments};
 
 use self::{escape::parse_escape_code, num_format::Formatter};
-use crate::{NonUtf8OsStrError, error::UError};
+use crate::{NonUtf8OsStrError, error::SGError};
 pub use spec::Spec;
 use std::{
     error::Error,
@@ -71,7 +71,7 @@ pub enum FormatError {
 }
 
 impl Error for FormatError {}
-impl UError for FormatError {}
+impl SGError for FormatError {}
 
 impl From<std::io::Error> for FormatError {
     fn from(value: std::io::Error) -> Self {
@@ -107,7 +107,6 @@ impl Display for FormatError {
                 write!(f, "format {} ends in %", String::from_utf8_lossy(s).quote())
             }
             Self::InvalidPrecision(precision) => write!(f, "invalid precision: '{precision}'"),
-            // TODO: Error message below needs some work
             Self::WrongSpecType => write!(f, "wrong % directive type was given"),
             Self::IoError(_) => write!(f, "write error"),
             Self::NoMoreArguments => write!(f, "no more arguments"),
@@ -384,8 +383,6 @@ impl<F: Formatter<T>, T> Format<F, T> {
         let mut suffix = Vec::new();
         for item in &mut iter {
             match item {
-                // If the `format_string` is of the form `%f%f` or
-                // `%f%`, then return an error.
                 Ok(FormatItem::Spec(_)) | Err(FormatError::EndsWithPercent(_)) => {
                     return Err(FormatError::TooManySpecs(format_string.as_ref().to_vec()));
                 }
@@ -409,3 +406,4 @@ impl<F: Formatter<T>, T> Format<F, T> {
         Ok(())
     }
 }
+

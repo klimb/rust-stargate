@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) clrtoeol dircolors eightbit endcode fnmatch leftcode multihardlink rightcode setenv sgid suid colorterm disp
+
 
 use std::borrow::Borrow;
 use std::env;
@@ -11,7 +11,7 @@ use std::path::Path;
 use clap::{Arg, ArgAction, Command};
 use sgcore::colors::{FILE_ATTRIBUTE_CODES, FILE_COLORS, FILE_TYPES, TERMS};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError};
 use sgcore::translate;
 
 use sgcore::{format_usage, parser::parse_glob};
@@ -76,7 +76,6 @@ pub fn generate_type_output(fmt: &OutputFmt) -> String {
             .collect::<Vec<String>>()
             .join("\n"),
         _ => {
-            // Existing logic for other formats
             FILE_TYPES
                 .iter()
                 .map(|&(_, v1, v2)| format!("{v1}={v2}"))
@@ -100,7 +99,6 @@ fn generate_ls_colors(fmt: &OutputFmt, sep: &str) -> String {
             display_parts.join("\n")
         }
         _ => {
-            // existing logic for other formats
             let mut parts = vec![];
             for &(extension, code) in FILE_COLORS {
                 let prefix = if extension.starts_with('*') { "" } else { "*" };
@@ -115,7 +113,7 @@ fn generate_ls_colors(fmt: &OutputFmt, sep: &str) -> String {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -123,19 +121,17 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .get_many::<OsString>(options::FILE)
         .map_or(vec![], |file_values| file_values.collect());
 
-    // clap provides .conflicts_with / .conflicts_with_all, but we want to
-    // manually handle conflicts so we can match the output of GNU coreutils
     if (matches.get_flag(options::C_SHELL) || matches.get_flag(options::BOURNE_SHELL))
         && (matches.get_flag(options::PRINT_DATABASE) || matches.get_flag(options::PRINT_LS_COLORS))
     {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("dircolors-error-shell-and-output-exclusive")
         ));
     }
 
     if matches.get_flag(options::PRINT_DATABASE) && matches.get_flag(options::PRINT_LS_COLORS) {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("dircolors-error-print-database-and-ls-colors-exclusive")
         ));
@@ -143,7 +139,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     if matches.get_flag(options::PRINT_DATABASE) {
         if !files.is_empty() {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 1,
                 translate!("dircolors-error-extra-operand-print-database", "operand" => files[0].to_string_lossy().quote())
             ));
@@ -166,7 +162,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     if out_format == OutputFmt::Unknown {
         match guess_syntax() {
             OutputFmt::Unknown => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("dircolors-error-no-shell-environment")
                 ));
@@ -179,26 +175,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     if files.is_empty() {
         println!("{}", generate_ls_colors(&out_format, ":"));
         return Ok(());
-        /*
-        // Check if data is being piped into the program
-        if std::io::stdin().is_terminal() {
-            // No data piped, use default behavior
-            println!("{}", generate_ls_colors(&out_format, ":"));
-            return Ok(());
-        } else {
-            // Data is piped, process the input from stdin
-            let fin = BufReader::new(std::io::stdin());
-            result = parse(fin.lines().map_while(Result::ok), &out_format, "-");
-        }
-         */
     } else if files.len() > 1 {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("dircolors-error-extra-operand", "operand" => files[1].to_string_lossy().quote())
         ));
     } else if files[0] == "-" {
         let fin = BufReader::new(std::io::stdin());
-        // For example, for echo "owt 40;33"|dircolors -b -
         result = parse(
             fin.lines().map_while(Result::ok),
             &out_format,
@@ -207,7 +190,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     } else {
         let path = Path::new(&files[0]);
         if path.is_dir() {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 2,
                 translate!("dircolors-error-expected-file-got-directory", "path" => path.quote())
             ));
@@ -222,7 +205,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 );
             }
             Err(e) => {
-                return Err(USimpleError::new(1, format!("{}: {e}", path.maybe_quote())));
+                return Err(SGSimpleError::new(1, format!("{}: {e}", path.maybe_quote())));
             }
         }
     }
@@ -232,7 +215,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             println!("{s}");
             Ok(())
         }
-        Err(s) => Err(USimpleError::new(1, s)),
+        Err(s) => Err(SGSimpleError::new(1, s)),
     }
 }
 
@@ -302,15 +285,12 @@ impl StrUtils for str {
             .enumerate()
             .filter(|(_, c)| **c == b'#')
         {
-            // Ignore the content after '#'
-            // only if it is preceded by at least one whitespace
             match self[..n].chars().last() {
                 Some(c) if c.is_whitespace() => {
                     line = &self[..n - c.len_utf8()];
                     break;
                 }
                 None => {
-                    // n == 0
                     line = &self[..0];
                     break;
                 }
@@ -356,7 +336,6 @@ where
 
     result.push_str(&prefix);
 
-    // Get environment variables once at the start
     let term = env::var("TERM").unwrap_or_else(|_| "none".to_owned());
     let colorterm = env::var("COLORTERM").unwrap_or_default();
 
@@ -389,7 +368,6 @@ where
                 }
             }
             "colorterm" => {
-                // For COLORTERM ?*, only match if COLORTERM is non-empty
                 let matches = if val == "?*" {
                     !colorterm.is_empty()
                 } else {
@@ -404,8 +382,6 @@ where
             }
             _ => {
                 if state == ParseState::Matched {
-                    // prevent subsequent mismatched TERM from
-                    // cancelling the input
                     state = ParseState::Continue;
                 }
                 if state != ParseState::Pass {
@@ -416,7 +392,6 @@ where
     }
 
     if fmt == &OutputFmt::Display {
-        // remove latest "\n"
         result.pop();
     }
     result.push_str(&suffix);
@@ -447,7 +422,7 @@ fn append_entry(
     }
 
     match lower {
-        "options" | "color" | "eightbit" => Ok(()), // Slackware only, ignore
+        "options" | "color" | "eightbit" => Ok(()),
         _ => {
             if let Some((_, s)) = FILE_ATTRIBUTE_CODES.iter().find(|&&(key, _)| key == lower) {
                 let disp = if *fmt == OutputFmt::Display {
@@ -549,3 +524,4 @@ mod tests {
         assert_eq!("\\:", escape("\\:"));
     }
 }
+

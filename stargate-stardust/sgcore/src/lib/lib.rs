@@ -1,21 +1,19 @@
 //! library ~ (core/bundler file)
-// #![deny(missing_docs)] //TODO: enable this
-//
-// spell-checker:ignore sigaction SIGBUS SIGSEGV extendedbigdecimal myutil logind
 
-// * feature-gated external crates (re-shared as public internal modules)
+
+
+
+
+
 #[cfg(feature = "libc")]
 pub extern crate libc;
 
-//## internal modules
-
-mod features; // feature-gated code modules
-mod macros; // crate macros (macro_rules-type; exported to `crate::...`)
-mod mods; // core cross-platform modules
+mod features;
+mod macros;
+mod mods;
 
 pub use sgcore_procs::*;
 
-// * cross-platform modules
 pub use crate::mods::clap_localization;
 pub use crate::mods::display;
 pub use crate::mods::error;
@@ -29,7 +27,6 @@ pub use crate::mods::panic;
 pub use crate::mods::pledge;
 pub use crate::mods::posix;
 
-// * feature-gated modules
 #[cfg(feature = "backup-control")]
 pub use crate::features::backup_control;
 #[cfg(feature = "benchmark")]
@@ -75,11 +72,8 @@ pub use crate::features::uptime;
 #[cfg(feature = "version-cmp")]
 pub use crate::features::version_cmp;
 
-// * (platform-specific) feature-gated modules
-// ** non-windows (i.e. Unix + Fuchsia)
 #[cfg(all(feature = "mode"))]
 pub use crate::features::mode;
-// ** unix-only
 #[cfg(all(unix, feature = "entries"))]
 pub use crate::features::entries;
 #[cfg(all(unix, feature = "perms"))]
@@ -101,7 +95,6 @@ pub use crate::features::fsext;
 #[cfg(all(unix, feature = "fsxattr"))]
 pub use crate::features::fsxattr;
 
-//## core functions
 use nix::errno::Errno;
 use nix::sys::signal::{
     SaFlags, SigAction, SigHandler::SigDfl, SigSet, Signal::SIGBUS, Signal::SIGSEGV, sigaction,
@@ -134,20 +127,16 @@ pub fn disable_rust_signal_handlers() -> Result<(), Errno> {
 }
 
 pub fn get_canonical_util_name(util_name: &str) -> &str {
-    // remove the "sg_" prefix
     let util_name = &util_name[3..];
     match util_name {
-        // sg_test aliases - '[' is an alias for test
         "[" => "test",
 
-        // hashsum aliases - all these hash commands are aliases for hashsum
         "md5sum" | "sha1sum" | "sha224sum" | "sha256sum" | "sha384sum" | "sha512sum"
         | "sha3sum" | "sha3-224sum" | "sha3-256sum" | "sha3-384sum" | "sha3-512sum"
         | "shake128sum" | "shake256sum" | "b2sum" | "b3sum" => "hashsum",
 
-        "dir" => "ls", // dir is an alias for ls
+        "dir" => "ls",
 
-        // Default case - return the util name as is
         _ => util_name,
     }
 }
@@ -162,7 +151,6 @@ macro_rules! bin {
         pub fn main() {
             use std::io::Write;
             use sgcore::locale;
-            // suppress extraneous error output for SIGPIPE failures/panics
             sgcore::panic::mute_sigpipe_panic();
             locale::setup_localization(sgcore::get_canonical_util_name(stringify!($util)))
                 .unwrap_or_else(|err| {
@@ -176,9 +164,7 @@ macro_rules! bin {
                     std::process::exit(99)
                 });
 
-            // execute utility code
             let code = $util::sgmain(sgcore::args_os());
-            // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");
             }
@@ -198,7 +184,6 @@ macro_rules! obj {
         pub fn main() {
             use std::io::Write;
             use sgcore::locale;
-            // suppress extraneous error output for SIGPIPE failures/panics
             sgcore::panic::mute_sigpipe_panic();
             locale::setup_localization(sgcore::get_canonical_util_name(stringify!($util)))
                 .unwrap_or_else(|err| {
@@ -212,9 +197,7 @@ macro_rules! obj {
                     std::process::exit(99)
                 });
 
-            // execute utility code
             let code = $util::sgmain(sgcore::args_os());
-            // (defensively) flush stdout for utility prior to exit; see <https://github.com/rust-lang/rust/issues/23818>
             if let Err(e) = std::io::stdout().flush() {
                 eprintln!("Error flushing stdout: {e}");
             }
@@ -271,7 +254,6 @@ pub fn format_usage(s: &str) -> String {
 pub fn localized_help_template(util_name: &str) -> clap::builder::StyledStr {
     use std::io::IsTerminal;
 
-    // Determine if colors should be enabled - same logic as configure_localized_command
     let colors_enabled = if std::env::var("NO_COLOR").is_ok() {
         false
     } else if std::env::var("CLICOLOR_FORCE").is_ok() || std::env::var("FORCE_COLOR").is_ok() {
@@ -292,19 +274,14 @@ pub fn localized_help_template_with_colors(
 ) -> clap::builder::StyledStr {
     use std::fmt::Write;
 
-    // Ensure localization is initialized for this utility
     let _ = crate::locale::setup_localization(util_name);
 
-    // Get the localized "Usage" label
     let usage_label = crate::locale::translate!("common-usage");
 
-    // Create a styled template
     let mut template = clap::builder::StyledStr::new();
 
-    // Add the basic template parts
     writeln!(template, "{{before-help}}{{about-with-newline}}").unwrap();
 
-    // Add styled usage header (bold + underline like clap's default)
     if colors_enabled {
         write!(
             template,
@@ -315,7 +292,6 @@ pub fn localized_help_template_with_colors(
         write!(template, "{usage_label}: {{usage}}\n\n").unwrap();
     }
 
-    // Add the rest
     write!(template, "{{all-args}}{{after-help}}").unwrap();
 
     template
@@ -333,8 +309,6 @@ pub fn set_utility_is_second_arg() {
     crate::macros::UTILITY_IS_SECOND_ARG.store(true, Ordering::SeqCst);
 }
 
-// args_os() can be expensive to call, it copies all of argv before iterating.
-// So if we want only the first arg or so it's overkill. We cache it.
 static ARGV: LazyLock<Vec<OsString>> = LazyLock::new(|| wild::args_os().collect());
 
 static UTIL_NAME: LazyLock<String> = LazyLock::new(|| {
@@ -342,9 +316,6 @@ static UTIL_NAME: LazyLock<String> = LazyLock::new(|| {
     let is_man = usize::from(ARGV[base_index].eq("manpage"));
     let argv_index = base_index + is_man;
 
-    // Strip directory path to show only utility name
-    // (e.g., "mkdir" instead of "./target/debug/mkdir")
-    // in version output, error messages, and other user-facing output
     std::path::Path::new(&ARGV[argv_index])
         .file_name()
         .unwrap_or(&ARGV[argv_index])
@@ -402,7 +373,6 @@ pub trait CommonArgs: Iterator<Item = OsString> + Sized {
     }
 }
 
-
 impl<T: Iterator<Item = OsString> + Sized> Args for T {}
 
 /// Returns an iterator over the command line arguments as `OsString`s.
@@ -443,7 +413,7 @@ impl std::fmt::Display for NonUtf8OsStrError {
 }
 
 impl std::error::Error for NonUtf8OsStrError {}
-impl error::UError for NonUtf8OsStrError {}
+impl error::SGError for NonUtf8OsStrError {}
 
 /// Converts an `OsStr` to a UTF-8 `&[u8]`.
 ///
@@ -480,12 +450,12 @@ pub fn os_str_as_bytes_lossy(os_string: &OsStr) -> Cow<'_, [u8]> {
 ///
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
-pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::UResult<Cow<'_, OsStr>> {
+pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::SGResult<Cow<'_, OsStr>> {
     return Ok(Cow::Borrowed(OsStr::from_bytes(bytes)));
 
     #[cfg(not(unix))]
     Ok(Cow::Owned(OsString::from(str::from_utf8(bytes).map_err(
-        |_| mods::error::UUsageError::new(1, "Unable to transform bytes into OsStr")
+        |_| mods::error::SGUsageError::new(1, "Unable to transform bytes into OsStr")
     )?)))
 }
 
@@ -493,12 +463,12 @@ pub fn os_str_from_bytes(bytes: &[u8]) -> mods::error::UResult<Cow<'_, OsStr>> {
 ///
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
-pub fn os_string_from_vec(vec: Vec<u8>) -> mods::error::UResult<OsString> {
+pub fn os_string_from_vec(vec: Vec<u8>) -> mods::error::SGResult<OsString> {
     return Ok(OsString::from_vec(vec));
 
     #[cfg(not(unix))]
     Ok(OsString::from(String::from_utf8(vec).map_err(|_| {
-        mods::error::UUsageError::new(1, "invalid UTF-8 was detected in one or more arguments")
+        mods::error::SGUsageError::new(1, "invalid UTF-8 was detected in one or more arguments")
     })?))
 }
 
@@ -506,13 +476,13 @@ pub fn os_string_from_vec(vec: Vec<u8>) -> mods::error::UResult<OsString> {
 ///
 /// This always succeeds on unix platforms,
 /// and fails on other platforms if the bytes can't be parsed as UTF-8.
-pub fn os_string_to_vec(s: OsString) -> mods::error::UResult<Vec<u8>> {
+pub fn os_string_to_vec(s: OsString) -> mods::error::SGResult<Vec<u8>> {
     let v = s.into_vec();
     #[cfg(not(unix))]
     let v = s
         .into_string()
         .map_err(|_| {
-            mods::error::UUsageError::new(1, "invalid UTF-8 was detected in one or more arguments")
+            mods::error::SGUsageError::new(1, "invalid UTF-8 was detected in one or more arguments")
         })?
         .into();
 
@@ -532,7 +502,6 @@ pub fn read_byte_lines<R: std::io::Read>(
             return None;
         }
 
-        // Trim (\r)\n
         if buf.ends_with(b"\n") {
             buf.pop();
             if buf.ends_with(b"\r") {
@@ -578,7 +547,7 @@ macro_rules! prompt_yes(
         eprint!($($args)+);
         eprint!(" ");
         let res = std::io::stderr().flush().map_err(|err| {
-            $crate::error::USimpleError::new(1, err.to_string())
+            $crate::error::SGSimpleError::new(1, err.to_string())
         });
         sgcore::show_if_err!(res);
         sgcore::read_yes()
@@ -678,35 +647,28 @@ mod tests {
     fn make_os_vec(os_str: &OsStr) -> Vec<OsString> {
         vec![
             OsString::from("test"),
-            OsString::from("สวัสดี"), // spell-checker:disable-line
+            OsString::from("สวัสดี"),
             os_str.to_os_string(),
         ]
     }
     fn test_invalid_utf8_args_lossy(os_str: &OsStr) {
-        // assert our string is invalid utf8
         assert!(os_str.to_os_string().into_string().is_err());
         let test_vec = make_os_vec(os_str);
         let collected_to_str = test_vec.clone().into_iter().collect_lossy();
-        // conservation of length - when accepting lossy conversion no arguments may be dropped
         assert_eq!(collected_to_str.len(), test_vec.len());
-        // first indices identical
         for index in 0..2 {
             assert_eq!(collected_to_str[index], test_vec[index].to_str().unwrap());
         }
-        // lossy conversion for string with illegal encoding is done
         assert_eq!(
             *collected_to_str[2],
             os_str.to_os_string().to_string_lossy()
         );
     }
     fn test_invalid_utf8_args_ignore(os_str: &OsStr) {
-        // assert our string is invalid utf8
         assert!(os_str.to_os_string().into_string().is_err());
         let test_vec = make_os_vec(os_str);
         let collected_to_str = test_vec.clone().into_iter().collect_ignore();
-        // assert that the broken entry is filtered out
         assert_eq!(collected_to_str.len(), test_vec.len() - 1);
-        // assert that the unbroken indices are converted as expected
         for index in 0..2 {
             assert_eq!(
                 collected_to_str.get(index).unwrap(),
@@ -717,9 +679,7 @@ mod tests {
 
     #[test]
     fn valid_utf8_encoding_args() {
-        // create a vector containing only correct encoding
         let test_vec = make_os_vec(&OsString::from("test2"));
-        // expect complete conversion without losses, even when lossy conversion is accepted
         let _ = test_vec.into_iter().collect_lossy();
     }
     #[test]
@@ -741,3 +701,4 @@ mod tests {
         );
     }
 }
+

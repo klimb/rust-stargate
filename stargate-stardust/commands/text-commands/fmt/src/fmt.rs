@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) PSKIP linebreak ostream parasplit tabwidth xanti xprefix
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Stdout, Write, stdin, stdout};
 use std::path::Path;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::translate;
 
 use sgcore::format_usage;
@@ -38,16 +38,15 @@ enum FmtError {
     InvalidWidthMalformed(String),
 }
 
-impl From<FmtError> for Box<dyn sgcore::error::UError> {
+impl From<FmtError> for Box<dyn sgcore::error::SGError> {
     fn from(err: FmtError) -> Self {
-        USimpleError::new(1, err.to_string())
+        SGSimpleError::new(1, err.to_string())
     }
 }
 
 const MAX_WIDTH: usize = 2500;
 const DEFAULT_GOAL: usize = 70;
 const DEFAULT_WIDTH: usize = 75;
-// by default, goal is 93% of width
 const DEFAULT_GOAL_TO_WIDTH_RATIO: usize = 93;
 
 mod options {
@@ -86,7 +85,7 @@ pub struct FmtOptions {
 }
 
 impl FmtOptions {
-    fn from_matches(matches: &ArgMatches) -> UResult<Self> {
+    fn from_matches(matches: &ArgMatches) -> SGResult<Self> {
         let mut tagged = matches.get_flag(options::TAGGED_PARAGRAPH);
         let mut crown = matches.get_flag(options::CROWN_MARGIN);
 
@@ -132,7 +131,6 @@ impl FmtOptions {
                 (w, g)
             }
             (Some(0), None) => {
-                // Only allow a goal of zero if the width is set to be zero
                 (0, 0)
             }
             (Some(w), None) => {
@@ -199,12 +197,12 @@ impl FmtOptions {
 ///
 /// # Returns
 ///
-/// A `UResult<()>` indicating success or failure.
+/// A `SGResult<()>` indicating success or failure.
 fn process_file(
     file_name: &OsString,
     fmt_opts: &FmtOptions,
     ostream: &mut BufWriter<Stdout>
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut fp = BufReader::new(if file_name == "-" {
         Box::new(stdin()) as Box<dyn Read + 'static>
     } else {
@@ -240,7 +238,6 @@ fn process_file(
         }
     }
 
-    // flush the output after each file
     ostream
         .flush()
         .map_err_context(|| translate!("fmt-error-failed-to-write-output"))?;
@@ -252,15 +249,15 @@ fn process_file(
 /// position.
 ///
 /// # Returns
-/// A `UResult<()>` with the file names, or an error if one of the file names could not be parsed
+/// A `SGResult<()>` with the file names, or an error if one of the file names could not be parsed
 /// (e.g., it is given as a negative number not in the first argument and not after a --
-fn extract_files(matches: &ArgMatches) -> UResult<Vec<OsString>> {
+fn extract_files(matches: &ArgMatches) -> SGResult<Vec<OsString>> {
     let in_first_pos = matches
         .index_of(options::FILES_OR_WIDTH)
         .is_some_and(|x| x == 1);
     let is_neg = |s: &str| s.parse::<isize>().is_ok_and(|w| w < 0);
 
-    let files: UResult<Vec<OsString>> = matches
+    let files: SGResult<Vec<OsString>> = matches
         .get_many::<OsString>(options::FILES_OR_WIDTH)
         .into_iter()
         .flatten()
@@ -290,7 +287,7 @@ fn extract_files(matches: &ArgMatches) -> UResult<Vec<OsString>> {
     }
 }
 
-fn extract_width(matches: &ArgMatches) -> UResult<Option<usize>> {
+fn extract_width(matches: &ArgMatches) -> SGResult<Option<usize>> {
     let width_opt = matches.get_one::<String>(options::WIDTH);
     if let Some(width_str) = width_opt {
         return if let Ok(width) = width_str.parse::<usize>() {
@@ -308,7 +305,6 @@ fn extract_width(matches: &ArgMatches) -> UResult<Option<usize>> {
         if let Some(num) = width_str.strip_prefix('-') {
             Ok(num.parse::<usize>().ok())
         } else {
-            // will be treated as a file name
             Ok(None)
         }
     } else {
@@ -317,12 +313,10 @@ fn extract_width(matches: &ArgMatches) -> UResult<Option<usize>> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args: Vec<_> = args.collect();
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
-    // Warn the user if it looks like we're trying to pass a number in the first
-    // argument with non-numeric characters
     if let Some(first_arg) = args.get(1) {
         let first_arg = first_arg.to_string_lossy();
         let malformed_number = first_arg.starts_with('-')
@@ -427,7 +421,6 @@ pub fn sg_app() -> Command {
                 .short('w')
                 .long("width")
                 .help(translate!("fmt-width-help"))
-                // We must accept invalid values if they are overridden later. This is not supported by clap, so accept all strings instead.
                 .value_name("WIDTH")
         )
         .arg(
@@ -435,7 +428,6 @@ pub fn sg_app() -> Command {
                 .short('g')
                 .long("goal")
                 .help(translate!("fmt-goal-help"))
-                // We must accept invalid values if they are overridden later. This is not supported by clap, so accept all strings instead.
                 .value_name("GOAL")
         )
         .arg(
@@ -515,3 +507,4 @@ mod tests {
         assert_eq!(extract_width(&matches).ok(), Some(Some(3)));
     }
 }
+

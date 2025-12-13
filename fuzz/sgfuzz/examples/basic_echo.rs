@@ -1,11 +1,9 @@
 use std::ffi::OsString;
-use uufuzz::{compare_result, generate_and_run_uumain, run_gnu_cmd};
+use sgfuzz::{compare_result, generate_and_run_uumain, run_gnu_cmd};
 
-// Mock echo implementation for demonstration
 fn mock_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
     let args: Vec<OsString> = args.collect();
 
-    // Skip the program name (first argument)
     for (i, arg) in args.iter().skip(1).enumerate() {
         if i > 0 {
             print!(" ");
@@ -17,9 +15,8 @@ fn mock_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
 }
 
 fn main() {
-    println!("=== Basic uufuzz Example ===");
+    println!("=== Basic sgfuzz Example ===");
 
-    // Test against GNU implementation
     let args = vec![
         OsString::from("echo"),
         OsString::from("hello"),
@@ -46,7 +43,6 @@ fn main() {
             println!("Failed to run GNU echo: {}", error_result.stderr);
             println!("This is expected if GNU coreutils is not installed");
 
-            // Show what our implementation produced
             println!("\nOur implementation result:");
             println!("Stdout: '{}'", rust_result.stdout);
             println!("Stderr: '{}'", rust_result.stderr);
@@ -54,3 +50,4 @@ fn main() {
         }
     }
 }
+

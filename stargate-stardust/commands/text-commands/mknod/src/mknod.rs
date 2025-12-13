@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) parsemode makedev sysmacros perror IFBLK IFCHR IFIFO
+
 
 use clap::{Arg, Command, value_parser};
 use libc::{S_IFBLK, S_IFCHR, S_IFIFO, S_IRGRP, S_IROTH, S_IRUSR, S_IWGRP, S_IWOTH, S_IWUSR};
@@ -6,7 +6,7 @@ use libc::{dev_t, mode_t};
 use std::ffi::CString;
 
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError, UUsageError, set_exit_code};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError, set_exit_code};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -21,7 +21,6 @@ mod options {
 
 #[inline(always)]
 fn makedev(maj: u64, min: u64) -> dev_t {
-    // pick up from <sys/sysmacros.h>
     ((min & 0xff) | ((maj & 0xfff) << 8) | ((min & !0xff) << 12) | ((maj & !0xfff) << 32)) as dev_t
 }
 
@@ -57,7 +56,6 @@ fn mknod(file_name: &str, config: Config) -> i32 {
     let c_str = CString::new(file_name).expect("Failed to convert to CString");
 
     unsafe {
-        // set umask to 0 and store previous umask
         let have_prev_umask = if config.use_umask {
             None
         } else {
@@ -66,7 +64,6 @@ fn mknod(file_name: &str, config: Config) -> i32 {
 
         let errno = libc::mknod(c_str.as_ptr(), config.mode, config.dev);
 
-        // set umask back to original value
         if let Some(prev_umask) = have_prev_umask {
             libc::umask(prev_umask);
         }
@@ -74,16 +71,15 @@ fn mknod(file_name: &str, config: Config) -> i32 {
         if errno == -1 {
             let c_str = CString::new(sgcore::execution_phrase().as_bytes())
                 .expect("Failed to convert to CString");
-            // shows the error from the mknod syscall
             libc::perror(c_str.as_ptr());
         }
-        
+
         errno
     }
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
@@ -94,7 +90,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         None => MODE_RW_UGO,
         Some(str_mode) => {
             use_umask = false;
-            parse_mode(str_mode).map_err(|e| USimpleError::new(1, e))?
+            parse_mode(str_mode).map_err(|e| SGSimpleError::new(1, e))?
         }
     };
     let mode = mode_permissions | file_type.as_mode();
@@ -110,14 +106,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     ) {
         (FileType::Fifo, None, None) => 0,
         (FileType::Fifo, _, _) => {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 1,
                 translate!("mknod-error-fifo-no-major-minor")
             ));
         }
         (_, Some(&major), Some(&minor)) => makedev(major, minor),
         _ => {
-            return Err(UUsageError::new(
+            return Err(SGUsageError::new(
                 1,
                 translate!("mknod-error-special-require-major-minor")
             ));
@@ -196,8 +192,6 @@ fn parse_mode(str_mode: &str) -> Result<mode_t, String> {
 }
 
 fn parse_type(tpe: &str) -> Result<FileType, String> {
-    // Only check the first character, to allow mnemonic usage like
-    // 'mknod /dev/rst0 character 18 0'.
     tpe.chars()
         .next()
         .ok_or_else(|| translate!("mknod-error-missing-device-type"))
@@ -208,3 +202,4 @@ fn parse_type(tpe: &str) -> Result<FileType, String> {
             _ => Err(translate!("mknod-error-invalid-device-type", "type" => tpe.quote())),
         })
 }
+

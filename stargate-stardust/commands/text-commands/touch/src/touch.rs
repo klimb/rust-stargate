@@ -1,5 +1,5 @@
-// spell-checker:ignore (ToDO) filetime datetime lpszfilepath mktime DATETIME datelike timelike
-// spell-checker:ignore (FORMATS) MMDDhhmm YYYYMMDDHHMM YYMMDDHHMM YYYYMMDDHHMMS
+
+
 
 pub mod error;
 
@@ -17,7 +17,7 @@ use std::fs::{self, File};
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::translate;
 use sgcore::{format_usage, show};
@@ -81,7 +81,6 @@ pub enum Source {
 }
 
 pub mod options {
-    // Both SOURCES and sources are needed as we need to be able to refer to the ArgGroup.
     pub static SOURCES: &str = "sources";
     pub mod sources {
         pub static DATE: &str = "date";
@@ -102,19 +101,11 @@ static ARG_FILES: &str = "files";
 mod format {
     pub(crate) const POSIX_LOCALE: &str = "%a %b %e %H:%M:%S %Y";
     pub(crate) const ISO_8601: &str = "%Y-%m-%d";
-    // "%Y%m%d%H%M.%S" 15 chars
     pub(crate) const YYYYMMDDHHMM_DOT_SS: &str = "%Y%m%d%H%M.%S";
-    // "%Y-%m-%d %H:%M:%S.%SS" 12 chars
     pub(crate) const YYYYMMDDHHMMSS: &str = "%Y-%m-%d %H:%M:%S.%f";
-    // "%Y-%m-%d %H:%M:%S" 12 chars
     pub(crate) const YYYYMMDDHHMMS: &str = "%Y-%m-%d %H:%M:%S";
-    // "%Y-%m-%d %H:%M" 12 chars
-    // Used for example in tests/touch/no-rights.sh
     pub(crate) const YYYY_MM_DD_HH_MM: &str = "%Y-%m-%d %H:%M";
-    // "%Y%m%d%H%M" 12 chars
     pub(crate) const YYYYMMDDHHMM: &str = "%Y%m%d%H%M";
-    // "%Y-%m-%d %H:%M +offset"
-    // Used for example in tests/touch/relative.sh
     pub(crate) const YYYYMMDDHHMM_OFFSET: &str = "%Y-%m-%d %H:%M %z";
 }
 
@@ -158,12 +149,10 @@ fn is_first_filename_timestamp(
         && reference.is_none()
         && date.is_none()
         && files.len() >= 2
-        // env check is last as the slowest op
         && matches!(std::env::var("_POSIX2_VERSION").as_deref(), Ok("199209"))
         && files[0].to_str().is_some_and(is_timestamp)
 }
 
-// Check if string is a valid POSIX timestamp (8 digits or 10 digits with valid year range)
 fn is_timestamp(s: &str) -> bool {
     all_digits(s) && (s.len() == 8 || (s.len() == 10 && (69..=99).contains(&get_year(s))))
 }
@@ -181,7 +170,7 @@ fn shr2(s: &str) -> String {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "fattr"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
@@ -189,7 +178,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let mut filenames: Vec<&OsString> = matches
         .get_many::<OsString>(ARG_FILES)
         .ok_or_else(|| {
-            USimpleError::new(
+            SGSimpleError::new(
                 1,
                 translate!("touch-error-missing-file-operand", "help_command" => sgcore::execution_phrase().to_string(),)
             )
@@ -425,7 +414,7 @@ fn touch_file(
     opts: &Options,
     atime: FileTime,
     mtime: FileTime
-) -> UResult<()> {
+) -> SGResult<()> {
     let filename = if is_stdout {
         String::from("-")
     } else {
@@ -450,7 +439,7 @@ fn touch_file(
         }
 
         if opts.no_deref {
-            let e = USimpleError::new(
+            let e = SGSimpleError::new(
                 1,
                 translate!("touch-error-setting-times-no-such-file", "filename" => filename.quote())
             );
@@ -462,10 +451,6 @@ fn touch_file(
         }
 
         if let Err(e) = File::create(path) {
-            // we need to check if the path is the path to a directory (ends with a separator)
-            // we can't use File::create to create a directory
-            // we cannot use path.is_dir() because it calls fs::metadata which we already called
-            // when stable, we can change to use e.kind() == std::io::ErrorKind::IsADirectory
             let is_directory = if let Some(last_char) = path.to_string_lossy().chars().last() {
                 last_char == std::path::MAIN_SEPARATOR
             } else {
@@ -487,7 +472,6 @@ fn touch_file(
             return Ok(());
         }
 
-        // Minor optimization: if no reference time, timestamp, or date was specified, we're done.
         if opts.source == Source::Now && opts.date.is_none() {
             return Ok(());
         }
@@ -503,8 +487,6 @@ fn touch_file(
 /// - If `-m` is passed but not `-a`, only modification time is changed
 /// - If neither or both are passed, both times are changed
 fn determine_atime_mtime_change(matches: &ArgMatches) -> ChangeTimes {
-    // If `--time` is given, Some(true) if equivalent to `-a`, Some(false) if equivalent to `-m`
-    // If `--time` not given, None
     let time_access_only = if matches.contains_id(options::TIME) {
         matches
             .get_one::<String>(options::TIME)
@@ -536,8 +518,7 @@ fn update_times(
     opts: &Options,
     atime: FileTime,
     mtime: FileTime
-) -> UResult<()> {
-    // If changing "only" atime or mtime, grab the existing value of the other.
+) -> SGResult<()> {
     let (atime, mtime) = match opts.change_times {
         ChangeTimes::AtimeOnly => (
             atime,
@@ -557,9 +538,6 @@ fn update_times(
         ),
         ChangeTimes::Both => (atime, mtime),
     };
-
-    // sets the file access and modification times for a file or a symbolic link.
-    // The filename, access time (atime), and modification time (mtime) are provided as inputs.
 
     if opts.no_deref && !is_stdout {
         set_symlink_file_times(path, atime, mtime)
@@ -586,27 +564,11 @@ fn stat(path: &Path, follow: bool) -> std::io::Result<(FileTime, FileTime)> {
 }
 
 fn parse_date(ref_time: DateTime<Local>, s: &str) -> Result<FileTime, TouchError> {
-    // This isn't actually compatible with GNU touch, but there doesn't seem to
-    // be any simple specification for what format this parameter allows and I'm
-    // not about to implement GNU parse_datetime.
-    // http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;f=lib/parse-datetime.y
 
-    // TODO: match on char count?
-
-    // "The preferred date and time representation for the current locale."
-    // "(In the POSIX locale this is equivalent to %a %b %e %H:%M:%S %Y.)"
-    // time 0.1.43 parsed this as 'a b e T Y'
-    // which is equivalent to the POSIX locale: %a %b %e %H:%M:%S %Y
-    // Tue Dec  3 ...
-    // ("%c", POSIX_LOCALE_FORMAT),
-    //
     if let Ok(parsed) = NaiveDateTime::parse_from_str(s, format::POSIX_LOCALE) {
         return Ok(datetime_to_filetime(&parsed.and_utc()));
     }
 
-    // Also support other formats found in the GNU tests like
-    // in tests/misc/stat-nanoseconds.sh
-    // or tests/touch/no-rights.sh
     for fmt in [
         format::YYYYMMDDHHMMS,
         format::YYYYMMDDHHMMSS,
@@ -618,8 +580,6 @@ fn parse_date(ref_time: DateTime<Local>, s: &str) -> Result<FileTime, TouchError
         }
     }
 
-    // "Equivalent to %Y-%m-%d (the ISO 8601 date format). (C99)"
-    // ("%F", ISO_8601_FORMAT),
     if let Ok(parsed_date) = NaiveDate::parse_from_str(s, format::ISO_8601) {
         let parsed = Local
             .from_local_datetime(&parsed_date.and_time(NaiveTime::MIN))
@@ -627,33 +587,12 @@ fn parse_date(ref_time: DateTime<Local>, s: &str) -> Result<FileTime, TouchError
         return Ok(datetime_to_filetime(&parsed));
     }
 
-    // "@%s" is "The number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC). (TZ) (Calculated from mktime(tm).)"
     if s.bytes().next() == Some(b'@') {
         if let Ok(ts) = &s[1..].parse::<i64>() {
             return Ok(FileTime::from_unix_time(*ts, 0));
         }
     }
 
-    // **parse_datetime 0.13 API change:**
-    // The parse_datetime crate was updated from 0.11 to 0.13 in commit 2a69918ca to fix
-    // issue #8754 (large second values like "12345.123456789 seconds ago" failing).
-    // This introduced a breaking API change in parse_datetime_at_date:
-    //
-    // Previously (0.11): parse_datetime_at_date(chrono::DateTime) → chrono::DateTime
-    // Now (0.13):        parse_datetime_at_date(jiff::Zoned) → jiff::Zoned
-    //
-    // Commit 4340913c4 initially adapted to this by switching from parse_datetime_at_date
-    // to parse_datetime, which broke deterministic relative date parsing (the ref_time
-    // parameter was no longer used, causing tests/touch/relative to fail in CI).
-    //
-    // This implementation restores parse_datetime_at_date usage with proper conversions:
-    // chrono::DateTime → jiff::Zoned → parse_datetime_at_date → jiff::Zoned → chrono::DateTime
-    //
-    // The use of parse_datetime_at_date (not parse_datetime) is critical for deterministic
-    // behavior with relative dates like "yesterday" or "2 days ago", which must be
-    // calculated relative to ref_time, not the current system time.
-
-    // Convert chrono DateTime to jiff Zoned for parse_datetime_at_date
     let ref_zoned = {
         let ts = Timestamp::new(
             ref_time.timestamp(),
@@ -681,9 +620,9 @@ fn parse_date(ref_time: DateTime<Local>, s: &str) -> Result<FileTime, TouchError
 ///
 /// - 68 and before is interpreted as 20xx
 /// - 69 and after is interpreted as 19xx
-fn prepend_century(s: &str) -> UResult<String> {
+fn prepend_century(s: &str) -> SGResult<String> {
     let first_two_digits = s[..2].parse::<u32>().map_err(|_| {
-        USimpleError::new(
+        SGSimpleError::new(
             1,
             translate!("touch-error-invalid-date-ts-format", "date" => s.quote())
         )
@@ -702,7 +641,7 @@ fn prepend_century(s: &str) -> UResult<String> {
 /// Note that  If the year is specified with only two digits,
 /// then cc is 20 for years in the range 0 … 68, and 19 for years in 69 … 99.
 /// in order to be compatible with GNU `touch`.
-fn parse_timestamp(s: &str) -> UResult<FileTime> {
+fn parse_timestamp(s: &str) -> SGResult<FileTime> {
     use format::*;
 
     let current_year = || Local::now().year();
@@ -710,13 +649,12 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
     let (format, ts) = match s.chars().count() {
         15 => (YYYYMMDDHHMM_DOT_SS, s.to_owned()),
         12 => (YYYYMMDDHHMM, s.to_owned()),
-        // If we don't add "19" or "20", we have insufficient information to parse
         13 => (YYYYMMDDHHMM_DOT_SS, prepend_century(s)?),
         10 => (YYYYMMDDHHMM, prepend_century(s)?),
         11 => (YYYYMMDDHHMM_DOT_SS, format!("{}{s}", current_year())),
         8 => (YYYYMMDDHHMM, format!("{}{s}", current_year())),
         _ => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("touch-error-invalid-date-format", "date" => s.quote())
             ));
@@ -724,34 +662,25 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
     };
 
     let local = NaiveDateTime::parse_from_str(&ts, format).map_err(|_| {
-        USimpleError::new(
+        SGSimpleError::new(
             1,
             translate!("touch-error-invalid-date-ts-format", "date" => ts.quote())
         )
     })?;
     let LocalResult::Single(mut local) = Local.from_local_datetime(&local) else {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("touch-error-invalid-date-ts-format", "date" => ts.quote())
         ));
     };
 
-    // Chrono caps seconds at 59, but 60 is valid. It might be a leap second
-    // or wrap to the next minute. But that doesn't really matter, because we
-    // only care about the timestamp anyway.
-    // Tested in gnu/tests/touch/60-seconds
     if local.second() == 59 && ts.ends_with(".60") {
         local += Duration::try_seconds(1).unwrap();
     }
 
-    // Due to daylight saving time switch, local time can jump from 1:59 AM to
-    // 3:00 AM, in which case any time between 2:00 AM and 2:59 AM is not
-    // valid. If we are within this jump, chrono takes the offset from before
-    // the jump. If we then jump forward an hour, we get the new corrected
-    // offset. Jumping back will then now correctly take the jump into account.
     let local2 = local + Duration::try_hours(1).unwrap() - Duration::try_hours(1).unwrap();
     if local.hour() != local2.hour() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("touch-error-invalid-date-format", "date" => s.quote())
         ));
@@ -760,7 +689,6 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
     Ok(datetime_to_filetime(&local))
 }
 
-// TODO: this may be a good candidate to put in fsext.rs
 /// Returns a [`PathBuf`] to stdout.
 ///
 /// On Windows, uses `GetFinalPathNameByHandleW` to attempt to get the path
@@ -828,3 +756,4 @@ mod tests {
         }
     }
 }
+

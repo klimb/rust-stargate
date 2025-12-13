@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) algo, algoname, regexes, nread, nonames
+
 
 use clap::ArgAction;
 use clap::builder::ValueParser;
@@ -20,13 +20,12 @@ use sgcore::checksum::detect_algo;
 use sgcore::checksum::digest_reader;
 use sgcore::checksum::escape_filename;
 use sgcore::checksum::perform_checksum_validation;
-use sgcore::error::{UResult, strip_errno};
+use sgcore::error::{SGResult, strip_errno};
 use sgcore::format_usage;
 use sgcore::sum::{Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Shake128, Shake256};
 use sgcore::translate;
 
 const NAME: &str = "hashsum";
-// Using the same read buffer size as GNU
 const READ_BUFFER_SIZE: usize = 32 * 1024;
 
 struct Options<'a> {
@@ -34,16 +33,10 @@ struct Options<'a> {
     digest: Box<dyn Digest + 'static>,
     binary: bool,
     binary_name: &'a str,
-    //check: bool,
     tag: bool,
     nonames: bool,
-    //status: bool,
-    //quiet: bool,
-    //strict: bool,
-    //warn: bool,
     output_bits: usize,
     zero: bool,
-    //ignore_missing: bool,
 }
 
 /// Creates a hasher instance based on the command-line flags.
@@ -54,14 +47,14 @@ struct Options<'a> {
 ///
 /// # Returns
 ///
-/// Returns a [`UResult`] of a tuple containing the algorithm name, the hasher instance, and
+/// Returns a [`SGResult`] of a tuple containing the algorithm name, the hasher instance, and
 /// the output length in bits or an Err if multiple hash algorithms are specified or if a
 /// required flag is missing.
 #[allow(clippy::cognitive_complexity)]
-fn create_algorithm_from_flags(matches: &ArgMatches) -> UResult<HashAlgorithm> {
+fn create_algorithm_from_flags(matches: &ArgMatches) -> SGResult<HashAlgorithm> {
     let mut alg: Option<HashAlgorithm> = None;
 
-    let mut set_or_err = |new_alg: HashAlgorithm| -> UResult<()> {
+    let mut set_or_err = |new_alg: HashAlgorithm| -> SGResult<()> {
         if alg.is_some() {
             return Err(ChecksumError::CombineMultipleAlgorithms.into());
         }
@@ -155,14 +148,12 @@ fn create_algorithm_from_flags(matches: &ArgMatches) -> UResult<HashAlgorithm> {
     Ok(alg.unwrap())
 }
 
-// TODO: return custom error type
 fn parse_bit_num(arg: &str) -> Result<usize, ParseIntError> {
     arg.parse()
 }
 
 #[sgcore::main]
-pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
-    // if there is no program name for some reason, default to "hashsum"
+pub fn sgmain(mut args: impl sgcore::Args) -> SGResult<()> {
     let program = args.next().unwrap_or_else(|| OsString::from(NAME));
     let binary_name = Path::new(&program)
         .file_stem()
@@ -172,15 +163,10 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
 
     let args = iter::once(program.clone()).chain(args);
 
-    // Default binary in Windows, text mode otherwise
     let binary_flag_default = cfg!(windows);
 
     let (command, is_hashsum_bin) = sg_app(&binary_name);
 
-    // FIXME: this should use try_get_matches_from() and crash!(), but at the moment that just
-    //        causes "error: " to be printed twice (once from crash!() and once from clap).  With
-    //        the current setup, the name of the utility is not printed, but I think this is at
-    //        least somewhat better from a user's perspective.
     let matches = sgcore::clap_localization::handle_clap_result(command, args)?;
 
     let input_length: Option<&usize> = if binary_name == "b2sum" {
@@ -215,13 +201,10 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
     let ignore_missing = matches.get_flag("ignore-missing");
 
     if ignore_missing && !check {
-        // --ignore-missing needs -c
         return Err(ChecksumError::IgnoreNotCheck.into());
     }
 
     if check {
-        // on Windows, allow --binary/--text to be used with --check
-        // and keep the behavior of defaulting to binary
         let binary = {
             let text_flag = matches.get_flag("text");
             let binary_flag = matches.get_flag("binary");
@@ -233,8 +216,6 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
             false
         };
 
-        // Execute the checksum validation based on the presence of files or the use of stdin
-        // Determine the source of input: a list of files or stdin.
         let input = matches.get_many::<OsString>(options::FILE).map_or_else(
             || iter::once(OsStr::new("-")).collect::<Vec<_>>(),
             |files| files.map(OsStr::new).collect::<Vec<_>>()
@@ -249,7 +230,6 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
             verbose,
         };
 
-        // Execute the checksum validation
         return perform_checksum_validation(
             input.iter().copied(),
             Some(algo.name),
@@ -276,14 +256,9 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
         binary_name: &binary_name,
         tag: matches.get_flag("tag"),
         nonames,
-        //status,
-        //quiet,
-        //warn,
         zero,
-        //ignore_missing,
     };
 
-    // Show the hashsum of the input
     match matches.get_many::<OsString>(options::FILE) {
         Some(files) => hashsum(opts, files.map(|f| f.as_os_str())),
         None => hashsum(opts, iter::once(OsStr::new("-"))),
@@ -291,13 +266,9 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
 }
 
 mod options {
-    //pub const ALGORITHM: &str = "algorithm";
     pub const FILE: &str = "file";
-    //pub const UNTAGGED: &str = "untagged";
     pub const TAG: &str = "tag";
     pub const LENGTH: &str = "length";
-    //pub const RAW: &str = "raw";
-    //pub const BASE64: &str = "base64";
     pub const CHECK: &str = "check";
     pub const STRICT: &str = "strict";
     pub const TEXT: &str = "text";
@@ -436,13 +407,11 @@ pub fn sg_app_bits() -> Command {
 }
 
 fn sg_app_opt_bits(command: Command) -> Command {
-    // Needed for variable-length output sums (e.g. SHAKE)
     command.arg(
         Arg::new("bits")
             .long("bits")
             .help(translate!("hashsum-help-bits"))
             .value_name("BITS")
-            // XXX: should we actually use validators?  they're not particularly efficient
             .value_parser(parse_bit_num)
     )
 }
@@ -482,17 +451,13 @@ pub fn sg_app_custom() -> Command {
 /// therefore, this is different from other utilities.
 fn sg_app(binary_name: &str) -> (Command, bool) {
     let (command, is_hashsum_bin) = match binary_name {
-        // These all support the same options.
         "md5sum" | "sha1sum" | "sha224sum" | "sha256sum" | "sha384sum" | "sha512sum" => {
             (sg_app_common(), false)
         }
-        // b2sum supports the md5sum options plus -l/--length.
         "b2sum" => (sg_app_length(), false),
-        // We're probably just being called as `hashsum`, so give them everything.
         _ => (sg_app_custom(), true),
     };
 
-    // If not called as generic hashsum, override the command name and usage
     let command = if is_hashsum_bin {
         command
     } else {
@@ -506,7 +471,7 @@ fn sg_app(binary_name: &str) -> (Command, bool) {
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn hashsum<'a, I>(mut options: Options, files: I) -> UResult<()>
+fn hashsum<'a, I>(mut options: Options, files: I) -> SGResult<()>
 where
     I: Iterator<Item = &'a OsStr>,
 {
@@ -562,7 +527,6 @@ where
                 if options.digest.output_bits() == 512 {
                     println!("BLAKE2b ({escaped_filename}) = {sum}");
                 } else {
-                    // special case for BLAKE2b with non-default output length
                     println!(
                         "BLAKE2b-{} ({escaped_filename}) = {sum}",
                         options.digest.output_bits()
@@ -577,7 +541,6 @@ where
         } else if options.nonames {
             println!("{sum}");
         } else if options.zero {
-            // with zero, we don't escape the filename
             print!("{sum} {binary_marker}{}\0", filename.display());
         } else {
             println!("{prefix}{sum} {binary_marker}{escaped_filename}");
@@ -588,3 +551,4 @@ where
         Some(e) => Err(Box::new(e)),
     }
 }
+

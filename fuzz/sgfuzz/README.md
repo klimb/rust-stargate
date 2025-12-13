@@ -1,4 +1,4 @@
-# uufuzz
+# sgfuzz
 
 A Rust library for **differential fuzzing** of command-line utilities. Originally designed for testing uutils coreutils against GNU coreutils, but can be used to compare any two implementations of command-line tools.
 
@@ -18,14 +18,14 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uufuzz = "0.1.0"
+sgfuzz = "0.1.0"
 ```
 
 ### Basic Example
 
 ```rust
 use std::ffi::OsString;
-use uufuzz::{generate_and_run_uumain, run_gnu_cmd, compare_result};
+use sgfuzz::{generate_and_run_uumain, run_gnu_cmd, compare_result};
 
 // Your utility's main function
 fn my_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
@@ -58,7 +58,7 @@ compare_result("cat", "", Some(pipe_input), &rust_result, &gnu_result, true);
 ### Random Input Generation
 
 ```rust
-use uufuzz::{generate_random_string, generate_random_file};
+use sgfuzz::{generate_random_string, generate_random_file};
 
 // Generate random string up to 50 characters
 let random_input = generate_random_string(50);
@@ -75,7 +75,7 @@ Perfect for libFuzzer-based differential fuzzing:
 ```rust
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use uufuzz::*;
+use sgfuzz::*;
 
 fuzz_target!(|_data: &[u8]| {
     let args = generate_test_args();

@@ -62,7 +62,6 @@ pub fn generate_and_run_uumain<F>(
 where
     F: FnOnce(std::vec::IntoIter<OsString>) -> i32 + Send + 'static,
 {
-    // Duplicate the stdout and stderr file descriptors
     let original_stdout_fd = unsafe { dup(STDOUT_FILENO) };
     let original_stderr_fd = unsafe { dup(STDERR_FILENO) };
     if original_stdout_fd == -1 || original_stderr_fd == -1 {
@@ -77,7 +76,6 @@ where
     let mut pipe_stdout_fds = [-1; 2];
     let mut pipe_stderr_fds = [-1; 2];
 
-    // Create pipes for stdout and stderr
     if unsafe { pipe(pipe_stdout_fds.as_mut_ptr()) } == -1
         || unsafe { pipe(pipe_stderr_fds.as_mut_ptr()) } == -1
     {
@@ -88,7 +86,6 @@ where
         };
     }
 
-    // Redirect stdout and stderr to their respective pipes
     if unsafe { dup2(pipe_stdout_fds[1], STDOUT_FILENO) } == -1
         || unsafe { dup2(pipe_stderr_fds[1], STDERR_FILENO) } == -1
     {
@@ -106,12 +103,10 @@ where
     }
 
     let original_stdin_fd = if let Some(input_str) = pipe_input {
-        // we have pipe input
         let mut input_file = tempfile::tempfile().unwrap();
         write!(input_file, "{input_str}").unwrap();
         input_file.seek(SeekFrom::Start(0)).unwrap();
 
-        // Redirect stdin to read from the in-memory file
         let original_stdin_fd = unsafe { dup(STDIN_FILENO) };
         if original_stdin_fd == -1 || unsafe { dup2(input_file.as_raw_fd(), STDIN_FILENO) } == -1 {
             return CommandResult {
@@ -129,10 +124,7 @@ where
         let out = s.spawn(|| read_from_fd(pipe_stdout_fds[0]));
         let err = s.spawn(|| read_from_fd(pipe_stderr_fds[0]));
         #[allow(clippy::unnecessary_to_owned)]
-        // TODO: clippy wants us to use args.iter().cloned() ?
         let status = uumain_function(args.to_owned().into_iter());
-        // Reset the exit code global variable in case we run another test after this one
-        // See https://github.com/uutils/coreutils/issues/5777
         sgcore::error::set_exit_code(0);
         io::stdout().flush().unwrap();
         io::stderr().flush().unwrap();
@@ -145,7 +137,6 @@ where
         (status, out.join().unwrap(), err.join().unwrap())
     });
 
-    // Restore the original stdout and stderr
     if unsafe { dup2(original_stdout_fd, STDOUT_FILENO) } == -1
         || unsafe { dup2(original_stderr_fd, STDERR_FILENO) } == -1
     {
@@ -160,7 +151,6 @@ where
         close(original_stderr_fd);
     }
 
-    // Restore the original stdin if it was modified
     if let Some(fd) = original_stdin_fd {
         if unsafe { dup2(fd, STDIN_FILENO) } == -1 {
             return CommandResult {
@@ -219,9 +209,8 @@ pub fn run_gnu_cmd(
 ) -> Result<CommandResult, CommandResult> {
     if check_gnu {
         match is_gnu_cmd(cmd_path) {
-            Ok(_) => {} // if the check passes, do nothing
+            Ok(_) => {}
             Err(e) => {
-                // Convert the io::Error into the function's error type
                 return Err(CommandResult {
                     stdout: String::new(),
                     stderr: e.to_string(),
@@ -236,12 +225,9 @@ pub fn run_gnu_cmd(
         command.arg(arg);
     }
 
-    // See https://github.com/uutils/coreutils/issues/6794
-    // uutils' coreutils is not locale-aware, and aims to mirror/be compatible with GNU Core Utilities's LC_ALL=C behavior
     command.env("LC_ALL", "C");
 
     let output = if let Some(input_str) = pipe_input {
-        // We have an pipe input
         command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -264,7 +250,6 @@ pub fn run_gnu_cmd(
             }
         }
     } else {
-        // Just run with args
         match command.output() {
             Ok(output) => output,
             Err(e) => {
@@ -277,7 +262,6 @@ pub fn run_gnu_cmd(
         }
     };
     let exit_code = output.status.code().unwrap_or(-1);
-    // Here we get stdout and stderr as Strings
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
     let stderr = stderr
@@ -387,7 +371,7 @@ pub fn generate_random_string(max_length: usize) -> String {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789🔩🪛🪓⚙️🔗🧰"
             .chars()
             .collect();
-    let invalid_utf8 = [0xC3, 0x28]; // Invalid UTF-8 sequence
+    let invalid_utf8 = [0xC3, 0x28];
     let mut result = String::new();
 
     for _ in 0..rng.random_range(0..=max_length) {
@@ -455,10 +439,8 @@ mod tests {
     #[test]
     fn test_generate_random_string() {
         let result = generate_random_string(10);
-        // Check character count, not byte count (emojis are multi-byte)
         assert!(result.chars().count() <= 10);
 
-        // Test that empty string can be generated (max_length = 0)
         let empty_result = generate_random_string(0);
         assert_eq!(empty_result.chars().count(), 0);
     }
@@ -483,7 +465,6 @@ mod tests {
         let args = vec![OsString::from("--version")];
         let result = run_gnu_cmd("nonexistent_command_12345", &args, false, None);
 
-        // Should return an error since the command doesn't exist
         assert!(result.is_err());
         let error_result = result.unwrap_err();
         assert_ne!(error_result.exit_code, 0);
@@ -491,16 +472,13 @@ mod tests {
 
     #[test]
     fn test_run_gnu_cmd_basic() {
-        // Test with a simple command that should exist on most systems
         let args = vec![OsString::from("--version")];
         let result = run_gnu_cmd("echo", &args, false, None);
 
-        // Should succeed (echo --version might not be standard but echo should exist)
         match result {
-            Ok(_) => {} // Command succeeded
+            Ok(_) => {}
             Err(err_result) => {
-                // Command failed but at least ran
-                assert_ne!(err_result.exit_code, -1); // -1 would indicate the command couldn't be found
+                assert_ne!(err_result.exit_code, -1);
             }
         }
     }
@@ -516,7 +494,6 @@ mod tests {
                 assert_eq!(cmd_result.stdout.trim(), "hello world");
             }
             Err(_) => {
-                // cat might not be available in test environment, that's ok
             }
         }
     }
@@ -527,12 +504,11 @@ mod tests {
         match result {
             Ok(file_path) => {
                 assert!(!file_path.is_empty());
-                // Clean up - try to remove the file
                 let _ = std::fs::remove_file(&file_path);
             }
             Err(_) => {
-                // File creation might fail due to permissions, that's acceptable for this test
             }
         }
     }
 }
+

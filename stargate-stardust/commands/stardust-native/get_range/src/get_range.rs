@@ -1,4 +1,5 @@
-// spell-checker:ignore (ToDO) bigdecimal extendedbigdecimal numberparse hexadecimalfloat biguint
+
+
 use std::ffi::{OsStr, OsString};
 use std::io::{BufWriter, ErrorKind, Write, stdout};
 
@@ -8,7 +9,7 @@ use num_traits::ToPrimitive;
 use num_traits::Zero;
 use serde_json::json;
 
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::extendedbigdecimal::ExtendedBigDecimal;
 use sgcore::format::num_format::FloatVariant;
 use sgcore::format::{Format, num_format};
@@ -17,7 +18,6 @@ use sgcore::{fast_inc::fast_inc, format_usage};
 
 mod error;
 
-// public to allow fuzzing
 #[cfg(fuzzing)]
 pub mod number;
 #[cfg(not(fuzzing))]
@@ -60,8 +60,6 @@ fn split_short_args_with_value(args: impl sgcore::Args) -> impl sgcore::Args {
             && (bytes.starts_with(b"-f") || bytes.starts_with(b"-s") || bytes.starts_with(b"-t"))
         {
             let (short_arg, value) = bytes.split_at(2);
-            // SAFETY:
-            // Both `short_arg` and `value` only contain content that originated from `OsStr::as_encoded_bytes`
             v.push(unsafe { OsString::from_encoded_bytes_unchecked(short_arg.to_vec()) });
             v.push(unsafe { OsString::from_encoded_bytes_unchecked(value.to_vec()) });
         } else {
@@ -89,7 +87,7 @@ fn select_precision(
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app(), split_short_args_with_value(args))?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
@@ -141,9 +139,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         return Err(SeqError::ZeroIncrement(numbers[1].to_owned()).into());
     }
     let last: PreciseNumber = {
-        // We are guaranteed that `numbers.len()` is greater than zero
-        // and at most three because of the argument specification in
-        // `sg_app()`.
         let n: usize = numbers.len();
         match numbers[n - 1].parse() {
             Ok(num) => num,
@@ -151,14 +146,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
     };
 
-    // If JSON output is requested, use JSON path
     if json_output_options.stardust_output {
         let range = (first.number, increment.number, last.number);
         return generate_seq_json(range, json_output_options);
     }
 
-    // If a format was passed on the command line, use that.
-    // If not, use some default format based on parameters precision.
     let (format, padding, fast_allowed) = match options.format {
         Some(str) => (
             Format::<num_format::Float, &ExtendedBigDecimal>::parse(str)?,
@@ -184,7 +176,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             };
 
             let formatter = match precision {
-                // format with precision: decimal floats and integers
                 Some(precision) => num_format::Float {
                     variant: FloatVariant::Decimal,
                     width: padding,
@@ -192,13 +183,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     precision: Some(precision),
                     ..Default::default()
                 },
-                // format without precision: hexadecimal floats
                 None => num_format::Float {
                     variant: FloatVariant::Shortest,
                     ..Default::default()
                 },
             };
-            // Allow fast printing if precision is 0 (integer inputs), `print_seq` will do further checks.
             (
                 Format::from_formatter(formatter),
                 padding,
@@ -208,7 +197,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     let range = (first.number, increment.number, last.number);
-    
+
     let result = print_seq(
         range,
         &options.separator,
@@ -261,14 +250,11 @@ pub fn sg_app() -> Command {
                 .help(translate!("seq-help-format"))
         )
         .arg(
-            // we use allow_hyphen_values instead of allow_negative_numbers because clap removed
-            // the support for "exotic" negative numbers like -.1 (see https://github.com/clap-rs/clap/discussions/5837)
             Arg::new(ARG_NUMBERS)
                 .allow_hyphen_values(true)
                 .action(ArgAction::Append)
                 .num_args(1..=3)
         )
-        // Add JSON args manually without -f short flag to avoid conflict with --format
         .arg(
             Arg::new(stardust_output::ARG_STARDUST_OUTPUT)
                 .short('o')
@@ -291,7 +277,7 @@ pub fn sg_app() -> Command {
         )
         .arg(
             Arg::new(stardust_output::ARG_FIELD)
-                .long("field")  // No short flag to avoid conflict with -f/--format
+                .long("field")
                 .value_name("FIELD")
                 .help("Filter object output to specific field(s) (comma-separated)")
                 .action(ArgAction::Set),
@@ -310,47 +296,28 @@ fn fast_print_seq(
     terminator: &OsStr,
     padding: usize
 ) -> std::io::Result<()> {
-    // Nothing to do, just return.
     if last < first {
         return Ok(());
     }
 
-    // Do at most u64::MAX loops. We can print in the order of 1e8 digits per second,
-    // u64::MAX is 1e19, so it'd take hundreds of years for this to complete anyway.
-    // TODO: we can move this test to `print_seq` if we care about this case.
     let loop_cnt = ((last - first) / increment).to_u64().unwrap_or(u64::MAX);
 
-    // Format the first number.
     let first_str = first.to_string();
 
-    // Makeshift log10.ceil
     let last_length = last.to_string().len();
 
-    // Allocate a large u8 buffer, that contains a preformatted string
-    // of the number followed by the `separator`.
-    //
-    // | ... head space ... | number | separator |
-    // ^0                   ^ start  ^ num_end   ^ size (==buf.len())
-    //
-    // We keep track of start in this buffer, as the number grows.
-    // When printing, we take a slice between start and end.
     let size = last_length.max(padding) + separator.len();
-    // Fill with '0', this is needed for equal_width, and harmless otherwise.
     let mut buf = vec![b'0'; size];
     let buf = buf.as_mut_slice();
 
     let num_end = buf.len() - separator.len();
     let mut start = num_end - first_str.len();
 
-    // Initialize buf with first and separator.
     buf[start..num_end].copy_from_slice(first_str.as_bytes());
     buf[num_end..].copy_from_slice(separator.as_encoded_bytes());
 
-    // Normally, if padding is > 0, it should be equal to last_length,
-    // so start would be == 0, but there are corner cases.
     start = start.min(num_end - padding);
 
-    // Prepare the number to increment with as a string
     let inc_str = increment.to_string();
     let inc_str = inc_str.as_bytes();
 
@@ -358,7 +325,6 @@ fn fast_print_seq(
         stdout.write_all(&buf[start..])?;
         fast_inc(buf, &mut start, num_end, inc_str);
     }
-    // Write the last number without separator, but with terminator.
     stdout.write_all(&buf[start..num_end])?;
     stdout.write_all(terminator.as_encoded_bytes())?;
     stdout.flush()?;
@@ -377,13 +343,12 @@ fn done_printing<T: Zero + PartialOrd>(next: &T, increment: &T, last: &T) -> boo
 fn generate_seq_json(
     range: RangeFloat,
     json_output_options: StardustOutputOptions
-) -> UResult<()> {
+) -> SGResult<()> {
     let (first, increment, last) = range;
     let mut values: Vec<String> = Vec::new();
     let mut value = first;
-    
+
     while !done_printing(&value, &increment, &last) {
-        // Convert ExtendedBigDecimal to string - it implements Debug but not Display
         let str_value = match &value {
             sgcore::extendedbigdecimal::ExtendedBigDecimal::BigDecimal(bd) => bd.to_string(),
             sgcore::extendedbigdecimal::ExtendedBigDecimal::Infinity => "inf".to_string(),
@@ -395,7 +360,7 @@ fn generate_seq_json(
         values.push(str_value);
         value = value + increment.clone();
     }
-    
+
     let output = json!({ "sequence": values });
     stardust_output::output(json_output_options, output, || Ok(()))?;
     Ok(())
@@ -408,15 +373,13 @@ fn print_seq(
     terminator: &OsStr,
     format: &Format<num_format::Float, &ExtendedBigDecimal>,
     fast_allowed: bool,
-    padding: usize, // Used by fast path only
+    padding: usize,
 ) -> std::io::Result<()> {
     let stdout = stdout().lock();
     let mut stdout = BufWriter::new(stdout);
     let (first, increment, last) = range;
 
     if fast_allowed {
-        // Test if we can use fast code path.
-        // First try to convert the range to BigUint (u64 for the increment).
         let (first_bui, increment_u64, last_bui) = (
             first.to_biguint(),
             increment.to_biguint().and_then(|x| x.to_u64()),
@@ -445,7 +408,6 @@ fn print_seq(
             stdout.write_all(separator.as_encoded_bytes())?;
         }
         format.fmt(&mut stdout, &value)?;
-        // TODO Implement augmenting addition.
         value = value + increment.clone();
         is_first_iteration = false;
     }
@@ -455,3 +417,4 @@ fn print_seq(
     stdout.flush()?;
     Ok(())
 }
+

@@ -21,7 +21,7 @@ use std::{
 };
 
 use compare::Compare;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 
 use crate::{
     GlobalSettings, Output, SortError,
@@ -36,7 +36,7 @@ fn replace_output_file_in_input_files(
     files: &mut [OsString],
     output: Option<&OsStr>,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut copy: Option<PathBuf> = None;
     if let Some(Ok(output_path)) = output.map(|path| Path::new(path).canonicalize()) {
         for file in files {
@@ -67,7 +67,7 @@ pub fn merge(
     settings: &GlobalSettings,
     output: Output,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     replace_output_file_in_input_files(files, output.as_output_name(), tmp_dir)?;
     let files = files
         .iter()
@@ -79,17 +79,16 @@ pub fn merge(
     }
 }
 
-// Merge already sorted `MergeInput`s.
 pub fn merge_with_file_limit<
     M: MergeInput + 'static,
-    F: ExactSizeIterator<Item = UResult<M>>,
+    F: ExactSizeIterator<Item = SGResult<M>>,
     Tmp: WriteableTmpFile + 'static,
 >(
     files: F,
     settings: &GlobalSettings,
     output: Output,
     tmp_dir: &mut TmpDirWrapper
-) -> UResult<()> {
+) -> SGResult<()> {
     if files.len() <= settings.merge_batch_size {
         let merger = merge_without_limit(files, settings);
         merger?.write_all(settings, output)
@@ -109,7 +108,6 @@ pub fn merge_with_file_limit<
                 temporary_files.push(tmp_file.finished_writing()?);
             }
         }
-        // Merge any remaining files that didn't get merged in a full batch above.
         if !batch.is_empty() {
             assert!(batch.len() < settings.merge_batch_size);
             let merger = merge_without_limit(batch.into_iter(), settings)?;
@@ -124,7 +122,7 @@ pub fn merge_with_file_limit<
                 .into_iter()
                 .map(Box::new(|c: Tmp::Closed| c.reopen())
                     as Box<
-                        dyn FnMut(Tmp::Closed) -> UResult<<Tmp::Closed as ClosedTmpFile>::Reopened>,
+                        dyn FnMut(Tmp::Closed) -> SGResult<<Tmp::Closed as ClosedTmpFile>::Reopened>,
                     >),
             settings,
             output,
@@ -137,10 +135,10 @@ pub fn merge_with_file_limit<
 ///
 /// It is the responsibility of the caller to ensure that `files` yields only
 /// as many files as we are allowed to open concurrently.
-fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = UResult<M>>>(
+fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = SGResult<M>>>(
     files: F,
     settings: &GlobalSettings
-) -> UResult<FileMerger<'_>> {
+) -> SGResult<FileMerger<'_>> {
     let (request_sender, request_receiver) = channel();
     let mut reader_files = Vec::with_capacity(files.size_hint().0);
     let mut loaded_receivers = Vec::with_capacity(files.size_hint().0);
@@ -152,13 +150,11 @@ fn merge_without_limit<M: MergeInput + 'static, F: Iterator<Item = UResult<M>>>(
             sender,
             carry_over: vec![],
         }));
-        // Send the initial chunk to trigger a read for each file
         request_sender
             .send((file_number, RecycledChunk::new(8 * 1024)))
             .unwrap();
     }
 
-    // Send the second chunk for each file
     for file_number in 0..reader_files.len() {
         request_sender
             .send((file_number, RecycledChunk::new(8 * 1024)))
@@ -213,7 +209,7 @@ fn reader(
     files: &mut [Option<ReaderFile<impl MergeInput>>],
     settings: &GlobalSettings,
     separator: u8
-) -> UResult<()> {
+) -> SGResult<()> {
     for (file_idx, recycled_chunk) in recycled_receiver {
         if let Some(ReaderFile {
             file,
@@ -232,9 +228,7 @@ fn reader(
                 settings
             )?;
             if !should_continue {
-                // Remove the file from the list by replacing it with `None`.
                 let ReaderFile { file, .. } = files[file_idx].take().unwrap();
-                // Depending on the kind of the `MergeInput`, this may delete the file:
                 file.finished_reading()?;
             }
         }
@@ -263,17 +257,17 @@ struct FileMerger<'a> {
     heap: binary_heap_plus::BinaryHeap<MergeableFile, FileComparator<'a>>,
     request_sender: Sender<(usize, RecycledChunk)>,
     prev: Option<PreviousLine>,
-    reader_join_handle: JoinHandle<UResult<()>>,
+    reader_join_handle: JoinHandle<SGResult<()>>,
 }
 
 impl FileMerger<'_> {
     /// Write the merged contents to the output file.
-    fn write_all(self, settings: &GlobalSettings, output: Output) -> UResult<()> {
+    fn write_all(self, settings: &GlobalSettings, output: Output) -> SGResult<()> {
         let mut out = output.into_write();
         self.write_all_to(settings, &mut out)
     }
 
-    fn write_all_to(mut self, settings: &GlobalSettings, out: &mut impl Write) -> UResult<()> {
+    fn write_all_to(mut self, settings: &GlobalSettings, out: &mut impl Write) -> SGResult<()> {
         while self
             .write_next(settings, out)
             .map_err_context(|| "write failed".into())?
@@ -324,14 +318,11 @@ impl FileMerger<'_> {
                     self.heap.pop();
                 }
             } else {
-                // This will cause the comparison to use a different line and the heap to readjust.
                 self.heap.peek_mut().unwrap().line_idx += 1;
             }
 
             if let Some(prev) = prev {
                 if let Ok(prev_chunk) = Rc::try_unwrap(prev.chunk) {
-                    // If nothing is referencing the previous chunk anymore, this means that the previous line
-                    // was the last line of the chunk. We can recycle the chunk.
                     self.request_sender
                         .send((prev.file_number, prev_chunk.recycle()))
                         .ok();
@@ -357,17 +348,14 @@ impl Compare<MergeableFile> for FileComparator<'_> {
             b.current_chunk.line_data()
         );
         if cmp == Ordering::Equal {
-            // To make sorting stable, we need to consider the file number as well,
-            // as lines from a file with a lower number are to be considered "earlier".
             cmp = a.file_number.cmp(&b.file_number);
         }
-        // BinaryHeap is a max heap. We use it as a min heap, so we need to reverse the ordering.
         cmp.reverse()
     }
 }
 
 /// Wait for the child to exit and check its exit code.
-fn check_child_success(mut child: Child, program: &str) -> UResult<()> {
+fn check_child_success(mut child: Child, program: &str) -> SGResult<()> {
     if matches!(child.wait().map(|e| e.code()), Ok(Some(0) | None) | Err(_)) {
         Ok(())
     } else {
@@ -382,23 +370,23 @@ fn check_child_success(mut child: Child, program: &str) -> UResult<()> {
 pub trait WriteableTmpFile: Sized {
     type Closed: ClosedTmpFile;
     type InnerWrite: Write;
-    fn create(file: (File, PathBuf), compress_prog: Option<&str>) -> UResult<Self>;
+    fn create(file: (File, PathBuf), compress_prog: Option<&str>) -> SGResult<Self>;
     /// Closes the temporary file.
-    fn finished_writing(self) -> UResult<Self::Closed>;
+    fn finished_writing(self) -> SGResult<Self::Closed>;
     fn as_write(&mut self) -> &mut Self::InnerWrite;
 }
 /// A temporary file that is (temporarily) closed, but can be reopened.
 pub trait ClosedTmpFile {
     type Reopened: MergeInput;
     /// Reopens the temporary file.
-    fn reopen(self) -> UResult<Self::Reopened>;
+    fn reopen(self) -> SGResult<Self::Reopened>;
 }
 /// A pre-sorted input for merging.
 pub trait MergeInput: Send {
     type InnerRead: Read;
     /// Cleans this `MergeInput` up.
     /// Implementations may delete the backing file.
-    fn finished_reading(self) -> UResult<()>;
+    fn finished_reading(self) -> SGResult<()>;
     fn as_read(&mut self) -> &mut Self::InnerRead;
 }
 
@@ -417,14 +405,14 @@ impl WriteableTmpFile for WriteablePlainTmpFile {
     type Closed = ClosedPlainTmpFile;
     type InnerWrite = BufWriter<File>;
 
-    fn create((file, path): (File, PathBuf), _: Option<&str>) -> UResult<Self> {
+    fn create((file, path): (File, PathBuf), _: Option<&str>) -> SGResult<Self> {
         Ok(Self {
             file: BufWriter::new(file),
             path,
         })
     }
 
-    fn finished_writing(self) -> UResult<Self::Closed> {
+    fn finished_writing(self) -> SGResult<Self::Closed> {
         Ok(ClosedPlainTmpFile { path: self.path })
     }
 
@@ -434,7 +422,7 @@ impl WriteableTmpFile for WriteablePlainTmpFile {
 }
 impl ClosedTmpFile for ClosedPlainTmpFile {
     type Reopened = PlainTmpMergeInput;
-    fn reopen(self) -> UResult<Self::Reopened> {
+    fn reopen(self) -> SGResult<Self::Reopened> {
         Ok(PlainTmpMergeInput {
             file: File::open(&self.path).map_err(|error| SortError::OpenTmpFileFailed { error })?,
             path: self.path,
@@ -444,10 +432,7 @@ impl ClosedTmpFile for ClosedPlainTmpFile {
 impl MergeInput for PlainTmpMergeInput {
     type InnerRead = File;
 
-    fn finished_reading(self) -> UResult<()> {
-        // we ignore failures to delete the temporary file,
-        // because there is a race at the end of the execution and the whole
-        // temporary directory might already be gone.
+    fn finished_reading(self) -> SGResult<()> {
         let _ = fs::remove_file(self.path);
         Ok(())
     }
@@ -477,7 +462,7 @@ impl WriteableTmpFile for WriteableCompressedTmpFile {
     type Closed = ClosedCompressedTmpFile;
     type InnerWrite = BufWriter<ChildStdin>;
 
-    fn create((file, path): (File, PathBuf), compress_prog: Option<&str>) -> UResult<Self> {
+    fn create((file, path): (File, PathBuf), compress_prog: Option<&str>) -> SGResult<Self> {
         let compress_prog = compress_prog.unwrap();
         let mut command = Command::new(compress_prog);
         command.stdin(Stdio::piped()).stdout(file);
@@ -496,7 +481,7 @@ impl WriteableTmpFile for WriteableCompressedTmpFile {
         })
     }
 
-    fn finished_writing(self) -> UResult<Self::Closed> {
+    fn finished_writing(self) -> SGResult<Self::Closed> {
         drop(self.child_stdin);
         check_child_success(self.child, &self.compress_prog)?;
         Ok(ClosedCompressedTmpFile {
@@ -512,7 +497,7 @@ impl WriteableTmpFile for WriteableCompressedTmpFile {
 impl ClosedTmpFile for ClosedCompressedTmpFile {
     type Reopened = CompressedTmpMergeInput;
 
-    fn reopen(self) -> UResult<Self::Reopened> {
+    fn reopen(self) -> SGResult<Self::Reopened> {
         let mut command = Command::new(&self.compress_prog);
         let file = File::open(&self.path).unwrap();
         command.stdin(file).stdout(Stdio::piped()).arg("-d");
@@ -534,7 +519,7 @@ impl ClosedTmpFile for ClosedCompressedTmpFile {
 impl MergeInput for CompressedTmpMergeInput {
     type InnerRead = ChildStdout;
 
-    fn finished_reading(self) -> UResult<()> {
+    fn finished_reading(self) -> SGResult<()> {
         drop(self.child_stdout);
         check_child_success(self.child, &self.compress_prog)?;
         let _ = fs::remove_file(self.path);
@@ -551,10 +536,11 @@ pub struct PlainMergeInput<R: Read + Send> {
 }
 impl<R: Read + Send> MergeInput for PlainMergeInput<R> {
     type InnerRead = R;
-    fn finished_reading(self) -> UResult<()> {
+    fn finished_reading(self) -> SGResult<()> {
         Ok(())
     }
     fn as_read(&mut self) -> &mut Self::InnerRead {
         &mut self.inner
     }
 }
+

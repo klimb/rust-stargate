@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) tempdir dyld dylib optgrps libstdbuf
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::ffi::OsString;
@@ -8,7 +8,7 @@ use std::process;
 use tempfile::TempDir;
 use tempfile::tempdir;
 use thiserror::Error;
-use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, SGUsageError};
 use sgcore::format_usage;
 use sgcore::parser::parse_size::parse_size_u64;
 use sgcore::translate;
@@ -27,7 +27,7 @@ mod options {
     not(feature = "feat_external_libstdbuf"),
     any(
         target_os = "linux",
-        
+
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "openbsd",
@@ -75,32 +75,32 @@ enum ProgramOptionsError {
 
 #[cfg(any(
     target_os = "linux",
-    
+
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",
     target_os = "dragonfly"
 ))]
-fn preload_strings() -> UResult<(&'static str, &'static str)> {
+fn preload_strings() -> SGResult<(&'static str, &'static str)> {
     Ok(("LD_PRELOAD", "so"))
 }
 
 #[cfg(target_vendor = "apple")]
-fn preload_strings() -> UResult<(&'static str, &'static str)> {
+fn preload_strings() -> SGResult<(&'static str, &'static str)> {
     Ok(("DYLD_LIBRARY_PATH", "dylib"))
 }
 
 #[cfg(not(any(
     target_os = "linux",
-    
+
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",
     target_os = "dragonfly",
     target_vendor = "apple"
 )))]
-fn preload_strings() -> UResult<(&'static str, &'static str)> {
-    Err(USimpleError::new(
+fn preload_strings() -> SGResult<(&'static str, &'static str)> {
+    Err(SGSimpleError::new(
         1,
         translate!("stdbuf-error-command-not-supported")
     ))
@@ -142,7 +142,7 @@ fn set_command_env(command: &mut process::Command, buffer_name: &str, buffer_typ
 }
 
 #[cfg(not(feature = "feat_external_libstdbuf"))]
-fn get_preload_env(tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
+fn get_preload_env(tmp_dir: &TempDir) -> SGResult<(String, PathBuf)> {
     use std::fs::File;
     use std::io::Write;
 
@@ -156,11 +156,9 @@ fn get_preload_env(tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
 }
 
 #[cfg(feature = "feat_external_libstdbuf")]
-fn get_preload_env(_tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
+fn get_preload_env(_tmp_dir: &TempDir) -> SGResult<(String, PathBuf)> {
     let (preload, extension) = preload_strings()?;
 
-    // Use the directory provided at compile time via LIBSTDBUF_DIR environment variable
-    // This will fail to compile if LIBSTDBUF_DIR is not set, which is the desired behavior
     const LIBSTDBUF_DIR: &str = env!("LIBSTDBUF_DIR");
     let path_buf = PathBuf::from(LIBSTDBUF_DIR)
         .join("libstdbuf")
@@ -169,20 +167,20 @@ fn get_preload_env(_tmp_dir: &TempDir) -> UResult<(String, PathBuf)> {
         return Ok((preload.to_owned(), path_buf));
     }
 
-    Err(USimpleError::new(
+    Err(SGSimpleError::new(
         1,
         translate!("stdbuf-error-external-libstdbuf-not-found", "path" => path_buf.display())
     ))
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
     sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
 
     let options =
-        ProgramOptions::try_from(&matches).map_err(|e| UUsageError::new(125, e.to_string()))?;
+        ProgramOptions::try_from(&matches).map_err(|e| SGUsageError::new(125, e.to_string()))?;
 
     let mut command_values = matches.get_many::<OsString>(options::COMMAND).unwrap();
     let mut command = process::Command::new(command_values.next().unwrap());
@@ -200,15 +198,15 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Ok(p) => p,
         Err(e) => {
             return match e.kind() {
-                std::io::ErrorKind::PermissionDenied => Err(USimpleError::new(
+                std::io::ErrorKind::PermissionDenied => Err(SGSimpleError::new(
                     126,
                     translate!("stdbuf-error-permission-denied")
                 )),
-                std::io::ErrorKind::NotFound => Err(USimpleError::new(
+                std::io::ErrorKind::NotFound => Err(SGSimpleError::new(
                     127,
                     translate!("stdbuf-error-no-such-file")
                 )),
-                _ => Err(USimpleError::new(
+                _ => Err(SGSimpleError::new(
                     1,
                     translate!("stdbuf-error-failed-to-execute", "error" => e)
                 )),
@@ -225,7 +223,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 Err(i.into())
             }
         }
-        None => Err(USimpleError::new(
+        None => Err(SGSimpleError::new(
             1,
             translate!("stdbuf-error-killed-by-signal", "signal" => status.signal().unwrap())
         )),
@@ -274,3 +272,4 @@ pub fn sg_app() -> Command {
                 .value_parser(clap::value_parser!(OsString))
         )
 }
+

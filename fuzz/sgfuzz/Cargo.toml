@@ -1,5 +1,5 @@
 [package]
-name = "uufuzz"
+name = "sgfuzz"
 authors = ["uutils developers"]
 description = "Stargate: core fuzzing library"
 repository = "https://github.com/klimb/rust-stargate"

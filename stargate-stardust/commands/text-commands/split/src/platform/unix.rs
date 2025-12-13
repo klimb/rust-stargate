@@ -4,7 +4,7 @@ use std::io::Write;
 use std::io::{BufWriter, Error, Result};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
-use sgcore::error::USimpleError;
+use sgcore::error::SGSimpleError;
 use sgcore::fs;
 use sgcore::fs::FileInformation;
 use sgcore::show;
@@ -79,7 +79,6 @@ impl FilterWriter {
     /// * `command` - The shell command to execute
     /// * `filepath` - Path of the output file (forwarded to command as $FILE)
     fn new(command: &str, filepath: &str) -> Result<Self> {
-        // set $FILE, save previous value (if there was one)
         let _with_env_var_set = WithEnvVarSet::new("FILE", filepath);
 
         let shell_process =
@@ -97,7 +96,6 @@ impl Drop for FilterWriter {
     /// flush stdin, close it and wait on `shell_process` before dropping self
     fn drop(&mut self) {
         {
-            // close stdin by dropping it
             let _stdin = self.shell_process.stdin.as_mut();
         }
         let exit_status = self
@@ -106,13 +104,13 @@ impl Drop for FilterWriter {
             .expect("Couldn't wait for child process");
         if let Some(return_code) = exit_status.code() {
             if return_code != 0 {
-                show!(USimpleError::new(
+                show!(SGSimpleError::new(
                     1,
                     translate!("split-error-shell-process-returned", "code" => return_code)
                 ));
             }
         } else {
-            show!(USimpleError::new(
+            show!(SGSimpleError::new(
                 1,
                 translate!("split-error-shell-process-terminated")
             ));
@@ -129,7 +127,6 @@ pub fn instantiate_current_writer(
     match filter {
         None => {
             let file = if is_new {
-                // create new file
                 std::fs::OpenOptions::new()
                     .write(true)
                     .create(true)
@@ -141,7 +138,6 @@ pub fn instantiate_current_writer(
                         )
                     })?
             } else {
-                // re-open file that we previously created to append to it
                 std::fs::OpenOptions::new()
                     .append(true)
                     .open(Path::new(&filename))
@@ -154,14 +150,12 @@ pub fn instantiate_current_writer(
             Ok(BufWriter::new(Box::new(file) as Box<dyn Write>))
         }
         Some(filter_command) => Ok(BufWriter::new(Box::new(
-            // spawn a shell command and write to it
             FilterWriter::new(filter_command, filename)?
         ) as Box<dyn Write>)),
     }
 }
 
 pub fn paths_refer_to_same_file(p1: &OsStr, p2: &OsStr) -> bool {
-    // We have to take symlinks and relative paths into account.
     let p1 = if p1 == "-" {
         FileInformation::from_file(&std::io::stdin())
     } else {
@@ -169,3 +163,4 @@ pub fn paths_refer_to_same_file(p1: &OsStr, p2: &OsStr) -> bool {
     };
     fs::infos_refer_to_same_file(p1, FileInformation::from_path(Path::new(p2), true))
 }
+

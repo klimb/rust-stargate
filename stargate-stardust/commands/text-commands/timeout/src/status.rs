@@ -1,11 +1,12 @@
 //! Exit status codes produced by `timeout`.
-use sgcore::error::UError;
+
+use sgcore::error::SGError;
 
 /// Enumerates the exit statuses produced by `timeout`.
 ///
 /// Use [`Into::into`] (or [`From::from`]) to convert an enumeration
 /// member into a numeric status code. You can also convert into a
-/// [`UError`].
+/// [`SGError`].
 ///
 /// # Examples
 ///
@@ -43,8 +44,9 @@ impl From<ExitStatus> for i32 {
     }
 }
 
-impl From<ExitStatus> for Box<dyn UError> {
+impl From<ExitStatus> for Box<dyn SGError> {
     fn from(exit_status: ExitStatus) -> Self {
         Box::from(i32::from(exit_status))
     }
 }
+

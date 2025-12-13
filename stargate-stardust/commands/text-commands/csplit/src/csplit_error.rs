@@ -1,7 +1,7 @@
 use std::io;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::translate;
 
 /// Errors thrown by the csplit command
@@ -32,20 +32,21 @@ pub enum CsplitError {
     #[error("{}", translate!("csplit-error-not-regular-file", "file" => _0.quote()))]
     NotRegularFile(String),
     #[error("{}", _0)]
-    UError(Box<dyn UError>),
+    SGError(Box<dyn SGError>),
 }
 
-impl From<Box<dyn UError>> for CsplitError {
-    fn from(error: Box<dyn UError>) -> Self {
-        Self::UError(error)
+impl From<Box<dyn SGError>> for CsplitError {
+    fn from(error: Box<dyn SGError>) -> Self {
+        Self::SGError(error)
     }
 }
 
-impl UError for CsplitError {
+impl SGError for CsplitError {
     fn code(&self) -> i32 {
         match self {
-            Self::UError(e) => e.code(),
+            Self::SGError(e) => e.code(),
             _ => 1,
         }
     }
 }
+

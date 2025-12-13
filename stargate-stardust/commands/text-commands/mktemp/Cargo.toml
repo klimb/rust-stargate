@@ -1,6 +1,6 @@
 [package]
 name = "sg_mktemp"
-description = "mktemp ~ (uutils) create and display a temporary file or directory from TEMPLATE"
+description = "mktemp ~ (stargate) create and display a temporary file or directory from TEMPLATE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

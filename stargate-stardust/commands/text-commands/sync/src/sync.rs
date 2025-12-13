@@ -1,4 +1,3 @@
-/* Last synced with: sync (GNU coreutils) 8.13 */
 
 use clap::{Arg, ArgAction, Command};
 #[cfg(any(target_os = "linux"))]
@@ -11,7 +10,7 @@ use std::path::Path;
 use sgcore::display::Quotable;
 #[cfg(any(target_os = "linux"))]
 use sgcore::error::FromIo;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
@@ -29,15 +28,15 @@ mod platform {
     use nix::unistd::{fdatasync, syncfs};
     #[cfg(any(target_os = "linux"))]
     use std::fs::File;
-    use sgcore::error::UResult;
+    use sgcore::error::SGResult;
 
-    pub fn do_sync() -> UResult<()> {
+    pub fn do_sync() -> SGResult<()> {
         sync();
         Ok(())
     }
 
     #[cfg(any(target_os = "linux"))]
-    pub fn do_syncfs(files: Vec<String>) -> UResult<()> {
+    pub fn do_syncfs(files: Vec<String>) -> SGResult<()> {
         for path in files {
             let f = File::open(path).unwrap();
             syncfs(f)?;
@@ -46,7 +45,7 @@ mod platform {
     }
 
     #[cfg(any(target_os = "linux"))]
-    pub fn do_fdatasync(files: Vec<String>) -> UResult<()> {
+    pub fn do_fdatasync(files: Vec<String>) -> SGResult<()> {
         for path in files {
             let f = File::open(path).unwrap();
             fdatasync(f)?;
@@ -56,11 +55,10 @@ mod platform {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let mut opts = StardustOutputOptions::from_matches(&matches);
-    // Stardust output is the default for this command
     if !matches.contains_id("stardust_output") {
         opts.stardust_output = true;
     }
@@ -70,14 +68,13 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         .unwrap_or_default();
 
     if matches.get_flag(options::DATA) && files.is_empty() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("sync-error-data-needs-argument")
         ));
     }
 
     for f in &files {
-        // Use the Nix open to be able to set the NONBLOCK flags for fifo files
         #[cfg(any(target_os = "linux"))]
         {
             let path = Path::new(&f);
@@ -92,7 +89,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         #[cfg(not(any(target_os = "linux")))]
         {
             if !Path::new(&f).exists() {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("sync-error-no-such-file", "file" => f.quote())
                 ));
@@ -150,20 +147,21 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Append)
                 .value_hint(clap::ValueHint::AnyPath)
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
-fn sync() -> UResult<()> {
+fn sync() -> SGResult<()> {
     platform::do_sync()
 }
 
 #[cfg(any(target_os = "linux"))]
-fn syncfs(files: Vec<String>) -> UResult<()> {
+fn syncfs(files: Vec<String>) -> SGResult<()> {
     platform::do_syncfs(files)
 }
 
 #[cfg(any(target_os = "linux"))]
-fn fdatasync(files: Vec<String>) -> UResult<()> {
+fn fdatasync(files: Vec<String>) -> SGResult<()> {
     platform::do_fdatasync(files)
 }
+

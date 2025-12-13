@@ -1,9 +1,9 @@
-// Copyright (C) 2025 Dmitry Kalashnikov
+
 
 use clap::{Arg, ArgAction, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
     translate,
@@ -64,10 +64,10 @@ struct ScanResult {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "scan-neighbors is currently only supported on macos and linux".to_string(),
         ));
@@ -76,9 +76,9 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-        
+
         check_root_privileges()?;
-        
+
         let object_output = StardustOutputOptions::from_matches(&matches);
 
         if object_output.stardust_output {
@@ -124,21 +124,21 @@ pub fn sg_app() -> ClapCommand {
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn check_root_privileges() -> UResult<()> {
+fn check_root_privileges() -> SGResult<()> {
     let current_uid = unsafe { libc::getuid() };
-    
+
     if current_uid != 0 {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "this command requires root privileges. please run with sudo.".to_string()
         ));
     }
-    
+
     Ok(())
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn produce(matches: &clap::ArgMatches) -> UResult<()> {
+fn produce(matches: &clap::ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "inet", "bpf"])?;
 
     let (interface, duration, continuous) = extract_config(matches);
@@ -157,12 +157,12 @@ fn extract_config(matches: &clap::ArgMatches) -> (String, u64, bool) {
     } else {
         detect_wifi_interface().unwrap_or_else(|| "wlan0".to_string())
     };
-    
+
     let duration = matches
         .get_one::<u64>(ARG_DURATION)
         .copied()
         .unwrap_or(DEFAULT_DURATION);
-    
+
     let continuous = matches.get_flag(ARG_CONTINUOUS);
 
     (interface, duration, continuous)
@@ -171,7 +171,7 @@ fn extract_config(matches: &clap::ArgMatches) -> (String, u64, bool) {
 #[cfg(target_os = "linux")]
 fn detect_wifi_interface() -> Option<String> {
     use std::path::Path;
-    
+
     Device::list().ok()?
         .into_iter()
         .find(|d| {
@@ -183,19 +183,19 @@ fn detect_wifi_interface() -> Option<String> {
 #[cfg(target_os = "macos")]
 fn detect_wifi_interface() -> Option<String> {
     use std::process::Command;
-    
+
     let output = Command::new("networksetup")
         .arg("-listallhardwareports")
         .output()
         .ok()?;
-    
+
     if !output.status.success() {
         return None;
     }
-    
+
     let text = String::from_utf8_lossy(&output.stdout);
     let mut next_is_device = false;
-    
+
     for line in text.lines() {
         if line.contains("Wi-Fi") || line.contains("AirPort") {
             next_is_device = true;
@@ -203,7 +203,7 @@ fn detect_wifi_interface() -> Option<String> {
             return line.split(':').nth(1).map(|s| s.trim().to_string());
         }
     }
-    
+
     None
 }
 
@@ -223,15 +223,15 @@ fn print_neighbor_table(neighbors: &[Neighbor]) {
     println!("\ndiscovered {} neighbors:", neighbors.len());
     println!("{:<15} {:<17} {:<20} {:<10} {:<30}", "ip", "mac", "hostname", "packets", "protocols");
     println!("{}", "-".repeat(100));
-    
+
     for neighbor in neighbors {
         let hostname = neighbor.hostname.as_deref().unwrap_or("unknown");
         let protocols = format_protocols(&neighbor.protocols);
-        
+
         println!(
-            "{:<15} {:<17} {:<20} {:<10} {:<30}", 
-            neighbor.ip, 
-            neighbor.mac, 
+            "{:<15} {:<17} {:<20} {:<10} {:<30}",
+            neighbor.ip,
+            neighbor.mac,
             hostname,
             neighbor.packet_count,
             protocols
@@ -253,7 +253,7 @@ fn format_protocols(protocols: &HashMap<String, usize>) -> String {
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn produce_json(matches: &clap::ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &clap::ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "inet", "bpf"])?;
 
     let (interface, duration, continuous) = extract_config(matches);
@@ -261,9 +261,9 @@ fn produce_json(matches: &clap::ArgMatches, options: StardustOutputOptions) -> U
     let neighbors = scan_neighbors(&interface, duration, continuous)?;
     let elapsed = start.elapsed().as_secs_f64();
 
-    let result = ScanResult { 
+    let result = ScanResult {
         count: neighbors.len(),
-        neighbors, 
+        neighbors,
         duration: elapsed,
     };
 
@@ -278,19 +278,19 @@ fn produce_json(matches: &clap::ArgMatches, options: StardustOutputOptions) -> U
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn scan_neighbors(interface: &str, duration: u64, continuous: bool) -> UResult<Vec<Neighbor>> {
+fn scan_neighbors(interface: &str, duration: u64, continuous: bool) -> SGResult<Vec<Neighbor>> {
     let device = find_network_device(interface)?;
     let mut capture = open_packet_capture(device)?;
-    
+
     let mut neighbors: HashMap<String, Neighbor> = HashMap::new();
     let start_time = Instant::now();
     let timeout = Duration::from_secs(duration);
-    
+
     loop {
         match capture.next_packet() {
             Ok(packet) => {
                 let timestamp = get_current_timestamp();
-                
+
                 if let Some((neighbor, traffic_type)) = parse_arp_packet(&packet) {
                     update_or_create_neighbor(&mut neighbors, neighbor, traffic_type, timestamp);
                 } else if let Some((ip, mac, traffic_type)) = parse_ip_packet(&packet) {
@@ -305,15 +305,15 @@ fn scan_neighbors(interface: &str, duration: u64, continuous: bool) -> UResult<V
                 eprintln!("warning: error capturing packet: {}", e);
             }
         }
-        
+
         if !continuous && start_time.elapsed() >= timeout {
             break;
         }
     }
-    
+
     let mut result: Vec<Neighbor> = neighbors.into_values().collect();
     result.sort_by(|a, b| a.ip.cmp(&b.ip));
-    
+
     Ok(result)
 }
 
@@ -346,7 +346,7 @@ fn update_or_create_neighbor(
     timestamp: f64,
 ) {
     let key = format!("{}:{}", neighbor.ip, neighbor.mac);
-    
+
     neighbors
         .entry(key)
         .and_modify(|n| {
@@ -371,70 +371,70 @@ fn update_or_create_neighbor(
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn find_network_device(interface: &str) -> UResult<Device> {
+fn find_network_device(interface: &str) -> SGResult<Device> {
     let all_devices = Device::list()
-        .map_err(|e| USimpleError::new(1, format!("unable to list devices: {}", e)))?;
-    
+        .map_err(|e| SGSimpleError::new(1, format!("unable to list devices: {}", e)))?;
+
     all_devices
         .into_iter()
         .find(|d| d.name == interface)
-        .ok_or_else(|| USimpleError::new(1, format!("interface '{}' not found", interface)))
+        .ok_or_else(|| SGSimpleError::new(1, format!("interface '{}' not found", interface)))
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-fn open_packet_capture(device: Device) -> UResult<Capture<pcap::Active>> {
+fn open_packet_capture(device: Device) -> SGResult<Capture<pcap::Active>> {
     Capture::from_device(device)
-        .map_err(|e| USimpleError::new(1, format!("unable to create capture: {}", e)))?
+        .map_err(|e| SGSimpleError::new(1, format!("unable to create capture: {}", e)))?
         .promisc(true)
         .snaplen(65535)
         .timeout(100)
         .open()
-        .map_err(|e| USimpleError::new(1, format!("failed to open device: {}", e)))
+        .map_err(|e| SGSimpleError::new(1, format!("failed to open device: {}", e)))
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn parse_arp_packet(packet: &pcap::Packet) -> Option<(Neighbor, TrafficType)> {
     let data = packet.data;
-    
+
     if data.len() < 42 {
         return None;
     }
-    
+
     let ethertype = u16::from_be_bytes([data[12], data[13]]);
     if ethertype != 0x0806 {
         return None;
     }
-    
+
     let arp = &data[14..];
-    
+
     let hw_type = u16::from_be_bytes([arp[0], arp[1]]);
     if hw_type != 1 {
         return None;
     }
-    
+
     let proto_type = u16::from_be_bytes([arp[2], arp[3]]);
     if proto_type != 0x0800 {
         return None;
     }
-    
+
     if arp[4] != 6 || arp[5] != 4 {
         return None;
     }
-    
+
     let sender_mac = format!(
         "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
         arp[8], arp[9], arp[10], arp[11], arp[12], arp[13]
     );
-    
+
     let sender_ip = format!(
         "{}.{}.{}.{}",
         arp[14], arp[15], arp[16], arp[17]
     );
-    
+
     if sender_ip == "0.0.0.0" || sender_mac == "00:00:00:00:00:00" {
         return None;
     }
-    
+
     let neighbor = create_empty_neighbor(sender_ip, sender_mac);
     Some((neighbor, TrafficType::ARP))
 }
@@ -442,51 +442,51 @@ fn parse_arp_packet(packet: &pcap::Packet) -> Option<(Neighbor, TrafficType)> {
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn parse_ip_packet(packet: &pcap::Packet) -> Option<(String, String, TrafficType)> {
     let data = packet.data;
-    
+
     if data.len() < 54 {
         return None;
     }
-    
+
     let src_mac = format!(
         "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
         data[6], data[7], data[8], data[9], data[10], data[11]
     );
-    
+
     let ethertype = u16::from_be_bytes([data[12], data[13]]);
     if ethertype != 0x0800 {
         return None;
     }
-    
+
     let ip = &data[14..];
-    
+
     let version = (ip[0] >> 4) & 0x0F;
     if version != 4 {
         return None;
     }
-    
+
     let protocol = ip[9];
     if protocol != 6 {
         return None;
     }
-    
+
     let src_ip = format!(
         "{}.{}.{}.{}",
         ip[12], ip[13], ip[14], ip[15]
     );
-    
+
     if src_ip.starts_with("127.") || src_ip.starts_with("169.254.") {
         return None;
     }
-    
+
     let ihl = (ip[0] & 0x0F) as usize * 4;
-    
+
     if ip.len() < ihl + 4 {
         return None;
     }
     let tcp = &ip[ihl..];
-    
+
     let dst_port = u16::from_be_bytes([tcp[2], tcp[3]]);
-    
+
     let traffic_type = match dst_port {
         443 => TrafficType::HTTPS,
         25 | 587 => TrafficType::SMTP,
@@ -494,25 +494,25 @@ fn parse_ip_packet(packet: &pcap::Packet) -> Option<(String, String, TrafficType
         143 | 993 => TrafficType::IMAP,
         _ => return None,
     };
-    
+
     Some((src_ip, src_mac, traffic_type))
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn resolve_hostname(ip: &str) -> Option<String> {
     use std::process::Command;
-    
+
     let output = Command::new("host")
         .arg("-W")
         .arg(HOSTNAME_TIMEOUT_SECS)
         .arg(ip)
         .output()
         .ok()?;
-    
+
     if !output.status.success() {
         return None;
     }
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
     stdout
         .lines()
@@ -524,3 +524,4 @@ fn resolve_hostname(ip: &str) -> Option<String> {
         .to_string()
         .into()
 }
+

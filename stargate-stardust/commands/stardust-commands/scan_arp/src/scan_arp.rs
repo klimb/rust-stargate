@@ -1,9 +1,9 @@
-// Copyright (C) 2025 Dmitry Kalashnikov
+
 
 use clap::{Arg, ArgMatches, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
     translate,
@@ -27,10 +27,10 @@ struct ScanResult {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     #[cfg(not(target_os = "macos"))]
     {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "scan-arp is currently only supported on macos".to_string(),
         ));
@@ -68,7 +68,7 @@ pub fn sg_app() -> ClapCommand {
 }
 
 #[cfg(target_os = "macos")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
 
     let hosts = scan_network_macos(matches)?;
@@ -85,7 +85,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
 
     let hosts = scan_network_macos(matches)?;
@@ -104,7 +104,7 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
 }
 
 #[cfg(target_os = "macos")]
-fn scan_network_macos(matches: &ArgMatches) -> UResult<Vec<Host>> {
+fn scan_network_macos(matches: &ArgMatches) -> SGResult<Vec<Host>> {
     let network = matches.get_one::<String>(NETWORK_ARG);
 
     if let Some(cidr) = network {
@@ -115,14 +115,14 @@ fn scan_network_macos(matches: &ArgMatches) -> UResult<Vec<Host>> {
 }
 
 #[cfg(target_os = "macos")]
-fn scan_arp_cache() -> UResult<Vec<Host>> {
+fn scan_arp_cache() -> SGResult<Vec<Host>> {
     let output = ProcessCommand::new("arp")
         .arg("-a")
         .output()
-        .map_err(|e| USimpleError::new(1, format!("failed to run arp: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("failed to run arp: {}", e)))?;
 
     if !output.status.success() {
-        return Err(USimpleError::new(1, "arp command failed".to_string()));
+        return Err(SGSimpleError::new(1, "arp command failed".to_string()));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -140,7 +140,7 @@ fn scan_arp_cache() -> UResult<Vec<Host>> {
 #[cfg(target_os = "macos")]
 fn parse_arp_line(line: &str) -> Option<Host> {
     let parts: Vec<&str> = line.split_whitespace().collect();
-    
+
     if parts.len() < 4 {
         return None;
     }
@@ -169,19 +169,19 @@ fn parse_arp_line(line: &str) -> Option<Host> {
 }
 
 #[cfg(target_os = "macos")]
-fn scan_cidr_range(cidr: &str) -> UResult<Vec<Host>> {
+fn scan_cidr_range(cidr: &str) -> SGResult<Vec<Host>> {
     let parts: Vec<&str> = cidr.split('/').collect();
     if parts.len() != 2 {
-        return Err(USimpleError::new(1, "invalid cidr format".to_string()));
+        return Err(SGSimpleError::new(1, "invalid cidr format".to_string()));
     }
 
     let base_ip = parts[0];
     let prefix: u32 = parts[1]
         .parse()
-        .map_err(|_| USimpleError::new(1, "invalid prefix length".to_string()))?;
+        .map_err(|_| SGSimpleError::new(1, "invalid prefix length".to_string()))?;
 
     if prefix > 30 || prefix < 8 {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "prefix must be between 8 and 30".to_string(),
         ));
@@ -193,7 +193,7 @@ fn scan_cidr_range(cidr: &str) -> UResult<Vec<Host>> {
         .collect();
 
     if ip_parts.len() != 4 {
-        return Err(USimpleError::new(1, "invalid ip address".to_string()));
+        return Err(SGSimpleError::new(1, "invalid ip address".to_string()));
     }
 
     let base_addr = (ip_parts[0] << 24) | (ip_parts[1] << 16) | (ip_parts[2] << 8) | ip_parts[3];
@@ -219,3 +219,4 @@ fn scan_cidr_range(cidr: &str) -> UResult<Vec<Host>> {
 
     scan_arp_cache()
 }
+

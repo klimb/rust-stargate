@@ -1,4 +1,4 @@
-// spell-checker:ignore fstatat openat dirfd
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command, builder::PossibleValue};
 use glob::Pattern;
@@ -16,7 +16,7 @@ use std::sync::mpsc;
 use std::thread;
 use thiserror::Error;
 use sgcore::display::{Quotable, print_verbatim};
-use sgcore::error::{FromIo, UError, UResult, USimpleError, set_exit_code};
+use sgcore::error::{FromIo, SGError, SGResult, SGSimpleError, set_exit_code};
 use sgcore::fsext::{MetadataTimeField, metadata_get_time};
 use sgcore::line_ending::LineEnding;
 #[cfg(target_os = "linux")]
@@ -119,7 +119,6 @@ impl Stat {
         dir_entry: Option<&DirEntry>,
         options: &TraversalOptions
     ) -> std::io::Result<Self> {
-        // Determine whether to dereference (follow) the symbolic link
         let should_dereference = match &options.dereference {
             Deref::All => true,
             Deref::Args(paths) => paths.contains(&path.to_path_buf()),
@@ -127,13 +126,10 @@ impl Stat {
         };
 
         let metadata = if should_dereference {
-            // Get metadata, following symbolic links if necessary
             fs::metadata(path)
         } else if let Some(dir_entry) = dir_entry {
-            // Get metadata directly from the DirEntry, which is faster on Windows
             dir_entry.metadata()
         } else {
-            // Get metadata from the filesystem without following symbolic links
             fs::symlink_metadata(path)
         }?;
 
@@ -153,10 +149,8 @@ impl Stat {
     /// Create a Stat using safe traversal methods with `DirFd` for the root directory
     #[cfg(target_os = "linux")]
     fn new_from_dirfd(dir_fd: &DirFd, full_path: &Path) -> std::io::Result<Self> {
-        // Get metadata for the directory itself using fstat
         let safe_metadata = dir_fd.metadata()?;
 
-        // Create file info from the safe metadata
         let file_info = safe_metadata.file_info();
         let file_info_option = Some(FileInfo {
             file_id: file_info.inode() as u128,
@@ -165,9 +159,6 @@ impl Stat {
 
         let blocks = safe_metadata.blocks();
 
-        // Create a temporary std::fs::Metadata by reading the same path
-        // This is still needed for compatibility but should work since we're dealing with
-        // the root path which should be accessible
         let std_metadata = fs::symlink_metadata(full_path)?;
 
         Ok(Self {
@@ -206,10 +197,10 @@ fn block_size_from_env() -> Option<u64> {
     None
 }
 
-fn read_block_size(s: Option<&str>) -> UResult<u64> {
+fn read_block_size(s: Option<&str>) -> SGResult<u64> {
     if let Some(s) = s {
         parse_size_u64(s)
-            .map_err(|e| USimpleError::new(1, format_error_message(&e, s, options::BLOCK_SIZE)))
+            .map_err(|e| SGSimpleError::new(1, format_error_message(&e, s, options::BLOCK_SIZE)))
     } else if let Some(bytes) = block_size_from_env() {
         Ok(bytes)
     } else if env::var("POSIXLY_CORRECT").is_ok() {
@@ -220,23 +211,18 @@ fn read_block_size(s: Option<&str>) -> UResult<u64> {
 }
 
 #[cfg(target_os = "linux")]
-// For now, implement safe_du only on Linux
-// This is done for Ubuntu but should be extended to other platforms that support openat
 fn safe_du(
     path: &Path,
     options: &TraversalOptions,
     depth: usize,
     seen_inodes: &mut HashSet<FileInfo>,
-    print_tx: &mpsc::Sender<UResult<StatPrintInfo>>,
+    print_tx: &mpsc::Sender<SGResult<StatPrintInfo>>,
     parent_fd: Option<&DirFd>
-) -> Result<Stat, Box<mpsc::SendError<UResult<StatPrintInfo>>>> {
-    // Get initial stat for this path - use DirFd if available to avoid path length issues
+) -> Result<Stat, Box<mpsc::SendError<SGResult<StatPrintInfo>>>> {
     let mut my_stat = if let Some(parent_fd) = parent_fd {
-        // We have a parent fd, this is a subdirectory - use openat
         let dir_name = path.file_name().unwrap_or(path.as_os_str());
         match parent_fd.metadata_at(dir_name, false) {
             Ok(safe_metadata) => {
-                // Create Stat from safe metadata
                 let file_info = safe_metadata.file_info();
                 let file_info_option = Some(FileInfo {
                     file_id: file_info.inode() as u128,
@@ -244,11 +230,7 @@ fn safe_du(
                 });
                 let blocks = safe_metadata.blocks();
 
-                // For compatibility, still try to get std::fs::Metadata
-                // but fallback to a minimal approach if it fails
                 let std_metadata = fs::symlink_metadata(path).unwrap_or_else(|_| {
-                    // If we can't get std metadata, create a minimal fake one
-                    // This should rarely happen but provides a fallback
                     fs::symlink_metadata("/").expect("root should be accessible")
                 });
 
@@ -272,18 +254,16 @@ fn safe_du(
                 if let Err(send_error) = print_tx.send(Err(error)) {
                     return Err(Box::new(send_error));
                 }
-                return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
+                return Err(Box::new(mpsc::SendError(Err(SGSimpleError::new(
                     0,
                     "Error already handled"
                 )))));
             }
         }
     } else {
-        // This is the initial directory - try regular Stat::new first, then fallback to DirFd
         match Stat::new(path, None, options) {
             Ok(s) => s,
             Err(_e) => {
-                // Try using our new DirFd method for the root directory
                 match DirFd::open(path) {
                     Ok(dir_fd) => match Stat::new_from_dirfd(&dir_fd, path) {
                         Ok(s) => s,
@@ -294,7 +274,7 @@ fn safe_du(
                             if let Err(send_error) = print_tx.send(Err(error)) {
                                 return Err(Box::new(send_error));
                             }
-                            return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
+                            return Err(Box::new(mpsc::SendError(Err(SGSimpleError::new(
                                 0,
                                 "Error already handled"
                             )))));
@@ -307,7 +287,7 @@ fn safe_du(
                         if let Err(send_error) = print_tx.send(Err(error)) {
                             return Err(Box::new(send_error));
                         }
-                        return Err(Box::new(mpsc::SendError(Err(USimpleError::new(
+                        return Err(Box::new(mpsc::SendError(Err(SGSimpleError::new(
                             0,
                             "Error already handled"
                         )))));
@@ -320,7 +300,6 @@ fn safe_du(
         return Ok(my_stat);
     }
 
-    // Open the directory using DirFd
     let open_result = match parent_fd {
         Some(parent) => parent.open_subdir(path.file_name().unwrap_or(path.as_os_str())),
         None => DirFd::open(path),
@@ -336,7 +315,6 @@ fn safe_du(
         }
     };
 
-    // Read directory entries
     let entries = match dir_fd.read_dir() {
         Ok(entries) => entries,
         Err(e) => {
@@ -350,7 +328,6 @@ fn safe_du(
     'file_loop: for entry_name in entries {
         let entry_path = path.join(&entry_name);
 
-        // First get the lstat (without following symlinks) to check if it's a symlink
         let lstat = match dir_fd.stat_at(&entry_name, false) {
             Ok(stat) => stat,
             Err(e) => {
@@ -361,18 +338,12 @@ fn safe_du(
             }
         };
 
-        // Check if it's a symlink
         const S_IFMT: u32 = 0o170_000;
         const S_IFDIR: u32 = 0o040_000;
         const S_IFLNK: u32 = 0o120_000;
         let is_symlink = (lstat.st_mode & S_IFMT) == S_IFLNK;
 
-        // Handle symlinks with -L option
-        // For safe traversal with -L, we skip symlinks to directories entirely
-        // and let the non-safe traversal handle them at the top level
         if is_symlink && options.dereference == Deref::All {
-            // Skip symlinks to directories when using safe traversal with -L
-            // They will be handled by regular traversal
             continue;
         }
 
@@ -384,22 +355,16 @@ fn safe_du(
             dev_id: entry_stat.st_dev,
         });
 
-        // For safe traversal, we need to handle stats differently
-        // We can't use std::fs::Metadata since that requires the full path
         let this_stat = if is_dir {
-            // For directories, recurse using safe_du
             Stat {
                 path: entry_path.clone(),
                 size: 0,
                 blocks: entry_stat.st_blocks as u64,
                 inodes: 1,
                 inode: file_info,
-                // We need a fake metadata - create one from symlink_metadata of parent
-                // This is a workaround since we can't get real metadata without the full path
                 metadata: my_stat.metadata.clone(),
             }
         } else {
-            // For files
             Stat {
                 path: entry_path.clone(),
                 size: entry_stat.st_size as u64,
@@ -410,7 +375,6 @@ fn safe_du(
             }
         };
 
-        // Check excludes
         for pattern in &options.excludes {
             if pattern.matches(&this_stat.path.to_string_lossy())
                 || pattern.matches(&entry_name.to_string_lossy())
@@ -425,7 +389,6 @@ fn safe_du(
             }
         }
 
-        // Handle inodes
         if let Some(inode) = this_stat.inode {
             if seen_inodes.contains(&inode) && (!options.count_links || !options.all) {
                 if options.count_links && !options.all {
@@ -436,7 +399,6 @@ fn safe_du(
             seen_inodes.insert(inode);
         }
 
-        // Process directories recursively
         if is_dir {
             if options.one_file_system {
                 if let (Some(this_inode), Some(my_inode)) = (this_stat.inode, my_stat.inode) {
@@ -480,27 +442,21 @@ fn safe_du(
     Ok(my_stat)
 }
 
-// this takes `my_stat` to avoid having to stat files multiple times.
-// Only used on non-Linux platforms
-// Regular traversal using std::fs
-// Used on non-Linux platforms and as fallback for symlinks on Linux
 #[allow(clippy::cognitive_complexity)]
 fn du_regular(
     mut my_stat: Stat,
     options: &TraversalOptions,
     depth: usize,
     seen_inodes: &mut HashSet<FileInfo>,
-    print_tx: &mpsc::Sender<UResult<StatPrintInfo>>,
+    print_tx: &mpsc::Sender<SGResult<StatPrintInfo>>,
     ancestors: Option<&mut HashSet<FileInfo>>,
     symlink_depth: Option<usize>
-) -> Result<Stat, Box<mpsc::SendError<UResult<StatPrintInfo>>>> {
+) -> Result<Stat, Box<mpsc::SendError<SGResult<StatPrintInfo>>>> {
     let mut default_ancestors = HashSet::new();
     let ancestors = ancestors.unwrap_or(&mut default_ancestors);
     let symlink_depth = symlink_depth.unwrap_or(0);
-    // Maximum symlink depth to prevent infinite loops
     const MAX_SYMLINK_DEPTH: usize = 40;
 
-    // Add current directory to ancestors if it's a directory
     let my_inode = if my_stat.metadata.is_dir() {
         my_stat.inode
     } else {
@@ -526,7 +482,6 @@ fn du_regular(
                 Ok(entry) => {
                     let entry_path = entry.path();
 
-                    // Check if this is a symlink when using -L
                     let mut current_symlink_depth = symlink_depth;
                     let is_symlink = match entry.file_type() {
                         Ok(ft) => ft.is_symlink(),
@@ -534,10 +489,8 @@ fn du_regular(
                     };
 
                     if is_symlink && options.dereference == Deref::All {
-                        // Increment symlink depth
                         current_symlink_depth += 1;
 
-                        // Check symlink depth limit
                         if current_symlink_depth > MAX_SYMLINK_DEPTH {
                             print_tx.send(Err(std::io::Error::new(
                                 std::io::ErrorKind::InvalidData,
@@ -551,52 +504,40 @@ fn du_regular(
 
                     match Stat::new(&entry_path, Some(&entry), options) {
                         Ok(this_stat) => {
-                            // Check if symlink with -L points to an ancestor (cycle detection)
                             if is_symlink
                                 && options.dereference == Deref::All
                                 && this_stat.metadata.is_dir()
                             {
                                 if let Some(inode) = this_stat.inode {
                                     if ancestors.contains(&inode) {
-                                        // This symlink points to an ancestor directory - skip to avoid cycle
                                         continue 'file_loop;
                                     }
                                 }
                             }
 
-                            // We have an exclude list
                             for pattern in &options.excludes {
-                                // Look at all patterns with both short and long paths
-                                // if we have 'du foo' but search to exclude 'foo/bar'
-                                // we need the full path
                                 if pattern.matches(&this_stat.path.to_string_lossy())
                                     || pattern.matches(&entry.file_name().into_string().unwrap())
                                 {
-                                    // if the directory is ignored, leave early
                                     if options.verbose {
                                         println!(
                                             "{}",
                                             translate!("du-verbose-ignored", "path" => this_stat.path.quote())
                                         );
                                     }
-                                    // Go to the next file
                                     continue 'file_loop;
                                 }
                             }
 
                             if let Some(inode) = this_stat.inode {
-                                // Check if the inode has been seen before and if we should skip it
                                 if seen_inodes.contains(&inode)
                                     && (!options.count_links || !options.all)
                                 {
-                                    // If `count_links` is enabled and `all` is not, increment the inode count
                                     if options.count_links && !options.all {
                                         my_stat.inodes += 1;
                                     }
-                                    // Skip further processing for this inode
                                     continue;
                                 }
-                                // Mark this inode as seen
                                 seen_inodes.insert(inode);
                             }
 
@@ -654,7 +595,6 @@ fn du_regular(
         }
     }
 
-    // Remove current directory from ancestors before returning
     if let Some(inode) = my_inode {
         ancestors.remove(&inode);
     }
@@ -677,7 +617,7 @@ enum DuError {
     InvalidGlob(String),
 }
 
-impl UError for DuError {
+impl SGError for DuError {
     fn code(&self) -> i32 {
         match self {
             Self::InvalidMaxDepthArg(_)
@@ -700,7 +640,7 @@ fn file_as_vec(filename: impl AsRef<Path>) -> Vec<String> {
 
 /// Given the `--exclude-from` and/or `--exclude` arguments, returns the globset lists
 /// to ignore the files
-fn build_exclude_patterns(matches: &ArgMatches) -> UResult<Vec<Pattern>> {
+fn build_exclude_patterns(matches: &ArgMatches) -> SGResult<Vec<Pattern>> {
     let exclude_from_iterator = matches
         .get_many::<String>(options::EXCLUDE_FROM)
         .unwrap_or_default()
@@ -739,13 +679,11 @@ impl StatPrinter {
         } else if self.apparent_size {
             stat.size
         } else {
-            // The st_blocks field indicates the number of blocks allocated to the file, 512-byte units.
-            // See: http://linux.die.net/man/2/stat
             stat.blocks * 512
         }
     }
 
-    fn print_stats(&self, rx: &mpsc::Receiver<UResult<StatPrintInfo>>) -> UResult<()> {
+    fn print_stats(&self, rx: &mpsc::Receiver<SGResult<StatPrintInfo>>) -> SGResult<()> {
         let mut grand_total = 0;
         loop {
             let received = rx.recv();
@@ -796,7 +734,6 @@ impl StatPrinter {
             ),
             SizeFormat::BlockSize(block_size) => {
                 if self.inodes {
-                    // we ignore block size (-B) with --inodes
                     size.to_string()
                 } else {
                     size.div_ceil(block_size).to_string()
@@ -805,7 +742,7 @@ impl StatPrinter {
         }
     }
 
-    fn print_stat(&self, stat: &Stat, size: u64) -> UResult<()> {
+    fn print_stat(&self, stat: &Stat, size: u64) -> SGResult<()> {
         print!("{}\t", self.convert_size(size));
 
         if let Some(md_time) = &self.time {
@@ -832,10 +769,8 @@ impl StatPrinter {
 /// Read file paths from the specified file, separated by null characters
 fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
     let reader: Box<dyn BufRead> = if file_name == "-" {
-        // Read from standard input
         Box::new(BufReader::new(std::io::stdin()))
     } else {
-        // First, check if the file_name is a directory
         let path = PathBuf::from(file_name);
         if path.is_dir() {
             return Err(std::io::Error::other(
@@ -843,7 +778,6 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
             ));
         }
 
-        // Attempt to open the file and handle the error if it does not exist
         match File::open(file_name) {
             Ok(file) => Box::new(BufReader::new(file)),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -880,7 +814,7 @@ fn read_files_from(file_name: &OsStr) -> Result<Vec<PathBuf>, std::io::Error> {
 
 #[sgcore::main]
 #[allow(clippy::cognitive_complexity)]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
@@ -915,7 +849,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         if count_links {
             files.collect()
         } else {
-            // Deduplicate while preserving order
             let mut seen = HashSet::new();
             files
                 .filter(|path| seen.insert(path.clone()))
@@ -958,7 +891,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         dereference: if matches.get_flag(options::DEREFERENCE) {
             Deref::All
         } else if matches.get_flag(options::DEREFERENCE_ARGS) {
-            // We don't care about the cost of cloning as it is rarely used
             Deref::Args(files.clone())
         } else {
             Deref::None
@@ -984,7 +916,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             .get_one::<String>(options::THRESHOLD)
             .map(|s| {
                 Threshold::from_str(s).map_err(|e| {
-                    USimpleError::new(1, format_error_message(&e, s, options::THRESHOLD))
+                    SGSimpleError::new(1, format_error_message(&e, s, options::THRESHOLD))
                 })
             })
             .transpose()?,
@@ -1004,17 +936,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         );
     }
 
-    // Use separate thread to print output, so we can print finished results while computation is still running
-    let (print_tx, rx) = mpsc::channel::<UResult<StatPrintInfo>>();
+    let (print_tx, rx) = mpsc::channel::<SGResult<StatPrintInfo>>();
     let printing_thread = thread::spawn(move || stat_printer.print_stats(&rx));
 
     'loop_file: for path in files {
-        // Skip if we don't want to ignore anything
         if !&traversal_options.excludes.is_empty() {
             let path_string = path.to_string_lossy();
             for pattern in &traversal_options.excludes {
                 if pattern.matches(&path_string) {
-                    // if the directory is ignored, leave early
                     if traversal_options.verbose {
                         println!(
                             "{}",
@@ -1026,20 +955,16 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
         }
 
-        // Check existence of path provided in argument
         let mut seen_inodes: HashSet<FileInfo> = HashSet::new();
 
-        // Determine which traversal method to use
         #[cfg(target_os = "linux")]
         let use_safe_traversal = traversal_options.dereference != Deref::All;
         #[cfg(not(target_os = "linux"))]
         let use_safe_traversal = false;
 
         if use_safe_traversal {
-            // Use safe traversal (Linux only, when not using -L)
             #[cfg(target_os = "linux")]
             {
-                // Pre-populate seen_inodes with the starting directory to detect cycles
                 if let Ok(stat) = Stat::new(&path, None, &traversal_options) {
                     if let Some(inode) = stat.inode {
                         seen_inodes.insert(inode);
@@ -1057,22 +982,19 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     Ok(stat) => {
                         print_tx
                             .send(Ok(StatPrintInfo { stat, depth: 0 }))
-                            .map_err(|e| USimpleError::new(1, e.to_string()))?;
+                            .map_err(|e| SGSimpleError::new(1, e.to_string()))?;
                     }
                     Err(e) => {
-                        // Check if this is our "already handled" error
                         if let mpsc::SendError(Err(simple_error)) = e.as_ref() {
                             if simple_error.code() == 0 {
-                                // Error already handled, continue to next file
                                 continue 'loop_file;
                             }
                         }
-                        return Err(USimpleError::new(1, e.to_string()));
+                        return Err(SGSimpleError::new(1, e.to_string()));
                     }
                 }
             }
         } else {
-            // Use regular traversal (non-Linux or when -L is used)
             if let Ok(stat) = Stat::new(&path, None, &traversal_options) {
                 if let Some(inode) = stat.inode {
                     seen_inodes.insert(inode);
@@ -1086,11 +1008,11 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                     None,
                     None
                 )
-                .map_err(|e| USimpleError::new(1, e.to_string()))?;
+                .map_err(|e| SGSimpleError::new(1, e.to_string()))?;
 
                 print_tx
                     .send(Ok(StatPrintInfo { stat, depth: 0 }))
-                    .map_err(|e| USimpleError::new(1, e.to_string()))?;
+                    .map_err(|e| SGSimpleError::new(1, e.to_string()))?;
             } else {
                 #[cfg(target_os = "linux")]
                 let error_msg = translate!("du-error-cannot-access", "path" => path.quote());
@@ -1098,8 +1020,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
                 let error_msg = translate!("du-error-cannot-access-no-such-file", "path" => path.to_string_lossy().quote());
 
                 print_tx
-                    .send(Err(USimpleError::new(1, error_msg)))
-                    .map_err(|e| USimpleError::new(1, e.to_string()))?;
+                    .send(Err(SGSimpleError::new(1, error_msg)))
+                    .map_err(|e| SGSimpleError::new(1, e.to_string()))?;
             }
         }
     }
@@ -1108,19 +1030,16 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     printing_thread
         .join()
-        .map_err(|_| USimpleError::new(1, translate!("du-error-printing-thread-panicked")))??;
+        .map_err(|_| SGSimpleError::new(1, translate!("du-error-printing-thread-panicked")))??;
 
     Ok(())
 }
 
-// Parse --time-style argument, falling back to environment variable if necessary.
-fn parse_time_style(s: Option<&String>) -> UResult<String> {
+fn parse_time_style(s: Option<&String>) -> SGResult<String> {
     let s = match s {
         Some(s) => Some(s.into()),
         None => {
             match env::var("TIME_STYLE") {
-                // Per GNU manual, strip `posix-` if present, ignore anything after a newline if
-                // the string starts with +, and ignore "locale".
                 Ok(s) => {
                     let s = s.strip_prefix("posix-").unwrap_or(s.as_str());
                     let s = match s.chars().next().unwrap() {
@@ -1150,7 +1069,7 @@ fn parse_time_style(s: Option<&String>) -> UResult<String> {
     }
 }
 
-fn parse_depth(max_depth_str: Option<&str>, summarize: bool) -> UResult<Option<usize>> {
+fn parse_depth(max_depth_str: Option<&str>, summarize: bool) -> SGResult<Option<usize>> {
     let max_depth = max_depth_str.as_ref().and_then(|s| s.parse::<usize>().ok());
     match (max_depth_str, max_depth) {
         (Some(s), _) if summarize => Err(DuError::SummarizeDepthConflict(s.into()).into()),
@@ -1388,8 +1307,6 @@ impl FromStr for Threshold {
         let size = parse_size_u64(&s[offset..])?;
 
         if s.starts_with('-') {
-            // Threshold of '-0' excludes everything besides 0 sized entries
-            // GNU's du treats '-0' as an invalid argument
             if size == 0 {
                 return Err(ParseSizeError::ParseFailure(s.to_string()));
             }
@@ -1410,8 +1327,6 @@ impl Threshold {
 }
 
 fn format_error_message(error: &ParseSizeError, s: &str, option: &str) -> String {
-    // NOTE:
-    // GNU's du echos affected flag, -B or --block-size (-t or --threshold), depending user's selection
     match error {
         ParseSizeError::InvalidSuffix(_) => {
             translate!("du-error-invalid-suffix", "option" => option, "value" => s.quote())
@@ -1438,3 +1353,4 @@ mod test_du {
         }
     }
 }
+

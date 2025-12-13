@@ -1,19 +1,15 @@
 use clap::{Arg, ArgAction, Command};
 use std::{ffi::OsString, io::Write};
-use sgcore::error::{UResult, set_exit_code};
+use sgcore::error::{SGResult, set_exit_code};
 
 use sgcore::translate;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
     let mut command = sg_app();
 
-    // Mirror GNU options, always return `1`. In particular even the 'successful' cases of no-op,
-    // and the interrupted display of help and version should return `1`. Also, we return Ok in all
-    // paths to avoid the allocation of an error object, an operation that could, in theory, fail
-    // and unwind through the standard library allocation handling machinery.
     set_exit_code(1);
 
     let args: Vec<OsString> = args.collect();
@@ -22,8 +18,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     }
 
     if let Err(e) = command.try_get_matches_from_mut(args) {
-        // For the false command, we don't want to show any error messages for UnknownArgument
-        // since false should produce no output and just exit with code 1
         let error = match e.kind() {
             clap::error::ErrorKind::DisplayHelp => command.print_help(),
             clap::error::ErrorKind::DisplayVersion => {
@@ -32,9 +26,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             _ => Ok(()),
         };
 
-        // Try to display this error.
         if let Err(print_fail) = error {
-            // Completely ignore any error here, no more failover and we will fail in any case.
             let _ = writeln!(std::io::stderr(), "{}: {print_fail}", sgcore::util_name());
         }
     }
@@ -47,7 +39,6 @@ pub fn sg_app() -> Command {
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
         .about(translate!("false-about"))
-        // We provide our own help and version options, to ensure maximum compatibility with GNU.
         .disable_help_flag(true)
         .disable_version_flag(true)
         .arg(
@@ -63,3 +54,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::Version)
         )
 }
+

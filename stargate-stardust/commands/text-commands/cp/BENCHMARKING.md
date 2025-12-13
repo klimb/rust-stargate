@@ -27,7 +27,7 @@ being exercised so results can be interpreted correctly.
 
 ## Benchmarking guidelines
 
-- Build a release binary first: `cargo build --release -p uu_cp`.
+- Build a release binary first: `cargo build --release -p sg_cp`.
 - Use `hyperfine` for timing and rely on the `--prepare` hook to reset state
 between runs.
 - Prefer running on a fast device (RAM disk, tmpfs, NVMe) to minimize raw

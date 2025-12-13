@@ -1,7 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 use serde_json::Value;
 use std::io::{self, Read};
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 
 pub mod options {
     pub static FIELD: &str = "field";
@@ -11,48 +11,43 @@ pub mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sg_app().try_get_matches_from(args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
 
-    // Read JSON from stdin
     let mut input = String::new();
     io::stdin()
         .read_to_string(&mut input)
-        .map_err(|e| USimpleError::new(1, format!("Failed to read stdin: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("Failed to read stdin: {}", e)))?;
 
-    // Parse JSON
     let json: Value = serde_json::from_str(&input)
-        .map_err(|e| USimpleError::new(1, format!("Failed to parse JSON: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("Failed to parse JSON: {}", e)))?;
 
     let pretty = matches.get_flag(options::PRETTY);
 
-    // Handle field extraction
     if let Some(field) = matches.get_one::<String>(options::FIELD) {
         let result = extract_field(&json, field)?;
         output_json(&result, pretty)?;
     } else {
-        // No extraction specified, just output the JSON (possibly prettified)
         output_json(&json, pretty)?;
     }
 
     Ok(())
 }
 
-fn extract_field(json: &Value, field: &str) -> UResult<Value> {
+fn extract_field(json: &Value, field: &str) -> SGResult<Value> {
     match json {
         Value::Object(map) => {
             if let Some(value) = map.get(field) {
                 Ok(value.clone())
             } else {
-                Err(USimpleError::new(
+                Err(SGSimpleError::new(
                     1,
                     format!("Field '{}' not found in JSON object", field),
                 ))
             }
         }
         Value::Array(arr) => {
-            // Extract field from all objects in array
             let results: Vec<Value> = arr
                 .iter()
                 .filter_map(|item| {
@@ -65,14 +60,14 @@ fn extract_field(json: &Value, field: &str) -> UResult<Value> {
                 .collect();
             Ok(Value::Array(results))
         }
-        _ => Err(USimpleError::new(
+        _ => Err(SGSimpleError::new(
             1,
             "Input JSON must be an object or array".to_string(),
         )),
     }
 }
 
-fn extract_multiple_fields(json: &Value, fields: &[&str]) -> UResult<Value> {
+fn extract_multiple_fields(json: &Value, fields: &[&str]) -> SGResult<Value> {
     match json {
         Value::Object(map) => {
             let mut result = serde_json::Map::new();
@@ -84,7 +79,6 @@ fn extract_multiple_fields(json: &Value, fields: &[&str]) -> UResult<Value> {
             Ok(Value::Object(result))
         }
         Value::Array(arr) => {
-            // Extract fields from all objects in array
             let results: Vec<Value> = arr
                 .iter()
                 .filter_map(|item| {
@@ -103,39 +97,39 @@ fn extract_multiple_fields(json: &Value, fields: &[&str]) -> UResult<Value> {
                 .collect();
             Ok(Value::Array(results))
         }
-        _ => Err(USimpleError::new(
+        _ => Err(SGSimpleError::new(
             1,
             "Input JSON must be an object or array".to_string(),
         )),
     }
 }
 
-fn extract_by_index(json: &Value, index: usize) -> UResult<Value> {
+fn extract_by_index(json: &Value, index: usize) -> SGResult<Value> {
     match json {
         Value::Array(arr) => {
             if index < arr.len() {
                 Ok(arr[index].clone())
             } else {
-                Err(USimpleError::new(
+                Err(SGSimpleError::new(
                     1,
                     format!("Index {} out of bounds (array length: {})", index, arr.len()),
                 ))
             }
         }
-        _ => Err(USimpleError::new(
+        _ => Err(SGSimpleError::new(
             1,
             "Input JSON must be an array for index extraction".to_string(),
         )),
     }
 }
 
-fn output_json(value: &Value, pretty: bool) -> UResult<()> {
+fn output_json(value: &Value, pretty: bool) -> SGResult<()> {
     let output = if pretty {
         serde_json::to_string_pretty(value)
     } else {
         serde_json::to_string(value)
     }
-    .map_err(|e| USimpleError::new(1, format!("Failed to serialize JSON: {}", e)))?;
+    .map_err(|e| SGSimpleError::new(1, format!("Failed to serialize JSON: {}", e)))?;
 
     println!("{}", output);
     Ok(())
@@ -161,3 +155,4 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue),
         )
 }
+

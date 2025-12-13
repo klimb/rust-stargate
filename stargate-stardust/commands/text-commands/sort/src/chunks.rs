@@ -1,7 +1,6 @@
 //! Utilities for reading files as chunks.
 
 #![allow(dead_code)]
-// Ignores non-used warning for `borrow_buffer` in `Chunk`
 
 use std::{
     io::{ErrorKind, Read},
@@ -10,7 +9,7 @@ use std::{
 
 use memchr::memchr_iter;
 use self_cell::self_cell;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 
 use crate::{GeneralBigDecimalParseResult, GlobalSettings, Line, numeric_str_cmp::NumInfo};
 
@@ -50,17 +49,11 @@ impl Chunk {
             contents.line_data.parsed_floats.clear();
             contents.line_data.line_num_floats.clear();
             let lines = unsafe {
-                // SAFETY: It is safe to (temporarily) transmute to a vector of lines with a longer lifetime,
-                // because the vector is empty.
-                // Transmuting is necessary to make recycling possible. See https://github.com/rust-lang/rfcs/pull/2802
-                // for a rfc to make this unnecessary. Its example is similar to the code here.
                 std::mem::transmute::<Vec<Line<'_>>, Vec<Line<'static>>>(std::mem::take(
                     &mut contents.lines
                 ))
             };
             let selections = unsafe {
-                // SAFETY: (same as above) It is safe to (temporarily) transmute to a vector of &str with a longer lifetime,
-                // because the vector is empty.
                 std::mem::transmute::<Vec<&'_ [u8]>, Vec<&'static [u8]>>(std::mem::take(
                     &mut contents.line_data.selections
                 ))
@@ -142,10 +135,10 @@ pub fn read<T: Read>(
     max_buffer_size: Option<usize>,
     carry_over: &mut Vec<u8>,
     file: &mut T,
-    next_files: &mut impl Iterator<Item = UResult<T>>,
+    next_files: &mut impl Iterator<Item = SGResult<T>>,
     separator: u8,
     settings: &GlobalSettings
-) -> UResult<bool> {
+) -> SGResult<bool> {
     let RecycledChunk {
         lines,
         selections,
@@ -170,15 +163,11 @@ pub fn read<T: Read>(
     carry_over.extend_from_slice(&buffer[read..]);
 
     if read != 0 {
-        let payload: UResult<Chunk> = Chunk::try_new(buffer, |buffer| {
+        let payload: SGResult<Chunk> = Chunk::try_new(buffer, |buffer| {
             let selections = unsafe {
-                // SAFETY: It is safe to transmute to an empty vector of selections with shorter lifetime.
-                // It was only temporarily transmuted to a Vec<Line<'static>> to make recycling possible.
                 std::mem::transmute::<Vec<&'static [u8]>, Vec<&'_ [u8]>>(selections)
             };
             let mut lines = unsafe {
-                // SAFETY: (same as above) It is safe to transmute to a vector of lines with shorter lifetime,
-                // because it was only temporarily transmuted to a Vec<Line<'static>> to make recycling possible.
                 std::mem::transmute::<Vec<Line<'static>>, Vec<Line<'_>>>(lines)
             };
             let read = &buffer[..read];
@@ -247,12 +236,12 @@ fn parse_lines<'a>(
 /// * Whether this function should be called again.
 fn read_to_buffer<T: Read>(
     file: &mut T,
-    next_files: &mut impl Iterator<Item = UResult<T>>,
+    next_files: &mut impl Iterator<Item = SGResult<T>>,
     buffer: &mut Vec<u8>,
     max_buffer_size: Option<usize>,
     start_offset: usize,
     separator: u8
-) -> UResult<(usize, bool)> {
+) -> SGResult<(usize, bool)> {
     let mut read_target = &mut buffer[start_offset..];
     let mut last_file_empty = true;
     let mut newline_search_offset = 0;
@@ -261,10 +250,8 @@ fn read_to_buffer<T: Read>(
         match file.read(read_target) {
             Ok(0) => {
                 if read_target.is_empty() {
-                    // chunk is full
                     if let Some(max_buffer_size) = max_buffer_size {
                         if max_buffer_size > buffer.len() {
-                            // we can grow the buffer
                             let prev_len = buffer.len();
                             let target = if buffer.len() < max_buffer_size / 2 {
                                 buffer.len().saturating_mul(2)
@@ -282,26 +269,20 @@ fn read_to_buffer<T: Read>(
                     newline_search_offset = buffer.len();
                     if let Some(last_line_end) = sep_iter.next() {
                         if found_newline || sep_iter.next().is_some() {
-                            // We read enough lines.
-                            // We want to include the separator here, because it shouldn't be carried over.
                             return Ok((last_line_end + 1, true));
                         }
                         found_newline = true;
                     }
 
-                    // We need to read more lines
                     let len = buffer.len();
                     let grow_by = (len / 2).max(1024 * 1024);
                     buffer.resize(len + grow_by, 0);
                     read_target = &mut buffer[len..];
                 } else {
-                    // This file has been fully read.
                     let mut leftover_len = read_target.len();
                     if !last_file_empty {
-                        // The file was not empty.
                         let read_len = buffer.len() - leftover_len;
                         if buffer[read_len - 1] != separator {
-                            // The file did not end with a separator. We have to insert one.
                             buffer[read_len] = separator;
                             leftover_len -= 1;
                         }
@@ -309,11 +290,9 @@ fn read_to_buffer<T: Read>(
                         read_target = &mut buffer[read_len..];
                     }
                     if let Some(next_file) = next_files.next() {
-                        // There is another file.
                         last_file_empty = true;
                         *file = next_file?;
                     } else {
-                        // This was the last file.
                         let read_len = buffer.len() - leftover_len;
                         return Ok((read_len, false));
                     }
@@ -324,9 +303,9 @@ fn read_to_buffer<T: Read>(
                 last_file_empty = false;
             }
             Err(e) if e.kind() == ErrorKind::Interrupted => {
-                // retry
             }
-            Err(e) => return Err(USimpleError::new(2, e.to_string())),
+            Err(e) => return Err(SGSimpleError::new(2, e.to_string())),
         }
     }
 }
+

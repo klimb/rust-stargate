@@ -1,6 +1,6 @@
-// spell-checker:ignore (clap) dont
-// spell-checker:ignore (ToDO) formatteriteminfo inputdecoder inputoffset mockstream nrofbytes partialreader odfunc multifile exitcode
-// spell-checker:ignore Anone bfloat
+
+
+
 
 mod byteorder_io;
 mod formatter_item_info;
@@ -38,14 +38,14 @@ use crate::prn_char::format_ascii_dump;
 use clap::ArgAction;
 use clap::{Arg, ArgMatches, Command, parser::ValueSource};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::translate;
 
 use sgcore::parser::parse_size::ParseSizeError;
 use sgcore::parser::shortcut_value_parser::ShortcutValueParser;
 use sgcore::{format_usage, show_error, show_warning};
 
-const PEEK_BUFFER_SIZE: usize = 4; // utf-8 can be 4 bytes
+const PEEK_BUFFER_SIZE: usize = 4;
 
 pub(crate) mod options {
     pub const HELP: &str = "help";
@@ -75,12 +75,12 @@ struct OdOptions {
 }
 
 /// Helper function to parse bytes with error handling
-fn parse_bytes_option(matches: &ArgMatches, option_name: &str) -> UResult<Option<u64>> {
+fn parse_bytes_option(matches: &ArgMatches, option_name: &str) -> SGResult<Option<u64>> {
     match matches.get_one::<String>(option_name) {
         None => Ok(None),
         Some(s) => match parse_number_of_bytes(s) {
             Ok(n) => Ok(Some(n)),
-            Err(e) => Err(USimpleError::new(
+            Err(e) => Err(SGSimpleError::new(
                 1,
                 format_error_message(&e, s, option_name)
             )),
@@ -89,13 +89,13 @@ fn parse_bytes_option(matches: &ArgMatches, option_name: &str) -> UResult<Option
 }
 
 impl OdOptions {
-    fn new(matches: &ArgMatches, args: &[String]) -> UResult<Self> {
+    fn new(matches: &ArgMatches, args: &[String]) -> SGResult<Self> {
         let byte_order = if let Some(s) = matches.get_one::<String>(options::ENDIAN) {
             match s.as_str() {
                 "little" => ByteOrder::Little,
                 "big" => ByteOrder::Big,
                 _ => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         1,
                         translate!("od-error-invalid-endian", "endian" => s)
                     ));
@@ -110,7 +110,7 @@ impl OdOptions {
         let mut label: Option<u64> = None;
 
         let parsed_input = parse_inputs(matches)
-            .map_err(|e| USimpleError::new(1, translate!("od-error-invalid-inputs", "msg" => e)))?;
+            .map_err(|e| SGSimpleError::new(1, translate!("od-error-invalid-inputs", "msg" => e)))?;
         let input_strings = match parsed_input {
             CommandLineInputs::FileNames(v) => v,
             CommandLineInputs::FileAndOffset((f, s, l)) => {
@@ -120,7 +120,7 @@ impl OdOptions {
             }
         };
 
-        let formats = parse_format_flags(args).map_err(|e| USimpleError::new(1, e))?;
+        let formats = parse_format_flags(args).map_err(|e| SGSimpleError::new(1, e))?;
 
         let mut line_bytes = match matches.get_one::<String>(options::WIDTH) {
             None => 16,
@@ -128,9 +128,9 @@ impl OdOptions {
                 if matches.value_source(options::WIDTH) == Some(ValueSource::CommandLine) {
                     match parse_number_of_bytes(s) {
                         Ok(n) => usize::try_from(n)
-                            .map_err(|_| USimpleError::new(1, format!("‘{s}‘ is too large")))?,
+                            .map_err(|_| SGSimpleError::new(1, format!("‘{s}‘ is too large")))?,
                         Err(e) => {
-                            return Err(USimpleError::new(
+                            return Err(SGSimpleError::new(
                                 1,
                                 format_error_message(&e, s, options::WIDTH)
                             ));
@@ -160,7 +160,7 @@ impl OdOptions {
         let string_min_length = match parse_bytes_option(matches, options::STRINGS)? {
             None => None,
             Some(n) => Some(usize::try_from(n).map_err(|_| {
-                USimpleError::new(
+                SGSimpleError::new(
                     1,
                     translate!("od-error-argument-too-large", "option" => "-S", "value" => n.to_string())
                 )
@@ -170,11 +170,6 @@ impl OdOptions {
         let radix = match matches.get_one::<String>(options::ADDRESS_RADIX) {
             None => Radix::Octal,
             Some(s) => {
-                // Other implementations of od only check the first character of this argument's value.
-                // This means executing `od -Anone` is equivalent to executing `od -An`.
-                // Existing users of od rely on this behavior:
-                // https://github.com/landley/toybox/blob/d50372cad35d5dd12e6391c3c7c901a96122dc67/scripts/make.sh#L239
-                // https://github.com/google/jsonnet/blob/913281d203578bb394995bacc792f2576371e06c/Makefile#L212
                 let st = s.as_bytes();
                 if let Some(u) = st.first() {
                     match *u {
@@ -183,15 +178,14 @@ impl OdOptions {
                         b'x' => Radix::Hexadecimal,
                         b'n' => Radix::NoPrefix,
                         _ => {
-                            return Err(USimpleError::new(
+                            return Err(SGSimpleError::new(
                                 1,
                                 translate!("od-error-radix-invalid", "radix" => s)
                             ));
                         }
                     }
                 } else {
-                    // Return an error instead of panicking when `od -A ''` is executed.
-                    return Err(USimpleError::new(1, translate!("od-error-radix-empty")));
+                    return Err(SGSimpleError::new(1, translate!("od-error-radix-empty")));
                 }
             }
         };
@@ -214,7 +208,7 @@ impl OdOptions {
 /// parses and validates command line parameters, prepares data structures,
 /// opens the input and calls `odfunc` to process the input.
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args = args.collect_ignore();
 
     let clap_opts = sg_app();
@@ -224,7 +218,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let od_options = OdOptions::new(&clap_matches, &args)?;
 
-    // Check if we're in strings mode
     if let Some(min_length) = od_options.string_min_length {
         extract_strings_from_input(
             &od_options.input_strings,
@@ -471,7 +464,7 @@ fn odfunc<I>(
     input_offset: &mut InputOffset,
     input_decoder: &mut InputDecoder<I>,
     output_info: &OutputInfo
-) -> UResult<()>
+) -> SGResult<()>
 where
     I: PeekRead + HasError,
 {
@@ -480,7 +473,6 @@ where
     let line_bytes = output_info.byte_size_line;
 
     loop {
-        // print each line data (or multi-format raster of several lines describing the same data).
 
         match input_decoder.peek_read() {
             Ok(mut memory_decoder) => {
@@ -491,9 +483,7 @@ where
                     break;
                 }
 
-                // not enough byte for a whole element, this should only happen on the last line.
                 if length != line_bytes {
-                    // set zero bytes in the part of the buffer that will be used, but is not filled.
                     let mut max_used = length + output_info.byte_size_block;
                     if max_used > line_bytes {
                         max_used = line_bytes;
@@ -513,7 +503,6 @@ where
                 } else {
                     duplicate_line = false;
                     if length == line_bytes {
-                        // save a copy of the input unless it is the last line
                         memory_decoder.clone_buffer(&mut previous_bytes);
                     }
 
@@ -548,23 +537,21 @@ fn extract_strings_from_input(
     read_bytes: Option<u64>,
     min_length: usize,
     radix: Radix
-) -> UResult<()> {
+) -> SGResult<()> {
     let inputs = map_input_strings(input_strings);
     let mut mf = MultifileReader::new(inputs);
 
-    // Apply skip_bytes by reading and discarding
     let mut skipped = 0u64;
     while skipped < skip_bytes {
         let to_skip = std::cmp::min(8192, skip_bytes - skipped);
         let mut skip_buf = vec![0u8; to_skip as usize];
         match mf.read(&mut skip_buf) {
-            Ok(0) => break, // EOF reached
+            Ok(0) => break,
             Ok(n) => skipped += n as u64,
             Err(_) => break,
         }
     }
 
-    // Helper function to format and print a string
     let print_string = |offset: u64, string: &[u8]| {
         let string_content = String::from_utf8_lossy(string);
         match radix {
@@ -582,11 +569,8 @@ fn extract_strings_from_input(
     let mut buf = [0u8; 1];
 
     loop {
-        // Check if we've reached the read_bytes limit
         if let Some(limit) = read_bytes {
             if bytes_read >= limit {
-                // Special case: when -N limit is reached with a pending string
-                // that meets min_length, output it even without null terminator
                 if current_string.len() >= min_length {
                     print_string(string_start_offset, &current_string);
                 }
@@ -594,23 +578,19 @@ fn extract_strings_from_input(
             }
         }
 
-        // Read one byte at a time
         match mf.read(&mut buf) {
-            Ok(0) => break, // EOF
+            Ok(0) => break,
             Ok(_) => {
                 bytes_read += 1;
                 let byte = buf[0];
 
-                // Check if it's a printable character (including space)
                 if (0x20..=0x7E).contains(&byte) {
                     if current_string.is_empty() {
                         string_start_offset = current_offset;
                     }
                     current_string.push(byte);
                 } else {
-                    // Either null terminator or non-printable character
                     if byte == 0 && current_string.len() >= min_length {
-                        // Null terminator found with valid string
                         print_string(string_start_offset, &current_string);
                     }
                     current_string.clear();
@@ -619,8 +599,6 @@ fn extract_strings_from_input(
                 current_offset += 1;
             }
             Err(e) => {
-                // Note: GNU od does not output unterminated strings at EOF
-                // Strings must be null-terminated to be output
                 if mf.has_error() {
                     show_error!("{}", e);
                     return Err(1.into());
@@ -629,9 +607,6 @@ fn extract_strings_from_input(
             }
         }
     }
-
-    // GNU od doesn't output an offset when strings mode finds no valid strings
-    // This includes cases with only unterminated or too-short strings
 
     if mf.has_error() {
         Err(1.into())
@@ -642,7 +617,7 @@ fn extract_strings_from_input(
 
 /// Outputs a single line of input, into one or more lines human readable output.
 fn print_bytes(prefix: &str, input_decoder: &MemoryDecoder, output_info: &OutputInfo) {
-    let mut first = true; // First line of a multi-format raster.
+    let mut first = true;
     for f in output_info.spaced_formatters_iter() {
         let mut output_text = String::new();
 
@@ -691,12 +666,9 @@ fn print_bytes(prefix: &str, input_decoder: &MemoryDecoder, output_info: &Output
         }
 
         if first {
-            print!("{prefix}"); // print offset
-            // if printing in multiple formats offset is printed only once
+            print!("{prefix}");
             first = false;
         } else {
-            // this takes the space of the file offset on subsequent
-            // lines of multi-format rasters.
             print!("{:>width$}", "", width = prefix.chars().count());
         }
         println!("{output_text}");
@@ -723,14 +695,9 @@ fn open_input_peek_reader(
     skip_bytes: u64,
     read_bytes: Option<u64>
 ) -> PeekReader<BufReader<PartialReader<MultifileReader<'_>>>> {
-    // should return  "impl PeekRead + Read + HasError" when supported in (stable) rust
     let inputs = map_input_strings(input_strings);
     let mf = MultifileReader::new(inputs);
     let pr = PartialReader::new(mf, skip_bytes, read_bytes);
-    // Add a BufReader over the top of the PartialReader. This will have the
-    // effect of generating buffered reads to files/stdin, but since these reads
-    // go through MultifileReader (which limits the maximum number of bytes read)
-    // we won't ever read more bytes than were specified with the `-N` flag.
     let buf_pr = BufReader::new(pr);
     PeekReader::new(buf_pr)
 }
@@ -742,8 +709,6 @@ impl<R: HasError> HasError for BufReader<R> {
 }
 
 fn format_error_message(error: &ParseSizeError, s: &str, option: &str) -> String {
-    // NOTE:
-    // GNU's od echos affected flag, -N or --read-bytes (-j or --skip-bytes, etc.), depending user's selection
     match error {
         ParseSizeError::InvalidSuffix(_) => {
             translate!("od-error-invalid-suffix", "option" => option, "value" => s.quote())
@@ -756,3 +721,4 @@ fn format_error_message(error: &ParseSizeError, s: &str, option: &str) -> String
         }
     }
 }
+

@@ -1,4 +1,4 @@
-// spell-checker:ignore dired subdired
+
 
 /// `dired` Module Documentation
 ///
@@ -33,7 +33,7 @@
 use crate::Config;
 use std::fmt;
 use std::io::{BufWriter, Stdout, Write};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BytePosition {
@@ -55,7 +55,7 @@ impl fmt::Display for BytePosition {
     }
 }
 
-// When --dired is used, all lines starts with 2 spaces
+
 static DIRED_TRAILING_OFFSET: usize = 2;
 
 fn get_offset_from_previous_line(dired_positions: &[BytePosition]) -> usize {
@@ -79,7 +79,7 @@ pub fn calculate_dired(
     (start, end)
 }
 
-pub fn indent(out: &mut BufWriter<Stdout>) -> UResult<()> {
+pub fn indent(out: &mut BufWriter<Stdout>) -> SGResult<()> {
     write!(out, "  ")?;
     Ok(())
 }
@@ -90,7 +90,7 @@ pub fn calculate_subdired(dired: &mut DiredOutput, path_len: usize) {
     let additional_offset = if dired.subdired_positions.is_empty() {
         0
     } else {
-        // if we have several directories: \n\n
+
         2
     };
 
@@ -104,7 +104,7 @@ pub fn print_dired_output(
     config: &Config,
     dired: &DiredOutput,
     out: &mut BufWriter<Stdout>
-) -> UResult<()> {
+) -> SGResult<()> {
     out.flush()?;
     if !dired.dired_positions.is_empty() {
         print_positions("//DIRED//", &dired.dired_positions);
@@ -128,20 +128,20 @@ fn print_positions(prefix: &str, positions: &Vec<BytePosition>) {
 pub fn add_total(dired: &mut DiredOutput, total_len: usize) {
     if dired.padding == 0 {
         let offset_from_previous_line = get_offset_from_previous_line(&dired.dired_positions);
-        // when dealing with "  total: xx", it isn't part of the //DIRED//
-        // so, we just keep the size line to add it to the position of the next file
+
+
         dired.padding = total_len + offset_from_previous_line + DIRED_TRAILING_OFFSET;
     } else {
-        // += because if we are in -R, we have "  dir:\n  total X". So, we need to take the
-        // previous padding too.
-        // and we already have the previous position in mind
+
+
+
         dired.padding += total_len + DIRED_TRAILING_OFFSET;
     }
 }
 
-// when using -R, we have the dirname. we need to add it to the padding
+
 pub fn add_dir_name(dired: &mut DiredOutput, dir_len: usize) {
-    // 1 for the ":" in "  dirname:"
+
     dired.padding += dir_len + DIRED_TRAILING_OFFSET + 1;
 }
 
@@ -166,12 +166,12 @@ pub fn calculate_and_update_positions(
 /// update when it is the first element in the list (to manage "total X")
 /// insert when it isn't the about total
 pub fn update_positions(dired: &mut DiredOutput, start: usize, end: usize) {
-    // padding can be 0 but as it doesn't matter
+
     dired.dired_positions.push(BytePosition {
         start: start + dired.padding,
         end: end + dired.padding,
     });
-    // Remove the previous padding
+
     dired.padding = 0;
 }
 
@@ -247,7 +247,7 @@ mod tests {
                     BytePosition { start: 8, end: 11 },
                 ],
                 subdired_positions: vec![],
-                // 8 = 1 for the \n + 5 for dir_len + 2 for "  " + 1 for :
+
                 padding: 8
             }
         );
@@ -264,19 +264,19 @@ mod tests {
             subdired_positions: vec![],
             padding: 0,
         };
-        // if we have "total: 2"
+
         let total_len = 8;
         add_total(&mut dired, total_len);
-        // 22 = 8 (len) + 2 (padding) + 11 (previous position) + 1 (\n)
+
         assert_eq!(dired.padding, 22);
     }
 
     #[test]
     fn test_add_dir_name_and_total() {
-        // test when we have
-        //   dirname:
-        //   total 0
-        //   -rw-r--r-- 1 sylvestre sylvestre 0 Sep 30 09:41 ab
+
+
+
+
 
         let mut dired = DiredOutput {
             dired_positions: vec![
@@ -289,7 +289,7 @@ mod tests {
         };
         let dir_len = 5;
         add_dir_name(&mut dired, dir_len);
-        // 8 = 2 ("  ") + 1 (\n) + 5 + 1 (: of dirname)
+
         assert_eq!(dired.padding, 8);
 
         let total_len = 8;
@@ -305,13 +305,13 @@ mod tests {
             padding: 10,
         };
 
-        // Test with adjust = true
+
         update_positions(&mut dired, 15, 20);
         let last_position = dired.dired_positions.last().unwrap();
-        assert_eq!(last_position.start, 25); // 15 + 10 (end of the previous position)
-        assert_eq!(last_position.end, 30); // 20 + 10 (end of the previous position)
+        assert_eq!(last_position.start, 25);
+        assert_eq!(last_position.end, 30);
 
-        // Test with adjust = false
+
         update_positions(&mut dired, 30, 35);
         let last_position = dired.dired_positions.last().unwrap();
         assert_eq!(last_position.start, 30);
@@ -344,3 +344,4 @@ mod tests {
         assert_eq!(dired.padding, 0);
     }
 }
+

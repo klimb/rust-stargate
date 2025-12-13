@@ -1,4 +1,4 @@
-// spell-checker:ignore zaaa zaab stype
+
 //! Compute filenames from a given index.
 //!
 //! The [`FilenameIterator`] yields filenames for use with ``split``.
@@ -39,7 +39,7 @@ use std::ffi::{OsStr, OsString};
 use std::path::is_separator;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::translate;
 
 /// The format to use for suffixes in the filename for each output chunk.
@@ -128,15 +128,10 @@ impl Suffix {
     pub fn from(matches: &ArgMatches, strategy: &Strategy) -> Result<Self, SuffixError> {
         let stype: SuffixType;
 
-        // Defaults
         let mut start = 0;
         let mut auto_widening = true;
         let default_length: usize = 2;
 
-        // Check if the user is specifying one or more than one suffix
-        // Any combination of suffixes is allowed
-        // Since all suffixes are setup with 'overrides_with_all()' against themselves and each other,
-        // last one wins, all others are ignored
         match (
             matches.contains_id(OPT_NUMERIC_SUFFIXES),
             matches.contains_id(OPT_HEX_SUFFIXES),
@@ -145,7 +140,6 @@ impl Suffix {
         ) {
             (true, _, _, _) => {
                 stype = SuffixType::Decimal;
-                // if option was specified, but without value - this will return None as there is no default value
                 if let Some(opt) = matches.get_one::<String>(OPT_NUMERIC_SUFFIXES) {
                     start = opt
                         .parse::<usize>()
@@ -155,39 +149,32 @@ impl Suffix {
             }
             (_, true, _, _) => {
                 stype = SuffixType::Hexadecimal;
-                // if option was specified, but without value - this will return None as there is no default value
                 if let Some(opt) = matches.get_one::<String>(OPT_HEX_SUFFIXES) {
                     start = usize::from_str_radix(opt, 16)
                         .map_err(|_| SuffixError::NotParsable(opt.to_owned()))?;
                     auto_widening = false;
                 }
             }
-            (_, _, true, _) => stype = SuffixType::Decimal, // short numeric suffix '-d'
-            (_, _, _, true) => stype = SuffixType::Hexadecimal, // short hex suffix '-x'
-            _ => stype = SuffixType::Alphabetic, // no numeric/hex suffix, using default alphabetic
+            (_, _, true, _) => stype = SuffixType::Decimal,
+            (_, _, _, true) => stype = SuffixType::Hexadecimal,
+            _ => stype = SuffixType::Alphabetic,
         }
 
-        // Get suffix length and a flag to indicate if it was specified with command line option
         let (mut length, is_length_cmd_opt) =
             if let Some(v) = matches.get_one::<String>(OPT_SUFFIX_LENGTH) {
-                // suffix length was specified in command line
                 (
                     v.parse::<usize>()
                         .map_err(|_| SuffixError::NotParsable(v.to_owned()))?,
                     true
                 )
             } else {
-                // no suffix length option was specified in command line
-                // set to default value
                 (default_length, false)
             };
 
-        // Disable dynamic auto-widening if suffix length was specified in command line with value > 0
         if is_length_cmd_opt && length > 0 {
             auto_widening = false;
         }
 
-        // Auto pre-calculate new suffix length (auto-width) if necessary
         if let Strategy::Number(number_type) = strategy {
             let chunks = number_type.num_chunks();
             let required_length = ((start as u64 + chunks) as f64)
@@ -195,10 +182,8 @@ impl Suffix {
                 .ceil() as usize;
 
             if (start as u64) < chunks && !(is_length_cmd_opt && length > 0) {
-                // with auto-width ON the auto-widening is OFF
                 auto_widening = false;
 
-                // do not reduce suffix length with auto-width
                 if length < required_length {
                     length = required_length;
                 }
@@ -209,8 +194,6 @@ impl Suffix {
             }
         }
 
-        // Check edge case when suffix length == 0 was specified in command line
-        // Set it to default value
         if is_length_cmd_opt && length == 0 {
             length = default_length;
         }
@@ -306,14 +289,14 @@ pub struct FilenameIterator<'a> {
 }
 
 impl<'a> FilenameIterator<'a> {
-    pub fn new(prefix: &'a OsStr, suffix: &'a Suffix) -> UResult<Self> {
+    pub fn new(prefix: &'a OsStr, suffix: &'a Suffix) -> SGResult<Self> {
         let radix = suffix.stype.radix();
         let number = if suffix.auto_widening {
             Number::DynamicWidth(DynamicWidthNumber::new(radix, suffix.start))
         } else {
             Number::FixedWidth(
                 FixedWidthNumber::new(radix, suffix.length, suffix.start).map_err(|_| {
-                    USimpleError::new(
+                    SGSimpleError::new(
                         1,
                         translate!("split-error-numerical-suffix-start-too-large")
                     )
@@ -340,8 +323,6 @@ impl Iterator for FilenameIterator<'_> {
         } else {
             self.number.increment().ok()?;
         }
-        // The first and third parts are just taken directly from the
-        // struct parameters unchanged.
         Some(format!(
             "{}{}{}",
             self.prefix.to_string_lossy(),
@@ -511,3 +492,4 @@ mod tests {
         assert!(it.is_err());
     }
 }
+

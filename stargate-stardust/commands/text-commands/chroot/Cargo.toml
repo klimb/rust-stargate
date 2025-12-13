@@ -1,6 +1,6 @@
 [package]
 name = "sg_chroot"
-description = "chroot ~ (uutils) run COMMAND under a new root directory"
+description = "chroot ~ (stargate) run COMMAND under a new root directory"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

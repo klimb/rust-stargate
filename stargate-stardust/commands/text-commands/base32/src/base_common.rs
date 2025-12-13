@@ -1,4 +1,4 @@
-// spell-checker:ignore hexupper lsbf msbf unpadded nopad aGVsbG8sIHdvcmxkIQ
+
 
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
@@ -11,7 +11,7 @@ use sgcore::encoding::{
     SupportsFastDecodeAndEncode, Z85Wrapper,
     for_base_common::{BASE32, BASE32HEX, BASE64URL, HEXUPPER_PERMISSIVE},
 };
-use sgcore::error::{FromIo, UResult, USimpleError, UUsageError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError, SGUsageError};
 use sgcore::format_usage;
 use sgcore::translate;
 
@@ -39,13 +39,13 @@ pub mod options {
 }
 
 impl Config {
-    pub fn from(options: &clap::ArgMatches) -> UResult<Self> {
+    pub fn from(options: &clap::ArgMatches) -> SGResult<Self> {
         let to_read = match options.get_many::<OsString>(options::FILE) {
             Some(mut values) => {
                 let name = values.next().unwrap();
 
                 if let Some(extra_op) = values.next() {
-                    return Err(UUsageError::new(
+                    return Err(SGUsageError::new(
                         BASE_CMD_PARSE_ERROR,
                         translate!("base-common-extra-operand", "operand" => extra_op.to_string_lossy().quote())
                     ));
@@ -57,7 +57,7 @@ impl Config {
                     let path = Path::new(name);
 
                     if !path.exists() {
-                        return Err(USimpleError::new(
+                        return Err(SGSimpleError::new(
                             BASE_CMD_PARSE_ERROR,
                             translate!("base-common-no-such-file", "file" => path.maybe_quote())
                         ));
@@ -73,7 +73,7 @@ impl Config {
             .get_one::<String>(options::WRAP)
             .map(|num| {
                 num.parse::<usize>().map_err(|_| {
-                    USimpleError::new(
+                    SGSimpleError::new(
                         BASE_CMD_PARSE_ERROR,
                         translate!("base-common-invalid-wrap-size", "size" => num.quote())
                     )
@@ -94,7 +94,7 @@ pub fn parse_base_cmd_args(
     args: impl sgcore::Args,
     about: &'static str,
     usage: &str
-) -> UResult<Config> {
+) -> SGResult<Config> {
     let command = base_app(about, usage);
     let matches = sgcore::clap_localization::handle_clap_result(command, args)?;
     Config::from(&matches)
@@ -107,7 +107,6 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
         .override_usage(format_usage(usage))
         .infer_long_args(true);
     sgcore::clap_localization::configure_localized_command(cmd)
-        // Format arguments.
         .arg(
             Arg::new(options::DECODE)
                 .short('d')
@@ -133,8 +132,6 @@ pub fn base_app(about: &'static str, usage: &str) -> Command {
                 .help(translate!("base-common-help-wrap", "default" => WRAP_DEFAULT))
                 .overrides_with(options::WRAP)
         )
-        // "multiple" arguments are used to check whether there is more than one
-        // file passed in.
         .arg(
             Arg::new(options::FILE)
                 .index(1)
@@ -150,10 +147,9 @@ pub trait ReadSeek: Read + Seek {}
 /// Automatically implement the `ReadSeek` trait for any type that implements both `Read` and `Seek`.
 impl<T: Read + Seek> ReadSeek for T {}
 
-pub fn get_input(config: &Config) -> UResult<Box<dyn ReadSeek>> {
+pub fn get_input(config: &Config) -> SGResult<Box<dyn ReadSeek>> {
     match &config.to_read {
         Some(path_buf) => {
-            // Do not buffer input, because buffering is handled by `fast_decode` and `fast_encode`
             let file =
                 File::open(path_buf).map_err_context(|| path_buf.maybe_quote().to_string())?;
             Ok(Box::new(file))
@@ -167,20 +163,18 @@ pub fn get_input(config: &Config) -> UResult<Box<dyn ReadSeek>> {
 }
 
 /// Determines if the input buffer contains any padding ('=') ignoring trailing whitespace.
-fn read_and_has_padding<R: Read>(input: &mut R) -> UResult<(bool, Vec<u8>)> {
+fn read_and_has_padding<R: Read>(input: &mut R) -> SGResult<(bool, Vec<u8>)> {
     let mut buf = Vec::new();
     input
         .read_to_end(&mut buf)
-        .map_err(|err| USimpleError::new(1, format_read_error(err.kind())))?;
+        .map_err(|err| SGSimpleError::new(1, format_read_error(err.kind())))?;
 
-    // Treat the stream as padded if any '=' exists (GNU coreutils continues decoding
-    // even when padding bytes are followed by more data).
     let has_padding = buf.contains(&b'=');
 
     Ok((has_padding, buf))
 }
 
-pub fn handle_input<R: Read + Seek>(input: &mut R, format: Format, config: Config) -> UResult<()> {
+pub fn handle_input<R: Read + Seek>(input: &mut R, format: Format, config: Config) -> SGResult<()> {
     let (has_padding, read) = read_and_has_padding(input)?;
 
     let supports_fast_decode_and_encode =
@@ -204,8 +198,6 @@ pub fn handle_input<R: Read + Seek>(input: &mut R, format: Format, config: Confi
         )
     };
 
-    // Ensure any pending stdout buffer is flushed even if decoding failed; GNU basenc
-    // keeps already-decoded bytes visible before reporting the error.
     match (result, stdout_lock.flush()) {
         (res, Ok(())) => res,
         (Ok(_), Err(err)) => Err(err.into()),
@@ -233,35 +225,30 @@ pub fn get_supports_fast_decode_and_encode(
             HEXUPPER_PERMISSIVE,
             BASE16_VALID_DECODING_MULTIPLE,
             BASE16_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"0123456789ABCDEFabcdef"
         )),
         Format::Base2Lsbf => Box::from(EncodingWrapper::new(
             BASE2LSBF,
             BASE2_VALID_DECODING_MULTIPLE,
             BASE2_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"01"
         )),
         Format::Base2Msbf => Box::from(EncodingWrapper::new(
             BASE2MSBF,
             BASE2_VALID_DECODING_MULTIPLE,
             BASE2_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"01"
         )),
         Format::Base32 => Box::from(Base32Wrapper::new(
             BASE32,
             BASE32_VALID_DECODING_MULTIPLE,
             BASE32_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567="
         )),
         Format::Base32Hex => Box::from(Base32Wrapper::new(
             BASE32HEX,
             BASE32_VALID_DECODING_MULTIPLE,
             BASE32_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"0123456789ABCDEFGHIJKLMNOPQRSTUV="
         )),
         Format::Base64 => {
@@ -282,7 +269,6 @@ pub fn get_supports_fast_decode_and_encode(
             BASE64URL,
             BASE64_VALID_DECODING_MULTIPLE,
             BASE64_UNPADDED_MULTIPLE,
-            // spell-checker:disable-next-line
             b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=_-"
         )),
         Format::Z85 => Box::from(Z85Wrapper {}),
@@ -298,19 +284,18 @@ pub mod fast_encode {
         io::{self, Write},
         num::NonZeroUsize,
     };
-    use sgcore::{encoding::SupportsFastDecodeAndEncode, error::UResult};
+    use sgcore::{encoding::SupportsFastDecodeAndEncode, error::SGResult};
 
     struct LineWrapping {
         line_length: NonZeroUsize,
         print_buffer: Vec<u8>,
     }
 
-    // Start of helper functions
     fn encode_in_chunks_to_buffer(
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         read_buffer: &[u8],
         encoded_buffer: &mut VecDeque<u8>
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         supports_fast_decode_and_encode.encode_to_vec_deque(read_buffer, encoded_buffer)?;
         Ok(())
     }
@@ -321,10 +306,6 @@ pub mod fast_encode {
         is_cleanup: bool,
         empty_wrap: bool
     ) -> io::Result<()> {
-        // TODO
-        // `encoded_buffer` only has to be a VecDeque if line wrapping is enabled
-        // (`make_contiguous` should be a no-op here)
-        // Refactoring could avoid this call
         output.write_all(encoded_buffer.make_contiguous())?;
 
         if is_cleanup {
@@ -364,14 +345,11 @@ pub mod fast_encode {
 
         output.write_all(print_buffer)?;
 
-        // Remove the bytes that were just printed from `encoded_buffer`
         drop(encoded_buffer.drain(..bytes_added_to_print_buffer));
 
         if is_cleanup {
             if encoded_buffer.is_empty() {
-                // Do not write a newline in this case, because two trailing newlines should never be printed
             } else {
-                // Print the partial line, since this is cleanup and no more data is coming
                 output.write_all(encoded_buffer.make_contiguous())?;
                 output.write_all(b"\n")?;
             }
@@ -389,7 +367,6 @@ pub mod fast_encode {
         is_cleanup: bool,
         empty_wrap: bool
     ) -> io::Result<()> {
-        // Write all data in `encoded_buffer` to `output`
         if let &mut Some(ref mut li) = line_wrapping {
             write_with_line_breaks(li, encoded_buffer, output, is_cleanup)?;
         } else {
@@ -398,15 +375,13 @@ pub mod fast_encode {
 
         Ok(())
     }
-    // End of helper functions
 
     pub fn fast_encode(
         input: Vec<u8>,
         output: &mut dyn Write,
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         wrap: Option<usize>
-    ) -> UResult<()> {
-        // Based on performance testing
+    ) -> SGResult<()> {
 
         const ENCODE_IN_CHUNKS_OF_SIZE_MULTIPLE: usize = 1_024;
 
@@ -415,18 +390,12 @@ pub mod fast_encode {
 
         assert!(encode_in_chunks_of_size > 0);
 
-        // The "data-encoding" crate supports line wrapping, but not arbitrary line wrapping, only certain widths, so
-        // line wrapping must be handled here.
-        // https://github.com/ia0/data-encoding/blob/4f42ad7ef242f6d243e4de90cd1b46a57690d00e/lib/src/lib.rs#L1710
         let mut line_wrapping = match wrap {
-            // Line wrapping is disabled because "-w"/"--wrap" was passed with "0"
             Some(0) => None,
-            // A custom line wrapping value was passed
             Some(an) => Some(LineWrapping {
                 line_length: NonZeroUsize::new(an).unwrap(),
                 print_buffer: Vec::<u8>::new(),
             }),
-            // Line wrapping was not set, so the default is used
             None => Some(LineWrapping {
                 line_length: NonZeroUsize::new(WRAP_DEFAULT).unwrap(),
                 print_buffer: Vec::<u8>::new(),
@@ -435,21 +404,15 @@ pub mod fast_encode {
 
         let input_size = input.len();
 
-        // Start of buffers
-        // Data that was read from `input` but has not been encoded yet
         let mut leftover_buffer = VecDeque::<u8>::new();
 
-        // Encoded data that needs to be written to `output`
         let mut encoded_buffer = VecDeque::<u8>::new();
-        // End of buffers
 
         input
             .iter()
             .enumerate()
             .step_by(encode_in_chunks_of_size)
             .map(|(idx, _)| {
-                // The part of `input_buffer` that was actually filled by the call
-                // to `read`
                 &input[idx..min(input_size, idx + encode_in_chunks_of_size)]
             })
             .map(|buffer| {
@@ -462,7 +425,6 @@ pub mod fast_encode {
             })
             .for_each(|buffer| {
                 if let Some(read_buffer) = buffer {
-                    // Encode data in chunks, then place it in `encoded_buffer`
                     assert_eq!(read_buffer.len(), encode_in_chunks_of_size);
                     encode_in_chunks_to_buffer(
                         supports_fast_decode_and_encode,
@@ -470,7 +432,6 @@ pub mod fast_encode {
                         &mut encoded_buffer
                     )
                     .unwrap();
-                    // Write all data in `encoded_buffer` to `output`
                     write_to_output(
                         &mut line_wrapping,
                         &mut encoded_buffer,
@@ -482,15 +443,10 @@ pub mod fast_encode {
                 }
             });
 
-        // Cleanup
-        // `input` has finished producing data, so the data remaining in the buffers needs to be encoded and printed
         {
-            // Encode all remaining unencoded bytes, placing them in `encoded_buffer`
             supports_fast_decode_and_encode
                 .encode_to_vec_deque(leftover_buffer.make_contiguous(), &mut encoded_buffer)?;
 
-            // Write all data in `encoded_buffer` to output
-            // `is_cleanup` triggers special cleanup-only logic
             write_to_output(
                 &mut line_wrapping,
                 &mut encoded_buffer,
@@ -507,12 +463,10 @@ pub mod fast_decode {
     use std::io::{self, Write};
     use sgcore::{
         encoding::SupportsFastDecodeAndEncode,
-        error::{UResult, USimpleError},
+        error::{SGResult, SGSimpleError},
     };
 
-    // Start of helper functions
     fn alphabet_lookup(alphabet: &[u8]) -> [bool; 256] {
-        // Precompute O(1) membership checks so we can validate every byte before decoding.
         let mut table = [false; 256];
 
         for &byte in alphabet {
@@ -526,13 +480,12 @@ pub mod fast_decode {
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         read_buffer_filtered: &[u8],
         decoded_buffer: &mut Vec<u8>
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         supports_fast_decode_and_encode.decode_into_vec(read_buffer_filtered, decoded_buffer)?;
         Ok(())
     }
 
     fn write_to_output(decoded_buffer: &mut Vec<u8>, output: &mut dyn Write) -> io::Result<()> {
-        // Write all data in `decoded_buffer` to `output`
         output.write_all(decoded_buffer.as_slice())?;
         output.flush()?;
 
@@ -548,9 +501,7 @@ pub mod fast_decode {
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         decoded_buffer: &mut Vec<u8>,
         output: &mut dyn Write
-    ) -> UResult<()> {
-        // While at least one full decode block is buffered, keep draining
-        // it and never yield more than block_limit per chunk.
+    ) -> SGResult<()> {
         while buffer.len() >= valid_multiple {
             let take = buffer.len().min(block_limit);
             let aligned_take = take - (take % valid_multiple);
@@ -572,14 +523,13 @@ pub mod fast_decode {
 
         Ok(())
     }
-    // End of helper functions
 
     pub fn fast_decode(
         input: Vec<u8>,
         output: &mut dyn Write,
         supports_fast_decode_and_encode: &dyn SupportsFastDecodeAndEncode,
         ignore_garbage: bool
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         const DECODE_IN_CHUNKS_OF_SIZE_MULTIPLE: usize = 1_024;
 
         let alphabet = supports_fast_decode_and_encode.alphabet();
@@ -590,12 +540,7 @@ pub mod fast_decode {
         assert!(decode_in_chunks_of_size > 0);
         assert!(valid_multiple > 0);
 
-        // Start of buffers
-
-        // Decoded data that needs to be written to `output`
         let mut decoded_buffer = Vec::<u8>::new();
-
-        // End of buffers
 
         let mut buffer = Vec::with_capacity(decode_in_chunks_of_size);
 
@@ -611,7 +556,7 @@ pub mod fast_decode {
             } else if ignore_garbage {
                 continue;
             } else {
-                return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
             }
 
             if supports_partial_decode {
@@ -660,7 +605,7 @@ pub mod fast_decode {
             write_to_output(&mut decoded_buffer, output)?;
 
             if had_invalid_tail {
-                return Err(USimpleError::new(1, "error: invalid input".to_owned()));
+                return Err(SGSimpleError::new(1, "error: invalid input".to_owned()));
             }
         }
 
@@ -671,7 +616,6 @@ pub mod fast_decode {
 fn format_read_error(kind: ErrorKind) -> String {
     let kind_string = kind.to_string();
 
-    // e.g. "is a directory" -> "Is a directory"
     let mut kind_string_capitalized = String::with_capacity(kind_string.len());
 
     for (index, ch) in kind_string.char_indices() {
@@ -717,3 +661,4 @@ mod tests {
         }
     }
 }
+

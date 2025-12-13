@@ -1,5 +1,5 @@
 use thiserror::Error;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::translate;
 
 #[derive(Debug, Error)]
@@ -24,4 +24,5 @@ pub enum MvError {
     FailedToAccessNotADirectory(String),
 }
 
-impl UError for MvError {}
+impl SGError for MvError {}
+

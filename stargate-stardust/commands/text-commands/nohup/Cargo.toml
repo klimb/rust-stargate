@@ -1,6 +1,6 @@
 [package]
 name = "sg_nohup"
-description = "nohup ~ (uutils) run COMMAND, ignoring hangup signals"
+description = "nohup ~ (stargate) run COMMAND, ignoring hangup signals"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

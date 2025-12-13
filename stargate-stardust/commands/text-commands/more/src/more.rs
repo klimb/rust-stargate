@@ -10,7 +10,7 @@ use std::{
 use clap::{Arg, ArgAction, ArgMatches, Command, value_parser};
 use crossterm::{
     ExecutableCommand,
-    QueueableCommand, // spell-checker:disable-line
+    QueueableCommand,
     cursor::{Hide, MoveTo, Show},
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     style::Attribute,
@@ -18,7 +18,7 @@ use crossterm::{
     tty::IsTty,
 };
 
-use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError};
 use sgcore::format_usage;
 use sgcore::{display::Quotable, show};
 
@@ -75,10 +75,8 @@ impl std::fmt::Display for MoreError {
 
 impl std::error::Error for MoreError {}
 
-const BELL: char = '\x07'; // Printing this character will ring the bell
+const BELL: char = '\x07';
 
-// The prompt to be displayed at the top of the screen when viewing multiple files,
-// with the file name in the middle
 const MULTI_FILE_TOP_PROMPT: &str = "\r::::::::::::::\n\r{}\n\r::::::::::::::\n";
 
 pub mod options {
@@ -99,9 +97,9 @@ pub mod options {
 
 struct Options {
     silent: bool,
-    _logical: bool,     // not implemented
-    _exit_on_eof: bool, // not implemented
-    _no_pause: bool,    // not implemented
+    _logical: bool,
+    _exit_on_eof: bool,
+    _no_pause: bool,
     print_over: bool,
     clean_print: bool,
     squeeze: bool,
@@ -116,10 +114,8 @@ impl Options {
             matches.get_one::<u16>(options::LINES).copied(),
             matches.get_one::<u16>(options::NUMBER).copied()
         ) {
-            // We add 1 to the number of lines to display because the last line
-            // is used for the banner
             (Some(n), _) | (None, Some(n)) if n > 0 => Some(n + 1),
-            _ => None, // Use terminal height
+            _ => None,
         };
         let from_line = match matches.get_one::<usize>(options::FROM_LINE).copied() {
             Some(number) => number.saturating_sub(1),
@@ -142,7 +138,7 @@ impl Options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     set_hook(Box::new(|panic_info| {
         print!("\r");
         println!("{panic_info}");
@@ -157,14 +153,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         while let (Some(file_os), next_file) = (files_iter.next(), files_iter.peek()) {
             let file = Path::new(file_os);
             if file.is_dir() {
-                show!(UUsageError::new(
+                show!(SGUsageError::new(
                     0,
                     MoreError::IsDirectory(file.to_string_lossy().to_string()).to_string()
                 ));
                 continue;
             }
             if !file.exists() {
-                show!(USimpleError::new(
+                show!(SGSimpleError::new(
                     0,
                     MoreError::CannotOpenNoSuchFile(file.to_string_lossy().to_string()).to_string()
                 ));
@@ -172,7 +168,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             }
             let opened_file = match File::open(file) {
                 Err(why) => {
-                    show!(USimpleError::new(
+                    show!(SGSimpleError::new(
                         0,
                         MoreError::CannotOpenIOError(
                             file.to_string_lossy().to_string(),
@@ -196,8 +192,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     } else {
         let stdin = stdin();
         if stdin.is_tty() {
-            // stdin is not a pipe
-            return Err(UUsageError::new(1, MoreError::BadUsage.to_string()));
+            return Err(SGUsageError::new(1, MoreError::BadUsage.to_string()));
         }
         more(InputType::Stdin(stdin), false, None, None, &mut options)?;
     }
@@ -368,7 +363,7 @@ impl Write for OutputType {
     }
 }
 
-fn setup_term() -> UResult<OutputType> {
+fn setup_term() -> SGResult<OutputType> {
     let mut stdout = stdout();
     if stdout.is_tty() {
         terminal::enable_raw_mode()?;
@@ -379,7 +374,7 @@ fn setup_term() -> UResult<OutputType> {
     }
 }
 
-fn reset_term() -> UResult<()> {
+fn reset_term() -> SGResult<()> {
     let mut stdout = stdout();
     if stdout.is_tty() {
         stdout.queue(Show)?.queue(LeaveAlternateScreen)?;
@@ -394,7 +389,7 @@ fn reset_term() -> UResult<()> {
 
 #[cfg(target_os = "fuchsia")]
 #[inline(always)]
-fn reset_term() -> UResult<()> {
+fn reset_term() -> SGResult<()> {
     Ok(())
 }
 
@@ -402,7 +397,6 @@ struct TerminalGuard;
 
 impl Drop for TerminalGuard {
     fn drop(&mut self) {
-        // Ignore errors in destructor
         let _ = reset_term();
     }
 }
@@ -413,33 +407,24 @@ fn more(
     file_name: Option<&str>,
     next_file: Option<&str>,
     options: &mut Options
-) -> UResult<()> {
-    // Initialize output
+) -> SGResult<()> {
     let out = setup_term()?;
-    // Ensure raw mode is disabled on drop
     let _guard = TerminalGuard;
-    // Create pager
     let (_cols, mut rows) = terminal::size()?;
     if let Some(number) = options.lines {
         rows = number;
     }
     let mut pager = Pager::new(input, rows, file_name, next_file, options, out)?;
-    // Start from the specified line
     pager.handle_from_line()?;
-    // Search for pattern
     pager.handle_pattern_search()?;
-    // Handle multi-file display header if needed
     if multiple_file {
         pager.display_multi_file_header()?;
     }
-    // Initial display
     pager.draw(None)?;
-    // Reset multi-file settings after initial display
     if multiple_file {
         pager.reset_multi_file_header();
         options.from_line = 0;
     }
-    // Main event loop
     pager.process_events(options)
 }
 
@@ -475,8 +460,7 @@ impl<'a> Pager<'a> {
         next_file: Option<&'a str>,
         options: &Options,
         stdout: OutputType
-    ) -> UResult<Self> {
-        // Reserve one line for the status bar, ensuring at least one content row
+    ) -> SGResult<Self> {
         let content_rows = rows.saturating_sub(1).max(1) as usize;
         let file_size = input.len()?;
         let pager = Self {
@@ -498,7 +482,7 @@ impl<'a> Pager<'a> {
         Ok(pager)
     }
 
-    fn handle_from_line(&mut self) -> UResult<()> {
+    fn handle_from_line(&mut self) -> SGResult<()> {
         if !self.read_until_line(self.upper_mark)? {
             write!(
                 self.stdout,
@@ -518,27 +502,23 @@ impl<'a> Pager<'a> {
         Ok(())
     }
 
-    fn read_until_line(&mut self, target_line: usize) -> UResult<bool> {
-        // Read lines until we reach the target line or EOF
+    fn read_until_line(&mut self, target_line: usize) -> SGResult<bool> {
         let mut line = String::new();
         while self.lines.len() <= target_line {
             let bytes_read = self.input.read_line(&mut line)?;
             if bytes_read == 0 {
-                return Ok(false); // EOF
+                return Ok(false);
             }
-            // Track cumulative byte position
             let last_pos = self.cumulative_line_sizes.last().copied().unwrap_or(0);
             self.cumulative_line_sizes
                 .push(last_pos + bytes_read as u64);
-            // Remove trailing whitespace
             line = line.trim_end().to_string();
-            // Store the line (using mem::take to avoid clone)
             self.lines.push(std::mem::take(&mut line));
         }
         Ok(true)
     }
 
-    fn wait_for_enter_key(&self) -> UResult<()> {
+    fn wait_for_enter_key(&self) -> SGResult<()> {
         if !self.stdout.is_tty() {
             return Ok(());
         }
@@ -557,7 +537,7 @@ impl<'a> Pager<'a> {
         }
     }
 
-    fn handle_pattern_search(&mut self) -> UResult<()> {
+    fn handle_pattern_search(&mut self) -> SGResult<()> {
         if self.pattern.is_none() {
             return Ok(());
         }
@@ -599,7 +579,7 @@ impl<'a> Pager<'a> {
         }
     }
 
-    fn display_multi_file_header(&mut self) -> UResult<()> {
+    fn display_multi_file_header(&mut self) -> SGResult<()> {
         self.stdout.queue(Clear(ClearType::CurrentLine))?;
         self.stdout.write_all(
             MULTI_FILE_TOP_PROMPT
@@ -618,7 +598,7 @@ impl<'a> Pager<'a> {
             .saturating_add(MULTI_FILE_TOP_PROMPT.lines().count());
     }
 
-    fn update_display(&mut self, options: &Options) -> UResult<()> {
+    fn update_display(&mut self, options: &Options) -> SGResult<()> {
         if options.print_over {
             self.stdout
                 .execute(MoveTo(0, 0))?
@@ -632,14 +612,13 @@ impl<'a> Pager<'a> {
     }
 
     /// Process user input events until exit
-    fn process_events(&mut self, options: &Options) -> UResult<()> {
+    fn process_events(&mut self, options: &Options) -> SGResult<()> {
         loop {
             if !event::poll(Duration::from_millis(100))? {
                 continue;
             }
             let mut wrong_key = None;
             match event::read()? {
-                // --- Quit commands ---
                 Event::Key(
                     KeyEvent {
                         code: KeyCode::Char('q'),
@@ -658,7 +637,6 @@ impl<'a> Pager<'a> {
                     std::process::exit(0);
                 }
 
-                // --- Forward Navigation ---
                 Event::Key(KeyEvent {
                     code: KeyCode::Down | KeyCode::PageDown | KeyCode::Char(' '),
                     modifiers: KeyModifiers::NONE,
@@ -680,7 +658,6 @@ impl<'a> Pager<'a> {
                     self.next_line();
                 }
 
-                // --- Backward Navigation ---
                 Event::Key(KeyEvent {
                     code: KeyCode::Up | KeyCode::PageUp,
                     modifiers: KeyModifiers::NONE,
@@ -696,24 +673,20 @@ impl<'a> Pager<'a> {
                     self.prev_line();
                 }
 
-                // --- Terminal events ---
                 Event::Resize(col, row) => {
                     self.page_resize(col, row, options.lines);
                 }
 
-                // --- Skip key release events ---
                 Event::Key(KeyEvent {
                     kind: KeyEventKind::Release,
                     ..
                 }) => continue,
 
-                // --- Handle unknown keys ---
                 Event::Key(KeyEvent {
                     code: KeyCode::Char(k),
                     ..
                 }) => wrong_key = Some(k),
 
-                // --- Ignore other events ---
                 _ => continue,
             }
             self.update_display(options)?;
@@ -722,23 +695,19 @@ impl<'a> Pager<'a> {
     }
 
     fn page_down(&mut self) {
-        // Move the viewing window down by the number of lines to display
         self.upper_mark = self.upper_mark.saturating_add(self.content_rows);
     }
 
     fn next_line(&mut self) {
-        // Move the viewing window down by one line
         self.upper_mark = self.upper_mark.saturating_add(1);
     }
 
     fn page_up(&mut self) {
         self.eof_reached = false;
-        // Move the viewing window up by the number of lines to display
         self.upper_mark = self
             .upper_mark
             .saturating_sub(self.content_rows.saturating_add(self.lines_squeezed));
         if self.squeeze {
-            // Move upper mark to the first non-empty line
             while self.upper_mark > 0 {
                 let line = self.lines.get(self.upper_mark).expect("line should exist");
                 if !line.trim().is_empty() {
@@ -751,49 +720,40 @@ impl<'a> Pager<'a> {
 
     fn prev_line(&mut self) {
         self.eof_reached = false;
-        // Move the viewing window up by one line
         self.upper_mark = self.upper_mark.saturating_sub(1);
     }
 
-    // TODO: Deal with column size changes.
     fn page_resize(&mut self, _col: u16, row: u16, option_line: Option<u16>) {
         if option_line.is_none() {
             self.content_rows = row.saturating_sub(1) as usize;
         }
     }
 
-    fn draw(&mut self, wrong_key: Option<char>) -> UResult<()> {
+    fn draw(&mut self, wrong_key: Option<char>) -> SGResult<()> {
         self.draw_lines()?;
         self.draw_status_bar(wrong_key);
         self.stdout.flush()?;
         Ok(())
     }
 
-    fn draw_lines(&mut self) -> UResult<()> {
-        // Clear current prompt line
+    fn draw_lines(&mut self) -> SGResult<()> {
         self.stdout.queue(Clear(ClearType::CurrentLine))?;
-        // Reset squeezed lines counter
         self.lines_squeezed = 0;
-        // Display lines until we've filled the screen
         let mut lines_printed = 0;
         let mut index = self.upper_mark;
         while lines_printed < self.content_rows {
-            // Load the required line or stop at EOF
             if !self.read_until_line(index)? {
                 self.eof_reached = true;
                 self.upper_mark = index.saturating_sub(self.content_rows);
                 break;
             }
-            // Skip line if it should be squeezed
             if self.should_squeeze_line(index) {
                 self.lines_squeezed += 1;
                 index += 1;
                 continue;
             }
-            // Display the line
             let mut line = self.lines[index].clone();
             if let Some(pattern) = &self.pattern {
-                // Highlight the pattern in the line
                 line = line.replace(
                     pattern,
                     &format!("{}{pattern}{}", Attribute::Reverse, Attribute::Reset)
@@ -803,7 +763,6 @@ impl<'a> Pager<'a> {
             lines_printed += 1;
             index += 1;
         }
-        // Fill remaining lines with `~`
         while lines_printed < self.content_rows {
             self.stdout.write_all(b"\r~\n")?;
             lines_printed += 1;
@@ -812,11 +771,9 @@ impl<'a> Pager<'a> {
     }
 
     fn should_squeeze_line(&self, index: usize) -> bool {
-        // Only squeeze if enabled and not the first line
         if !self.squeeze || index == 0 {
             return false;
         }
-        // Squeeze only if both current and previous lines are empty
         match (self.lines.get(index), self.lines.get(index - 1)) {
             (Some(current), Some(previous)) => current.is_empty() && previous.is_empty(),
             _ => false,
@@ -824,16 +781,11 @@ impl<'a> Pager<'a> {
     }
 
     fn draw_status_bar(&mut self, wrong_key: Option<char>) {
-        // Calculate the index of the last visible line
         let lower_mark =
             (self.upper_mark + self.content_rows).min(self.lines.len().saturating_sub(1));
-        // Determine progress information to display
-        // - Show next file name when at EOF and there is a next file
-        // - Otherwise show percentage of the file read (if available)
         let progress_info = if self.eof_reached && self.next_file.is_some() {
             format!(" (Next file: {})", self.next_file.unwrap())
         } else if let Some(file_size) = self.file_size {
-            // For files, show percentage or END
             let position = self
                 .cumulative_line_sizes
                 .get(lower_mark)
@@ -850,15 +802,10 @@ impl<'a> Pager<'a> {
                 }
             }
         } else {
-            // For stdin, don't show percentage
             String::new()
         };
-        // Base status message with progress info
         let file_name = self.file_name.unwrap_or(":");
         let status = format!("{file_name}{progress_info}");
-        // Add appropriate user feedback based on silent mode and key input:
-        // - In silent mode: show help text or unknown key message
-        // - In normal mode: ring bell (BELL char) on wrong key or show basic prompt
         let banner = match (self.silent, wrong_key) {
             (true, Some(key)) => format!(
                 "{status}[{}]",
@@ -871,7 +818,6 @@ impl<'a> Pager<'a> {
             (false, Some(_)) => format!("{status}{BELL}"),
             (false, None) => status,
         };
-        // Draw the status bar at the bottom of the screen
         write!(
             self.stdout,
             "\r{}{banner}{}",
@@ -1026,10 +972,8 @@ mod tests {
 
     #[test]
     fn test_navigate_page() {
-        // create 10 lines "0\n".."9\n"
         let content = (0..10).map(|i| i.to_string() + "\n").collect::<String>();
 
-        // content_rows = rows - 1 = 10 - 1 = 9
         let mut pager = TestPagerBuilder::new(&content).build();
         assert_eq!(pager.upper_mark, 0);
 
@@ -1039,7 +983,7 @@ mod tests {
         let mut stdout = String::from_utf8_lossy(&pager.stdout);
         assert!(stdout.contains("9\n"));
         assert!(!stdout.contains("8\n"));
-        assert_eq!(pager.upper_mark, 1); // EOF reached: upper_mark = 10 - content_rows = 1
+        assert_eq!(pager.upper_mark, 1);
 
         pager.page_up();
         assert_eq!(pager.upper_mark, 0);
@@ -1053,7 +997,7 @@ mod tests {
         pager.draw(None).unwrap();
         stdout = String::from_utf8_lossy(&pager.stdout);
         assert!(stdout.contains("0\n"));
-        assert!(!stdout.contains("9\n")); // only lines 0 to 8 should be displayed
+        assert!(!stdout.contains("9\n"));
     }
 
     #[test]
@@ -1072,15 +1016,12 @@ mod tests {
     fn test_squeeze() {
         let content = "Line 0\n\n\n\nLine 4\n\n\nLine 7\n";
         let mut pager = TestPagerBuilder::new(content).lines(6).squeeze().build();
-        assert_eq!(pager.content_rows, 5); // 1 line for the status bar
+        assert_eq!(pager.content_rows, 5);
 
-        // load all lines
         assert!(pager.read_until_line(7).unwrap());
-        //  back‑to‑back empty lines → should squeeze
         assert!(pager.should_squeeze_line(2));
         assert!(pager.should_squeeze_line(3));
         assert!(pager.should_squeeze_line(6));
-        // non‑blank or first line should not be squeezed
         assert!(!pager.should_squeeze_line(0));
         assert!(!pager.should_squeeze_line(1));
         assert!(!pager.should_squeeze_line(4));
@@ -1098,15 +1039,13 @@ mod tests {
     fn test_lines_option() {
         let content = (0..5).map(|i| i.to_string() + "\n").collect::<String>();
 
-        // Output zero lines succeeds
         let mut pager = TestPagerBuilder::new(&content).lines(0).build();
         pager.draw(None).unwrap();
         let mut stdout = String::from_utf8_lossy(&pager.stdout);
         assert!(!stdout.is_empty());
 
-        // Output two lines
         let mut pager = TestPagerBuilder::new(&content).lines(3).build();
-        assert_eq!(pager.content_rows, 3 - 1); // 1 line for the status bar
+        assert_eq!(pager.content_rows, 3 - 1);
         pager.draw(None).unwrap();
         stdout = String::from_utf8_lossy(&pager.stdout);
         assert!(stdout.contains("0\n"));
@@ -1118,14 +1057,12 @@ mod tests {
     fn test_from_line_option() {
         let content = (0..5).map(|i| i.to_string() + "\n").collect::<String>();
 
-        // Output from first line
         let mut pager = TestPagerBuilder::new(&content).from_line(0).build();
         assert!(pager.handle_from_line().is_ok());
         pager.draw(None).unwrap();
         let stdout = String::from_utf8_lossy(&pager.stdout);
         assert!(stdout.contains("0\n"));
 
-        // Output from second line
         pager = TestPagerBuilder::new(&content).from_line(1).build();
         assert!(pager.handle_from_line().is_ok());
         pager.draw(None).unwrap();
@@ -1133,7 +1070,6 @@ mod tests {
         assert!(stdout.contains("1\n"));
         assert!(!stdout.contains("0\n"));
 
-        // Output from out of range line
         pager = TestPagerBuilder::new(&content).from_line(99).build();
         assert!(pager.handle_from_line().is_ok());
         assert_eq!(pager.upper_mark, 0);
@@ -1183,3 +1119,4 @@ mod tests {
         assert!(stdout.contains(&BELL.to_string()));
     }
 }
+

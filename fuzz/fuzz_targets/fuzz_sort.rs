@@ -1,4 +1,4 @@
-// spell-checker:ignore parens
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -8,8 +8,8 @@ use rand::Rng;
 use std::env;
 use std::ffi::OsString;
 
-use uufuzz::CommandResult;
-use uufuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
+use sgfuzz::CommandResult;
+use sgfuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
 static CMD_PATH: &str = "sort";
 
 fn generate_sort_args() -> String {
@@ -20,11 +20,11 @@ fn generate_sort_args() -> String {
 
     for _ in 0..arg_count {
         match rng.random_range(0..=4) {
-            0 => args.push(String::from("-r")), // Reverse the result of comparisons
-            1 => args.push(String::from("-n")), // Compare according to string numerical value
-            2 => args.push(String::from("-f")), // Fold lower case to upper case characters
-            3 => args.push(generate_random_string(rng.random_range(1..=10))), // Random string (to simulate file names)
-            _ => args.push(String::from("-k") + &rng.random_range(1..=5).to_string()), // Sort via a specified field
+            0 => args.push(String::from("-r")),
+            1 => args.push(String::from("-n")),
+            2 => args.push(String::from("-f")),
+            3 => args.push(generate_random_string(rng.random_range(1..=10))),
+            _ => args.push(String::from("-k") + &rng.random_range(1..=5).to_string()),
         }
     }
 
@@ -47,12 +47,10 @@ fuzz_target!(|_data: &[u8]| {
     let mut args = vec![OsString::from("sort")];
     args.extend(sort_args.split_whitespace().map(OsString::from));
 
-    // Generate random lines to sort
     let input_lines = generate_random_lines(10);
 
     let rust_result = generate_and_run_uumain(&args, uumain, Some(&input_lines));
 
-    // TODO remove once uutils sort supports localization
     unsafe {
         env::set_var("LC_ALL", "C");
     }
@@ -76,6 +74,7 @@ fuzz_target!(|_data: &[u8]| {
         None,
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

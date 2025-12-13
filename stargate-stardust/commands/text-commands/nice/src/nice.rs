@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) getpriority execvp setpriority nstr PRIO cstrs ENOENT
+
 
 use clap::{Arg, ArgAction, Command};
 use libc::{PRIO_PROCESS, c_char, c_int, execvp};
@@ -8,7 +8,7 @@ use std::ptr;
 
 use sgcore::translate;
 use sgcore::{
-    error::{UResult, USimpleError, UUsageError, set_exit_code},
+    error::{SGResult, SGSimpleError, SGUsageError, set_exit_code},
     format_usage, show_error,
 };
 
@@ -95,7 +95,7 @@ fn standardize_nice_args(mut args: impl sgcore::Args) -> impl sgcore::Args {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args = standardize_nice_args(args);
 
     let matches =
@@ -105,7 +105,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     nix::errno::Errno::clear();
     let mut niceness = unsafe { libc::getpriority(PRIO_PROCESS, 0) };
     if Error::last_os_error().raw_os_error().unwrap() != 0 {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             125,
             format!("getpriority: {}", Error::last_os_error())
         ));
@@ -114,7 +114,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let adjustment = match matches.get_one::<String>(options::ADJUSTMENT) {
         Some(nstr) => {
             if !matches.contains_id(options::COMMAND) {
-                return Err(UUsageError::new(
+                return Err(SGUsageError::new(
                     125,
                     translate!("nice-error-command-required-with-adjustment")
                 ));
@@ -122,7 +122,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             match nstr.parse::<i32>() {
                 Ok(num) => num,
                 Err(e) => {
-                    return Err(USimpleError::new(
+                    return Err(SGSimpleError::new(
                         125,
                         translate!("nice-error-invalid-number", "value" => nstr.clone(), "error" => e)
                     ));
@@ -139,10 +139,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     };
 
     niceness += adjustment;
-    // We can't use `show_warning` because that will panic if stderr
-    // isn't writable. The GNU test suite checks specifically that the
-    // exit code when failing to write the advisory is 125, but Rust
-    // will produce an exit code of 101 when it panics.
     if unsafe { libc::setpriority(PRIO_PROCESS, 0, niceness) } == -1 {
         let warning_msg = translate!("nice-warning-setpriority", "util_name" => sgcore::util_name(), "error" => Error::last_os_error());
 
@@ -198,3 +194,4 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::CommandName)
         )
 }
+

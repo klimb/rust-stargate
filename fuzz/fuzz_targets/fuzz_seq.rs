@@ -1,4 +1,4 @@
-// spell-checker:ignore parens
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -7,28 +7,25 @@ use sg_seq::sgmain;
 use rand::Rng;
 use std::ffi::OsString;
 
-use uufuzz::CommandResult;
-use uufuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
+use sgfuzz::CommandResult;
+use sgfuzz::{compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd};
 static CMD_PATH: &str = "seq";
 
 fn generate_seq() -> String {
     let mut rng = rand::rng();
 
-    // Generate 1 to 3 numbers for seq arguments
     let arg_count = rng.random_range(1..=3);
     let mut args = Vec::new();
 
     for _ in 0..arg_count {
         if rng.random_ratio(1, 100) {
-            // 1% chance to add a random string
             args.push(generate_random_string(rng.random_range(1..=10)));
         } else {
-            // 99% chance to add a numeric value
             match rng.random_range(0..=3) {
-                0 => args.push(rng.random_range(-10000..=10000).to_string()), // Large or small integers
-                1 => args.push(rng.random_range(-100.0..100.0).to_string()), // Floating-point numbers
-                2 => args.push(rng.random_range(-100..0).to_string()),       // Negative integers
-                _ => args.push(rng.random_range(1..=100).to_string()),       // Regular integers
+                0 => args.push(rng.random_range(-10000..=10000).to_string()),
+                1 => args.push(rng.random_range(-100.0..100.0).to_string()),
+                2 => args.push(rng.random_range(-100..0).to_string()),
+                _ => args.push(rng.random_range(1..=100).to_string()),
             }
         }
     }
@@ -63,6 +60,7 @@ fuzz_target!(|_data: &[u8]| {
         None,
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

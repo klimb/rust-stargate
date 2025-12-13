@@ -37,7 +37,7 @@
 //! use clap::{Command, Arg, ArgMatches};
 //! use std::path::{Path, PathBuf};
 //! use sgcore::backup_control::{self, BackupMode};
-//! use sgcore::error::{UError, UResult};
+//! use sgcore::error::{SGError, SGResult};
 //!
 //! fn main() {
 //!     let usage = String::from("command [OPTION]... ARG");
@@ -75,11 +75,11 @@
 //! }
 //! ```
 
-// spell-checker:ignore backupopt
+
 
 use crate::{
     display::Quotable,
-    error::{UError, UResult},
+    error::{SGError, SGResult},
 };
 use clap::ArgMatches;
 use std::{
@@ -131,7 +131,7 @@ pub enum BackupMode {
 /// Backup error types.
 ///
 /// Errors are currently raised by [`determine_backup_mode`] only. All errors
-/// are implemented as [`UError`] for uniform handling across utilities.
+/// are implemented as [`SGError`] for uniform handling across utilities.
 #[derive(Debug, Eq, PartialEq)]
 pub enum BackupError {
     /// An invalid argument (e.g. 'foo') was given as backup type. First
@@ -144,10 +144,9 @@ pub enum BackupError {
     AmbiguousArgument(String, String),
     /// Currently unused
     BackupImpossible(),
-    // BackupFailed(PathBuf, PathBuf, std::io::Error),
 }
 
-impl UError for BackupError {
+impl SGError for BackupError {
     fn code(&self) -> i32 {
         match self {
             Self::BackupImpossible() => 2,
@@ -156,7 +155,6 @@ impl UError for BackupError {
     }
 
     fn usage(&self) -> bool {
-        // Suggested by clippy.
         matches!(
             self,
             Self::InvalidArgument(_, _) | Self::AmbiguousArgument(_, _)
@@ -180,11 +178,6 @@ impl Display for BackupError {
                 arg.quote()
             ),
             Self::BackupImpossible() => write!(f, "cannot create backup"),
-            // Placeholder for later
-            // Self::BackupFailed(from, to, e) => Display::fmt(
-            //     &uio_error!(e, "failed to backup {} to {}", from.quote(), to.quote()),
-            //     f
-            // ),
         }
     }
 }
@@ -330,33 +323,22 @@ pub fn determine_backup_suffix(matches: &ArgMatches) -> String {
 ///     show!(err);
 /// }
 /// ```
-pub fn determine_backup_mode(matches: &ArgMatches) -> UResult<BackupMode> {
+pub fn determine_backup_mode(matches: &ArgMatches) -> SGResult<BackupMode> {
     if matches.contains_id(arguments::OPT_BACKUP) {
-        // Use method to determine the type of backups to make. When this option
-        // is used but method is not specified, then the value of the
-        // VERSION_CONTROL environment variable is used. And if VERSION_CONTROL
-        // is not set, the default backup type is 'existing'.
         if let Some(method) = matches.get_one::<String>(arguments::OPT_BACKUP) {
-            // Second argument is for the error string that is returned.
             match_method(method, "backup type")
         } else if let Ok(method) = env::var("VERSION_CONTROL") {
-            // Second argument is for the error string that is returned.
             match_method(&method, "$VERSION_CONTROL")
         } else {
-            // Default if no argument is provided to '--backup'
             Ok(BackupMode::Existing)
         }
     } else if matches.get_flag(arguments::OPT_BACKUP_NO_ARG) {
-        // the short form of this option, -b does not accept any argument.
-        // if VERSION_CONTROL is not set then using -b is equivalent to
-        // using --backup=existing.
         if let Ok(method) = env::var("VERSION_CONTROL") {
             match_method(&method, "$VERSION_CONTROL")
         } else {
             Ok(BackupMode::Existing)
         }
     } else {
-        // No option was present at all
         Ok(BackupMode::None)
     }
 }
@@ -380,7 +362,7 @@ pub fn determine_backup_mode(matches: &ArgMatches) -> UResult<BackupMode> {
 ///
 /// [10]: BackupError::InvalidArgument
 /// [11]: BackupError::AmbiguousArgument
-fn match_method(method: &str, origin: &str) -> UResult<BackupMode> {
+fn match_method(method: &str, origin: &str) -> SGResult<BackupMode> {
     let matches: Vec<&&str> = BACKUP_CONTROL_VALUES
         .iter()
         .filter(|val| val.starts_with(method))
@@ -391,8 +373,7 @@ fn match_method(method: &str, origin: &str) -> UResult<BackupMode> {
             "numbered" | "t" => Ok(BackupMode::Numbered),
             "existing" | "nil" => Ok(BackupMode::Existing),
             "none" | "off" => Ok(BackupMode::None),
-            _ => unreachable!(), // cannot happen as we must have exactly one match
-                                 // from the list above.
+            _ => unreachable!(),
         }
     } else if matches.is_empty() {
         Err(BackupError::InvalidArgument(method.to_string(), origin.to_string()).into())
@@ -471,25 +452,14 @@ pub fn source_is_target_backup(source: &Path, target: &Path, suffix: &str) -> bo
     source_filename == target_backup_filename
 }
 
-//
-// Tests for this module
-//
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Required to instantiate mutex in shared context
     use clap::Command;
     use std::sync::{LazyLock, Mutex};
 
-    // The mutex is required here as by default all tests are run as separate
-    // threads under the same parent process. As environment variables are
-    // specific to processes (and thus shared among threads), data races *will*
-    // occur if no precautions are taken. Thus we have all tests that rely on
-    // environment variables lock this empty mutex to ensure they don't access
-    // it concurrently.
     static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
-    // Environment variable for "VERSION_CONTROL"
     static ENV_VERSION_CONTROL: &str = "VERSION_CONTROL";
 
     fn make_app() -> clap::Command {
@@ -499,7 +469,6 @@ mod tests {
             .arg(arguments::suffix())
     }
 
-    // Defaults to --backup=existing
     #[test]
     fn test_backup_mode_short_only() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -510,7 +479,6 @@ mod tests {
         assert_eq!(result, BackupMode::Existing);
     }
 
-    // --backup takes precedence over -b
     #[test]
     fn test_backup_mode_long_preferred_over_short() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -521,7 +489,6 @@ mod tests {
         assert_eq!(result, BackupMode::None);
     }
 
-    // --backup can be passed without an argument
     #[test]
     fn test_backup_mode_long_without_args_no_env() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -532,7 +499,6 @@ mod tests {
         assert_eq!(result, BackupMode::Existing);
     }
 
-    // --backup can be passed with an argument only
     #[test]
     fn test_backup_mode_long_with_args() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -543,7 +509,6 @@ mod tests {
         assert_eq!(result, BackupMode::Simple);
     }
 
-    // --backup errors on invalid argument
     #[test]
     fn test_backup_mode_long_with_args_invalid() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -556,7 +521,6 @@ mod tests {
         assert!(text.contains("invalid argument 'foobar' for 'backup type'"));
     }
 
-    // --backup errors on ambiguous argument
     #[test]
     fn test_backup_mode_long_with_args_ambiguous() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -569,7 +533,6 @@ mod tests {
         assert!(text.contains("ambiguous argument 'n' for 'backup type'"));
     }
 
-    // --backup accepts shortened arguments (si for simple)
     #[test]
     fn test_backup_mode_long_with_arg_shortened() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -580,7 +543,6 @@ mod tests {
         assert_eq!(result, BackupMode::Simple);
     }
 
-    // -b doesn't ignores the "VERSION_CONTROL" environment variable
     #[test]
     fn test_backup_mode_short_does_not_ignore_env() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -593,7 +555,6 @@ mod tests {
         unsafe { env::remove_var(ENV_VERSION_CONTROL) };
     }
 
-    // --backup can be passed without an argument, but reads env var if existent
     #[test]
     fn test_backup_mode_long_without_args_with_env() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -606,7 +567,6 @@ mod tests {
         unsafe { env::remove_var(ENV_VERSION_CONTROL) };
     }
 
-    // --backup errors on invalid VERSION_CONTROL env var
     #[test]
     fn test_backup_mode_long_with_env_var_invalid() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -621,7 +581,6 @@ mod tests {
         unsafe { env::remove_var(ENV_VERSION_CONTROL) };
     }
 
-    // --backup errors on ambiguous VERSION_CONTROL env var
     #[test]
     fn test_backup_mode_long_with_env_var_ambiguous() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -636,7 +595,6 @@ mod tests {
         unsafe { env::remove_var(ENV_VERSION_CONTROL) };
     }
 
-    // --backup accepts shortened env vars (si for simple)
     #[test]
     fn test_backup_mode_long_with_env_var_shortened() {
         let _dummy = TEST_MUTEX.lock().unwrap();
@@ -719,3 +677,4 @@ mod tests {
         assert!(source_is_target_backup(source, target, &suffix));
     }
 }
+

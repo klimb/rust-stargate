@@ -1,6 +1,6 @@
-//
 
-// spell-checker:ignore (ToDO) adFfmprt, kmerge
+
+
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
@@ -12,7 +12,7 @@ use std::time::SystemTime;
 use thiserror::Error;
 
 use sgcore::display::Quotable;
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format_usage;
 use sgcore::time::{FormatSystemTimeFallback, format, format_system_time};
 use sgcore::translate;
@@ -305,7 +305,7 @@ pub fn sg_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args = args.collect_ignore();
 
     let opt_args = recreate_arguments(&args);
@@ -409,9 +409,7 @@ fn get_date_format(matches: &ArgMatches) -> String {
     match matches.get_one::<String>(options::DATE_FORMAT) {
         Some(format) => format,
         None => {
-            // Replicate behavior from GNU manual.
             if std::env::var("POSIXLY_CORRECT").is_ok()
-                // TODO: This needs to be moved to sgcore and handled by icu?
                 && (std::env::var("LC_TIME").unwrap_or_default() == "POSIX"
                     || std::env::var("LC_ALL").unwrap_or_default() == "POSIX")
             {
@@ -532,7 +530,6 @@ fn build_options(
         .unwrap_or_default()
     };
 
-    // +page option is less priority than --pages
     let page_plus_re = Regex::new(r"\s*\+(\d+:*\d*)\s*").unwrap();
     let res = page_plus_re.captures(free_args).map(|i| {
         let unparsed_num = i.get(1).unwrap().as_str().trim();
@@ -674,8 +671,6 @@ fn build_options(
         None => None,
     };
 
-    // --column has more priority than -column
-
     let column_option_value = match parse_usize(matches, options::COLUMN) {
         Some(res) => Some(res?),
         None => start_column_option,
@@ -786,7 +781,6 @@ fn split_lines_if_form_feed(file_content: Result<String, std::io::Error>) -> Vec
                     f_occurred += 1;
                 } else {
                     if f_occurred != 0 {
-                        // First time byte occurred in the scan
                         lines.push(FileLine {
                             line_content: Ok(String::from_utf8(chunk.clone()).unwrap()),
                             form_feeds_after: f_occurred,
@@ -842,7 +836,7 @@ fn read_stream_and_create_pages(
                 line_number: i + start_line_number,
                 file_id,
                 ..line
-            }) // Add line number and file_id
+            })
             .batching(move |it| {
                 let mut first_page = Vec::new();
                 let mut page_with_lines = Vec::new();
@@ -851,7 +845,6 @@ fn read_stream_and_create_pages(
                     first_page.push(line);
 
                     if form_feeds_after > 1 {
-                        // insert empty pages
                         page_with_lines.push(first_page);
                         for _i in 1..form_feeds_after {
                             page_with_lines.push(vec![]);
@@ -869,16 +862,14 @@ fn read_stream_and_create_pages(
                 }
                 page_with_lines.push(first_page);
                 Some(page_with_lines)
-            }) // Create set of pages as form feeds could lead to empty pages
-            .flatten() // Flatten to pages from page sets
-            .enumerate() // Assign page number
+            })
+            .flatten()
+            .enumerate()
             .skip_while(move |(x, _)| {
-                // Skip the not needed pages
                 let current_page = x + 1;
                 current_page < start_page
             })
             .take_while(move |(x, _)| {
-                // Take only the required pages
                 let current_page = x + 1;
 
                 current_page >= start_page
@@ -890,7 +881,6 @@ fn read_stream_and_create_pages(
 fn mpr(paths: &[&str], options: &OutputOptions) -> Result<i32, PrError> {
     let n_files = paths.len();
 
-    // Check if files exists
     for path in paths {
         open(path)?;
     }
@@ -1145,29 +1135,18 @@ fn header_content(options: &OutputOptions, page: usize) -> Vec<String> {
         return Vec::new();
     }
 
-    // The header should be formatted with proper spacing:
-    // - Date/time on the left
-    // - Filename centered
-    // - "Page X" on the right
     let date_part = &options.last_modified_time;
     let filename = &options.header;
     let page_part = format!("{} {page}", translate!("pr-page"));
 
-    // Use the line width if available, otherwise use default of 72
     let total_width = options.line_width.unwrap_or(DEFAULT_COLUMN_WIDTH);
 
-    // GNU pr uses a specific layout:
-    // Date takes up the left part, filename is centered, page is right-aligned
     let date_len = date_part.chars().count();
     let filename_len = filename.chars().count();
     let page_len = page_part.chars().count();
 
     let header_line = if date_len + filename_len + page_len + 2 < total_width {
-        // Check if we're using a custom date format that needs centered alignment
-        // This preserves backward compatibility while fixing the GNU time-style test
         if date_part.starts_with('+') {
-            // GNU pr uses centered layout for headers with custom date formats
-            // The filename should be centered between the date and page parts
             let space_for_filename = total_width - date_len - page_len;
             let padding_before_filename = (space_for_filename - filename_len) / 2;
             let padding_after_filename =
@@ -1181,11 +1160,9 @@ fn header_content(options: &OutputOptions, page: usize) -> Vec<String> {
                 width2 = padding_after_filename
             )
         } else {
-            // For standard date formats, use simple spacing for backward compatibility
             format!("{date_part} {filename} {page_part}")
         }
     } else {
-        // If content is too long, just use single spaces
         format!("{date_part} {filename} {page_part}")
     };
 
@@ -1238,3 +1215,4 @@ fn lines_to_read_for_page(opts: &OutputOptions) -> usize {
 fn get_columns(opts: &OutputOptions) -> usize {
     opts.column_mode_options.as_ref().map_or(1, |i| i.columns)
 }
+

@@ -5,7 +5,7 @@
 The benchmarks for `factor` are located under `tests/benches/factor`
 and can be invoked with `cargo bench` in that directory.
 
-They are located outside the `uu_factor` crate, as they do not comply
+They are located outside the `sg_factor` crate, as they do not comply
 with the project's minimum supported Rust version, *i.e.* may require
 a newer version of `rustc`.
 

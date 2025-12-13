@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) retcode
+
 
 use clap::{
     Arg, ArgAction, ArgMatches, Command,
@@ -10,7 +10,7 @@ use sgcore::stardust_output::{self, StardustOutputOptions};
 use sgcore::translate;
 use sgcore::{
     display::{Quotable, print_verbatim},
-    error::{FromIo, UResult},
+    error::{FromIo, SGResult},
     format_usage,
     fs::{MissingHandling, ResolveMode, canonicalize},
     line_ending::LineEnding,
@@ -83,13 +83,11 @@ impl ValueParserFactory for NonEmptyOsStringParser {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let json_output_options = StardustOutputOptions::from_matches(&matches);
-
-    /*  the list of files */
 
     let paths: Vec<PathBuf> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -104,12 +102,8 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let can_mode = if matches.get_flag(OPT_CANONICALIZE_MISSING) {
         MissingHandling::Missing
     } else if matches.get_flag(OPT_CANONICALIZE_EXISTING) {
-        // -e: all components must exist
-        // Despite the name, MissingHandling::Existing requires all components to exist
         MissingHandling::Existing
     } else {
-        // Default behavior (same as -E): all but last component must exist
-        // MissingHandling::Normal allows the final component to not exist
         MissingHandling::Normal
     };
     let resolve_mode = if strip {
@@ -120,7 +114,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         ResolveMode::Physical
     };
     let (relative_to, relative_base) = prepare_relative_options(&matches, can_mode, resolve_mode)?;
-    
+
     if json_output_options.stardust_output {
         return realpath_json(
             &paths,
@@ -131,7 +125,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             &json_output_options
         );
     }
-    
+
     for path in &paths {
         let result = resolve_path(
             path,
@@ -145,9 +139,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             show_if_err!(result.map_err_context(|| path.maybe_quote().to_string()));
         }
     }
-    // Although we return `Ok`, it is possible that a call to
-    // `show!()` above has set the exit code for the program to a
-    // non-zero integer.
     Ok(())
 }
 
@@ -251,7 +242,7 @@ fn prepare_relative_options(
     matches: &ArgMatches,
     can_mode: MissingHandling,
     resolve_mode: ResolveMode
-) -> UResult<(Option<PathBuf>, Option<PathBuf>)> {
+) -> SGResult<(Option<PathBuf>, Option<PathBuf>)> {
     let relative_to = matches
         .get_one::<OsString>(OPT_RELATIVE_TO)
         .map(PathBuf::from);
@@ -275,9 +266,9 @@ fn realpath_json(
     relative_to: Option<&Path>,
     relative_base: Option<&Path>,
     json_output_options: &StardustOutputOptions
-) -> UResult<()> {
+) -> SGResult<()> {
     let mut results = Vec::new();
-    
+
     for path in paths {
         let result = match canonicalize(path, can_mode, resolve_mode) {
             Ok(abs) => {
@@ -298,7 +289,7 @@ fn realpath_json(
         };
         results.push(result);
     }
-    
+
     let output = RealpathOutput { paths: results };
     let json_value = serde_json::to_value(&output)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
@@ -311,7 +302,7 @@ fn canonicalize_relative_option(
     relative: Option<PathBuf>,
     can_mode: MissingHandling,
     resolve_mode: ResolveMode
-) -> UResult<Option<PathBuf>> {
+) -> SGResult<Option<PathBuf>> {
     Ok(match relative {
         None => None,
         Some(p) => Some(
@@ -335,7 +326,7 @@ fn canonicalize_relative(
 ) -> std::io::Result<PathBuf> {
     let abs = canonicalize(r, can_mode, resolve)?;
     if can_mode == MissingHandling::Existing && !abs.is_dir() {
-        abs.read_dir()?; // raise not a directory error
+        abs.read_dir()?;
     }
     Ok(abs)
 }
@@ -398,3 +389,4 @@ fn process_relative(
         path
     }
 }
+

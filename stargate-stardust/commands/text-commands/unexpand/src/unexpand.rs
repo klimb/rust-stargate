@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) nums aflag uflag scol prevtab amode ctype cwidth nbytes lastcol pctype Preprocess
+
 
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
@@ -10,7 +10,7 @@ use std::str::from_utf8;
 use thiserror::Error;
 use unicode_width::UnicodeWidthChar;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult, USimpleError};
+use sgcore::error::{FromIo, SGError, SGResult, SGSimpleError};
 use sgcore::translate;
 use sgcore::{format_usage, show};
 
@@ -28,7 +28,7 @@ enum ParseError {
     TabSizesMustBeAscending,
 }
 
-impl UError for ParseError {}
+impl SGError for ParseError {}
 
 fn tabstops_parse(s: &str) -> Result<Vec<usize>, ParseError> {
     let words = s.split(',');
@@ -144,7 +144,7 @@ fn expand_shortcuts(args: Vec<OsString>) -> Vec<OsString> {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result(sg_app(), expand_shortcuts(args.collect()))?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
@@ -197,11 +197,11 @@ pub fn sg_app() -> Command {
         )
 }
 
-fn open(path: &OsString) -> UResult<BufReader<Box<dyn Read + 'static>>> {
+fn open(path: &OsString) -> SGResult<BufReader<Box<dyn Read + 'static>>> {
     let file_buf;
     let filename = Path::new(path);
     if filename.is_dir() {
-        Err(Box::new(USimpleError {
+        Err(Box::new(SGSimpleError {
             code: 1,
             message: translate!("unexpand-error-is-directory", "path" => filename.display()),
         }))
@@ -217,8 +217,6 @@ fn next_tabstop(tabstops: &[usize], col: usize) -> Option<usize> {
     if tabstops.len() == 1 {
         Some(tabstops[0] - col % tabstops[0])
     } else {
-        // find next larger tab
-        // if there isn't one in the list, tab becomes a single space
         tabstops.iter().find(|&&t| t > col).map(|t| t - col)
     }
 }
@@ -231,10 +229,7 @@ fn write_tabs(
     prevtab: bool,
     init: bool,
     amode: bool
-) -> UResult<()> {
-    // This conditional establishes the following:
-    // We never turn a single space before a non-blank into
-    // a tab, unless it's at the start of the line.
+) -> SGResult<()> {
     let ai = init || amode;
     if (ai && !prevtab && col > scol + 1) || (col > scol && (init || ai && prevtab)) {
         while let Some(nts) = next_tabstop(tabstops, scol) {
@@ -267,10 +262,8 @@ fn next_char_info(uflag: bool, buf: &[u8], byte: usize) -> (CharType, usize, usi
         let nbytes = char::from(buf[byte]).len_utf8();
 
         if byte + nbytes > buf.len() {
-            // make sure we don't overrun the buffer because of invalid UTF-8
             (CharType::Other, 1, 1)
         } else if let Ok(t) = from_utf8(&buf[byte..byte + nbytes]) {
-            // Now that we think it's UTF-8, figure out what kind of char it is
             match t.chars().next() {
                 Some(' ') => (CharType::Space, 0, 1),
                 Some('\t') => (CharType::Tab, 0, 1),
@@ -281,18 +274,15 @@ fn next_char_info(uflag: bool, buf: &[u8], byte: usize) -> (CharType, usize, usi
                     nbytes
                 ),
                 None => {
-                    // invalid char snuck past the utf8_validation_iterator somehow???
                     (CharType::Other, 1, 1)
                 }
             }
         } else {
-            // otherwise, it's not valid
-            (CharType::Other, 1, 1) // implicit assumption: non-UTF8 char has display width 1
+            (CharType::Other, 1, 1)
         }
     } else {
         (
             match buf[byte] {
-                // always take exactly 1 byte in strict ASCII mode
                 0x20 => CharType::Space,
                 0x09 => CharType::Tab,
                 0x08 => CharType::Backspace,
@@ -313,25 +303,20 @@ fn unexpand_line(
     options: &Options,
     lastcol: usize,
     ts: &[usize]
-) -> UResult<()> {
-    // Fast path: if we're not converting all spaces (-a flag not set)
-    // and the line doesn't start with spaces, just write it directly
+) -> SGResult<()> {
     if !options.aflag && !buf.is_empty() && buf[0] != b' ' && buf[0] != b'\t' {
         output.write_all(buf)?;
         buf.truncate(0);
         return Ok(());
     }
 
-    let mut byte = 0; // offset into the buffer
-    let mut col = 0; // the current column
-    let mut scol = 0; // the start col for the current span, i.e., the already-printed width
-    let mut init = true; // are we at the start of the line?
+    let mut byte = 0;
+    let mut col = 0;
+    let mut scol = 0;
+    let mut init = true;
     let mut pctype = CharType::Other;
 
-    // Fast path for leading spaces in non-UTF8 mode: count consecutive spaces/tabs at start
     if !options.uflag && !options.aflag {
-        // In default mode (not -a), we only convert leading spaces
-        // So we can batch process them and then copy the rest
         while byte < buf.len() {
             match buf[byte] {
                 b' ' => {
@@ -347,12 +332,10 @@ fn unexpand_line(
             }
         }
 
-        // If we found spaces/tabs, write them as tabs
         if byte > 0 {
             write_tabs(output, ts, 0, col, pctype == CharType::Tab, true, true)?;
         }
 
-        // Write the rest of the line directly (no more tab conversion needed)
         if byte < buf.len() {
             output.write_all(&buf[byte..])?;
         }
@@ -361,7 +344,6 @@ fn unexpand_line(
     }
 
     while byte < buf.len() {
-        // when we have a finite number of columns, never convert past the last column
         if lastcol > 0 && col >= lastcol {
             write_tabs(output, ts, scol, col, pctype == CharType::Tab, init, true)?;
             output.write_all(&buf[byte..])?;
@@ -369,14 +351,11 @@ fn unexpand_line(
             break;
         }
 
-        // figure out how big the next char is, if it's UTF-8
         let (ctype, cwidth, nbytes) = next_char_info(options.uflag, buf, byte);
 
-        // now figure out how many columns this char takes up, and maybe print it
         let tabs_buffered = init || options.aflag;
         match ctype {
             CharType::Space | CharType::Tab => {
-                // compute next col, but only write space or tab chars if not buffering
                 col += if ctype == CharType::Space {
                     1
                 } else {
@@ -385,11 +364,10 @@ fn unexpand_line(
 
                 if !tabs_buffered {
                     output.write_all(&buf[byte..byte + nbytes])?;
-                    scol = col; // now printed up to this column
+                    scol = col;
                 }
             }
             CharType::Other | CharType::Backspace => {
-                // always
                 write_tabs(
                     output,
                     ts,
@@ -399,33 +377,30 @@ fn unexpand_line(
                     init,
                     options.aflag
                 )?;
-                init = false; // no longer at the start of a line
+                init = false;
                 col = if ctype == CharType::Other {
-                    // use computed width
                     col + cwidth
                 } else if col > 0 {
-                    // Backspace case, but only if col > 0
                     col - 1
                 } else {
                     0
                 };
                 output.write_all(&buf[byte..byte + nbytes])?;
-                scol = col; // we've now printed up to this column
+                scol = col;
             }
         }
 
-        byte += nbytes; // move on to next char
-        pctype = ctype; // save the previous type
+        byte += nbytes;
+        pctype = ctype;
     }
 
-    // write out anything remaining
     write_tabs(output, ts, scol, col, pctype == CharType::Tab, init, true)?;
-    buf.truncate(0); // clear out the buffer
+    buf.truncate(0);
 
     Ok(())
 }
 
-fn unexpand(options: &Options) -> UResult<()> {
+fn unexpand(options: &Options) -> SGResult<()> {
     let mut output = BufWriter::new(stdout());
     let ts = &options.tabstops[..];
     let mut buf = Vec::new();
@@ -462,3 +437,4 @@ mod tests {
         assert!(!is_digit_or_comma('a'));
     }
 }
+

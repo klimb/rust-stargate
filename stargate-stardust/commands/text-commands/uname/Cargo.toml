@@ -1,6 +1,6 @@
 [package]
 name = "sg_uname"
-description = "uname ~ (uutils) display system information"
+description = "uname ~ (stargate) display system information"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

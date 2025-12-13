@@ -1,4 +1,5 @@
-// spell-checker:ignore (ToDO) tstr sigstr cmdname setpgid sigchld getpid
+
+
 mod status;
 
 use crate::status::ExitStatus;
@@ -9,7 +10,7 @@ use std::process::{self, Child, Stdio};
 use std::sync::atomic::{self, AtomicBool};
 use std::time::Duration;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError, UUsageError};
+use sgcore::error::{SGResult, SGSimpleError, SGUsageError};
 use sgcore::parser::parse_time;
 use sgcore::process::ChildExt;
 use sgcore::translate;
@@ -27,7 +28,6 @@ pub mod options {
     pub static PRESERVE_STATUS: &str = "preserve-status";
     pub static VERBOSE: &str = "verbose";
 
-    // Positional args.
     pub static DURATION: &str = "duration";
     pub static COMMAND: &str = "command";
 }
@@ -44,13 +44,13 @@ struct Config {
 }
 
 impl Config {
-    fn from(options: &clap::ArgMatches) -> UResult<Self> {
+    fn from(options: &clap::ArgMatches) -> SGResult<Self> {
         let signal = match options.get_one::<String>(options::SIGNAL) {
             Some(signal_) => {
                 let signal_result = signal_by_name_or_value(signal_);
                 match signal_result {
                     None => {
-                        return Err(UUsageError::new(
+                        return Err(SGUsageError::new(
                             ExitStatus::TimeoutFailed.into(),
                             translate!("timeout-error-invalid-signal", "signal" => signal_.quote())
                         ));
@@ -65,13 +65,13 @@ impl Config {
             None => None,
             Some(kill_after) => match parse_time::from_str(kill_after, true) {
                 Ok(k) => Some(k),
-                Err(err) => return Err(UUsageError::new(ExitStatus::TimeoutFailed.into(), err)),
+                Err(err) => return Err(SGUsageError::new(ExitStatus::TimeoutFailed.into(), err)),
             },
         };
 
         let duration =
             parse_time::from_str(options.get_one::<String>(options::DURATION).unwrap(), true)
-                .map_err(|err| UUsageError::new(ExitStatus::TimeoutFailed.into(), err))?;
+                .map_err(|err| SGUsageError::new(ExitStatus::TimeoutFailed.into(), err))?;
 
         let preserve_status: bool = options.get_flag(options::PRESERVE_STATUS);
         let foreground = options.get_flag(options::FOREGROUND);
@@ -96,7 +96,7 @@ impl Config {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches =
         sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 125)?;
     sgcore::pledge::apply_pledge(&["stdio", "proc", "exec"])?;
@@ -210,9 +210,6 @@ fn report_if_verbose(signal: usize, cmd: &str, verbose: bool) {
 }
 
 fn send_signal(process: &mut Child, signal: usize, foreground: bool) {
-    // NOTE: GNU timeout doesn't check for errors of signal.
-    // The subprocess might have exited just after the timeout.
-    // Sending a signal now would return "No such process", but we should still try to kill the children.
     if foreground {
         let _ = process.send_signal(signal);
     } else {
@@ -253,7 +250,6 @@ fn wait_or_kill_process(
     foreground: bool,
     verbose: bool
 ) -> std::io::Result<i32> {
-    // ignore `SIGTERM` here
     match process.wait_or_timeout(duration, None) {
         Ok(Some(status)) => {
             if preserve_status {
@@ -273,18 +269,6 @@ fn wait_or_kill_process(
     }
 }
 fn preserve_signal_info(signal: libc::c_int) -> libc::c_int {
-    // This is needed because timeout is expected to preserve the exit
-    // status of its child. It is not the case that utilities have a
-    // single simple exit code, that's an illusion some shells
-    // provide.  Instead exit status is really two numbers:
-    //
-    //  - An exit code if the program ran to completion
-    //
-    //  - A signal number if the program was terminated by a signal
-    //
-    // The easiest way to preserve the latter seems to be to kill
-    // ourselves with whatever signal our child exited with, which is
-    // what the following is intended to accomplish.
     unsafe {
         libc::kill(libc::getpid(), signal);
     }
@@ -293,7 +277,6 @@ fn preserve_signal_info(signal: libc::c_int) -> libc::c_int {
 
 #[cfg(not(unix))]
 fn preserve_signal_info(signal: libc::c_int) -> libc::c_int {
-    // Do nothing
     signal
 }
 
@@ -306,7 +289,7 @@ fn timeout(
     foreground: bool,
     preserve_status: bool,
     verbose: bool
-) -> UResult<()> {
+) -> SGResult<()> {
     if !foreground {
         unsafe { libc::setpgid(0, 0) };
     }
@@ -320,30 +303,17 @@ fn timeout(
         .spawn()
         .map_err(|err| {
             let status_code = if err.kind() == ErrorKind::NotFound {
-                // FIXME: not sure which to use
                 127
             } else {
-                // FIXME: this may not be 100% correct...
                 126
             };
-            USimpleError::new(
+            SGSimpleError::new(
                 status_code,
                 translate!("timeout-error-failed-to-execute-process", "error" => err)
             )
         })?;
     unblock_sigchld();
     catch_sigterm();
-    // Wait for the child process for the specified time period.
-    //
-    // If the process exits within the specified time period (the
-    // `Ok(Some(_))` arm), then return the appropriate status code.
-    //
-    // If the process does not exit within that time (the `Ok(None)`
-    // arm) and `kill_after` is specified, then try sending `SIGKILL`.
-    //
-    // TODO The structure of this block is extremely similar to the
-    // structure of `wait_or_kill_process()`. They can probably be
-    // refactored into some common function.
     match process.wait_or_timeout(duration, Some(&SIGNALED)) {
         Ok(Some(status)) => Err(status
             .code()
@@ -379,7 +349,7 @@ fn timeout(
                         verbose
                     ) {
                         Ok(status) => Err(status.into()),
-                        Err(e) => Err(USimpleError::new(
+                        Err(e) => Err(SGSimpleError::new(
                             ExitStatus::TimeoutFailed.into(),
                             e.to_string()
                         )),
@@ -388,10 +358,9 @@ fn timeout(
             }
         }
         Err(_) => {
-            // We're going to return ERR_EXIT_STATUS regardless of
-            // whether `send_signal()` succeeds or fails
             send_signal(process, signal, foreground);
             Err(ExitStatus::TimeoutFailed.into())
         }
     }
 }
+

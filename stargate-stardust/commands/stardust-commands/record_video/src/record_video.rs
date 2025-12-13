@@ -1,11 +1,11 @@
-// Copyright (C) 2025 Dmitry Kalashnikov
+
 
 use clap::{Arg, ArgMatches, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::process::Command as ProcessCommand;
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -24,10 +24,10 @@ fn get_record_dir() -> String {
     format!("{}/.stargate/record-video", home)
 }
 
-fn ensure_record_dir() -> UResult<String> {
+fn ensure_record_dir() -> SGResult<String> {
     let dir = get_record_dir();
     std::fs::create_dir_all(&dir)
-        .map_err(|e| USimpleError::new(1, format!("failed to create directory: {}", e)))?;
+        .map_err(|e| SGSimpleError::new(1, format!("failed to create directory: {}", e)))?;
     Ok(dir)
 }
 
@@ -73,10 +73,10 @@ struct RecordVideoResult {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "record-video is only available on macos and linux".to_string(),
         ));
@@ -139,12 +139,12 @@ pub fn sg_app() -> ClapCommand {
 }
 
 #[cfg(target_os = "macos")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
-    
+
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
-    
+
     let output_file = matches
         .get_one::<String>(OUTPUT_ARG)
         .map(|s| s.to_string())
@@ -152,7 +152,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             let dir = ensure_record_dir().expect("failed to create record directory");
             format!("{}/record_video_{}{}", dir, std::process::id(), MACOS_FILE_EXTENSION)
         });
-    
+
     let record_result = ProcessCommand::new("ffmpeg")
         .args([
             "-f", MACOS_VIDEO_INPUT,
@@ -166,7 +166,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         .output();
 
     if !record_result.is_ok() || !record_result.as_ref().unwrap().status.success() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "failed to record video. install ffmpeg: brew install ffmpeg".to_string(),
         ));
@@ -185,18 +185,18 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 
     #[cfg(not(feature = "transcription"))]
     let transcript = String::new();
-    
+
     println!("{}", transcript);
     Ok(())
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
-    
+
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
-    
+
     let output_file = matches
         .get_one::<String>(OUTPUT_ARG)
         .map(|s| s.to_string())
@@ -204,7 +204,7 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
             let dir = ensure_record_dir().expect("failed to create record directory");
             format!("{}/record_video_{}{}", dir, std::process::id(), MACOS_FILE_EXTENSION)
         });
-    
+
     let record_result = ProcessCommand::new("ffmpeg")
         .args([
             "-f", MACOS_VIDEO_INPUT,
@@ -277,12 +277,12 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
 }
 
 #[cfg(target_os = "linux")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
-    
+
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
-    
+
     let output_file = matches
         .get_one::<String>(OUTPUT_ARG)
         .map(|s| s.to_string())
@@ -290,7 +290,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             let dir = ensure_record_dir().expect("failed to create record directory");
             format!("{}/record_video_{}{}", dir, std::process::id(), LINUX_FILE_EXTENSION)
         });
-    
+
     let record_result = ProcessCommand::new("ffmpeg")
         .args([
             "-f", LINUX_VIDEO_INPUT,
@@ -304,7 +304,7 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         .output();
 
     if !record_result.is_ok() || !record_result.as_ref().unwrap().status.success() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "failed to record video. install ffmpeg or check camera access.".to_string(),
         ));
@@ -322,18 +322,18 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
 
     #[cfg(not(feature = "transcription"))]
     let transcript = String::new();
-    
+
     println!("{}", transcript);
     Ok(())
 }
 
 #[cfg(target_os = "linux")]
-fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath", "proc", "exec"])?;
-    
+
     let duration: u32 = *matches.get_one::<u32>(DURATION_ARG).unwrap();
     let duration = duration.min(MAX_DURATION_SECONDS);
-    
+
     let output_file = matches
         .get_one::<String>(OUTPUT_ARG)
         .map(|s| s.to_string())
@@ -341,7 +341,7 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
             let dir = ensure_record_dir().expect("failed to create record directory");
             format!("{}/record_video_{}{}", dir, std::process::id(), LINUX_FILE_EXTENSION)
         });
-    
+
     let record_result = ProcessCommand::new("ffmpeg")
         .args([
             "-f", LINUX_VIDEO_INPUT,
@@ -405,10 +405,10 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
 }
 
 #[cfg(all(target_os = "macos", feature = "transcription"))]
-fn extract_and_transcribe(video_file: &str, model_path: &str) -> UResult<String> {
+fn extract_and_transcribe(video_file: &str, model_path: &str) -> SGResult<String> {
     let dir = ensure_record_dir()?;
     let audio_file = format!("{}/record_video_audio_{}{}", dir, std::process::id(), AUDIO_FILE_EXTENSION);
-    
+
     let extract_result = ProcessCommand::new("ffmpeg")
         .args([
             "-i", video_file,
@@ -426,53 +426,53 @@ fn extract_and_transcribe(video_file: &str, model_path: &str) -> UResult<String>
     }
 
     let transcript = transcribe_audio_vosk(&audio_file, model_path)?;
-    
+
     let _ = std::fs::remove_file(&audio_file);
-    
+
     Ok(transcript)
 }
 
 #[cfg(all(target_os = "macos", feature = "transcription"))]
-fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> {
+fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> SGResult<String> {
     vosk::set_log_level(vosk::LogLevel::Error);
-    
+
     let model = vosk::Model::new(model_path)
-        .ok_or_else(|| USimpleError::new(1, "failed to load vosk model".to_string()))?;
-    
+        .ok_or_else(|| SGSimpleError::new(1, "failed to load vosk model".to_string()))?;
+
     let mut recognizer = vosk::Recognizer::new(&model, 16000.0)
-        .ok_or_else(|| USimpleError::new(1, "failed to create recognizer".to_string()))?;
-    
+        .ok_or_else(|| SGSimpleError::new(1, "failed to create recognizer".to_string()))?;
+
     let mut reader = hound::WavReader::open(audio_file)
-        .map_err(|e| USimpleError::new(1, format!("failed to open audio file: {}", e)))?;
-    
+        .map_err(|e| SGSimpleError::new(1, format!("failed to open audio file: {}", e)))?;
+
     let spec = reader.spec();
-    
+
     if spec.sample_format != hound::SampleFormat::Int || spec.bits_per_sample != 16 {
-        return Err(USimpleError::new(1, "audio must be 16-bit PCM format".to_string()));
+        return Err(SGSimpleError::new(1, "audio must be 16-bit PCM format".to_string()));
     }
-    
+
     let samples: Vec<i16> = reader.samples::<i16>()
         .filter_map(|s| s.ok())
         .collect();
-    
+
     for chunk in samples.chunks(4000) {
         recognizer.accept_waveform(chunk);
     }
-    
+
     let result_json = recognizer.final_result();
-    
+
     let transcript = result_json.single()
         .map(|s| s.text.to_string())
         .unwrap_or_default();
-    
+
     Ok(transcript)
 }
 
 #[cfg(all(target_os = "linux", feature = "transcription"))]
-fn extract_and_transcribe_linux(video_file: &str, model_path: &str) -> UResult<String> {
+fn extract_and_transcribe_linux(video_file: &str, model_path: &str) -> SGResult<String> {
     let dir = ensure_record_dir()?;
     let audio_file = format!("{}/record_video_audio_{}{}", dir, std::process::id(), AUDIO_FILE_EXTENSION);
-    
+
     let extract_result = ProcessCommand::new("ffmpeg")
         .args([
             "-i", video_file,
@@ -490,42 +490,43 @@ fn extract_and_transcribe_linux(video_file: &str, model_path: &str) -> UResult<S
     }
 
     let transcript = transcribe_audio_vosk(&audio_file, model_path)?;
-    
+
     let _ = std::fs::remove_file(&audio_file);
-    
+
     Ok(transcript)
 }
 
 #[cfg(all(target_os = "linux", feature = "transcription"))]
-fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> UResult<String> {
+fn transcribe_audio_vosk(audio_file: &str, model_path: &str) -> SGResult<String> {
     let model = vosk::Model::new(model_path)
-        .ok_or_else(|| USimpleError::new(1, "failed to load vosk model".to_string()))?;
-    
+        .ok_or_else(|| SGSimpleError::new(1, "failed to load vosk model".to_string()))?;
+
     let mut recognizer = vosk::Recognizer::new(&model, 16000.0)
-        .ok_or_else(|| USimpleError::new(1, "failed to create recognizer".to_string()))?;
-    
+        .ok_or_else(|| SGSimpleError::new(1, "failed to create recognizer".to_string()))?;
+
     let mut reader = hound::WavReader::open(audio_file)
-        .map_err(|e| USimpleError::new(1, format!("failed to open audio file: {}", e)))?;
-    
+        .map_err(|e| SGSimpleError::new(1, format!("failed to open audio file: {}", e)))?;
+
     let spec = reader.spec();
-    
+
     if spec.sample_format != hound::SampleFormat::Int || spec.bits_per_sample != 16 {
-        return Err(USimpleError::new(1, "audio must be 16-bit PCM format".to_string()));
+        return Err(SGSimpleError::new(1, "audio must be 16-bit PCM format".to_string()));
     }
-    
+
     let samples: Vec<i16> = reader.samples::<i16>()
         .filter_map(|s| s.ok())
         .collect();
-    
+
     for chunk in samples.chunks(4000) {
         recognizer.accept_waveform(chunk);
     }
-    
+
     let result_json = recognizer.final_result();
-    
+
     let transcript = result_json.single()
         .map(|s| s.text.to_string())
         .unwrap_or_default();
-    
+
     Ok(transcript)
 }
+

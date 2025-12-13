@@ -1,11 +1,11 @@
-// spell-checker:ignore (ToDO) signalname pids killpg
+
 
 use clap::{Arg, ArgAction, Command};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 use std::io::Error;
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
@@ -13,9 +13,6 @@ use serde_json::json;
 use sgcore::signals::{ALL_SIGNALS, signal_by_name_or_value, signal_name_by_value};
 use sgcore::{format_usage, show};
 
-// When the -l option is selected, the program displays the type of signal related to a certain
-// value or string. In case of a value, the program should control the lower 8 bits, but there is
-// a particular case in which if the value is in range [128, 159], it is translated to a signal
 const OFFSET: usize = 128;
 
 pub mod options {
@@ -33,7 +30,7 @@ pub enum Mode {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let mut args = args.collect_ignore();
     let obs_signal = handle_obsolete(&mut args);
 
@@ -62,12 +59,10 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             } else if let Some(signal) = matches.get_one::<String>(options::SIGNAL) {
                 parse_signal_value(signal)?
             } else {
-                15_usize //SIGTERM
+                15_usize
             };
 
             let sig_name = signal_name_by_value(sig);
-            // Signal does not support converting from EXIT
-            // Instead, nix::signal::kill expects Option::None to properly handle EXIT
             let sig: Option<Signal> = if sig_name.is_some_and(|name| name == "EXIT") {
                 None
             } else {
@@ -79,7 +74,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
             let pids = parse_pids(&pids_or_signals)?;
             if pids.is_empty() {
-                Err(USimpleError::new(1, translate!("kill-error-no-process-id")))
+                Err(SGSimpleError::new(1, translate!("kill-error-no-process-id")))
             } else {
                 if opts.stardust_output {
                     let results = kill_with_results(sig, &pids);
@@ -153,7 +148,7 @@ pub fn sg_app() -> Command {
         .arg(
             Arg::new(options::SIGNAL)
                 .short('s')
-                .short_alias('n') // For bash compatibility, like in GNU coreutils
+                .short_alias('n')
                 .long(options::SIGNAL)
                 .value_name("signal")
                 .help(translate!("kill-help-signal"))
@@ -169,19 +164,14 @@ pub fn sg_app() -> Command {
 }
 
 fn handle_obsolete(args: &mut Vec<String>) -> Option<usize> {
-    // Sanity check
     if args.len() > 2 {
-        // Old signal can only be in the first argument position
         let slice = args[1].as_str();
         if let Some(signal) = slice.strip_prefix('-') {
-            // With '-', a signal name must start with an uppercase char
             if signal.chars().next().is_some_and(|c| c.is_lowercase()) {
                 return None;
             }
-            // Check if it is a valid signal
             let opt_signal = signal_by_name_or_value(signal);
             if opt_signal.is_some() {
-                // remove the signal before return
                 args.remove(1);
                 return opt_signal;
             }
@@ -196,12 +186,7 @@ fn table() {
     }
 }
 
-fn print_signal(signal_name_or_value: &str) -> UResult<()> {
-    // Closure used to track the last 8 bits of the signal value
-    // when the -l option is passed only the lower 8 bits are important
-    // or the value is in range [128, 159]
-    // Example: kill -l 143 => TERM because 143 = 15 + 128
-    // Example: kill -l 2304 => EXIT
+fn print_signal(signal_name_or_value: &str) -> SGResult<()> {
     let lower_8_bits = |x: usize| x & 0xff;
     let option_num_parse = signal_name_or_value.parse::<usize>().ok();
 
@@ -219,7 +204,7 @@ fn print_signal(signal_name_or_value: &str) -> UResult<()> {
             return Ok(());
         }
     }
-    Err(USimpleError::new(
+    Err(SGSimpleError::new(
         1,
         translate!("kill-error-invalid-signal", "signal" => signal_name_or_value.quote())
     ))
@@ -243,22 +228,22 @@ fn list(signals: &Vec<String>) {
     }
 }
 
-fn parse_signal_value(signal_name: &str) -> UResult<usize> {
+fn parse_signal_value(signal_name: &str) -> SGResult<usize> {
     let optional_signal_value = signal_by_name_or_value(signal_name);
     match optional_signal_value {
         Some(x) => Ok(x),
-        None => Err(USimpleError::new(
+        None => Err(SGSimpleError::new(
             1,
             translate!("kill-error-invalid-signal", "signal" => signal_name.quote())
         )),
     }
 }
 
-fn parse_pids(pids: &[String]) -> UResult<Vec<i32>> {
+fn parse_pids(pids: &[String]) -> SGResult<Vec<i32>> {
     pids.iter()
         .map(|x| {
             x.parse::<i32>().map_err(|e| {
-                USimpleError::new(
+                SGSimpleError::new(
                     1,
                     translate!("kill-error-parse-argument", "argument" => x.quote(), "error" => e)
                 )
@@ -297,7 +282,7 @@ fn kill_with_results(sig: Option<Signal>, pids: &[i32]) -> Vec<serde_json::Value
         .collect()
 }
 
-fn get_signal_info(signal_name_or_value: &str) -> UResult<serde_json::Value> {
+fn get_signal_info(signal_name_or_value: &str) -> SGResult<serde_json::Value> {
     let lower_8_bits = |x: usize| x & 0xff;
     let option_num_parse = signal_name_or_value.parse::<usize>().ok();
 
@@ -321,13 +306,13 @@ fn get_signal_info(signal_name_or_value: &str) -> UResult<serde_json::Value> {
             }));
         }
     }
-    Err(USimpleError::new(
+    Err(SGSimpleError::new(
         1,
         translate!("kill-error-invalid-signal", "signal" => signal_name_or_value.quote())
     ).into())
 }
 
-fn list_as_json(signals: &Vec<String>) -> UResult<serde_json::Value> {
+fn list_as_json(signals: &Vec<String>) -> SGResult<serde_json::Value> {
     if signals.is_empty() {
         let all_signals: Vec<_> = ALL_SIGNALS.iter()
             .map(|signal| json!({"name": signal}))
@@ -336,7 +321,7 @@ fn list_as_json(signals: &Vec<String>) -> UResult<serde_json::Value> {
     } else {
         let mut results = Vec::new();
         let mut has_error = false;
-        
+
         for signal in signals {
             match get_signal_info(signal) {
                 Ok(info) => results.push(info),
@@ -349,7 +334,7 @@ fn list_as_json(signals: &Vec<String>) -> UResult<serde_json::Value> {
                 }
             }
         }
-        
+
         if has_error {
             Ok(json!({"signals": results, "has_errors": true}))
         } else {

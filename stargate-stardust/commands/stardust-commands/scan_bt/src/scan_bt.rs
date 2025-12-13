@@ -1,10 +1,11 @@
-// Copyright (C) 2025 Dmitry Kalashnikov
+
+
 use clap::{Arg, ArgMatches, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "macos")]
 use std::process::Command as ProcessCommand;
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
@@ -56,10 +57,10 @@ struct ScanResult {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "scan-bt is currently only supported on macos and linux".to_string(),
         ));
@@ -105,14 +106,14 @@ pub fn sg_app() -> ClapCommand {
 }
 
 #[cfg(target_os = "macos")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
-    
+
     let timeout: u32 = *matches.get_one::<u32>(TIMEOUT_ARG).unwrap();
     let _timeout = timeout.min(MAX_TIMEOUT_SECONDS);
-    
+
     let devices = scan_bluetooth_macos()?;
-    
+
     if devices.is_empty() {
         println!("no bluetooth devices found");
     } else {
@@ -126,17 +127,17 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
             }
         }
     }
-    
+
     Ok(())
 }
 
 #[cfg(target_os = "macos")]
-fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
-    
+
     let timeout: u32 = *matches.get_one::<u32>(TIMEOUT_ARG).unwrap();
     let _timeout = timeout.min(MAX_TIMEOUT_SECONDS);
-    
+
     let result = match scan_bluetooth_macos() {
         Ok(devices) => {
             let count = devices.len();
@@ -154,7 +155,7 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
             error: Some(e.to_string()),
         },
     };
-    
+
     let json = if options.pretty {
         serde_json::to_string_pretty(&result).unwrap()
     } else {
@@ -166,14 +167,14 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
 }
 
 #[cfg(target_os = "linux")]
-fn produce(matches: &ArgMatches) -> UResult<()> {
+fn produce(matches: &ArgMatches) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
-    
+
     let timeout: u32 = *matches.get_one::<u32>(TIMEOUT_ARG).unwrap();
     let timeout = timeout.min(MAX_TIMEOUT_SECONDS);
-    
+
     let devices = scan_bluetooth_linux(timeout)?;
-    
+
     if devices.is_empty() {
         println!("no bluetooth devices found");
     } else {
@@ -181,30 +182,30 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         devices.sort_by(|a, b| a.address.cmp(&b.address));
         for device in devices {
             let mut parts = vec![format!("{} ({})", device.name, device.address)];
-            
+
             if let Some(ref manufacturer) = device.manufacturer {
                 parts.push(manufacturer.clone());
             }
-            
+
             if !device.capabilities.is_empty() {
                 parts.push(format!("[{}]", device.capabilities.join(", ")));
             }
-            
+
             println!("{}", parts.join(" - "));
         }
     }
-    
+
     Ok(())
 }
 
 #[cfg(target_os = "linux")]
-fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult<()> {
+fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "proc", "exec"])?;
-    
+
     let timeout: u32 = *matches.get_one::<u32>(TIMEOUT_ARG).unwrap();
     let timeout = timeout.min(MAX_TIMEOUT_SECONDS);
     let verbose = !matches.get_flag(NO_VERBOSE_ARG);
-    
+
     let mut result = match scan_bluetooth_linux(timeout) {
         Ok(devices) => {
             let count = devices.len();
@@ -231,7 +232,7 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
     }
 
     result.devices.sort_by(|a, b| a.address.cmp(&b.address));
-    
+
     let json = if options.pretty {
         serde_json::to_string_pretty(&result).unwrap()
     } else {
@@ -245,22 +246,22 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> UResult
 #[cfg(target_os = "macos")]
 fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<BluetoothDevice> {
     let mut devices = Vec::new();
-    
+
     if let Some(array) = not_conn_array.as_array() {
         for device_wrapper in array {
             if let Some(obj) = device_wrapper.as_object() {
                 for (key, device) in obj {
                     let name = key.to_string();
-                    
+
                     let address = device.get("device_address")
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown")
                         .to_string();
-                    
+
                     let rssi = device.get("device_rssi")
                         .and_then(|v| v.as_str())
                         .and_then(|s| s.parse::<i32>().ok());
-                    
+
                     devices.push(BluetoothDevice {
                         name,
                         address,
@@ -280,30 +281,30 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
             }
         }
     }
-    
+
     devices
 }
 
 #[cfg(target_os = "macos")]
 fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice> {
     let mut devices = Vec::new();
-    
+
     if let Some(array) = cache_array.as_array() {
         for device in array {
             let name = device.get("device_name")
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             let address = device.get("device_address")
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             let device_type = device.get("device_minorType")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
-            
+
             devices.push(BluetoothDevice {
                 name,
                 address,
@@ -321,30 +322,30 @@ fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice>
             });
         }
     }
-    
+
     devices
 }
 
 #[cfg(target_os = "macos")]
 fn parse_connected_devices(conn_array: &serde_json::Value) -> Vec<BluetoothDevice> {
     let mut devices = Vec::new();
-    
+
     if let Some(array) = conn_array.as_array() {
         for device in array {
             let name = device.get("device_name")
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             let address = device.get("device_address")
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             let device_type = device.get("device_minorType")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
-            
+
             devices.push(BluetoothDevice {
                 name: format!("{} (connected)", name),
                 address,
@@ -362,51 +363,51 @@ fn parse_connected_devices(conn_array: &serde_json::Value) -> Vec<BluetoothDevic
             });
         }
     }
-    
+
     devices
 }
 
 #[cfg(target_os = "macos")]
 fn parse_bluetooth_json(json_str: &str) -> Vec<BluetoothDevice> {
     let mut devices = Vec::new();
-    
+
     let Ok(json) = serde_json::from_str::<serde_json::Value>(json_str) else {
         return devices;
     };
-    
+
     let Some(bt_data) = json.get("SPBluetoothDataType") else {
         return devices;
     };
-    
+
     let Some(array) = bt_data.as_array() else {
         return devices;
     };
-    
+
     for item in array {
         if let Some(device_not_connected) = item.get("device_not_connected") {
             devices.extend(parse_not_connected_devices(device_not_connected));
         }
-        
+
         if let Some(device_cache) = item.get("device_cache") {
             devices.extend(parse_cached_devices(device_cache));
         }
-        
+
         if let Some(connected) = item.get("device_connected") {
             devices.extend(parse_connected_devices(connected));
         }
     }
-    
+
     devices
 }
 
 #[cfg(target_os = "macos")]
-fn scan_bluetooth_macos() -> UResult<Vec<BluetoothDevice>> {
+fn scan_bluetooth_macos() -> SGResult<Vec<BluetoothDevice>> {
     let output = ProcessCommand::new("system_profiler")
         .args(["SPBluetoothDataType", "-json"])
         .output();
 
     if !output.is_ok() || !output.as_ref().unwrap().status.success() {
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             "failed to scan bluetooth devices".to_string(),
         ));
@@ -420,17 +421,17 @@ fn scan_bluetooth_macos() -> UResult<Vec<BluetoothDevice>> {
 }
 
 #[cfg(target_os = "linux")]
-fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
+fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
     use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
     use btleplug::platform::Manager;
-    
+
     eprintln!("scanning for bluetooth devices ({}s)...", timeout);
-    
+
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .map_err(|e| USimpleError::new(1, format!("failed to create async runtime: {}", e)))?;
-    
+        .map_err(|e| SGSimpleError::new(1, format!("failed to create async runtime: {}", e)))?;
+
     let devices = runtime.block_on(async {
         let manager = match Manager::new().await {
             Ok(m) => m,
@@ -505,20 +506,20 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
 
                 let mut manufacturer = None;
                 let mut manufacturer_data_decoded = None;
-                
+
                 if let Some(ref m) = manufacturer_data {
                     if let Some((id_str, data_hex)) = m.iter().next() {
                         if let Ok(company_id) = u16::from_str_radix(id_str, 16) {
                             manufacturer = get_manufacturer_name(company_id).map(|s| s.to_string());
                             manufacturer_data_decoded = decode_manufacturer_data(company_id, data_hex);
-                            
+
                             if name == "unknown" && manufacturer.is_some() {
                                 name = format!("{} device", manufacturer.as_ref().unwrap().to_lowercase());
                             }
                         }
                     }
                 }
-                
+
                 let capabilities = detect_capabilities(&services, tx_power);
 
                 out.push(BluetoothDevice {
@@ -541,10 +542,11 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
 
         out
     });
-    
+
     if devices.is_empty() {
         eprintln!("try: sudo systemctl start bluetooth");
     }
-    
+
     Ok(devices)
 }
+

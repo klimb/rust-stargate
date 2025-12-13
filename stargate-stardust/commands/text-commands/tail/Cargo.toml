@@ -1,7 +1,7 @@
 # spell-checker:ignore (libs) kqueue
 [package]
 name = "sg_tail"
-description = "tail ~ (uutils) display the last lines of input"
+description = "tail ~ (stargate) display the last lines of input"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

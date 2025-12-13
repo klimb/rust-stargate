@@ -4,7 +4,7 @@ use std::ffi::CString;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::translate;
 
 use sgcore::{format_usage, show};
@@ -16,17 +16,17 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
 
     let mode = calculate_mode(matches.get_one::<String>(options::MODE))
-        .map_err(|e| USimpleError::new(1, translate!("mkfifo-error-invalid-mode", "error" => e)))?;
+        .map_err(|e| SGSimpleError::new(1, translate!("mkfifo-error-invalid-mode", "error" => e)))?;
 
     let fifos: Vec<String> = match matches.get_many::<String>(options::FIFO) {
         Some(v) => v.cloned().collect(),
         None => {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("mkfifo-error-missing-operand")
             ));
@@ -39,15 +39,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
             mkfifo(name.as_ptr(), 0o666)
         };
         if err == -1 {
-            show!(USimpleError::new(
+            show!(SGSimpleError::new(
                 1,
                 translate!("mkfifo-error-cannot-create-fifo", "path" => f.quote())
             ));
         }
 
-        // Explicitly set the permissions to ignore umask
         if let Err(e) = fs::set_permissions(&f, fs::Permissions::from_mode(mode)) {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 1,
                 translate!("mkfifo-error-cannot-set-permissions", "path" => f.quote(), "error" => e)
             ));
@@ -91,7 +90,7 @@ pub fn sg_app() -> Command {
 
 fn calculate_mode(mode_option: Option<&String>) -> Result<u32, String> {
     let umask = sgcore::mode::get_umask();
-    let mut mode = 0o666; // Default mode for FIFOs
+    let mut mode = 0o666;
 
     if let Some(m) = mode_option {
         if m.chars().any(|c| c.is_ascii_digit()) {
@@ -102,8 +101,9 @@ fn calculate_mode(mode_option: Option<&String>) -> Result<u32, String> {
             }
         }
     } else {
-        mode &= !umask; // Apply umask if no mode is specified
+        mode &= !umask;
     }
 
     Ok(mode)
 }
+

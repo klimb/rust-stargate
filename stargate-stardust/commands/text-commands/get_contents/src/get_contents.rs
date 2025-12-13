@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) nonprint nonblank nonprinting ELOOP
+
 
 mod platform;
 
@@ -15,22 +15,19 @@ use std::os::unix::fs::FileTypeExt;
 use std::os::unix::net::UnixStream;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::libc;
 use sgcore::translate;
 use sgcore::{fast_inc::fast_inc_one, format_usage};
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 use std::collections::HashSet;
-use std::io::BufRead; // for read_line on BufReader
+use std::io::BufRead;
 
 /// Linux splice support
 #[cfg(any(target_os = "linux"))]
 mod splice;
 
-// Allocate 32 digits for the line number.
-// An estimate is that we can print about 1e8 lines/seconds, so 32 digits
-// would be enough for billions of universe lifetimes.
 const LINE_NUMBER_BUF_SIZE: usize = 32;
 
 struct LineNumber {
@@ -40,12 +37,6 @@ struct LineNumber {
     num_end: usize,
 }
 
-// Logic to store a string for the line number. Manually incrementing the value
-// represented in a buffer like this is significantly faster than storing
-// a `usize` and using the standard Rust formatting macros to format a `usize`
-// to a string each time it's needed.
-// Buffer is initialized to "     1\t" and incremented each time `increment` is
-// called, using sgcore's fast_inc function that operates on strings.
 impl LineNumber {
     fn new() -> Self {
         let mut buf = [b'0'; LINE_NUMBER_BUF_SIZE];
@@ -207,24 +198,17 @@ mod options {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // When we receive a SIGPIPE signal, we want to terminate the process so
-    // that we don't print any error messages to stderr. Rust ignores SIGPIPE
-    // (see https://github.com/rust-lang/rust/issues/62569), so we restore it's
-    // default action here.
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
-    // Custom construction because we cannot reuse object_output::add_json_args (short -v already used by cat)
     let opts = StardustOutputOptions { stardust_output: matches.get_flag("object_output"), verbose: false, pretty: matches.get_flag(stardust_output::ARG_PRETTY) };
 
-    // Line filtering for object output (-f line:1,3,5)
     let mut requested_lines: HashSet<usize> = HashSet::new();
     if let Some(filter_spec) = matches.get_one::<String>(stardust_output::ARG_FIELD) {
-        // Parse "line:1,3,5" or "lines:1,3,5" format
         if let Some(line_spec) = filter_spec.strip_prefix("line:").or_else(|| filter_spec.strip_prefix("lines:")) {
             for part in line_spec.split(',') {
                 if let Ok(num) = part.trim().parse::<usize>() {
@@ -316,8 +300,6 @@ pub fn sg_app() -> Command {
                 .short('b')
                 .long(options::NUMBER_NONBLANK)
                 .help(translate!("cat-help-number-nonblank"))
-                // Note: This MUST NOT .overrides_with(options::NUMBER)!
-                // In clap, overriding is symmetric, so "-b -n" counts as "-n", which is not what we want.
                 .action(ArgAction::SetTrue)
         )
         .arg(
@@ -374,7 +356,6 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         ;
-    // Add only object output flag; verbose (-v) already used for show-nonprinting
     cmd
         .arg(
             Arg::new("object_output")
@@ -399,42 +380,31 @@ pub fn sg_app() -> Command {
         )
 }
 
-
 /// Build the structured object output for cat including optional line filtering
-fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &HashSet<usize>) -> UResult<serde_json::Value> {
+fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &HashSet<usize>) -> SGResult<serde_json::Value> {
     let number_mode_str = match options.number {
         NumberingMode::None => "none",
         NumberingMode::NonEmpty => "non-empty",
         NumberingMode::All => "all",
     };
     let mut lines_output: Vec<serde_json::Value> = Vec::new();
-    let mut global_line_index: usize = 0; // 1-based counting of physical lines across all inputs
-    let mut printed_number: usize = 0; // numbering per flag logic
+    let mut global_line_index: usize = 0;
+    let mut printed_number: usize = 0;
 
     for file in files {
-        // Open source (stdin or file)
-        let reader: Box<dyn Read> = if file == "-" { Box::new(io::stdin()) } else { Box::new(File::open(file).map_err(|e| sgcore::error::USimpleError::new(1, e.to_string()))?) };
+        let reader: Box<dyn Read> = if file == "-" { Box::new(io::stdin()) } else { Box::new(File::open(file).map_err(|e| sgcore::error::SGSimpleError::new(1, e.to_string()))?) };
         let mut buf_reader = io::BufReader::new(reader);
         let mut raw = String::new();
         loop {
             raw.clear();
             let n = buf_reader.read_line(&mut raw)?;
             if n == 0 { break; }
-            // Remove trailing newline for processing; keep to test blank
             let is_blank_line = raw.trim_end_matches(['\r','\n']).is_empty();
-            // Squeeze blank: skip if blank and previous blank kept already
-            // We'll need state for previous blank; use closure variables
-            // Simpler: implement local static; but we need per file state.
-            // We'll track via at_line_start logic: use an option variable outside loop.
-            // For simplicity recreate variable outside loop.
             global_line_index += 1;
-            // Apply squeeze_blank after we know blank status
-            // We need to know previous blank status: We'll store in lines_output last element's original blank flag for evaluation.
             if options.squeeze_blank {
                 if is_blank_line {
                     if let Some(prev) = lines_output.last() {
                         if prev.get("blank").and_then(|b| b.as_bool()).unwrap_or(false) {
-                            // Skip additional blank
                             continue;
                         }
                     }
@@ -443,14 +413,13 @@ fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &
             let mut text = raw.trim_end_matches(['\r','\n']).to_string();
             if options.show_tabs { text = text.replace('\t', "^I"); }
             if options.show_nonprint {
-                // Basic caret notation for control chars excluding newline and tab (already handled)
                 let mut transformed = String::new();
                 for ch in text.chars() {
                     let code = ch as u32;
-                    if code < 0x20 && ch != '\n' && ch != '\t' { // control char
+                    if code < 0x20 && ch != '\n' && ch != '\t' {
                         transformed.push('^');
-                        transformed.push((code as u8 + 64) as char); // ^@ starts at 0x00
-                    } else if code == 0x7f { // DEL
+                        transformed.push((code as u8 + 64) as char);
+                    } else if code == 0x7f {
                         transformed.push_str("^?");
                     } else {
                         transformed.push(ch);
@@ -467,7 +436,6 @@ fn build_object_output(files: &[OsString], options: &OutputOptions, requested: &
                 }
             };
             let physical_line_number = global_line_index;
-            // Apply filtering if requested not empty
             if !requested.is_empty() && !requested.contains(&physical_line_number) {
                 continue;
             }
@@ -546,7 +514,7 @@ fn cat_path(path: &OsString, options: &OutputOptions, state: &mut OutputState) -
     }
 }
 
-fn cat_files(files: &[OsString], options: &OutputOptions) -> UResult<()> {
+fn cat_files(files: &[OsString], options: &OutputOptions) -> SGResult<()> {
     let mut state = OutputState {
         line_number: LineNumber::new(),
         at_line_start: true,
@@ -566,10 +534,9 @@ fn cat_files(files: &[OsString], options: &OutputOptions) -> UResult<()> {
     if error_messages.is_empty() {
         Ok(())
     } else {
-        // each next line is expected to display "cat: …"
         let line_joiner = format!("\n{}: ", sgcore::util_name());
 
-        Err(sgcore::error::USimpleError::new(
+        Err(sgcore::error::SGSimpleError::new(
             error_messages.len() as i32,
             error_messages.join(&line_joiner)
         ))
@@ -590,8 +557,6 @@ fn get_input_type(path: &OsString) -> CatResult<InputType> {
         Ok(md) => md.file_type(),
         Err(e) => {
             if let Some(raw_error) = e.raw_os_error() {
-                // On Unix-like systems, the error code for "Too many levels of symbolic links" is 40 (ELOOP).
-                // we want to provide a proper error message in this case.
                 #[cfg(not(any(target_os = "macos", target_os = "freebsd")))]
                 let too_many_symlink_code = 40;
                 #[cfg(any(target_os = "macos", target_os = "freebsd"))]
@@ -624,14 +589,10 @@ fn write_fast<R: FdReadable>(handle: &mut InputHandle<R>) -> CatResult<()> {
     let mut stdout_lock = stdout.lock();
     #[cfg(any(target_os = "linux"))]
     {
-        // If we're on Linux or Android, try to use the splice() system call
-        // for faster writing. If it works, we're done.
         if !splice::write_fast_using_splice(handle, &stdout_lock)? {
             return Ok(());
         }
     }
-    // If we're not on Linux or Android, or the splice() call failed,
-    // fall back on slower writing.
     let mut buf = [0; 1024 * 64];
     loop {
         match handle.reader.read(&mut buf) {
@@ -648,11 +609,6 @@ fn write_fast<R: FdReadable>(handle: &mut InputHandle<R>) -> CatResult<()> {
         }
     }
 
-    // If the splice() call failed and there has been some data written to
-    // stdout via while loop above AND there will be second splice() call
-    // that will succeed, data pushed through splice will be output before
-    // the data buffered in stdout.lock. Therefore additional explicit flush
-    // is required here.
     stdout_lock.flush().inspect_err(handle_broken_pipe)?;
     Ok(())
 }
@@ -667,7 +623,6 @@ fn write_lines<R: FdReadable>(
     let mut in_buf = [0; 1024 * 31];
     let stdout = io::stdout();
     let stdout = stdout.lock();
-    // Add a 32K buffer for stdout - this greatly improves performance.
     let mut writer = BufWriter::with_capacity(32 * 1024, stdout);
 
     loop {
@@ -680,7 +635,6 @@ fn write_lines<R: FdReadable>(
         let in_buf = &in_buf[..n];
         let mut pos = 0;
         while pos < n {
-            // skip empty line_number enumerating them if needed
             if in_buf[pos] == b'\n' {
                 write_new_line(&mut writer, options, state, handle.is_interactive)?;
                 state.at_line_start = true;
@@ -698,10 +652,8 @@ fn write_lines<R: FdReadable>(
                 state.line_number.increment();
             }
 
-            // print to end of line or end of buffer
             let offset = write_end(&mut writer, &in_buf[pos..], options);
 
-            // end of buffer?
             if offset + pos == in_buf.len() {
                 state.at_line_start = false;
                 break;
@@ -710,7 +662,6 @@ fn write_lines<R: FdReadable>(
                 state.skipped_carriage_return = true;
             } else {
                 assert_eq!(in_buf[pos + offset], b'\n');
-                // print suitable end of line
                 write_end_of_line(
                     &mut writer,
                     options.end_of_line().as_bytes(),
@@ -720,13 +671,6 @@ fn write_lines<R: FdReadable>(
             }
             pos += offset + 1;
         }
-        // We need to flush the buffer each time around the loop in order to pass GNU tests.
-        // When we are reading the input from a pipe, the `handle.reader.read` call at the top
-        // of this loop will block (indefinitely) whist waiting for more data. The expectation
-        // however is that anything that's ready for output should show up in the meantime,
-        // and not be buffered internally to the `cat` process.
-        // Hence it's necessary to flush our buffer before every time we could potentially block
-        // on a `std::io::Read::read` call.
         writer.flush().inspect_err(handle_broken_pipe)?;
     }
 
@@ -772,14 +716,7 @@ fn write_end<W: Write>(writer: &mut W, in_buf: &[u8], options: &OutputOptions) -
     }
 }
 
-// write***_to_end methods
-// Write all symbols till \n or \r or end of buffer is reached
-// We need to stop at \r because it may be written as ^M depending on the byte after and settings;
-// however, write_nonprint_to_end doesn't need to stop at \r because it will always write \r as ^M.
-// Return the number of written symbols
-
 fn write_to_end<W: Write>(in_buf: &[u8], writer: &mut W) -> usize {
-    // using memchr2 significantly improves performances
     match memchr2(b'\n', b'\r', in_buf) {
         Some(p) => {
             writer.write_all(&in_buf[..p]).unwrap();
@@ -806,7 +743,6 @@ fn write_tab_to_end<W: Write>(mut in_buf: &[u8], writer: &mut W) -> usize {
                     in_buf = &in_buf[p + 1..];
                     count += p + 1;
                 } else {
-                    // b'\n' or b'\r'
                     return count + p;
                 }
             }
@@ -922,18 +858,16 @@ mod tests {
         assert_eq!(b"     1\t", incrementing_string.to_str());
         incrementing_string.increment();
         assert_eq!(b"     2\t", incrementing_string.to_str());
-        // Run through to 100
         for _ in 3..=100 {
             incrementing_string.increment();
         }
         assert_eq!(b"   100\t", incrementing_string.to_str());
-        // Run through until we overflow the original size.
         for _ in 101..=1_000_000 {
             incrementing_string.increment();
         }
-        // Confirm that the start position moves when we overflow the original size.
         assert_eq!(b"1000000\t", incrementing_string.to_str());
         incrementing_string.increment();
         assert_eq!(b"1000001\t", incrementing_string.to_str());
     }
 }
+

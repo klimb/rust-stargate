@@ -16,7 +16,7 @@ hyperfine currently does not measure maximum memory usage. Memory usage can be b
 Build the `basenc` binary using the release profile:
 
 ```Shell
-cargo build --package uu_basenc --profile release
+cargo build --package sg_basenc --profile release
 ```
 
 ## Expected performance

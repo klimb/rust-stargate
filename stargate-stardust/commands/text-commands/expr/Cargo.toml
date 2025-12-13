@@ -1,6 +1,6 @@
 [package]
 name = "sg_expr"
-description = "expr ~ (uutils) display the value of EXPRESSION"
+description = "expr ~ (stargate) display the value of EXPRESSION"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

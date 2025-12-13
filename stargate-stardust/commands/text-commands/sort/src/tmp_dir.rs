@@ -7,7 +7,7 @@ use std::{
 
 use tempfile::TempDir;
 use sgcore::{
-    error::{UResult, USimpleError},
+    error::{SGResult, SGSimpleError},
     show_error, translate,
 };
 
@@ -33,19 +33,13 @@ struct HandlerRegistration {
 }
 
 fn handler_state() -> Arc<Mutex<HandlerRegistration>> {
-    // Lazily create the global HandlerRegistration so all TmpDirWrapper instances and the
-    // SIGINT handler operate on the same lock/path snapshot.
     static HANDLER_STATE: OnceLock<Arc<Mutex<HandlerRegistration>>> = OnceLock::new();
     HANDLER_STATE
         .get_or_init(|| Arc::new(Mutex::new(HandlerRegistration::default())))
         .clone()
 }
 
-fn ensure_signal_handler_installed(state: Arc<Mutex<HandlerRegistration>>) -> UResult<()> {
-    // This shared state must originate from `handler_state()` so the handler always sees
-    // the current lock/path pair and can clean up the active temp directory on SIGINT.
-    // Install a shared SIGINT handler so the active temp directory is deleted when the user aborts.
-    // Guard to ensure the SIGINT handler is registered once per process and reused.
+fn ensure_signal_handler_installed(state: Arc<Mutex<HandlerRegistration>>) -> SGResult<()> {
     static HANDLER_INSTALLED: AtomicBool = AtomicBool::new(false);
 
     if HANDLER_INSTALLED
@@ -57,7 +51,6 @@ fn ensure_signal_handler_installed(state: Arc<Mutex<HandlerRegistration>>) -> UR
 
     let handler_state = state.clone();
     if let Err(e) = ctrlc::set_handler(move || {
-        // Load the latest lock/path snapshot so the handler cleans the active temp dir.
         let (lock, path) = {
             let state = handler_state.lock().unwrap();
             (state.lock.clone(), state.path.clone())
@@ -81,7 +74,7 @@ fn ensure_signal_handler_installed(state: Arc<Mutex<HandlerRegistration>>) -> UR
         std::process::exit(2)
     }) {
         HANDLER_INSTALLED.store(false, Ordering::Release);
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             2,
             translate!("sort-failed-to-set-up-signal-handler", "error" => e)
         ));
@@ -100,7 +93,7 @@ impl TmpDirWrapper {
         }
     }
 
-    fn init_tmp_dir(&mut self) -> UResult<()> {
+    fn init_tmp_dir(&mut self) -> SGResult<()> {
         assert!(self.temp_dir.is_none());
         assert_eq!(self.size, 0);
         self.temp_dir = Some(
@@ -123,7 +116,7 @@ impl TmpDirWrapper {
         ensure_signal_handler_installed(state)
     }
 
-    pub fn next_file(&mut self) -> UResult<(File, PathBuf)> {
+    pub fn next_file(&mut self) -> SGResult<(File, PathBuf)> {
         if self.temp_dir.is_none() {
             self.init_tmp_dir()?;
         }
@@ -165,10 +158,9 @@ impl Drop for TmpDirWrapper {
 fn remove_tmp_dir(path: &Path) -> std::io::Result<()> {
     if let Ok(read_dir) = std::fs::read_dir(path) {
         for file in read_dir.flatten() {
-            // if we fail to delete the file here it was probably deleted by another thread
-            // in the meantime, but that's ok.
             let _ = std::fs::remove_file(file.path());
         }
     }
     std::fs::remove_dir(path)
 }
+

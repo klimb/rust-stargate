@@ -1,6 +1,6 @@
 [package]
 name = "sg_install"
-description = "install ~ (uutils) copy files from SOURCE to DESTINATION (with specified attributes)"
+description = "install ~ (stargate) copy files from SOURCE to DESTINATION (with specified attributes)"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

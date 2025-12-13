@@ -2,7 +2,7 @@
 
 [package]
 name = "sg_tac"
-description = "tac ~ (uutils) concatenate and display input lines in reverse order"
+description = "tac ~ (stargate) concatenate and display input lines in reverse order"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

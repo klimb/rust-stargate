@@ -1,8 +1,7 @@
 use rand::Rng;
 use std::ffi::OsString;
-use uufuzz::{generate_and_run_uumain, generate_random_string, run_gnu_cmd};
+use sgfuzz::{generate_and_run_uumain, generate_random_string, run_gnu_cmd};
 
-// Mock echo implementation with some bugs for demonstration
 fn mock_buggy_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
     let args: Vec<OsString> = args.collect();
 
@@ -10,7 +9,6 @@ fn mock_buggy_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
     let mut enable_escapes = false;
     let mut start_index = 1;
 
-    // Parse arguments (simplified)
     for arg in args.iter().skip(1) {
         let arg_str = arg.to_string_lossy();
         if arg_str == "-n" {
@@ -24,7 +22,6 @@ fn mock_buggy_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
         }
     }
 
-    // Print arguments
     for (i, arg) in args.iter().skip(start_index).enumerate() {
         if i > 0 {
             print!(" ");
@@ -32,7 +29,6 @@ fn mock_buggy_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
         let arg_str = arg.to_string_lossy();
 
         if enable_escapes {
-            // Simulate a bug: incomplete escape sequence handling
             let processed = arg_str.replace("\\n", "\n").replace("\\t", "\t");
             print!("{}", processed);
         } else {
@@ -47,22 +43,17 @@ fn mock_buggy_echo_main(args: std::vec::IntoIter<OsString>) -> i32 {
     0
 }
 
-// Generate test arguments for echo command
 fn generate_echo_args() -> Vec<OsString> {
     let mut rng = rand::rng();
     let mut args = vec![OsString::from("echo")];
 
-    // Randomly add flags
     if rng.random_bool(0.3) {
-        // 30% chance
         args.push(OsString::from("-n"));
     }
     if rng.random_bool(0.2) {
-        // 20% chance
         args.push(OsString::from("-e"));
     }
 
-    // Add 1-3 random string arguments
     let num_args = rng.random_range(1..=3);
     for _ in 0..num_args {
         let arg = generate_random_string(rng.random_range(1..=15));
@@ -73,7 +64,7 @@ fn generate_echo_args() -> Vec<OsString> {
 }
 
 fn main() {
-    println!("=== Fuzzing Simulation uufuzz Example ===");
+    println!("=== Fuzzing Simulation sgfuzz Example ===");
     println!("This simulates how libFuzzer would test our echo implementation");
     println!("against GNU echo with random inputs.\n");
 
@@ -90,13 +81,10 @@ fn main() {
             args.iter().map(|s| s.to_string_lossy()).collect::<Vec<_>>()
         );
 
-        // Run our implementation
         let rust_result = generate_and_run_uumain(&args, mock_buggy_echo_main, None);
 
-        // Run GNU implementation
         match run_gnu_cmd("echo", &args[1..], false, None) {
             Ok(gnu_result) => {
-                // Check if results match
                 let stdout_match = rust_result.stdout.trim() == gnu_result.stdout.trim();
                 let exit_code_match = rust_result.exit_code == gnu_result.exit_code;
 
@@ -107,7 +95,6 @@ fn main() {
                     println!("✗ FAIL: Implementations differ");
                     failed += 1;
 
-                    // Show the difference in a controlled way (not panicking like compare_result)
                     if !stdout_match {
                         println!("  Stdout difference:");
                         println!(
@@ -130,7 +117,6 @@ fn main() {
             Err(error_result) => {
                 println!("⚠ GNU echo not available: {}", error_result.stderr);
                 println!("  Our result: '{}'", rust_result.stdout.trim());
-                // Don't count this as pass or fail
                 continue;
             }
         }
@@ -156,3 +142,4 @@ fn main() {
     println!("\nIn a real libfuzzer setup, this would run thousands of iterations");
     println!("automatically with more sophisticated input generation.");
 }
+

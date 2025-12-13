@@ -1,4 +1,4 @@
-// spell-checker:ignore parens
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -7,7 +7,7 @@ use sg_cut::sgmain;
 use rand::Rng;
 use std::ffi::OsString;
 
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_string, run_gnu_cmd,
 };
 static CMD_PATH: &str = "cut";
@@ -24,7 +24,7 @@ fn generate_cut_args() -> String {
             match rng.random_range(0..=4) {
                 0 => args.push(String::from("-b") + &rng.random_range(1..=10).to_string()),
                 1 => args.push(String::from("-c") + &rng.random_range(1..=10).to_string()),
-                2 => args.push(String::from("-d,") + &generate_random_string(1)), // Using a comma as a default delimiter
+                2 => args.push(String::from("-d,") + &generate_random_string(1)),
                 3 => args.push(String::from("-f") + &rng.random_range(1..=5).to_string()),
                 _ => (),
             }
@@ -77,6 +77,7 @@ fuzz_target!(|_data: &[u8]| {
         Some(&input_lines),
         &rust_result,
         &gnu_result,
-        false, // Set to true if you want to fail on stderr diff
+        false,
     );
 });
+

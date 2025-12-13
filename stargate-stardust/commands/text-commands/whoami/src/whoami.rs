@@ -1,7 +1,7 @@
 use clap::Command;
 use std::ffi::OsString;
 use sgcore::display::println_verbatim;
-use sgcore::error::{FromIo, UResult};
+use sgcore::error::{FromIo, SGResult};
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
@@ -9,7 +9,7 @@ use serde_json::json;
 mod platform;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "getpw"])?;
 
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
@@ -28,7 +28,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 }
 
 /// Get the current username
-pub fn whoami() -> UResult<OsString> {
+pub fn whoami() -> SGResult<OsString> {
     platform::get_username().map_err_context(|| translate!("whoami-error-failed-to-get"))
 }
 
@@ -42,3 +42,4 @@ pub fn sg_app() -> Command {
 
     stardust_output::add_json_args(cmd)
 }
+

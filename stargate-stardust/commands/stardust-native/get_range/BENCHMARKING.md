@@ -12,7 +12,7 @@ sudo apt-get install hyperfine
 Next, build the `seq` binary under the release profile:
 
 ```shell
-cargo build --release -p uu_seq
+cargo build --release -p sg_seq
 ```
 
 Finally, you can compare the performance of the two versions of `seq`

@@ -1,12 +1,11 @@
 use std::ffi::OsString;
-use uufuzz::{CommandResult, run_gnu_cmd};
+use sgfuzz::{CommandResult, run_gnu_cmd};
 
 fn main() {
-    println!("=== Simple Integration Testing uufuzz Example ===");
-    println!("This demonstrates how to use uufuzz to compare against GNU tools");
+    println!("=== Simple Integration Testing sgfuzz Example ===");
+    println!("This demonstrates how to use sgfuzz to compare against GNU tools");
     println!("without the complex file descriptor manipulation.\n");
 
-    // Test cases that work well with external command comparison
     let test_cases = [
         (
             "echo test",
@@ -38,7 +37,6 @@ fn main() {
     for (test_name, cmd, args, input) in test_cases {
         println!("--- {} ---", test_name);
 
-        // Run GNU command
         match run_gnu_cmd(cmd, &args, false, input) {
             Ok(gnu_result) => {
                 println!("✓ GNU {} succeeded", cmd);
@@ -48,11 +46,6 @@ fn main() {
                 );
                 println!("  Exit code: {}", gnu_result.exit_code);
 
-                // This demonstrates how you would compare results
-                // In real usage, you'd run your implementation and compare:
-                // let my_result = run_my_implementation(&args, input);
-                // assert_eq!(my_result.stdout, gnu_result.stdout);
-                // assert_eq!(my_result.exit_code, gnu_result.exit_code);
             }
             Err(error_result) => {
                 println!(
@@ -67,13 +60,11 @@ fn main() {
 
     println!("=== Practical Example: Compare two echo implementations ===");
 
-    // Simple echo comparison
     let args = vec![OsString::from("hello"), OsString::from("world")];
     match run_gnu_cmd("echo", &args, false, None) {
         Ok(gnu_result) => {
             println!("GNU echo result: {:?}", gnu_result.stdout.trim());
 
-            // Simulate our own echo implementation result
             let our_result = CommandResult {
                 stdout: "hello world\n".to_string(),
                 stderr: String::new(),
@@ -98,3 +89,4 @@ fn main() {
     println!("\n=== Example completed ===");
     println!("This approach is simpler and more reliable for integration testing.");
 }
+

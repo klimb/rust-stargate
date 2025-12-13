@@ -1,8 +1,8 @@
-// spell-checker:ignore (ToDO) srcpath targetpath EEXIST
+
 
 use clap::{Arg, ArgAction, Command};
 use sgcore::display::Quotable;
-use sgcore::error::{FromIo, UError, UResult};
+use sgcore::error::{FromIo, SGError, SGResult};
 use sgcore::fs::{make_path_relative_to, paths_refer_to_same_file};
 use sgcore::translate;
 use sgcore::{format_usage, prompt_yes, show_error};
@@ -56,7 +56,7 @@ enum LnError {
     ExtraOperand(OsString, String),
 }
 
-impl UError for LnError {
+impl SGError for LnError {
     fn code(&self) -> i32 {
         1
     }
@@ -64,7 +64,6 @@ impl UError for LnError {
 
 mod options {
     pub const FORCE: &str = "force";
-    //pub const DIRECTORY: &str = "directory";
     pub const INTERACTIVE: &str = "interactive";
     pub const NO_DEREFERENCE: &str = "no-dereference";
     pub const SYMBOLIC: &str = "symbolic";
@@ -79,11 +78,9 @@ mod options {
 static ARG_FILES: &str = "files";
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "wpath", "cpath"])?;
-
-    /* the list of files */
 
     let paths: Vec<PathBuf> = matches
         .get_many::<OsString>(ARG_FILES)
@@ -104,7 +101,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     let backup_mode = backup_control::determine_backup_mode(&matches)?;
     let backup_suffix = backup_control::determine_backup_suffix(&matches);
 
-    // When we have "-L" or "-L -P", false otherwise
     let logical = matches.get_flag(options::LOGICAL);
 
     let settings = Settings {
@@ -141,12 +137,6 @@ pub fn sg_app() -> Command {
         .after_help(after_help)
         .arg(backup_control::arguments::backup())
         .arg(backup_control::arguments::backup_no_args())
-        /*.arg(
-            Arg::new(options::DIRECTORY)
-                .short('d')
-                .long(options::DIRECTORY)
-                .help("allow users with appropriate privileges to attempt to make hard links to directories")
-        )*/
         .arg(
             Arg::new(options::FORCE)
                 .short('f')
@@ -177,7 +167,6 @@ pub fn sg_app() -> Command {
                 .action(ArgAction::SetTrue)
         )
         .arg(
-            // Not implemented yet
             Arg::new(options::PHYSICAL)
                 .short('P')
                 .long(options::PHYSICAL)
@@ -189,7 +178,6 @@ pub fn sg_app() -> Command {
                 .short('s')
                 .long(options::SYMBOLIC)
                 .help(translate!("ln-help-symbolic"))
-                // override added for https://github.com/uutils/coreutils/issues/2359
                 .overrides_with(options::SYMBOLIC)
                 .action(ArgAction::SetTrue)
         )
@@ -236,26 +224,20 @@ pub fn sg_app() -> Command {
         )
 }
 
-fn exec(files: &[PathBuf], settings: &Settings) -> UResult<()> {
-    // Handle cases where we create links in a directory first.
+fn exec(files: &[PathBuf], settings: &Settings) -> SGResult<()> {
     if let Some(ref target_path) = settings.target_dir {
-        // 4th form: a directory is specified by -t.
         return link_files_in_dir(files, target_path, settings);
     }
     if !settings.no_target_dir {
         if files.len() == 1 {
-            // 2nd form: the target directory is the current directory.
             return link_files_in_dir(files, &PathBuf::from("."), settings);
         }
         let last_file = &PathBuf::from(files.last().unwrap());
         if files.len() > 2 || last_file.is_dir() {
-            // 3rd form: create links in the last argument.
             return link_files_in_dir(&files[0..files.len() - 1], last_file, settings);
         }
     }
 
-    // 1st form. Now there should be only two operands, but if -T is
-    // specified we may have a wrong number of operands.
     if files.len() == 1 {
         return Err(LnError::MissingDestination(files[0].clone()).into());
     }
@@ -272,11 +254,10 @@ fn exec(files: &[PathBuf], settings: &Settings) -> UResult<()> {
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) -> UResult<()> {
+fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) -> SGResult<()> {
     if !target_dir.is_dir() {
         return Err(LnError::TargetIsNotADirectory(target_dir.to_owned()).into());
     }
-    // remember the linked destinations for further usage
     let mut linked_destinations: HashSet<PathBuf> = HashSet::with_capacity(files.len());
 
     let mut all_successful = true;
@@ -285,8 +266,6 @@ fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) 
             && matches!(settings.overwrite, OverwriteMode::Force)
             && target_dir.is_symlink()
         {
-            // In that case, we don't want to do link resolution
-            // We need to clean the target
             if target_dir.is_file() {
                 if let Err(e) = fs::remove_file(target_dir) {
                     show_error!(
@@ -301,10 +280,6 @@ fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) 
                 Some(name) => {
                     match Path::new(name).file_name() {
                         Some(basename) => target_dir.join(basename),
-                        // This can be None only for "." or "..". Trying
-                        // to create a link with such name will fail with
-                        // EEXIST, which agrees with the behavior of GNU
-                        // coreutils.
                         None => target_dir.join(name),
                     }
                 }
@@ -320,7 +295,6 @@ fn link_files_in_dir(files: &[PathBuf], target_dir: &Path, settings: &Settings) 
         };
 
         if linked_destinations.contains(&targetpath) {
-            // If the target file was already created in this ln call, do not overwrite
             show_error!(
                 "{}",
                 translate!("ln-error-will-not-overwrite", "target" => targetpath.display(), "source" => srcpath.display())
@@ -354,7 +328,7 @@ fn relative_path<'a>(src: &'a Path, dst: &Path) -> Cow<'a, Path> {
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
+fn link(src: &Path, dst: &Path, settings: &Settings) -> SGResult<()> {
     let mut backup_path = None;
     let source: Cow<'_, Path> = if settings.relative {
         relative_path(src, dst)
@@ -370,7 +344,6 @@ fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
             BackupMode::Existing => Some(existing_backup_path(dst, &settings.suffix)),
         };
         if settings.backup == BackupMode::Existing && !settings.symbolic {
-            // when ln --backup f f, it should detect that it is the same file
             if paths_refer_to_same_file(src, dst, true) {
                 return Err(LnError::SameFile(src.to_owned(), dst.to_owned()).into());
             }
@@ -387,11 +360,9 @@ fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
                 }
 
                 if fs::remove_file(dst).is_ok() {}
-                // In case of error, don't do anything
             }
             OverwriteMode::Force => {
                 if !dst.is_symlink() && paths_refer_to_same_file(src, dst, true) {
-                    // Even in force overwrite mode, verify we are not targeting the same entry and return a SameFile error if so
                     let same_entry = match (
                         canonicalize(src, MissingHandling::Missing, ResolveMode::Physical),
                         canonicalize(dst, MissingHandling::Missing, ResolveMode::Physical)
@@ -404,7 +375,6 @@ fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
                     }
                 }
                 if fs::remove_file(dst).is_ok() {}
-                // In case of error, don't do anything
             }
         }
     }
@@ -413,9 +383,6 @@ fn link(src: &Path, dst: &Path, settings: &Settings) -> UResult<()> {
         symlink(&source, dst)?;
     } else {
         let p = if settings.logical && source.is_symlink() {
-            // if we want to have an hard link,
-            // source is a symlink and -L is passed
-            // we want to resolve the symlink to create the hardlink
             fs::canonicalize(&source)
                 .map_err_context(|| translate!("ln-failed-to-access", "file" => source.quote()))?
         } else {
@@ -460,3 +427,4 @@ fn existing_backup_path(path: &Path, suffix: &OsString) -> PathBuf {
     }
     simple_backup_path(path, suffix)
 }
+

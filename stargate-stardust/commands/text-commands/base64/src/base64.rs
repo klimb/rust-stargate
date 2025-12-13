@@ -1,10 +1,10 @@
 use clap::Command;
 use sg_base32::base_common;
 use sgcore::translate;
-use sgcore::{encoding::Format, error::UResult};
+use sgcore::{encoding::Format, error::SGResult};
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let format = Format::Base64;
     let (about, usage) = get_info();
     let config = base_common::parse_base_cmd_args(args, about, usage)?;
@@ -23,3 +23,4 @@ fn get_info() -> (&'static str, &'static str) {
     let usage: &'static str = Box::leak(translate!("base64-usage").into_boxed_str());
     (about, usage)
 }
+

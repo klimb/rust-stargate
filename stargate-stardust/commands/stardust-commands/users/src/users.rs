@@ -1,11 +1,11 @@
-// spell-checker:ignore (paths) wtmp
+
 
 use std::ffi::OsString;
 use std::path::Path;
 
 use clap::builder::ValueParser;
 use clap::{Arg, Command};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
@@ -31,11 +31,10 @@ fn get_long_usage() -> String {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
     let mut opts = StardustOutputOptions::from_matches(&matches);
-    // Stardust output is the default for this command
     if !matches.contains_id("stardust_output") {
         opts.stardust_output = true;
     }
@@ -44,7 +43,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     let mut users: Vec<String>;
 
-    // OpenBSD uses the Unix version 1 UTMP, all other Unixes use the newer UTMPX
     #[cfg(target_os = "openbsd")]
     {
         let filename = maybe_file.unwrap_or(Path::new(OPENBSD_UTMP_FILE));
@@ -110,6 +108,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::FilePath)
                 .value_parser(ValueParser::os_string())
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
+

@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) tailable untailable stdlib kqueue Uncategorized unwatch
+
 
 use crate::args::{FollowMode, Settings};
 use crate::follow::files::{FileHandling, PathData};
@@ -9,7 +9,7 @@ use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, channel};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError, set_exit_code};
+use sgcore::error::{SGResult, SGSimpleError, set_exit_code};
 use sgcore::translate;
 
 use sgcore::show_error;
@@ -28,22 +28,11 @@ impl WatcherRx {
     }
 
     /// Wrapper for `notify::Watcher::watch` to also add the parent directory of `path` if necessary.
-    fn watch_with_parent(&mut self, path: &Path) -> UResult<()> {
+    fn watch_with_parent(&mut self, path: &Path) -> SGResult<()> {
         let mut path = path.to_owned();
         #[cfg(target_os = "linux")]
         if path.is_file() {
-            /*
-            NOTE: Using the parent directory instead of the file is a workaround.
-            This workaround follows the recommendation of the notify crate authors:
-            > On some platforms, if the `path` is renamed or removed while being watched, behavior may
-            > be unexpected. See discussions in [#165] and [#166]. If less surprising behavior is wanted
-            > one may non-recursively watch the _parent_ directory as well and manage related events.
-            NOTE: Adding both: file and parent results in duplicate/wrong events.
-            Tested for notify::InotifyWatcher and for notify::PollWatcher.
-            */
             if let Some(parent) = path.parent() {
-                // clippy::assigning_clones added with Rust 1.78
-                // Rust version = 1.76 on OpenBSD stable/7.5
                 #[cfg_attr(not(target_os = "openbsd"), allow(clippy::assigning_clones))]
                 if parent.is_dir() {
                     path = parent.to_owned();
@@ -51,7 +40,7 @@ impl WatcherRx {
                     path = PathBuf::from(".");
                 }
             } else {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("tail-error-cannot-watch-parent-directory", "path" => path.display())
                 ));
@@ -61,21 +50,20 @@ impl WatcherRx {
             path = path.canonicalize()?;
         }
 
-        // for syscalls: 2x "inotify_add_watch" ("filename" and ".") and 1x "inotify_rm_watch"
         self.watch(&path, RecursiveMode::NonRecursive)?;
         Ok(())
     }
 
-    fn watch(&mut self, path: &Path, mode: RecursiveMode) -> UResult<()> {
+    fn watch(&mut self, path: &Path, mode: RecursiveMode) -> SGResult<()> {
         self.watcher
             .watch(path, mode)
-            .map_err(|err| USimpleError::new(1, err.to_string()))
+            .map_err(|err| SGSimpleError::new(1, err.to_string()))
     }
 
-    fn unwatch(&mut self, path: &Path) -> UResult<()> {
+    fn unwatch(&mut self, path: &Path) -> SGResult<()> {
         self.watcher
             .unwatch(path)
-            .map_err(|err| USimpleError::new(1, err.to_string()))
+            .map_err(|err| SGSimpleError::new(1, err.to_string()))
     }
 }
 
@@ -139,7 +127,7 @@ impl Observer {
         display_name: &str,
         reader: Option<Box<dyn BufRead>>,
         update_last: bool
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         if self.follow.is_some() {
             let path = if path.is_relative() {
                 std::env::current_dir()?.join(path)
@@ -162,7 +150,7 @@ impl Observer {
         display_name: &str,
         reader: Option<Box<dyn BufRead>>,
         update_last: bool
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         if self.follow == Some(FollowMode::Descriptor) {
             return self.add_path(
                 &PathBuf::from(text::DEV_STDIN),
@@ -180,7 +168,7 @@ impl Observer {
         path: &Path,
         display_name: &str,
         update_last: bool
-    ) -> UResult<()> {
+    ) -> SGResult<()> {
         if self.retry && self.follow.is_some() {
             return self.add_path(path, display_name, None, update_last);
         }
@@ -188,53 +176,25 @@ impl Observer {
         Ok(())
     }
 
-    pub fn start(&mut self, settings: &Settings) -> UResult<()> {
+    pub fn start(&mut self, settings: &Settings) -> SGResult<()> {
         if settings.follow.is_none() {
             return Ok(());
         }
 
         let (tx, rx) = channel();
 
-        /*
-        Watcher is implemented per platform using the best implementation available on that
-        platform. In addition to such event driven implementations, a polling implementation
-        is also provided that should work on any platform.
-        Linux / Android: inotify
-        macOS: FSEvents / kqueue
-        Windows: ReadDirectoryChangesWatcher
-        FreeBSD / NetBSD / OpenBSD / DragonflyBSD: kqueue
-        Fallback: polling every n seconds
-
-        NOTE:
-        We force the use of kqueue with: features=["macos_kqueue"].
-        On macOS only `kqueue` is suitable for our use case because `FSEvents`
-        waits for file close util it delivers a modify event. See:
-        https://github.com/notify-rs/notify/issues/240
-        */
-
         let watcher: Box<dyn Watcher>;
         let watcher_config = notify::Config::default()
             .with_poll_interval(settings.sleep_sec)
-            /*
-            NOTE: By enabling compare_contents, performance will be significantly impacted
-            as all files will need to be read and hashed at each `poll_interval`.
-            However, this is necessary to pass: "gnu/tests/tail-2/F-vs-rename.sh"
-            */
             .with_compare_contents(true);
         if self.use_polling || RecommendedWatcher::kind() == WatcherKind::PollWatcher {
-            self.use_polling = true; // We have to use polling because there's no supported backend
+            self.use_polling = true;
             watcher = Box::new(notify::PollWatcher::new(tx, watcher_config).unwrap());
         } else {
             let tx_clone = tx.clone();
             match RecommendedWatcher::new(tx, notify::Config::default()) {
                 Ok(w) => watcher = Box::new(w),
                 Err(e) if e.to_string().starts_with("Too many open files") => {
-                    /*
-                    NOTE: This ErrorKind is `Uncategorized`, but it is not recommended
-                    to match an error against `Uncategorized`
-                    NOTE: Could be tested with decreasing `max_user_instances`, e.g.:
-                    `sudo sysctl fs.inotify.max_user_instances=64`
-                    */
                     show_error!(
                         "{}",
                         translate!("tail-error-backend-cannot-be-used-too-many-files", "backend" => text::BACKEND)
@@ -243,7 +203,7 @@ impl Observer {
                     self.use_polling = true;
                     watcher = Box::new(notify::PollWatcher::new(tx_clone, watcher_config).unwrap());
                 }
-                Err(e) => return Err(USimpleError::new(1, e.to_string())),
+                Err(e) => return Err(SGSimpleError::new(1, e.to_string())),
             }
         }
 
@@ -269,7 +229,7 @@ impl Observer {
         self.follow_name() && self.retry
     }
 
-    fn init_files(&mut self, inputs: &Vec<Input>) -> UResult<()> {
+    fn init_files(&mut self, inputs: &Vec<Input>) -> SGResult<()> {
         if let Some(watcher_rx) = &mut self.watcher_rx {
             for input in inputs {
                 match input.kind() {
@@ -285,14 +245,11 @@ impl Observer {
                         }
 
                         if path.is_tailable() {
-                            // Add existing regular files to `Watcher` (InotifyWatcher).
                             watcher_rx.watch_with_parent(&path)?;
                         } else if !path.is_orphan() {
-                            // If `path` is not a tailable file, add its parent to `Watcher`.
                             watcher_rx
                                 .watch(path.parent().unwrap(), RecursiveMode::NonRecursive)?;
                         } else {
-                            // If there is no parent, add `path` to `orphans`.
                             self.orphans.push(path);
                         }
                     }
@@ -307,7 +264,7 @@ impl Observer {
         &mut self,
         event: &notify::Event,
         settings: &Settings
-    ) -> UResult<Vec<PathBuf>> {
+    ) -> SGResult<Vec<PathBuf>> {
         use notify::event::*;
 
         let event_path = event.paths.first().unwrap();
@@ -322,9 +279,6 @@ impl Observer {
                     let pd = self.files.get(event_path);
                     if let Some(old_md) = &pd.metadata {
                         if is_tailable {
-                            // We resume tracking from the start of the file,
-                            // assuming it has been truncated to 0. This mimics GNU's `tail`
-                            // behavior and is the usual truncation operation for log files.
                             if !old_md.is_tailable() {
                                 show_error!(
                                     "{}",
@@ -378,7 +332,7 @@ impl Observer {
                             let _ = self.watcher_rx.as_mut().unwrap().watcher.unwatch(event_path);
                             self.files.remove(event_path);
                             if self.files.no_files_remaining(settings) {
-                                return Err(USimpleError::new(1, translate!("tail-no-files-remaining")));
+                                return Err(SGSimpleError::new(1, translate!("tail-no-files-remaining")));
                             }
                         } else {
                             show_error!(
@@ -392,7 +346,6 @@ impl Observer {
             }
             EventKind::Remove(RemoveKind::File | RemoveKind::Any)
 
-                // | EventKind::Modify(ModifyKind::Name(RenameMode::Any))
                 | EventKind::Modify(ModifyKind::Name(RenameMode::From)) => {
                 if self.follow_name() {
                     if settings.retry {
@@ -419,45 +372,17 @@ impl Observer {
                             translate!("tail-status-file-no-such-file", "file" => display_name, "no_such_file" => translate!("tail-no-such-file-or-directory"))
                         );
                         if !self.files.files_remaining() && self.use_polling {
-                            // NOTE: GNU's tail exits here for `---disable-inotify`
-                            return Err(USimpleError::new(1, translate!("tail-no-files-remaining")));
+                            return Err(SGSimpleError::new(1, translate!("tail-no-files-remaining")));
                         }
                     }
                     self.files.reset_reader(event_path);
                 } else if self.follow_descriptor_retry() {
-                    // --retry only effective for the initial open
                     let _ = self.watcher_rx.as_mut().unwrap().unwatch(event_path);
                     self.files.remove(event_path);
                 } else if self.use_polling && event.kind == EventKind::Remove(RemoveKind::Any) {
-                    /*
-                    BUG: The watched file was removed. Since we're using Polling, this
-                    could be a rename. We can't tell because `notify::PollWatcher` doesn't
-                    recognize renames properly.
-                    Ideally we want to call seek to offset 0 on the file handle.
-                    But because we only have access to `PathData::reader` as `BufRead`,
-                    we cannot seek to 0 with `BufReader::seek_relative`.
-                    Also because we don't have the new name, we cannot work around this
-                    by simply reopening the file.
-                    */
                 }
             }
             EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => {
-                /*
-                NOTE: For `tail -f a`, keep tracking additions to b after `mv a b`
-                (gnu/tests/tail-2/descriptor-vs-rename.sh)
-                NOTE: The File/BufReader doesn't need to be updated.
-                However, we need to update our `files.map`.
-                This can only be done for inotify, because this EventKind does not
-                trigger for the PollWatcher.
-                BUG: As a result, there's a bug if polling is used:
-                $ tail -f file_a ---disable-inotify
-                $ mv file_a file_b
-                $ echo A >> file_b
-                $ echo A >> file_a
-                The last append to file_a is printed, however this shouldn't be because
-                after the "mv" tail should only follow "file_b".
-                TODO: [2022-05; jhscheer] add test for this bug
-                */
 
                 if self.follow_descriptor() {
                     let new_path = event.paths.last().unwrap();
@@ -470,7 +395,6 @@ impl Observer {
                         self.files.get_last().unwrap() == event_path
                     );
 
-                    // Unwatch old path and watch new path
                     let _ = self.watcher_rx.as_mut().unwrap().unwatch(event_path);
                     self.watcher_rx.as_mut().unwrap().watch_with_parent(new_path)?;
                 }
@@ -482,30 +406,22 @@ impl Observer {
 }
 
 #[allow(clippy::cognitive_complexity)]
-pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
+pub fn follow(mut observer: Observer, settings: &Settings) -> SGResult<()> {
     if observer.files.no_files_remaining(settings) && !observer.files.only_stdin_remaining() {
-        return Err(USimpleError::new(1, translate!("tail-no-files-remaining")));
+        return Err(SGSimpleError::new(1, translate!("tail-no-files-remaining")));
     }
 
     let mut process = platform::ProcessChecker::new(observer.pid);
 
     let mut timeout_counter = 0;
 
-    // main follow loop
     loop {
         let mut _read_some = false;
 
-        // If `--pid=p`, tail checks whether process p
-        // is alive at least every `--sleep-interval=N` seconds
         if settings.follow.is_some() && observer.pid != 0 && process.is_dead() {
-            // p is dead, tail will also terminate
             break;
         }
 
-        // For `-F` we need to poll if an orphan path becomes available during runtime.
-        // If a path becomes an orphan during runtime, it will be added to orphans.
-        // To be able to differentiate between the cases of test_retry8 and test_retry9,
-        // here paths will not be removed from orphans if the path becomes available.
         if observer.follow_name_retry() {
             for new_path in &observer.orphans {
                 if new_path.exists() {
@@ -529,8 +445,6 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
             }
         }
 
-        // With  -f, sleep for approximately N seconds (default 1.0) between iterations;
-        // We wake up if Notify sends an Event or if we wait more than `sleep_sec`.
         let rx_result = observer
             .watcher_rx
             .as_mut()
@@ -542,12 +456,11 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
             timeout_counter = 0;
         }
 
-        let mut paths = vec![]; // Paths worth checking for new content to print
+        let mut paths = vec![];
         match rx_result {
             Ok(Ok(event)) => {
                 if let Some(event_path) = event.paths.first() {
                     if observer.files.contains_key(event_path) {
-                        // Handle Event if it is about a path that we are monitoring
                         paths = observer.handle_event(&event, settings)?;
                     }
                 }
@@ -571,13 +484,13 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
                 kind: notify::ErrorKind::MaxFilesWatch,
                 ..
             })) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("tail-error-backend-resources-exhausted", "backend" => text::BACKEND)
                 ));
             }
             Ok(Err(e)) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("tail-error-notify-error", "error" => e)
                 ));
@@ -586,7 +499,7 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
                 timeout_counter += 1;
             }
             Err(e) => {
-                return Err(USimpleError::new(
+                return Err(SGSimpleError::new(
                     1,
                     translate!("tail-error-recv-timeout-error", "error" => e)
                 ));
@@ -594,31 +507,17 @@ pub fn follow(mut observer: Observer, settings: &Settings) -> UResult<()> {
         }
 
         if observer.use_polling && settings.follow.is_some() {
-            // Consider all files to potentially have new content.
-            // This is a workaround because `Notify::PollWatcher`
-            // does not recognize the "renaming" of files.
             paths = observer.files.keys().cloned().collect::<Vec<_>>();
         }
 
-        // main print loop
         for path in &paths {
             _read_some = observer.files.tail_file(path, settings.verbose)?;
         }
 
         if timeout_counter == settings.max_unchanged_stats {
-            /*
-            TODO: [2021-10; jhscheer] implement timeout_counter for each file.
-            '--max-unchanged-stats=n'
-            When tailing a file by name, if there have been n (default n=5) consecutive iterations
-            for which the file has not changed, then open/fstat the file to determine if that file
-            name is still associated with the same device/inode-number pair as before. When
-            following a log file that is rotated, this is approximately the number of seconds
-            between when tail prints the last pre-rotation lines and when it prints the lines that
-            have accumulated in the new log file. This option is meaningful only when polling
-            (i.e., without inotify) and when following by name.
-            */
         }
     }
 
     Ok(())
 }
+

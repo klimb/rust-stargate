@@ -1,4 +1,4 @@
-// spell-checker:ignore (strings) anychar combinator Alnum Punct Xdigit alnum punct xdigit cntrl
+
 
 use crate::unicode_table;
 use nom::{
@@ -16,7 +16,7 @@ use std::{
     fmt::{Debug, Display},
     io::{BufRead, Write},
 };
-use sgcore::error::{FromIo, UError, UResult};
+use sgcore::error::{FromIo, SGError, SGResult};
 use sgcore::translate;
 
 use sgcore::show_warning;
@@ -124,7 +124,7 @@ impl Display for BadSequence {
 }
 
 impl Error for BadSequence {}
-impl UError for BadSequence {}
+impl SGError for BadSequence {}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Class {
@@ -165,21 +165,19 @@ impl Sequence {
                 Class::Control => Box::new((0..=31).chain(std::iter::once(127))),
                 Class::Digit => Box::new(b'0'..=b'9'),
                 Class::Graph => Box::new(
-                    (48..=57) // digit
-                        .chain(65..=90) // uppercase
-                        .chain(97..=122) // lowercase
-                        // punctuations
+                    (48..=57)
+                        .chain(65..=90)
+                        .chain(97..=122)
                         .chain(33..=47)
                         .chain(58..=64)
                         .chain(91..=96)
                         .chain(123..=126)
-                        .chain(std::iter::once(32)), // space
+                        .chain(std::iter::once(32)),
                 ),
                 Class::Print => Box::new(
-                    (48..=57) // digit
-                        .chain(65..=90) // uppercase
-                        .chain(97..=122) // lowercase
-                        // punctuations
+                    (48..=57)
+                        .chain(65..=90)
+                        .chain(97..=122)
                         .chain(33..=47)
                         .chain(58..=64)
                         .chain(91..=96)
@@ -194,7 +192,6 @@ impl Sequence {
         }
     }
 
-    // Hide all the nasty sh*t in here
     pub fn solve_set_characters(
         set1_str: &[u8],
         set2_str: &[u8],
@@ -239,7 +236,6 @@ impl Sequence {
             .count();
 
         let star_compensate_len = set1_len.saturating_sub(set2_len);
-        //Replace CharStar with CharRepeat
         set2 = set2
             .iter()
             .filter_map(|s| match s {
@@ -249,7 +245,6 @@ impl Sequence {
             })
             .collect();
 
-        // For every upper/lower in set2, there must be an upper/lower in set1 at the same position. The position is calculated by expanding everything before the upper/lower in both sets
         for (set2_pos, set2_item) in set2.iter().enumerate() {
             if matches!(set2_item, Self::Class(_)) {
                 let mut set2_part_solved_len = 0;
@@ -282,15 +277,10 @@ impl Sequence {
 
         let set2_solved: Vec<_> = set2.iter().flat_map(Self::flatten).collect();
 
-        // Calculate the set of unique characters in set2
         let mut set2_uniques = set2_solved.clone();
         set2_uniques.sort_unstable();
         set2_uniques.dedup();
 
-        // If the complement flag is used in translate mode, only one unique
-        // character may appear in set2. Validate this with the set of uniques
-        // in set2 that we just generated.
-        // Also, set2 must not overgrow set1, otherwise the mapping can't be 1:1.
         if set1.iter().any(|x| matches!(x, Self::Class(_)))
             && translating
             && complement_flag
@@ -308,7 +298,6 @@ impl Sequence {
         {
             return Err(BadSequence::Set1LongerSet2EndsInClass);
         }
-        //Truncation is done dead last. It has no influence on the other conversion steps
         if truncate_set1_flag {
             set1_solved.truncate(set2_solved.len());
         }
@@ -324,7 +313,6 @@ impl Sequence {
             Self::parse_char_repeat,
             Self::parse_class,
             Self::parse_char_equal,
-            // NOTE: This must be the last one
             map(Self::parse_backslash_or_char_with_warning, |s| {
                 Ok(Self::Char(s))
             })
@@ -337,8 +325,6 @@ impl Sequence {
     }
 
     fn parse_octal(input: &[u8]) -> IResult<&[u8], u8> {
-        // For `parse_char_range`, `parse_char_star`, `parse_char_repeat`, `parse_char_equal`.
-        // Because in these patterns, there's no ambiguous cases.
         preceded(tag("\\"), Self::parse_octal_up_to_three_digits).parse(input)
     }
 
@@ -347,9 +333,6 @@ impl Sequence {
             tag("\\"),
             alt((
                 Self::parse_octal_up_to_three_digits_with_warning,
-                // Fallback for if the three digit octal escape is greater than \377 (0xFF), and therefore can't be
-                // parsed as as a byte
-                // See test `test_multibyte_octal_sequence`
                 Self::parse_octal_two_digits
             ))
         )
@@ -465,9 +448,6 @@ impl Sequence {
             separated_pair(
                 Self::parse_backslash_or_char,
                 tag("*"),
-                // TODO
-                // Why are the opening and closing tags not sufficient?
-                // Backslash check is a workaround for `check_against_gnu_tr_tests_repeat_bs_9`
                 take_till(|ue| matches!(ue, b']' | b'\\'))
             ),
             tag("]")
@@ -605,7 +585,6 @@ impl DeleteOperation {
 
 impl SymbolTranslator for DeleteOperation {
     fn translate(&mut self, current: u8) -> Option<u8> {
-        // keep if not present in the delete set
         (!self.delete_table[current as usize]).then_some(current)
     }
 }
@@ -614,13 +593,11 @@ impl ChunkProcessor for DeleteOperation {
     fn process_chunk(&self, input: &[u8], output: &mut Vec<u8>) {
         use crate::simd::{find_single_change, process_single_delete};
 
-        // Check if this is single character deletion
         if let Some((delete_char, _)) =
             find_single_change(&self.delete_table, |_, &should_delete| should_delete)
         {
             process_single_delete(input, output, delete_char);
         } else {
-            // Standard deletion
             output.extend(
                 input
                     .iter()
@@ -638,11 +615,9 @@ pub struct TranslateOperation {
 
 impl TranslateOperation {
     pub fn new(set1: Vec<u8>, set2: Vec<u8>) -> Result<Self, BadSequence> {
-        // Initialize translation table with identity mapping
         let mut translation_table = std::array::from_fn(|i| i as u8);
 
         if let Some(fallback) = set2.last().copied() {
-            // Apply translations from set1 to set2
             for (from, to) in set1
                 .into_iter()
                 .zip(set2.into_iter().chain(std::iter::repeat(fallback)))
@@ -652,7 +627,6 @@ impl TranslateOperation {
 
             Ok(Self { translation_table })
         } else if set1.is_empty() && set2.is_empty() {
-            // Identity mapping for empty sets
             Ok(Self { translation_table })
         } else {
             Err(BadSequence::EmptySet2WhenNotTruncatingSet1)
@@ -670,14 +644,11 @@ impl ChunkProcessor for TranslateOperation {
     fn process_chunk(&self, input: &[u8], output: &mut Vec<u8>) {
         use crate::simd::{find_single_change, process_single_char_replace};
 
-        // Check if this is a simple single-character translation
         if let Some((source, target)) =
             find_single_change(&self.translation_table, |i, &val| val != i as u8)
         {
-            // Use SIMD-optimized single character replacement
             process_single_char_replace(input, output, source, target);
         } else {
-            // Standard translation using table lookup
             output.extend(input.iter().map(|&b| self.translation_table[b as usize]));
         }
     }
@@ -713,25 +684,24 @@ impl SymbolTranslator for SqueezeOperation {
     }
 }
 
-pub fn translate_input<T, R, W>(input: &mut R, output: &mut W, mut translator: T) -> UResult<()>
+pub fn translate_input<T, R, W>(input: &mut R, output: &mut W, mut translator: T) -> SGResult<()>
 where
     T: SymbolTranslator,
     R: BufRead,
     W: Write,
 {
-    const BUFFER_SIZE: usize = 32768; // Large buffer for better throughput
+    const BUFFER_SIZE: usize = 32768;
     let mut buf = [0; BUFFER_SIZE];
     let mut output_buf = Vec::with_capacity(BUFFER_SIZE);
 
     loop {
         let length = match input.read(&mut buf[..]) {
-            Ok(0) => break, // EOF reached
+            Ok(0) => break,
             Ok(len) => len,
             Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
             Err(e) => return Err(e.map_err_context(|| translate!("tr-error-read-error"))),
         };
 
-        // Process the buffer and collect translated chars to output
         output_buf.clear();
         for &byte in &buf[..length] {
             if let Some(translated) = translator.translate(byte) {
@@ -749,8 +719,9 @@ where
 
 /// Platform-specific flush operation
 #[inline]
-pub fn flush_output<W: Write>(output: &mut W) -> UResult<()> {
+pub fn flush_output<W: Write>(output: &mut W) -> SGResult<()> {
     return output
         .flush()
         .map_err_context(|| translate!("tr-error-write-error"));
 }
+

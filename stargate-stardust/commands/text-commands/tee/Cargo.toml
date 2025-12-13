@@ -1,6 +1,6 @@
 [package]
 name = "sg_tee"
-description = "tee ~ (uutils) display input and copy to FILE"
+description = "tee ~ (stargate) display input and copy to FILE"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

@@ -1,23 +1,21 @@
-#![allow(unused_must_use)] // because we of writeln!
+#![allow(unused_must_use)]
 
-// spell-checker:ignore (ToDO) lstat
 use clap::{Arg, ArgAction, Command};
 use std::ffi::OsString;
 use std::fs;
 use std::io::{ErrorKind, Write};
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, UUsageError, set_exit_code};
+use sgcore::error::{SGResult, SGUsageError, set_exit_code};
 use sgcore::format_usage;
 use sgcore::translate;
 use sgcore::stardust_output::{self, StardustOutputOptions};
 use serde_json::json;
 
-// operating mode
 enum Mode {
-    Default, // use filesystem to determine information and limits
-    Basic,   // check basic compatibility with POSIX
-    Extra,   // check for leading dashes and empty names
-    Both,    // a combination of `Basic` and `Extra`
+    Default,
+    Basic,
+    Extra,
+    Both,
 }
 
 mod options {
@@ -27,21 +25,18 @@ mod options {
     pub const PATH: &str = "path";
 }
 
-// a few global constants as used in the GNU implementation
 const POSIX_PATH_MAX: usize = 256;
 const POSIX_NAME_MAX: usize = 14;
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
     let mut opts = StardustOutputOptions::from_matches(&matches);
-    // Stardust output is the default for this command
     if !matches.contains_id("stardust_output") {
         opts.stardust_output = true;
     }
 
-    // set working mode
     let is_posix = matches.get_flag(options::POSIX);
     let is_posix_special = matches.get_flag(options::POSIX_SPECIAL);
     let is_portability = matches.get_flag(options::PORTABILITY);
@@ -56,17 +51,14 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         Mode::Default
     };
 
-    // take necessary actions
     let paths = matches.get_many::<OsString>(options::PATH);
     if paths.is_none() {
-        return Err(UUsageError::new(
+        return Err(SGUsageError::new(
             1,
             translate!("pathchk-error-missing-operand")
         ));
     }
 
-    // free strings are path operands
-    // FIXME: TCS, seems inefficient and overly verbose (?)
     let mut res = true;
     let mut path_results = Vec::new();
 
@@ -78,7 +70,7 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         }
         let is_valid = check_path(&mode, &path);
         res &= is_valid;
-        
+
         if opts.stardust_output {
             path_results.push(json!({
                 "path": path_str,
@@ -101,7 +93,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
         stardust_output::output(opts, output, || Ok(()))?;
     }
 
-    // determine error code
     if !res {
         set_exit_code(1);
     }
@@ -140,7 +131,7 @@ pub fn sg_app() -> Command {
                 .value_hint(clap::ValueHint::AnyPath)
                 .value_parser(clap::value_parser!(OsString))
         );
-    
+
     stardust_output::add_json_args(cmd)
 }
 
@@ -158,7 +149,6 @@ fn check_path(mode: &Mode, path: &[String]) -> bool {
 fn check_basic(path: &[String]) -> bool {
     let joined_path = path.join("/");
     let total_len = joined_path.len();
-    // path length
     if total_len > POSIX_PATH_MAX {
         writeln!(
             std::io::stderr(),
@@ -174,7 +164,6 @@ fn check_basic(path: &[String]) -> bool {
         );
         return false;
     }
-    // components: character portability and length
     for p in path {
         let component_len = p.len();
         if component_len > POSIX_NAME_MAX {
@@ -189,13 +178,11 @@ fn check_basic(path: &[String]) -> bool {
             return false;
         }
     }
-    // permission checks
     check_searchable(&joined_path)
 }
 
 /// check a path in extra compatibility mode
 fn check_extra(path: &[String]) -> bool {
-    // components: leading hyphens
     for p in path {
         if p.starts_with('-') {
             writeln!(
@@ -206,7 +193,6 @@ fn check_extra(path: &[String]) -> bool {
             return false;
         }
     }
-    // path length
     if path.join("/").is_empty() {
         writeln!(
             std::io::stderr(),
@@ -222,7 +208,6 @@ fn check_extra(path: &[String]) -> bool {
 fn check_default(path: &[String]) -> bool {
     let joined_path = path.join("/");
     let total_len = joined_path.len();
-    // path length
     if total_len > libc::PATH_MAX as usize {
         writeln!(
             std::io::stderr(),
@@ -232,10 +217,6 @@ fn check_default(path: &[String]) -> bool {
         return false;
     }
     if total_len == 0 {
-        // Check whether a file name component is in a directory that is not searchable,
-        // or has some other serious problem. POSIX does not allow "" as a file name,
-        // but some non-POSIX hosts do (as an alias for "."),
-        // so allow "" if `symlink_metadata` (corresponds to `lstat`) does.
         if fs::symlink_metadata(&joined_path).is_err() {
             writeln!(
                 std::io::stderr(),
@@ -246,7 +227,6 @@ fn check_default(path: &[String]) -> bool {
         }
     }
 
-    // components: length
     for p in path {
         let component_len = p.len();
         if component_len > libc::FILENAME_MAX as usize {
@@ -258,13 +238,11 @@ fn check_default(path: &[String]) -> bool {
             return false;
         }
     }
-    // permission checks
     check_searchable(&joined_path)
 }
 
 /// check whether a path is or if other problems arise
 fn check_searchable(path: &str) -> bool {
-    // we use lstat, just like the original implementation
     match fs::symlink_metadata(path) {
         Ok(_) => true,
         Err(e) => {
@@ -294,3 +272,4 @@ fn check_portable_chars(path_segment: &str) -> bool {
     }
     true
 }
+

@@ -1,4 +1,4 @@
-// spell-checker:ignore (vars) egid euid FiletestOp StrlenOp
+
 
 pub(crate) mod error;
 mod parser;
@@ -10,22 +10,13 @@ use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 use sgcore::display::Quotable;
-use sgcore::error::{UResult, USimpleError};
+use sgcore::error::{SGResult, SGSimpleError};
 use sgcore::format_usage;
 use sgcore::process::{getegid, geteuid};
 
 use sgcore::translate;
 
-// The help_usage method replaces util name (the first word) with {}.
-// And, The format_usage method replaces {} with execution_phrase ( e.g. test or [ ).
-// However, This test command has two util names.
-// So, we use test or [ instead of {} so that the usage string is correct.
-
-// We use after_help so that this comes after the usage string (it would come before if we used about)
-
 pub fn sg_app() -> Command {
-    // Disable printing of -h and -v as valid alternatives for --help and --version,
-    // since we don't recognize -h and -v as help/version flags.
     Command::new(sgcore::util_name())
         .version(sgcore::crate_version!())
         .help_template(sgcore::localized_help_template(sgcore::util_name()))
@@ -35,14 +26,13 @@ pub fn sg_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(mut args: impl sgcore::Args) -> SGResult<()> {
     let program = args.next().unwrap_or_else(|| OsString::from("test"));
     let binary_name = sgcore::util_name();
     let mut args: Vec<_> = args.collect();
     sgcore::pledge::apply_pledge(&["stdio", "rpath"])?;
 
     if binary_name.ends_with('[') {
-        // If invoked as [ we should recognize --help and --version (but not -h or -v)
         if args.len() == 1 && (args[0] == "--help" || args[0] == "--version") {
             sgcore::clap_localization::handle_clap_result(
                 sg_app(),
@@ -50,10 +40,9 @@ pub fn sgmain(mut args: impl sgcore::Args) -> UResult<()> {
             )?;
             return Ok(());
         }
-        // If invoked via name '[', matching ']' must be in the last arg
         let last = args.pop();
         if last.as_deref() != Some(OsStr::new("]")) {
-            return Err(USimpleError::new(
+            return Err(SGSimpleError::new(
                 2,
                 translate!("test-error-missing-closing-bracket")
             ));
@@ -174,7 +163,6 @@ fn eval(stack: &mut Vec<Symbol>) -> ParseResult<bool> {
 /// `b` is the left hand side
 /// `op` the operation (ex: -eq, -lt, etc)
 fn integers(a: &OsStr, b: &OsStr, op: &OsStr) -> ParseResult<bool> {
-    // Parse the two inputs
     let a: i128 = a
         .to_str()
         .and_then(|s| s.parse().ok())
@@ -185,7 +173,6 @@ fn integers(a: &OsStr, b: &OsStr, op: &OsStr) -> ParseResult<bool> {
         .and_then(|s| s.parse().ok())
         .ok_or_else(|| ParseError::InvalidInteger(b.quote().to_string()))?;
 
-    // Do the maths
     Ok(match op.to_str() {
         Some("-eq") => a == b,
         Some("-ne") => a != b,
@@ -405,3 +392,4 @@ mod tests {
         assert!(!integers(a, b, OsStr::new("-ne")).unwrap());
     }
 }
+

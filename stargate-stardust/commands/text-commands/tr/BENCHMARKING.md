@@ -7,7 +7,7 @@
 ## Building
 
 ```shell
-cargo build --release --package uu_tr
+cargo build --release --package sg_tr
 ```
 
 ## Basic Benchmarks
@@ -49,7 +49,7 @@ hyperfine --warmup 3 \
 
 ```shell
 #!/bin/bash
-cargo build --release --package uu_tr
+cargo build --release --package sg_tr
 
 echo "=== Translation ==="
 hyperfine 'tr a b < 10mb_input > /dev/null' './target/release/tr a b < 10mb_input > /dev/null'

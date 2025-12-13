@@ -1,6 +1,6 @@
 [package]
 name = "sg_uniq"
-description = "uniq ~ (uutils) filter identical adjacent lines from input"
+description = "uniq ~ (stargate) filter identical adjacent lines from input"
 repository = "https://github.com/klimb/rust-stargate"
 version.workspace = true
 authors.workspace = true

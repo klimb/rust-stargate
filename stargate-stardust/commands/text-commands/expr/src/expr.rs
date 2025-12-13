@@ -6,7 +6,7 @@ use sgcore::os_string_to_vec;
 use sgcore::translate;
 use sgcore::{
     display::Quotable,
-    error::{UError, UResult},
+    error::{SGError, SGResult},
     format_usage,
 };
 
@@ -55,7 +55,7 @@ pub enum ExprError {
     UnsupportedNonUtf8Match(String),
 }
 
-impl UError for ExprError {
+impl SGError for ExprError {
     fn code(&self) -> i32 {
         2
     }
@@ -95,11 +95,9 @@ pub fn sg_app() -> Command {
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
-    // For expr utility we do not want getopts.
-    // The following usage should work without escaping hyphens: `expr -15 = 1 + 2 \* \( 3 - -4 \)`
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let args = args
-        .skip(1) // Skip binary name
+        .skip(1)
         .map(os_string_to_vec)
         .collect::<Result<Vec<_>, _>>()?;
     sgcore::pledge::apply_pledge(&["stdio"])?;
@@ -109,7 +107,6 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
     } else if args.len() == 1 && args[0] == b"--version" {
         println!("{} {}", sgcore::util_name(), sgcore::crate_version!());
     } else {
-        // The first argument may be "--" and should be be ignored.
         let args = if !args.is_empty() && args[0] == b"--" {
             &args[1..]
         } else {
@@ -127,3 +124,4 @@ pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
 
     Ok(())
 }
+

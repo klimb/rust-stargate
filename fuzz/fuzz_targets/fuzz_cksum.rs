@@ -1,4 +1,4 @@
-// spell-checker:ignore chdir
+
 
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -9,7 +9,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::process::Command;
 use sg_cksum::sgmain;
-use uufuzz::{
+use sgfuzz::{
     CommandResult, compare_result, generate_and_run_uumain, generate_random_file,
     generate_random_string,
     pretty_print::{print_or_empty, print_test_begin},
@@ -150,7 +150,6 @@ fuzz_target!(|_data: &[u8]| {
                 }
             };
 
-            // Lower the number of false positives caused by binary names
             replace_fuzz_binary_name("cksum", &mut rust_result);
 
             compare_result(
@@ -164,3 +163,4 @@ fuzz_target!(|_data: &[u8]| {
         }
     }
 });
+

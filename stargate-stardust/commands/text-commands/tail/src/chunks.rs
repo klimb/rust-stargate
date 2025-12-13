@@ -3,12 +3,12 @@
 //!
 //! Use [`ReverseChunks::new`] to create a new iterator over chunks of bytes from the file.
 
-// spell-checker:ignore (ToDO) filehandle BUFSIZ
+
 
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufRead, Read, Seek, SeekFrom, Write};
-use sgcore::error::UResult;
+use sgcore::error::SGResult;
 
 /// When reading files in reverse in `bounded_tail`, this is the size of each
 /// block read at a time.
@@ -63,22 +63,16 @@ impl Iterator for ReverseChunks<'_> {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // If there are no more chunks to read, terminate the iterator.
         if self.block_idx >= self.max_blocks_to_read {
             return None;
         }
 
-        // The chunk size is `BLOCK_SIZE` for all but the last chunk
-        // (that is, the chunk closest to the beginning of the file),
-        // which contains the remainder of the bytes.
         let block_size = if self.block_idx == self.max_blocks_to_read - 1 {
             self.size % BLOCK_SIZE
         } else {
             BLOCK_SIZE
         };
 
-        // Seek backwards by the next chunk, read the full chunk into
-        // `buf`, and then seek back to the start of the chunk again.
         let mut buf = vec![0; BLOCK_SIZE as usize];
         let pos = self
             .file
@@ -203,9 +197,9 @@ impl BytesChunk {
 
     /// Fills `self.buffer` with maximal [`BUFFER_SIZE`] number of bytes, draining the reader by
     /// that number of bytes. If EOF is reached (so 0 bytes are read), it returns
-    /// [`UResult<None>`]; otherwise, it returns [`UResult<Some(bytes)>`], where bytes is the
+    /// [`SGResult<None>`]; otherwise, it returns [`SGResult<Some(bytes)>`], where bytes is the
     /// number of bytes read from the source.
-    pub fn fill(&mut self, filehandle: &mut impl BufRead) -> UResult<Option<usize>> {
+    pub fn fill(&mut self, filehandle: &mut impl BufRead) -> SGResult<Option<usize>> {
         let num_bytes = filehandle.read(&mut self.buffer)?;
         self.bytes = num_bytes;
         if num_bytes == 0 {
@@ -280,10 +274,9 @@ impl BytesChunkBuffer {
     /// let mut chunks = BytesChunkBuffer::new(num_print);
     /// chunks.fill(&mut reader).unwrap();
     /// ```
-    pub fn fill(&mut self, reader: &mut impl BufRead) -> UResult<()> {
+    pub fn fill(&mut self, reader: &mut impl BufRead) -> SGResult<()> {
         let mut chunk = Box::new(BytesChunk::new());
 
-        // fill chunks with all bytes from reader and reuse already instantiated chunks if possible
         while chunk.fill(reader)?.is_some() {
             self.bytes += chunk.bytes as u64;
             self.chunks.push_back(chunk.clone());
@@ -297,16 +290,12 @@ impl BytesChunkBuffer {
             }
         }
 
-        // quit early if there are no chunks for example in case the pipe was empty
         if self.chunks.is_empty() {
             return Ok(());
         }
 
         let chunk = self.chunks.pop_front().unwrap();
 
-        // calculate the offset in the first chunk and put the calculated chunk as first element in
-        // the self.chunks collection. The calculated offset must be in the range 0 to BUFFER_SIZE
-        // and is therefore safely convertible to a usize without losses.
         let offset = self.bytes.saturating_sub(self.num_print) as usize;
         self.chunks
             .push_front(Box::new(BytesChunk::from_chunk(&chunk, offset)));
@@ -314,7 +303,7 @@ impl BytesChunkBuffer {
         Ok(())
     }
 
-    pub fn print(&self, writer: &mut impl Write) -> UResult<()> {
+    pub fn print(&self, writer: &mut impl Write) -> SGResult<()> {
         for chunk in &self.chunks {
             writer.write_all(chunk.get_buffer())?;
         }
@@ -453,7 +442,7 @@ impl LinesChunk {
     /// that number of bytes. This function works like the [`BytesChunk::fill`] function besides
     /// that this function also counts and stores the number of lines encountered while reading from
     /// the `filehandle`.
-    pub fn fill(&mut self, filehandle: &mut impl BufRead) -> UResult<Option<usize>> {
+    pub fn fill(&mut self, filehandle: &mut impl BufRead) -> SGResult<Option<usize>> {
         match self.chunk.fill(filehandle)? {
             None => {
                 self.lines = 0;
@@ -509,7 +498,7 @@ impl LinesChunk {
     ///
     /// * `writer`: must implement [`Write`]
     /// * `offset`: An offset in number of lines.
-    pub fn print_lines(&self, writer: &mut impl Write, offset: usize) -> UResult<()> {
+    pub fn print_lines(&self, writer: &mut impl Write, offset: usize) -> SGResult<()> {
         self.print_bytes(writer, self.calculate_bytes_offset_from(offset))
     }
 
@@ -519,7 +508,7 @@ impl LinesChunk {
     ///
     /// * `writer`: must implement [`Write`]
     /// * `offset`: An offset in number of bytes.
-    pub fn print_bytes(&self, writer: &mut impl Write, offset: usize) -> UResult<()> {
+    pub fn print_bytes(&self, writer: &mut impl Write, offset: usize) -> SGResult<()> {
         writer.write_all(self.get_buffer_with(offset))?;
         Ok(())
     }
@@ -557,7 +546,7 @@ impl LinesChunkBuffer {
     /// in sum exactly `self.num_print` lines stored in all chunks. The method returns an iterator
     /// over these chunks. If there are no chunks, for example because the piped stdin contained no
     /// lines, or `num_print = 0` then `iterator.next` will return None.
-    pub fn fill(&mut self, reader: &mut impl BufRead) -> UResult<()> {
+    pub fn fill(&mut self, reader: &mut impl BufRead) -> SGResult<()> {
         let mut chunk = Box::new(LinesChunk::new(self.delimiter));
 
         while chunk.fill(reader)?.is_some() {
@@ -575,7 +564,6 @@ impl LinesChunkBuffer {
         }
 
         if self.chunks.is_empty() {
-            // chunks is empty when a file is empty so quitting early here
             return Ok(());
         }
 
@@ -586,14 +574,9 @@ impl LinesChunkBuffer {
             self.lines += 1;
         }
 
-        // skip unnecessary chunks and save the first chunk which may hold some lines we have to
-        // print
         let chunk = loop {
-            // it's safe to call unwrap here because there is at least one chunk and sorting out
-            // more chunks than exist shouldn't be possible.
             let chunk = self.chunks.pop_front().unwrap();
 
-            // skip is true as long there are enough lines left in the other stored chunks.
             let skip = self.lines - chunk.lines as u64 > self.num_print;
             if skip {
                 self.lines -= chunk.lines as u64;
@@ -602,9 +585,6 @@ impl LinesChunkBuffer {
             }
         };
 
-        // Calculate the number of lines to skip in the current chunk. The calculated value must be
-        // in the range 0 to BUFFER_SIZE and is therefore safely convertible to a usize without
-        // losses.
         let skip_lines = self.lines.saturating_sub(self.num_print) as usize;
         let chunk = LinesChunk::from_chunk(&chunk, skip_lines);
         self.chunks.push_front(Box::new(chunk));
@@ -612,7 +592,7 @@ impl LinesChunkBuffer {
         Ok(())
     }
 
-    pub fn print(&self, mut writer: impl Write) -> UResult<()> {
+    pub fn print(&self, mut writer: impl Write) -> SGResult<()> {
         for chunk in &self.chunks {
             chunk.print_bytes(&mut writer, 0)?;
         }
@@ -697,3 +677,4 @@ mod tests {
         assert_eq!(0, new_chunk.bytes);
     }
 }
+

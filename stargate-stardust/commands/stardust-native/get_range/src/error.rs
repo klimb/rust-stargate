@@ -1,9 +1,10 @@
-// spell-checker:ignore numberparse
+
 //! Errors returned by seq.
+
 use crate::numberparse::ParseNumberError;
 use thiserror::Error;
 use sgcore::display::Quotable;
-use sgcore::error::UError;
+use sgcore::error::SGError;
 use sgcore::translate;
 
 #[derive(Debug, Error)]
@@ -41,7 +42,7 @@ fn parse_error_type(e: &ParseNumberError) -> String {
     }
 }
 
-impl UError for SeqError {
+impl SGError for SeqError {
     /// Always return 1.
     fn code(&self) -> i32 {
         1
@@ -51,3 +52,4 @@ impl UError for SeqError {
         true
     }
 }
+

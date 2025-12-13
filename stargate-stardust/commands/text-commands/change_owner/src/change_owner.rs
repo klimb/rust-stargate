@@ -1,4 +1,4 @@
-// spell-checker:ignore (ToDO) COMFOLLOW Passwd RFILE RFILE's derefer dgid duid groupname
+
 
 use sgcore::display::Quotable;
 pub use sgcore::entries::{self, Group, Locate, Passwd};
@@ -6,14 +6,14 @@ use sgcore::format_usage;
 use sgcore::perms::{GidUidOwnerFilter, IfFrom, chown_base, options};
 use sgcore::translate;
 
-use sgcore::error::{FromIo, UResult, USimpleError};
+use sgcore::error::{FromIo, SGResult, SGSimpleError};
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 
-fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> {
+fn parse_gid_uid_and_filter(matches: &ArgMatches) -> SGResult<GidUidOwnerFilter> {
     let filter = if let Some(spec) = matches.get_one::<String>(options::FROM) {
         match parse_spec(spec, ':')? {
             (Some(uid), None) => IfFrom::User(uid),
@@ -59,7 +59,7 @@ fn parse_gid_uid_and_filter(matches: &ArgMatches) -> UResult<GidUidOwnerFilter> 
 }
 
 #[sgcore::main]
-pub fn sgmain(args: impl sgcore::Args) -> UResult<()> {
+pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "fattr"])?;
     chown_base(
         sg_app(),
@@ -142,31 +142,23 @@ pub fn sg_app() -> Command {
                 .help(translate!("change_owner-help-verbose"))
                 .action(ArgAction::SetTrue)
         )
-        // Add common arguments with chgrp, change_owner & chmod
         .args(sgcore::perms::common_args())
 }
 
 /// Parses the user string to extract the UID.
-fn parse_uid(user: &str, spec: &str, sep: char) -> UResult<Option<u32>> {
+fn parse_uid(user: &str, spec: &str, sep: char) -> SGResult<Option<u32>> {
     if user.is_empty() {
         return Ok(None);
     }
     match Passwd::locate(user) {
-        Ok(u) => Ok(Some(u.uid)), // We have been able to get the uid
+        Ok(u) => Ok(Some(u.uid)),
         Err(_) => {
-            // we have NOT been able to find the uid
-            // but we could be in the case where we have user.group
             if spec.contains('.') && !spec.contains(':') && sep == ':' {
-                // but the input contains a '.' but not a ':'
-                // we might have something like username.groupname
-                // So, try to parse it this way
                 parse_spec(spec, '.').map(|(uid, _)| uid)
             } else {
-                // It's possible that the `user` string contains a
-                // numeric user ID, in which case, we respect that.
                 match user.parse() {
                     Ok(uid) => Ok(Some(uid)),
-                    Err(_) => Err(USimpleError::new(
+                    Err(_) => Err(SGSimpleError::new(
                         1,
                         translate!("change_owner-error-invalid-user", "user" => spec.quote())
                     )),
@@ -177,7 +169,7 @@ fn parse_uid(user: &str, spec: &str, sep: char) -> UResult<Option<u32>> {
 }
 
 /// Parses the group string to extract the GID.
-fn parse_gid(group: &str, spec: &str) -> UResult<Option<u32>> {
+fn parse_gid(group: &str, spec: &str) -> SGResult<Option<u32>> {
     if group.is_empty() {
         return Ok(None);
     }
@@ -185,7 +177,7 @@ fn parse_gid(group: &str, spec: &str) -> UResult<Option<u32>> {
         Ok(g) => Ok(Some(g.gid)),
         Err(_) => match group.parse() {
             Ok(gid) => Ok(Some(gid)),
-            Err(_) => Err(USimpleError::new(
+            Err(_) => Err(SGSimpleError::new(
                 1,
                 translate!("change_owner-error-invalid-group", "group" => spec.quote())
             )),
@@ -205,7 +197,7 @@ fn parse_gid(group: &str, spec: &str) -> UResult<Option<u32>> {
 /// name. The `sep` argument specifies which character to use as a
 /// separator between the owner and group; calling code should set
 /// this to `':'`.
-fn parse_spec(spec: &str, sep: char) -> UResult<(Option<u32>, Option<u32>)> {
+fn parse_spec(spec: &str, sep: char) -> SGResult<(Option<u32>, Option<u32>)> {
     assert!(['.', ':'].contains(&sep));
     let mut args = spec.splitn(2, sep);
     let user = args.next().unwrap_or("");
@@ -215,9 +207,7 @@ fn parse_spec(spec: &str, sep: char) -> UResult<(Option<u32>, Option<u32>)> {
     let gid = parse_gid(group, spec)?;
 
     if user.chars().next().is_some_and(char::is_numeric) && group.is_empty() && spec != user {
-        // if the arg starts with an id numeric value, the group isn't set but the separator is provided,
-        // we should fail with an error
-        return Err(USimpleError::new(
+        return Err(SGSimpleError::new(
             1,
             translate!("change_owner-error-invalid-spec", "spec" => spec.quote())
         ));
@@ -248,9 +238,7 @@ mod test {
     /// Test for parsing IDs that don't correspond to a named user or group.
     #[test]
     fn test_parse_spec_nameless_ids() {
-        // This assumes that there is no named user with ID 12345.
         assert!(matches!(parse_spec("12345", ':'), Ok((Some(12345), None))));
-        // This assumes that there is no named group with ID 54321.
         assert!(matches!(parse_spec(":54321", ':'), Ok((None, Some(54321)))));
         assert!(matches!(
             parse_spec("12345:54321", ':'),
@@ -258,3 +246,4 @@ mod test {
         ));
     }
 }
+
