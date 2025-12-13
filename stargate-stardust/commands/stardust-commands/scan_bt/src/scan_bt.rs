@@ -1,14 +1,15 @@
 // Copyright (C) 2025 Dmitry Kalashnikov
-
 use clap::{Arg, ArgMatches, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(target_os = "macos")]
 use std::process::Command as ProcessCommand;
 use sgcore::{
     error::{UResult, USimpleError},
     format_usage,
     stardust_output::{self, StardustOutputOptions},
 };
+
+use crate::manufacturers::get_manufacturer_name;
 
 static TIMEOUT_ARG: &str = "timeout";
 static NO_VERBOSE_ARG: &str = "no-verbose";
@@ -37,7 +38,7 @@ struct BluetoothDevice {
     #[serde(skip_serializing_if = "Option::is_none")]
     appearance: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    likely_iphone: Option<bool>,
+    manufacturer: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -174,7 +175,11 @@ fn produce(matches: &ArgMatches) -> UResult<()> {
         let mut devices = devices;
         devices.sort_by(|a, b| a.address.cmp(&b.address));
         for device in devices {
-            println!("{} ({})", device.name, device.address);
+            if let Some(ref manufacturer) = device.manufacturer {
+                println!("{} ({}) - {}", device.name, device.address, manufacturer);
+            } else {
+                println!("{} ({})", device.name, device.address);
+            }
         }
     }
     
@@ -248,8 +253,15 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
                     devices.push(BluetoothDevice {
                         name,
                         address,
-                        rssi,
+                        advertised_name: None,
                         device_type: None,
+                        address_type: None,
+                        tx_power: None,
+                        services: vec![],
+                        manufacturer_data: None,
+                        service_data: None,
+                        appearance: None,
+                        manufacturer: None,
                     });
                 }
             }
@@ -282,8 +294,15 @@ fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice>
             devices.push(BluetoothDevice {
                 name,
                 address,
-                rssi: None,
+                advertised_name: None,
                 device_type,
+                address_type: None,
+                tx_power: None,
+                services: vec![],
+                manufacturer_data: None,
+                service_data: None,
+                appearance: None,
+                manufacturer: None,
             });
         }
     }
@@ -380,7 +399,6 @@ fn scan_bluetooth_macos() -> UResult<Vec<BluetoothDevice>> {
 fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
     use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
     use btleplug::platform::Manager;
-    use uuid::Uuid;
     
     eprintln!("scanning for bluetooth devices ({}s)...", timeout);
     
@@ -461,15 +479,17 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
                     if map.is_empty() { None } else { Some(map) }
                 };
 
-                let mut likely_iphone = None;
+                let mut manufacturer = None;
+                
                 if let Some(ref m) = manufacturer_data {
-                    if m.contains_key("004c") {
-                        if name == "unknown" {
-                            name = "apple device".to_string();
+                    if let Some((id_str, _)) = m.iter().next() {
+                        if let Ok(company_id) = u16::from_str_radix(id_str, 16) {
+                            manufacturer = get_manufacturer_name(company_id).map(|s| s.to_string());
+                            
+                            if name == "unknown" && manufacturer.is_some() {
+                                name = format!("{} device", manufacturer.as_ref().unwrap().to_lowercase());
+                            }
                         }
-                        use btleplug::api::AddressType;
-                        let is_random_addr = matches!(props.address_type, Some(AddressType::Random));
-                        likely_iphone = Some(is_random_addr);
                     }
                 }
 
@@ -484,7 +504,7 @@ fn scan_bluetooth_linux(timeout: u32) -> UResult<Vec<BluetoothDevice>> {
                     manufacturer_data,
                     service_data,
                     appearance: None,
-                    likely_iphone,
+                    manufacturer,
                 });
             }
         }
