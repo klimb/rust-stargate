@@ -124,6 +124,10 @@ PROGS       := \
 	rm \
 	rmdir \
 	get_range \
+	scan-arp \
+	scan-bt \
+	scan-neighbors \
+	scan-radio \
 	shred \
 	shuf \
 	sleep \
