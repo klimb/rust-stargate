@@ -155,7 +155,9 @@ mod tests {
 
         copy_xattrs(&source_path, &dest_path).unwrap();
 
-        let copied_value = xattr::get(&dest_path, test_attr).unwrap().unwrap();
+        let copied_value = xattr::get(&dest_path, test_attr)
+            .expect("failed to get xattr")
+            .expect("xattr value is None");
         assert_eq!(copied_value, test_value);
     }
 
