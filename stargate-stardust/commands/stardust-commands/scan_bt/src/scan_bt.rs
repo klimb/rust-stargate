@@ -14,12 +14,24 @@ use sgcore::{
 use crate::manufacturers::{get_manufacturer_name, decode_manufacturer_data};
 #[cfg(target_os = "linux")]
 use crate::manufacturer_capability::detect_capabilities;
+#[cfg(target_os = "linux")]
+use crate::bluetooth_specs::{decode_service_uuid, decode_appearance, rssi_to_quality};
 
 static TIMEOUT_ARG: &str = "timeout";
 static NO_VERBOSE_ARG: &str = "no-verbose";
 
 const DEFAULT_TIMEOUT_SECONDS: &str = "10";
 const MAX_TIMEOUT_SECONDS: u32 = 60;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ManufacturerInfo {
+    id: String,
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    decoded: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BluetoothDevice {
@@ -33,20 +45,22 @@ struct BluetoothDevice {
     address_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tx_power: Option<i8>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    services: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    manufacturer_data: Option<std::collections::HashMap<String, String>>,
+    rssi: Option<i16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    signal_quality: Option<String>,
+    #[serde(skip_serializing_if = "std::collections::HashMap::is_empty")]
+    services: std::collections::HashMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    manufacturer: Option<ManufacturerInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     service_data: Option<std::collections::HashMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     appearance: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    manufacturer: Option<String>,
+    appearance_name: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     capabilities: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    manufacturer_data_decoded: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -184,10 +198,21 @@ fn produce(matches: &ArgMatches) -> SGResult<()> {
             let mut parts = vec![format!("{} ({})", device.name, device.address)];
 
             if let Some(ref manufacturer) = device.manufacturer {
-                parts.push(manufacturer.clone());
+                parts.push(manufacturer.name.clone());
             }
 
-            if !device.capabilities.is_empty() {
+            if let Some(rssi) = device.rssi {
+                if let Some(ref quality) = device.signal_quality {
+                    parts.push(format!("{} dBm ({})", rssi, quality));
+                } else {
+                    parts.push(format!("{} dBm", rssi));
+                }
+            }
+
+            if !device.services.is_empty() {
+                let service_names: Vec<&String> = device.services.values().collect();
+                parts.push(format!("[Services: {}]", service_names.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")));
+            } else if !device.capabilities.is_empty() {
                 parts.push(format!("[{}]", device.capabilities.join(", ")));
             }
 
@@ -226,7 +251,10 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResul
 
     if !verbose {
         for d in &mut result.devices {
-            d.manufacturer_data = None;
+            if let Some(ref mut mfg) = d.manufacturer {
+                mfg.data = None;
+                mfg.decoded = None;
+            }
             d.service_data = None;
         }
     }
@@ -265,11 +293,13 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
                         device_type: None,
                         address_type: None,
                         tx_power: None,
-                        services: vec![],
-                        manufacturer_data: None,
+                        rssi: None,
+                        signal_quality: None,
+                        services: std::collections::HashMap::new(),
+                        manufacturer: None,
                         service_data: None,
                         appearance: None,
-                        manufacturer: None,
+                        appearance_name: None,
                         capabilities: vec![],
                         manufacturer_data_decoded: None,
                     });
@@ -308,13 +338,14 @@ fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice>
                 device_type,
                 address_type: None,
                 tx_power: None,
-                services: vec![],
-                manufacturer_data: None,
+                rssi: None,
+                signal_quality: None,
+                services: std::collections::HashMap::new(),
+                manufacturer: None,
                 service_data: None,
                 appearance: None,
-                manufacturer: None,
+                appearance_name: None,
                 capabilities: vec![],
-                manufacturer_data_decoded: None,
             });
         }
     }
@@ -349,13 +380,14 @@ fn parse_connected_devices(conn_array: &serde_json::Value) -> Vec<BluetoothDevic
                 device_type,
                 address_type: None,
                 tx_power: None,
-                services: vec![],
-                manufacturer_data: None,
+                rssi: None,
+                signal_quality: None,
+                services: std::collections::HashMap::new(),
+                manufacturer: None,
                 service_data: None,
                 appearance: None,
-                manufacturer: None,
+                appearance_name: None,
                 capabilities: vec![],
-                manufacturer_data_decoded: None,
             });
         }
     }
@@ -500,21 +532,47 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
                     if map.is_empty() { None } else { Some(map) }
                 };
 
-                let mut manufacturer = None;
-                let mut manufacturer_data_decoded = None;
-
-                if let Some(ref m) = manufacturer_data {
+                let manufacturer = if let Some(ref m) = manufacturer_data {
                     if let Some((id_str, data_hex)) = m.iter().next() {
                         if let Ok(company_id) = u16::from_str_radix(id_str, 16) {
-                            manufacturer = get_manufacturer_name(company_id).map(|s| s.to_string());
-                            manufacturer_data_decoded = decode_manufacturer_data(company_id, data_hex);
+                            let mfg_name = get_manufacturer_name(company_id)
+                                .unwrap_or("Unknown")
+                                .to_string();
+                            let decoded = decode_manufacturer_data(company_id, data_hex);
 
-                            if name == "unknown" && manufacturer.is_some() {
-                                name = format!("{} device", manufacturer.as_ref().unwrap().to_lowercase());
+                            if name == "unknown" {
+                                name = format!("{} device", mfg_name.to_lowercase());
                             }
+
+                            Some(ManufacturerInfo {
+                                id: id_str.clone(),
+                                name: mfg_name,
+                                data: Some(data_hex.clone()),
+                                decoded,
+                            })
+                        } else {
+                            None
                         }
+                    } else {
+                        None
                     }
-                }
+                } else {
+                    None
+                };
+
+                let rssi = props.rssi;
+                let signal_quality = rssi.map(|r| rssi_to_quality(r).to_string());
+                
+                let appearance = None;
+                let appearance_name = appearance.and_then(decode_appearance);
+                
+                let services_map: std::collections::HashMap<String, String> = services.iter()
+                    .map(|uuid| {
+                        let decoded = decode_service_uuid(uuid)
+                            .unwrap_or_else(|| "Unknown".to_string());
+                        (uuid.clone(), decoded)
+                    })
+                    .collect();
 
                 let capabilities = detect_capabilities(&services, tx_power);
 
@@ -525,13 +583,14 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
                     device_type: None,
                     address_type,
                     tx_power,
-                    services,
-                    manufacturer_data,
-                    service_data,
-                    appearance: None,
+                    rssi,
+                    signal_quality,
+                    services: services_map,
                     manufacturer,
+                    service_data,
+                    appearance,
+                    appearance_name,
                     capabilities,
-                    manufacturer_data_decoded,
                 });
             }
         }

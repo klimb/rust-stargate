@@ -37,8 +37,44 @@ pub fn decode_manufacturer_data(company_id: u16, data: &str) -> Option<String> {
         0x00E0 => decode_google_data(data),
         0x0075 => Some("Samsung Smart Beacon".to_string()),
         0xFE95 => Some("Xiaomi MiBeacon".to_string()),
+        0x2400 => decode_charger_beacon(data),
         _ => None,
     }
+}
+
+fn decode_charger_beacon(hex_str: &str) -> Option<String> {
+    if hex_str.len() < 44 {
+        return None;
+    }
+    
+    let mut data_bytes = Vec::new();
+    for i in (0..hex_str.len()).step_by(2) {
+        if i + 2 <= hex_str.len() {
+            let byte = u8::from_str_radix(&hex_str[i..i+2], 16).ok()?;
+            data_bytes.push(byte);
+        }
+    }
+    
+    if data_bytes.len() < 22 {
+        return None;
+    }
+    
+    let msg_type = data_bytes[0];
+    
+    let mac1 = format!("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        data_bytes[2], data_bytes[3], data_bytes[4], 
+        data_bytes[5], data_bytes[6], data_bytes[7]);
+    
+    let mac2 = format!("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        data_bytes[8], data_bytes[9], data_bytes[10], 
+        data_bytes[11], data_bytes[12], data_bytes[13]);
+    
+    let own_mac = format!("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        data_bytes[16], data_bytes[17], data_bytes[18], 
+        data_bytes[19], data_bytes[20], data_bytes[21]);
+    
+    Some(format!("Charger Beacon (type 0x{:02x}): paired devices [{}, {}], own MAC [{}]", 
+        msg_type, mac1, mac2, own_mac))
 }
 
 fn decode_apple_data(hex: &str) -> Option<String> {
