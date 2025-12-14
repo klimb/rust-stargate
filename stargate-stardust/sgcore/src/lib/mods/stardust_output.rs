@@ -152,6 +152,33 @@ pub fn print_schema(schema: JsonValue) -> std::io::Result<()> {
     Ok(())
 }
 
+#[macro_export]
+macro_rules! schema {
+    // With descriptions: name => type, description
+    ($($name:expr => $type:expr, $desc:expr);* $(;)?) => {
+        $crate::stardust_output::create_schema(vec![
+            $(($name, $type, Some($desc)),)*
+        ])
+    };
+    // Without descriptions: name => type
+    ($($name:expr => $type:expr);* $(;)?) => {
+        $crate::stardust_output::create_schema(vec![
+            $(($name, $type, None),)*
+        ])
+    };
+}
+
+/// Handle --schema flag in stardust common command-line params
+pub fn self_describe(matches: &clap::ArgMatches, schema: JsonValue) -> crate::error::SGResult<bool> {
+    if matches.get_flag(ARG_SCHEMA) {
+        print_schema(schema)
+            .map_err(|e| crate::error::SGSimpleError::new(1, e.to_string()))?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
