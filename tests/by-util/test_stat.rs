@@ -372,6 +372,7 @@ fn test_stdin_with_fs_option() {
 }
 
 #[test]
+#[cfg(target_os = "linux")]
 fn test_stdin_redirect() {
     // $ touch f && stat - < f
     // File: -

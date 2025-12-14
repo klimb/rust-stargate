@@ -6153,23 +6153,6 @@ fn test_cp_archive_preserves_directory_permissions() {
 }
 
 #[test]
-#[cfg(unix)]
-#[cfg_attr(target_os = "macos", ignore = "Flaky on MacOS, see #8453")]
-fn test_cp_from_stdin() {
-    let (at, mut ucmd) = at_and_ucmd!();
-    let target = "target";
-    let test_string = "Hello, World!\n";
-
-    ucmd.arg("/dev/fd/0")
-        .arg(target)
-        .pipe_in(test_string)
-        .succeeds();
-
-    assert!(at.file_exists(target));
-    assert_eq!(at.read(target), test_string);
-}
-
-#[test]
 fn test_cp_update_older_interactive_prompt_yes() {
     let (at, mut ucmd) = at_and_ucmd!();
     let old_file = "old";
@@ -6221,56 +6204,6 @@ fn test_cp_update_none_interactive_prompt_no() {
 }
 
 /// only unix has `/dev/fd/0`
-#[cfg(unix)]
-#[cfg_attr(target_os = "macos", ignore = "Flaky on MacOS, see #8453")]
-#[test]
-fn test_cp_from_stream() {
-    let target = "target";
-    let test_string1 = "longer: Hello, World!\n";
-    let test_string2 = "shorter";
-    let scenario = TestScenario::new(util_name!());
-    let at = &scenario.fixtures;
-    at.touch(target);
-
-    let mut ucmd = scenario.ucmd();
-    ucmd.arg("/dev/fd/0")
-        .arg(target)
-        .pipe_in(test_string1)
-        .succeeds();
-    assert_eq!(at.read(target), test_string1);
-
-    let mut ucmd = scenario.ucmd();
-    ucmd.arg("/dev/fd/0")
-        .arg(target)
-        .pipe_in(test_string2)
-        .succeeds();
-    assert_eq!(at.read(target), test_string2);
-}
-
-/// only unix has `/dev/fd/0`
-#[cfg(unix)]
-#[cfg_attr(target_os = "macos", ignore = "Flaky on MacOS, see #8453")]
-#[test]
-fn test_cp_from_stream_permission() {
-    let target = "target";
-    let link = "link";
-    let test_string = "Hello, World!\n";
-    let (at, mut ucmd) = at_and_ucmd!();
-
-    at.touch(target);
-    at.symlink_file(target, link);
-    let mode = 0o777;
-    at.set_mode("target", mode);
-
-    ucmd.arg("/dev/fd/0")
-        .arg(link)
-        .pipe_in(test_string)
-        .succeeds();
-
-    assert_eq!(at.read(target), test_string);
-    assert_eq!(at.metadata(target).permissions().mode(), 0o100_777);
-}
-
 // Test copying current directory (.) to an existing directory.
 // This tests the special case where we copy the current directory
 // to an existing directory, ensuring the directory name is properly

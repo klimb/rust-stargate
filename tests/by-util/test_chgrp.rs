@@ -208,8 +208,9 @@ fn test_reference() {
 #[test]
 #[cfg(target_vendor = "apple")]
 fn test_reference() {
-    new_ucmd!()
-        .arg("-v")
+    let (at, mut ucmd) = at_and_ucmd!();
+    at.touch("ref_file");
+    ucmd.arg("-v")
         .arg("--reference=ref_file")
         .arg("/etc")
         .fails()

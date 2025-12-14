@@ -351,7 +351,7 @@ pub struct Config {
     dired: bool,
     hyperlink: bool,
     tab_size: usize,
-    object_output: StardustOutputOptions,
+    stardust_options: StardustOutputOptions,
     object_fields: Vec<String>,
 }
 
@@ -1144,7 +1144,7 @@ impl Config {
             dired,
             hyperlink,
             tab_size,
-            object_output: StardustOutputOptions::from_matches(options),
+            stardust_options: StardustOutputOptions::from_matches(options),
             object_fields: if let Some(field) = options.get_one::<String>("object_field") {
                 vec![field.clone()]
             } else if let Some(fields) = options.get_many::<String>("object_fields") {
@@ -2237,7 +2237,7 @@ fn list_json(locs: Vec<&Path>, config: &Config) -> SGResult<()> {
         output = filter_object_fields(&output, &config.object_fields);
     }
 
-    Ok(stardust_output::output(config.object_output, output, || Ok(()))?)
+    Ok(stardust_output::output(config.stardust_options, output, || Ok(()))?)
 }
 
 fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_json::Value {
@@ -2257,7 +2257,7 @@ fn filter_object_fields(value: &serde_json::Value, fields: &[String]) -> serde_j
 #[allow(clippy::cognitive_complexity)]
 pub fn list(locs: Vec<&Path>, config: &Config) -> SGResult<()> {
 
-    if config.object_output.stardust_output {
+    if config.stardust_options.stardust_output {
         return list_json(locs, config);
     }
 

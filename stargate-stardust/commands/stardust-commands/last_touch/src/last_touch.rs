@@ -174,7 +174,7 @@ pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(20);
 
-    if object_output.object_output {
+    if object_output.stardust_output {
         let mut samples = Vec::new();
         for _ in 0..number {
             if let Some(event_info) = get_seconds_since_last_event() {

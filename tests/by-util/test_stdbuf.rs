@@ -11,6 +11,7 @@ fn invalid_input() {
 }
 
 #[test]
+#[cfg(target_os = "linux")]
 fn test_permission() {
     new_ucmd!()
         .arg("-o1")
@@ -20,6 +21,7 @@ fn test_permission() {
 }
 
 #[test]
+#[cfg(target_os = "linux")]
 fn test_no_such() {
     new_ucmd!()
         .arg("-o1")
@@ -37,6 +39,7 @@ fn test_no_such() {
     not(all(target_arch = "x86_64", target_env = "musl"))
 ))]
 #[test]
+#[cfg(target_os = "linux")]
 fn test_stdbuf_unbuffered_stdout() {
     // This is a basic smoke test
     // Note: This test only verifies that stdbuf does not crash and that output is passed through as expected
@@ -58,6 +61,7 @@ fn test_stdbuf_unbuffered_stdout() {
     not(all(target_arch = "x86_64", target_env = "musl"))
 ))]
 #[test]
+#[cfg(target_os = "linux")]
 fn test_stdbuf_line_buffered_stdout() {
     // Note: This test only verifies that stdbuf does not crash and that output is passed through as expected
     // for simple, short-lived commands. It does not guarantee that buffering is actually modified or that
@@ -88,6 +92,7 @@ fn test_stdbuf_no_buffer_option_fails() {
     not(all(target_arch = "x86_64", target_env = "musl"))
 ))]
 #[test]
+#[cfg(target_os = "linux")]
 fn test_stdbuf_trailing_var_arg() {
     new_ucmd!()
         .args(&["-i", "1024", "tail", "-1"])

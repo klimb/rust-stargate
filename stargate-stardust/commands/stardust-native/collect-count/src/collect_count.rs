@@ -50,7 +50,7 @@ struct Settings<'a> {
     show_max_line_length: bool,
     files0_from: Option<Input<'a>>,
     total_when: TotalWhen,
-    object_output: StardustOutputOptions,
+    stardust_options: StardustOutputOptions,
 }
 
 impl Default for Settings<'_> {
@@ -63,7 +63,7 @@ impl Default for Settings<'_> {
             show_max_line_length: false,
             files0_from: None,
             total_when: TotalWhen::default(),
-            object_output: StardustOutputOptions::default(),
+            stardust_options: StardustOutputOptions::default(),
         }
     }
 }
@@ -79,7 +79,7 @@ impl<'a> Settings<'a> {
             .map(Into::into)
             .unwrap_or_default();
 
-        let object_output = StardustOutputOptions::from_matches(matches);
+        let stardust_options = StardustOutputOptions::from_matches(matches);
 
         let settings = Self {
             show_bytes: matches.get_flag(options::BYTES),
@@ -89,7 +89,7 @@ impl<'a> Settings<'a> {
             show_max_line_length: matches.get_flag(options::MAX_LINE_LENGTH),
             files0_from,
             total_when,
-            object_output,
+            stardust_options,
         };
 
         if settings.number_enabled() > 0 {
@@ -98,7 +98,7 @@ impl<'a> Settings<'a> {
             Self {
                 files0_from: settings.files0_from,
                 total_when,
-                object_output,
+                stardust_options,
                 ..Default::default()
             }
         }
@@ -822,7 +822,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> SGResul
         };
         total_word_count += word_count;
 
-        if settings.object_output.stardust_output {
+        if settings.stardust_options.stardust_output {
             let title = input.to_title().map(|t| t.to_string_lossy().to_string());
             results.push((title, word_count));
         } else if are_stats_visible {
@@ -835,7 +835,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> SGResul
         }
     }
 
-    if settings.object_output.stardust_output {
+    if settings.stardust_options.stardust_output {
         let collected_count = CollectedCount::new(
             results,
             &total_word_count,
@@ -844,7 +844,7 @@ fn wc(inputs: &Inputs, settings: &Settings, metadata: &InputMetadata) -> SGResul
         );
 
         let output = collected_count.to_json();
-        stardust_output::output(settings.object_output, output, || Ok(()))?;
+        stardust_output::output(settings.stardust_options, output, || Ok(()))?;
     } else if settings.total_when.is_total_row_visible(num_inputs) {
         let wc_total_msg = translate!("wc-total");
         let title = are_stats_visible.then_some(OsStr::new(&wc_total_msg));

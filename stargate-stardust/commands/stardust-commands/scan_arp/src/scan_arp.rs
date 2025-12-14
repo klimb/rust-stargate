@@ -41,7 +41,7 @@ pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
         let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
         let object_output = StardustOutputOptions::from_matches(&matches);
 
-        if object_output.object_output {
+        if object_output.stardust_output {
             produce_json(&matches, object_output)
         } else {
             produce(&matches)

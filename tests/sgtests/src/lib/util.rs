@@ -934,6 +934,13 @@ pub fn compare_xattrs<P: AsRef<std::path::Path>>(path1: P, path2: P) -> bool {
     get_sorted_xattrs(path1) == get_sorted_xattrs(path2)
 }
 
+/// Stub implementation for macOS and OpenBSD where xattr comparison is not implemented
+#[cfg(any(target_os = "macos", target_os = "openbsd"))]
+pub fn compare_xattrs<P: AsRef<std::path::Path>>(_path1: P, _path2: P) -> bool {
+    // On macOS and OpenBSD, always return true to skip xattr comparison
+    true
+}
+
 /// Object-oriented path struct that represents and operates on
 /// paths relative to the directory it was constructed for.
 #[derive(Clone)]

@@ -10,7 +10,9 @@ use sgcore::{
     stardust_output::{self, StardustOutputOptions},
 };
 
+#[cfg(target_os = "linux")]
 use crate::manufacturers::{get_manufacturer_name, decode_manufacturer_data};
+#[cfg(target_os = "linux")]
 use crate::manufacturer_capability::detect_capabilities;
 
 static TIMEOUT_ARG: &str = "timeout";
@@ -118,9 +120,7 @@ fn produce(matches: &ArgMatches) -> SGResult<()> {
         println!("no bluetooth devices found");
     } else {
         for device in devices {
-            if let Some(rssi) = device.rssi {
-                println!("{} ({}) - rssi: {}", device.name, device.address, rssi);
-            } else if let Some(device_type) = device.device_type {
+            if let Some(device_type) = device.device_type {
                 println!("{} ({}) - {}", device.name, device.address, device_type);
             } else {
                 println!("{} ({})", device.name, device.address);
@@ -257,10 +257,6 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown")
                         .to_string();
-
-                    let rssi = device.get("device_rssi")
-                        .and_then(|v| v.as_str())
-                        .and_then(|s| s.parse::<i32>().ok());
 
                     devices.push(BluetoothDevice {
                         name,
