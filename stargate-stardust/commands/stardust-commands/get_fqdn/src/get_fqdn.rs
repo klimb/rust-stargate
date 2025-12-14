@@ -9,12 +9,24 @@ use sgcore::{
     format_usage,
 };
 use sgcore::error::CommandResult::{Success, Error};
+use sgcore::stardust_output;
 
 static OBJ_FLAG: &str = "obj";
 
 #[sgcore::main]
 pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
+    
+    if stardust_output::self_describe(&matches, sgcore::schema!(
+        "fqdn" => "string", "Fully qualified domain name";
+        "hostname" => "string", "Hostname portion (before first dot)";
+        "domain" => "string", "Domain portion (after first dot)";
+        "has_domain" => "boolean", "Whether a domain component exists";
+        "length" => "integer", "Length of the FQDN string";
+    ))? {
+        return Ok(());
+    }
+    
     sgcore::pledge::apply_pledge(&["stdio", "dns"])?;
 
     if matches.get_flag(OBJ_FLAG) {
@@ -46,6 +58,13 @@ pub fn sg_app() -> Command {
                 .long("obj")
                 .help("Output result as JSON object")
                 .action(ArgAction::SetTrue)
+        )
+        .arg(
+            Arg::new(stardust_output::ARG_SCHEMA)
+                .long("schema")
+                .help("Print JSON schema of output structure")
+                .action(ArgAction::SetTrue)
+                .hide(true)
         )
 }
 

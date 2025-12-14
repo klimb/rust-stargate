@@ -47,6 +47,14 @@ struct WifiNetwork {
 pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result(sg_app(), args)?;
 
+    // Handle --schema flag
+    if stardust_output::self_describe(&matches, sgcore::schema!(
+        "networks" => "array", "List of detected WiFi networks with their properties";
+        "count" => "integer", "Total number of networks found";
+    ))? {
+        return Ok(());
+    }
+
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     check_root_privileges()?;
 
