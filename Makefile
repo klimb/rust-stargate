@@ -1,6 +1,3 @@
-# spell-checker:ignore (misc) testsuite runtest findstring (targets) busytest toybox distclean pkgs nextest ; (vars/env) BINDIR BUILDDIR CARGOFLAGS DESTDIR INSTALLDIR INSTALLEES MULTICALL DATAROOTDIR TESTDIR manpages
-
-# Config options
 ifneq (,$(filter install, $(MAKECMDGOALS)))
  PROFILE?=release
 endif
@@ -12,7 +9,6 @@ LOCALES         ?= y
 INSTALL         ?= install
 BYTECODE        ?= y
 
-# Needed for the foreach loops to split each loop into a separate command
 define newline
 
 
@@ -23,27 +19,21 @@ ifeq ($(PROFILE),debug)
 	PROFILE_CMD =
 endif
 
-# Binaries
 CARGO  ?= cargo
 CARGOFLAGS ?=
-RUSTC_ARCH ?= # should be empty except for cross-build, not --target $(shell rustc --print host-tuple)
+RUSTC_ARCH ?=
 
-# Install directories
 PREFIX ?= /usr/local
 DESTDIR ?=
 BINDIR ?= $(PREFIX)/bin
 DATAROOTDIR ?= $(PREFIX)/share
 LIBSTDBUF_DIR ?= $(PREFIX)/libexec/stargate
-# Export variable so that it is used during the build
 export LIBSTDBUF_DIR
 
 INSTALLDIR_BIN=$(DESTDIR)$(BINDIR)
 
-#prefix to apply to stargate binary and all tool binaries
 PROG_PREFIX ?=
 
-# This won't support any directory with spaces in its name, but you can just
-# make a symlink without spaces that points to the directory.
 BASEDIR       ?= $(shell pwd)
 ifdef CARGO_TARGET_DIR
 BUILDDIR 	  := $(CARGO_TARGET_DIR)/${PROFILE}
@@ -56,14 +46,10 @@ TOYBOX_ROOT := $(BASEDIR)/tmp
 TOYBOX_VER  := 0.8.12
 TOYBOX_SRC  := $(TOYBOX_ROOT)/toybox-$(TOYBOX_VER)
 
-#------------------------------------------------------------------------
-# Detect the host system.
-#------------------------------------------------------------------------
 OS ?= $(shell uname -s)
 
 LN ?= ln -sf
 
-# Possible programs
 PROGS       := \
 	get_architecture \
 	base32 \
@@ -191,6 +177,10 @@ HASHSUM_PROGS := \
 
 $(info Detected OS = $(OS))
 
+# Exclude scan-bt on OpenBSD
+ifeq ($(OS),OpenBSD)
+	SKIP_UTILS += scan-bt
+endif
 
 PROGS += $(UNIX_PROGS)
 
@@ -200,19 +190,18 @@ ifneq ($(filter hashsum,$(UTILS)),hashsum)
 endif
 
 ifneq ($(findstring stdbuf,$(UTILS)),)
-    # Use external libstdbuf per default. It is more robust than embedding libstdbuf.
 	CARGOFLAGS += --features feat_external_libstdbuf
 endif
 
 STARGATE_FEATURES :=
 
 ifeq ($(OS),Linux)
+	STARGATE_FEATURES += feat_os_linux
 ifneq ($(findstring record-audio,$(UTILS)),)
 	STARGATE_FEATURES += feat_transcription
 endif
 endif
 
-# Programs with usable tests
 TEST_PROGS  := \
 	base32 \
 	base64 \
@@ -297,7 +286,6 @@ TEST_NO_FAIL_FAST :=--no-fail-fast
 TEST_SPEC_FEATURE := test_unimplemented
 endif
 
-# Output names
 EXES        := \
 	$(sort $(UTILS))
 
@@ -389,14 +377,12 @@ endif
 
 ifeq ($(LOCALES),y)
 locales:
-	@# Copy uucore common locales
 	@if [ -d "$(BASEDIR)/stargate-stardust/sgcore/locales" ]; then \
 		mkdir -p "$(BUILDDIR)/locales/sgcore"; \
 		for locale_file in "$(BASEDIR)"/stargate-stardust/sgcore/locales/*.ftl; do \
 			$(INSTALL) -m 644 "$$locale_file" "$(BUILDDIR)/locales/sgcore/"; \
 		done; \
-	fi; \
-	# Copy utility-specific locales
+	fi
 	@for prog in $(INSTALLEES); do \
 		if [ -d "$(BASEDIR)/stargate-stardust/commands/$$prog/locales" ]; then \
 			mkdir -p "$(BUILDDIR)/locales/$$prog"; \

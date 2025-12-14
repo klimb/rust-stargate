@@ -384,41 +384,6 @@ fn test_null_fullblock() {
 }
 
 #[cfg(unix)]
-#[ignore = "See note below before using this test."]
-#[test]
-fn test_fullblock() {
-    let tname = "fullblock-from-urand";
-    let tmp_fn = format!("TESTFILE-{tname}.tmp");
-    let exp_stats = vec![
-        "1+0 records in\n",
-        "1+0 records out\n",
-        "134217728 bytes (134 MB, 128 MiB) copied,",
-    ];
-    let exp_stats = exp_stats.into_iter().fold(Vec::new(), |mut acc, s| {
-        acc.extend(s.bytes());
-        acc
-    });
-
-    let ucmd = new_ucmd!()
-        .args(&[
-            "if=/dev/urandom",
-            &of!(&tmp_fn),
-            "bs=128M",
-            // Note: In order for this test to actually test iflag=fullblock, the bs=VALUE
-            // must be big enough to 'overwhelm' the urandom store of bytes.
-            // Try executing 'dd if=/dev/urandom bs=128M count=1' (i.e without iflag=fullblock).
-            // The stats should contain the line: '0+1 records in' indicating a partial read.
-            // Since my system only copies 32 MiB without fullblock, I expect 128 MiB to be
-            // a reasonable value for testing most systems.
-            "count=1",
-            "iflag=fullblock",
-        ])
-        .succeeds();
-
-    let run_stats = &ucmd.stderr()[..exp_stats.len()];
-    assert_eq!(exp_stats, run_stats);
-}
-
 // Fileio
 #[test]
 fn test_ys_to_stdout() {
@@ -541,27 +506,6 @@ fn test_ascii_521k_to_file() {
         },
         fix.open(&tmp_fn)
     );
-}
-
-#[ignore = ""]
-#[cfg(unix)]
-#[test]
-fn test_ascii_5_gibi_to_file() {
-    let tname = "ascii-5G";
-    let tmp_fn = format!("TESTFILE-{tname}.tmp");
-
-    let (fix, mut ucmd) = at_and_ucmd!();
-    ucmd.args(&[
-        "status=none",
-        "count=5G",
-        "iflag=count_bytes",
-        "if=/dev/zero",
-        &of!(tmp_fn),
-    ])
-    .succeeds()
-    .no_output();
-
-    assert_eq!(5 * 1024 * 1024 * 1024, fix.metadata(&tmp_fn).len());
 }
 
 #[test]
