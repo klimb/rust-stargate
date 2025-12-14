@@ -39,6 +39,7 @@ pub const ARG_STARDUST_OUTPUT: &str = "stardust_output";
 pub const ARG_VERBOSE: &str = "verbose_json";
 pub const ARG_FIELD: &str = "field";
 pub const ARG_PRETTY: &str = "pretty";
+pub const ARG_SCHEMA: &str = "schema";
 
 pub fn add_json_args(cmd: clap::Command) -> clap::Command {
     cmd.arg(
@@ -65,6 +66,13 @@ pub fn add_json_args(cmd: clap::Command) -> clap::Command {
             .value_name("FIELD")
             .help("Filter stardust output to specific field(s) (comma-separated)")
             .action(ArgAction::Set),
+    )
+    .arg(
+        Arg::new(ARG_SCHEMA)
+            .long("schema")
+            .help("Print JSON schema of output structure")
+            .action(ArgAction::SetTrue)
+            .hide(true),  // Hidden from normal help
     )
 }
 
@@ -117,6 +125,31 @@ pub fn response_with_fields(fields: Vec<(&str, JsonValue)>) -> JsonValue {
         obj.insert(key.to_string(), value);
     }
     JsonValue::Object(obj)
+}
+
+/// Helper to create a JSON schema for command output
+/// Returns a simple schema with property names and types
+pub fn create_schema(properties: Vec<(&str, &str, Option<&str>)>) -> JsonValue {
+    let mut props = serde_json::map::Map::new();
+    for (name, type_name, description) in properties {
+        let mut prop = serde_json::map::Map::new();
+        prop.insert("type".to_string(), JsonValue::String(type_name.to_string()));
+        if let Some(desc) = description {
+            prop.insert("description".to_string(), JsonValue::String(desc.to_string()));
+        }
+        props.insert(name.to_string(), JsonValue::Object(prop));
+    }
+    
+    json!({
+        "type": "object",
+        "properties": props
+    })
+}
+
+/// Print schema to stdout
+pub fn print_schema(schema: JsonValue) -> std::io::Result<()> {
+    println!("{}", serde_json::to_string_pretty(&schema).unwrap_or_else(|_| schema.to_string()));
+    Ok(())
 }
 
 #[cfg(test)]

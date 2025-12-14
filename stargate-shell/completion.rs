@@ -11,7 +11,8 @@ use rustyline::{Context, Helper};
 use std::borrow::Cow;
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
+use std::time::{Duration, Instant};
 
 use super::commands::{get_stargate_commands, get_command_parameters, get_command_aliases, SHELL_COMMANDS};
 use super::interpreter::Interpreter;
@@ -27,6 +28,7 @@ pub struct StargateCompletion {
     commands: Vec<String>,
     variables: Arc<Mutex<HashSet<String>>>,
     interpreter: Arc<Mutex<Interpreter>>,
+    property_cache: Arc<Mutex<HashMap<String, (Vec<String>, Instant)>>>,
 }
 
 impl StargateCompletion {
@@ -36,7 +38,12 @@ impl StargateCompletion {
         commands.extend(get_command_aliases());
         commands.sort();
         commands.dedup();
-        Self { commands, variables, interpreter }
+        Self { 
+            commands, 
+            variables, 
+            interpreter,
+            property_cache: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 }
 
@@ -149,8 +156,8 @@ impl Completer for StargateCompletion {
                 
                 // Check if it's a stargate command
                 if self.commands.contains(&cmd_str.to_string()) && !SHELL_COMMANDS.contains(&cmd_str) {
-                    // Execute command to get JSON schema
-                    if let Some(properties) = get_command_properties(cmd_str) {
+                    // Get properties from schema (with caching)
+                    if let Some(properties) = get_command_properties_cached(cmd_str, &self.property_cache) {
                         let matches: Vec<Pair> = properties
                             .into_iter()
                             .filter(|prop| prop.starts_with(after_dot))
@@ -306,8 +313,68 @@ impl Completer for StargateCompletion {
     }
 }
 
-// Helper function to get property names from a command's JSON output
-fn get_command_properties(cmd: &str) -> Option<Vec<String>> {
+// Helper function to get property names with caching
+fn get_command_properties_cached(
+    cmd: &str,
+    cache: &Arc<Mutex<HashMap<String, (Vec<String>, Instant)>>>
+) -> Option<Vec<String>> {
+    const CACHE_TTL: Duration = Duration::from_secs(30);
+    
+    // Check cache first
+    if let Ok(cache_map) = cache.lock() {
+        if let Some((properties, timestamp)) = cache_map.get(cmd) {
+            if timestamp.elapsed() < CACHE_TTL {
+                return Some(properties.clone());
+            }
+        }
+    }
+    
+    // Cache miss or expired - try to get properties
+    let properties = get_command_schema_properties(cmd)
+        .or_else(|| get_command_properties_from_execution(cmd))?;
+    
+    // Store in cache
+    if let Ok(mut cache_map) = cache.lock() {
+        cache_map.insert(cmd.to_string(), (properties.clone(), Instant::now()));
+    }
+    
+    Some(properties)
+}
+
+// Try to get properties from --schema flag (fast, no execution)
+fn get_command_schema_properties(cmd: &str) -> Option<Vec<String>> {
+    let stargate_bin = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("stargate")))
+        .unwrap_or_else(|| "stargate".into());
+    
+    let output = Command::new(&stargate_bin)
+        .arg(cmd)
+        .arg("--schema")
+        .output()
+        .ok()?;
+    
+    if !output.status.success() {
+        return None;
+    }
+    
+    let json_str = String::from_utf8_lossy(&output.stdout);
+    let schema: serde_json::Value = serde_json::from_str(&json_str).ok()?;
+    
+    // Extract property names from schema
+    if let Some(props) = schema.get("properties") {
+        if let serde_json::Value::Object(map) = props {
+            let mut properties: Vec<String> = map.keys().cloned().collect();
+            properties.sort();
+            return Some(properties);
+        }
+    }
+    
+    None
+}
+
+// Fallback: execute command with --obj to get properties (slow but works for all commands)
+fn get_command_properties_from_execution(cmd: &str) -> Option<Vec<String>> {
     let stargate_bin = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|d| d.join("stargate")))

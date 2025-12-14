@@ -40,7 +40,7 @@ use sgcore::libc::{S_IXGRP, S_IXOTH, S_IXUSR};
 use sgcore::libc::{dev_t, major, minor};
 use sgcore::{
     display::Quotable,
-    error::{SGError, SGResult, set_exit_code},
+    error::{SGError, SGResult, SGSimpleError, set_exit_code},
     format::human::{SizeFormat, human_readable},
     format_usage,
     fs::FileInformation,
@@ -1160,6 +1160,17 @@ impl Config {
 pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     let matches = sgcore::clap_localization::handle_clap_result_with_exit_code(sg_app(), args, 2)?;
 
+    // Handle --schema flag
+    if matches.get_flag(stardust_output::ARG_SCHEMA) {
+        let schema = stardust_output::create_schema(vec![
+            ("entries", "array", Some("List of directory entries with file information")),
+            ("count", "integer", Some("Total number of entries")),
+            ("recursive", "boolean", Some("Whether recursive listing was enabled")),
+        ]);
+        return stardust_output::print_schema(schema)
+            .map_err(|e| SGSimpleError::new(1, e.to_string()).into());
+    }
+
     let config = Config::from(&matches)?;
 
     sgcore::pledge::apply_pledge(&["stdio", "rpath", "getpw"])?;
@@ -1832,6 +1843,13 @@ pub fn sg_app() -> Command {
                 .long("pretty")
                 .help("Pretty-print object (JSON) output (use with -o)")
                 .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new(stardust_output::ARG_SCHEMA)
+                .long("schema")
+                .help("Print JSON schema of output structure")
+                .action(ArgAction::SetTrue)
+                .hide(true),
         );
 
     let cmd = cmd
