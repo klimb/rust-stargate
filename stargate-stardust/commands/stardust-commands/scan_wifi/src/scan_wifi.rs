@@ -86,6 +86,14 @@ pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
         eprintln!();
     }
 
+    // Only allow external WiFi cards (wlx*) - never use built-in
+    if !interface.starts_with("wlx") {
+        return Err(sgcore::error::SGSimpleError::new(
+            1,
+            format!("scan-wifi only works with external WiFi adapters (wlx*). Interface '{}' appears to be built-in. Please plug in an external USB WiFi adapter.", interface)
+        ));
+    }
+
     let mut networks = {
         #[cfg(target_os = "linux")]
         {
@@ -128,26 +136,24 @@ fn detect_wireless_interface() -> Option<String> {
         {
             if output.status.success() {
                 let text = String::from_utf8_lossy(&output.stdout);
-                let mut interfaces = Vec::new();
+                let mut wlx_interfaces = Vec::new();
 
                 for line in text.lines() {
                     let trimmed = line.trim();
                     if trimmed.starts_with("Interface ") {
                         let parts: Vec<&str> = trimmed.split_whitespace().collect();
                         if parts.len() >= 2 {
-                            interfaces.push(parts[1].to_string());
+                            let iface = parts[1].to_string();
+                            if iface.starts_with("wlx") {
+                                wlx_interfaces.push(iface);
+                            }
                         }
                     }
                 }
 
-                for iface in &interfaces {
-                    if iface.starts_with("wlx") {
-                        return Some(iface.clone());
-                    }
-                }
-
-                if !interfaces.is_empty() {
-                    return Some(interfaces[0].clone());
+                wlx_interfaces.sort();
+                if !wlx_interfaces.is_empty() {
+                    return Some(wlx_interfaces[0].clone());
                 }
             }
         }
@@ -155,19 +161,14 @@ fn detect_wireless_interface() -> Option<String> {
 
     if let Ok(entries) = std::fs::read_dir("/sys/class/net") {
         let mut wlx_interfaces = Vec::new();
-        let mut other_interfaces = Vec::new();
 
         for entry in entries.flatten() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if name_str.starts_with("wl") {
+            if name_str.starts_with("wlx") {
                 let wireless_path = format!("/sys/class/net/{}/wireless", name_str);
                 if std::path::Path::new(&wireless_path).exists() {
-                    if name_str.starts_with("wlx") {
-                        wlx_interfaces.push(name_str.to_string());
-                    } else {
-                        other_interfaces.push(name_str.to_string());
-                    }
+                    wlx_interfaces.push(name_str.to_string());
                 }
             }
         }
@@ -175,11 +176,6 @@ fn detect_wireless_interface() -> Option<String> {
         wlx_interfaces.sort();
         if !wlx_interfaces.is_empty() {
             return Some(wlx_interfaces[0].clone());
-        }
-
-        other_interfaces.sort();
-        if !other_interfaces.is_empty() {
-            return Some(other_interfaces[0].clone());
         }
     }
 
@@ -404,6 +400,14 @@ fn scan_wifi_detailed(interface: &str, duration: u64, _channel: Option<&str>) ->
 
     check_root_privileges()?;
 
+    // Safety check: only allow monitor mode on external WiFi cards
+    if !interface.starts_with("wlx") {
+        return Err(sgcore::error::SGSimpleError::new(
+            1,
+            format!("Monitor mode scanning only supported on external WiFi adapters (wlx*). Interface '{}' appears to be built-in. Use --interface wlx<device> or remove --interface to auto-detect external adapter.", interface)
+        ));
+    }
+
     let airmon_paths = ["/usr/sbin/airmon-ng", "/sbin/airmon-ng", "/usr/bin/airmon-ng", "airmon-ng"];
     let mut airmon_cmd = None;
     for path in &airmon_paths {
@@ -435,6 +439,9 @@ fn scan_wifi_detailed(interface: &str, duration: u64, _channel: Option<&str>) ->
             "airodump-ng not found. Install with: sudo apt install aircrack-ng".to_string()
         )
     })?;
+
+    // Save current connection state for restoration
+    let connection_info = save_connection_state(interface);
 
     let _ = ProcessCommand::new(airmon_path)
         .arg("stop")
@@ -507,12 +514,18 @@ fn scan_wifi_detailed(interface: &str, duration: u64, _channel: Option<&str>) ->
 
     let networks = parse_airodump_csv(&csv_content)?;
 
+    // Stop monitor mode
     let _ = ProcessCommand::new(airmon_path)
         .arg("stop")
         .arg(&monitor_iface)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
+
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    // Restore connection if there was one
+    restore_connection_state(interface, &connection_info);
 
     let _ = fs::remove_file(&csv_file);
     let cap_file = format!("{}-01.cap", output_prefix);
@@ -900,6 +913,122 @@ fn parse_signal_strength(signal_str: &str) -> f64 {
         .next()
         .and_then(|s| s.parse::<f64>().ok())
         .unwrap_or(-100.0)
+}
+
+#[cfg(target_os = "linux")]
+struct ConnectionInfo {
+    was_up: bool,
+    ssid: Option<String>,
+    nm_was_running: bool,
+}
+
+#[cfg(target_os = "linux")]
+fn save_connection_state(interface: &str) -> ConnectionInfo {
+    use std::process::{Command as ProcessCommand, Stdio};
+    
+    let nm_running = ProcessCommand::new("systemctl")
+        .args(&["is-active", "NetworkManager"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    
+    let mut info = ConnectionInfo {
+        was_up: false,
+        ssid: None,
+        nm_was_running: nm_running,
+    };
+    
+    // Check if interface is up
+    if let Ok(output) = ProcessCommand::new("ip")
+        .args(&["link", "show", interface])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output()
+    {
+        let text = String::from_utf8_lossy(&output.stdout);
+        info.was_up = text.contains("state UP");
+    }
+    
+    // Try to get current SSID
+    let iw_paths = ["/usr/sbin/iw", "/sbin/iw", "/usr/bin/iw", "iw"];
+    for iw_path in &iw_paths {
+        if let Ok(output) = ProcessCommand::new(iw_path)
+            .arg("dev")
+            .arg(interface)
+            .arg("link")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .output()
+        {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                for line in text.lines() {
+                    if line.contains("SSID:") {
+                        if let Some(ssid) = line.split("SSID:").nth(1) {
+                            info.ssid = Some(ssid.trim().to_string());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+    
+    info
+}
+
+#[cfg(target_os = "linux")]
+fn restore_connection_state(interface: &str, info: &ConnectionInfo) {
+    use std::process::{Command as ProcessCommand, Stdio};
+    
+    if info.nm_was_running {
+        let nm_running = ProcessCommand::new("systemctl")
+            .args(&["is-active", "NetworkManager"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        
+        if !nm_running {
+            let _ = ProcessCommand::new("systemctl")
+                .args(&["start", "NetworkManager"])
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status();
+            
+            std::thread::sleep(std::time::Duration::from_secs(3));
+        }
+    }
+    
+    if info.was_up {
+        let _ = ProcessCommand::new("ip")
+            .args(&["link", "set", interface, "up"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+        
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
+    
+    if let Some(ssid) = &info.ssid {
+        let _ = ProcessCommand::new("nmcli")
+            .args(&["device", "connect", interface])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+        
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        
+        let _ = ProcessCommand::new("nmcli")
+            .args(&["device", "wifi", "connect", ssid, "ifname", interface])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
+    }
 }
 
 pub fn sg_app() -> Command {
