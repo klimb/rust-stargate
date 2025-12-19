@@ -1,4 +1,4 @@
-
+// Copyright (c) 2025 Dmitry Kalashnikov.
 
 use clap::{Arg, Command};
 use sgcore::error::SGResult;
@@ -41,6 +41,9 @@ struct WifiNetwork {
     packets: Option<usize>,
     beacons: Option<usize>,
     client_details: Vec<ClientInfo>,
+    distance_meters: Option<f64>,
+    distance: Option<String>,
+    proximity: Option<String>,
 }
 
 #[sgcore::main]
@@ -67,16 +70,44 @@ pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
     } else if let Some(ref iface) = detected_interface {
         iface.as_str()
     } else {
-        DEFAULT_INTERFACE
+        return Err(sgcore::error::SGSimpleError::new(
+            1,
+            "No external WiFi adapter detected. scan-wifi requires an external USB WiFi adapter (wlx* on Linux). Please plug in an external WiFi adapter and specify it with --interface.".to_string()
+        ));
     };
+
+    #[cfg(target_os = "linux")]
+    if !interface.starts_with("wlx") {
+        return Err(sgcore::error::SGSimpleError::new(
+            1,
+            format!("scan-wifi only works with external WiFi adapters (wlx*). Interface '{}' appears to be built-in. Please plug in an external USB WiFi adapter.", interface)
+        ));
+    }
+
+    #[cfg(target_os = "macos")]
+    if interface.starts_with("en") && !detected_interface.is_none() {
+        if let Ok(output) = std::process::Command::new("system_profiler")
+            .args(&["SPUSBDataType"])
+            .output()
+        {
+            let usb_info = String::from_utf8_lossy(&output.stdout);
+            if !usb_info.contains(interface) {
+                return Err(sgcore::error::SGSimpleError::new(
+                    1,
+                    format!("scan-wifi only works with external USB WiFi adapters. Interface '{}' appears to be built-in. Please plug in an external USB WiFi adapter.", interface)
+                ));
+            }
+        }
+    }
+
     let duration = matches.get_one::<u64>(ARG_DURATION).copied().unwrap_or(15);
     let channel = matches.get_one::<String>(ARG_CHANNEL).map(|s| s.as_str());
 
     if !opts.stardust_output {
-        if detected_interface.is_some() {
-            eprintln!("auto-detected wireless interface: {}", interface);
+        if interface_from_args.is_none() {
+            eprintln!("auto-detected external WiFi adapter: {}", interface);
         } else {
-            eprintln!("scanning for WiFi networks on interface: {}", interface);
+            eprintln!("using WiFi adapter: {}", interface);
         }
         eprintln!("duration: {} seconds", duration);
         if let Some(ch) = channel {
@@ -84,14 +115,6 @@ pub fn sgmain(args: impl sgcore::Args) -> SGResult<()> {
         }
         eprintln!("this requires root privileges and iw/wireless-tools (or airodump-ng).");
         eprintln!();
-    }
-
-    // Only allow external WiFi cards (wlx*) - never use built-in
-    if !interface.starts_with("wlx") {
-        return Err(sgcore::error::SGSimpleError::new(
-            1,
-            format!("scan-wifi only works with external WiFi adapters (wlx*). Interface '{}' appears to be built-in. Please plug in an external USB WiFi adapter.", interface)
-        ));
     }
 
     let mut networks = {
@@ -195,15 +218,15 @@ fn detect_wireless_interface() -> Option<String> {
 
     if output.status.success() {
         let text = String::from_utf8_lossy(&output.stdout);
-        let mut is_wifi = false;
+        let mut is_usb_wifi = false;
         for line in text.lines() {
-            if line.contains("Wi-Fi") || line.contains("AirPort") {
-                is_wifi = true;
-            } else if is_wifi && line.starts_with("Device: ") {
+            if line.contains("USB") && (line.contains("Wi-Fi") || line.contains("AirPort")) {
+                is_usb_wifi = true;
+            } else if is_usb_wifi && line.starts_with("Device: ") {
                 let device = line.trim_start_matches("Device: ").trim();
                 return Some(device.to_string());
             } else if line.starts_with("Hardware Port:") {
-                is_wifi = false;
+                is_usb_wifi = false;
             }
         }
     }
@@ -299,20 +322,28 @@ fn parse_airport_output(output: &str) -> SGResult<Vec<WifiNetwork>> {
                 continue;
             }
 
-            let rssi = parts[0].to_string();
+            let rssi_str = parts[0].to_string();
             let channel_info = parts[1].to_string();
             let security = parts[4..].join(" ");
+
+            let rssi_value = parse_signal_strength(&rssi_str) as i16;
+            let distance_m = estimate_distance(rssi_value, None);
+            let distance_string = distance_to_string(distance_m);
+            let proximity_string = distance_to_proximity(distance_m);
 
             networks.push(WifiNetwork {
                 bssid,
                 ssid,
                 channel: channel_info,
-                signal_strength: rssi,
+                signal_strength: rssi_str,
                 encryption: security,
                 clients: None,
                 packets: None,
                 beacons: None,
                 client_details: Vec::new(),
+                distance_meters: Some(distance_m),
+                distance: Some(distance_string),
+                proximity: Some(proximity_string.to_string()),
             });
         }
     }
@@ -588,6 +619,11 @@ fn parse_airodump_csv(content: &str) -> SGResult<Vec<WifiNetwork>> {
                 "<hidden>".to_string()
             };
 
+            let rssi_value = parse_signal_strength(&signal) as i16;
+            let distance_m = estimate_distance(rssi_value, None);
+            let distance_string = distance_to_string(distance_m);
+            let proximity_string = distance_to_proximity(distance_m);
+
             networks.push(WifiNetwork {
                 bssid,
                 ssid,
@@ -598,6 +634,9 @@ fn parse_airodump_csv(content: &str) -> SGResult<Vec<WifiNetwork>> {
                 packets,
                 beacons,
                 client_details: Vec::new(),
+                distance_meters: Some(distance_m),
+                distance: Some(distance_string),
+                proximity: Some(proximity_string.to_string()),
             });
         } else if in_station_section {
             let parts: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
@@ -674,6 +713,9 @@ fn parse_iw_output(output: &str) -> SGResult<Vec<WifiNetwork>> {
                     packets: None,
                     beacons: None,
                     client_details: Vec::new(),
+                    distance_meters: None,
+                    distance: None,
+                    proximity: None,
                 });
             }
         } else if line.starts_with("SSID: ") {
@@ -721,7 +763,14 @@ fn parse_iw_output(output: &str) -> SGResult<Vec<WifiNetwork>> {
         }
     }
 
-    if let Some(network) = current_network {
+    if let Some(mut network) = current_network {
+        if !network.signal_strength.is_empty() {
+            let rssi_value = parse_signal_strength(&network.signal_strength) as i16;
+            let distance_m = estimate_distance(rssi_value, None);
+            network.distance_meters = Some(distance_m);
+            network.distance = Some(distance_to_string(distance_m));
+            network.proximity = Some(distance_to_proximity(distance_m).to_string());
+        }
         networks.push(network);
     }
 
@@ -753,6 +802,9 @@ fn parse_iwlist_output(output: &str) -> SGResult<Vec<WifiNetwork>> {
                     packets: None,
                     beacons: None,
                     client_details: Vec::new(),
+                    distance_meters: None,
+                    distance: None,
+                    proximity: None,
                 });
             }
         } else if line.starts_with("Channel:") {
@@ -798,7 +850,14 @@ fn parse_iwlist_output(output: &str) -> SGResult<Vec<WifiNetwork>> {
         }
     }
 
-    if let Some(network) = current_network {
+    if let Some(mut network) = current_network {
+        if !network.signal_strength.is_empty() {
+            let rssi_value = parse_signal_strength(&network.signal_strength) as i16;
+            let distance_m = estimate_distance(rssi_value, None);
+            network.distance_meters = Some(distance_m);
+            network.distance = Some(distance_to_string(distance_m));
+            network.proximity = Some(distance_to_proximity(distance_m).to_string());
+        }
         networks.push(network);
     }
 
@@ -832,6 +891,15 @@ fn output_json(networks: &[WifiNetwork], opts: StardustOutputOptions) -> SGResul
         if let Some(beacons) = n.beacons {
             obj["beacons"] = json!(beacons);
         }
+        if let Some(distance_m) = n.distance_meters {
+            obj["distance_meters"] = json!(distance_m);
+        }
+        if let Some(ref distance) = n.distance {
+            obj["distance"] = json!(distance);
+        }
+        if let Some(ref proximity) = n.proximity {
+            obj["proximity"] = json!(proximity);
+        }
 
         if !n.client_details.is_empty() {
             let clients_json: Vec<_> = n.client_details.iter().map(|c| {
@@ -860,15 +928,20 @@ fn output_text(networks: &[WifiNetwork]) {
     let has_detailed = networks.iter().any(|n| n.beacons.is_some() || n.packets.is_some());
 
     if has_detailed {
-        println!("SSID\t\t\tBSSID\t\t\tCH\tSIGNAL\t\tBEACONS\tPACKETS\tCLIENTS\tENCRYPTION");
-        println!("{}", "=".repeat(130));
+        println!("SSID\t\t\tBSSID\t\t\tCH\tSIGNAL\t\tDISTANCE\tPROXIMITY\tBEACONS\tPACKETS\tCLIENTS\tENCRYPTION");
+        println!("{}", "=".repeat(140));
 
         for network in networks {
-            println!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            let distance_str = network.distance.as_deref().unwrap_or("-");
+            let proximity_str = network.proximity.as_deref().unwrap_or("-");
+            
+            println!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 truncate_string(&network.ssid, 20),
                 network.bssid,
                 network.channel,
                 truncate_string(&network.signal_strength, 10),
+                truncate_string(distance_str, 10),
+                truncate_string(proximity_str, 10),
                 network.beacons.map(|b| b.to_string()).unwrap_or_else(|| "-".to_string()),
                 network.packets.map(|p| p.to_string()).unwrap_or_else(|| "-".to_string()),
                 network.clients.map(|c| c.to_string()).unwrap_or_else(|| "0".to_string()),
@@ -882,16 +955,20 @@ fn output_text(networks: &[WifiNetwork]) {
             }
         }
     } else {
-        println!("SSID\t\t\tBSSID\t\t\tCHANNEL\tSIGNAL\tENCRYPTION");
-        println!("{}", "=".repeat(100));
-
         for network in networks {
-            println!("{}\t{}\t{}\t{}\t{}",
-                truncate_string(&network.ssid, 20),
+            let rssi_value = parse_signal_strength(&network.signal_strength) as i16;
+            let quality = rssi_to_quality(rssi_value);
+            let distance_str = network.distance.as_deref().unwrap_or("N/A");
+            let proximity_str = network.proximity.as_deref().unwrap_or("N/A");
+            
+            println!("{} ({}) - {} - {}, {}, {} ({})",
+                network.ssid,
                 network.bssid,
-                network.channel,
+                network.encryption,
                 network.signal_strength,
-                truncate_string(&network.encryption, 20));
+                quality,
+                distance_str,
+                proximity_str);
         }
     }
 
@@ -913,6 +990,51 @@ fn parse_signal_strength(signal_str: &str) -> f64 {
         .next()
         .and_then(|s| s.parse::<f64>().ok())
         .unwrap_or(-100.0)
+}
+
+fn estimate_distance(rssi: i16, tx_power: Option<i8>) -> f64 {
+    let measured_power = tx_power.unwrap_or(20) as f64;
+    let n = 3.0;
+    let exponent = (measured_power - rssi as f64) / (10.0 * n);
+    10_f64.powf(exponent)
+}
+
+fn distance_to_string(distance_meters: f64) -> String {
+    if distance_meters < 1.0 {
+        format!("{:.0} cm", distance_meters * 100.0)
+    } else if distance_meters < 10.0 {
+        format!("{:.1} m", distance_meters)
+    } else if distance_meters < 100.0 {
+        format!("{:.0} m", distance_meters)
+    } else {
+        "100+ m".to_string()
+    }
+}
+
+fn distance_to_proximity(distance_meters: f64) -> &'static str {
+    if distance_meters < 1.0 {
+        "Immediate"
+    } else if distance_meters < 3.0 {
+        "Very Close"
+    } else if distance_meters < 10.0 {
+        "Near"
+    } else if distance_meters < 30.0 {
+        "Far"
+    } else {
+        "Very Far"
+    }
+}
+
+fn rssi_to_quality(rssi: i16) -> &'static str {
+    if rssi >= -50 {
+        "Excellent"
+    } else if rssi >= -60 {
+        "Good"
+    } else if rssi >= -70 {
+        "Fair"
+    } else {
+        "Weak"
+    }
 }
 
 #[cfg(target_os = "linux")]
