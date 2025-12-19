@@ -993,8 +993,8 @@ fn parse_signal_strength(signal_str: &str) -> f64 {
 }
 
 fn estimate_distance(rssi: i16, tx_power: Option<i8>) -> f64 {
-    let measured_power = tx_power.unwrap_or(20) as f64;
-    let n = 3.0;
+    let measured_power = tx_power.unwrap_or(0) as f64;
+    let n = 2.7;
     let exponent = (measured_power - rssi as f64) / (10.0 * n);
     10_f64.powf(exponent)
 }
