@@ -3822,6 +3822,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_monitor_spectrum"
+version = "0.4.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "ctrlc",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_monitor_traffic"
 version = "0.4.0"
 dependencies = [
@@ -4829,6 +4840,7 @@ dependencies = [
  "sg_mkfifo",
  "sg_mknod",
  "sg_mktemp",
+ "sg_monitor_spectrum",
  "sg_monitor_traffic",
  "sg_more",
  "sg_mv",

@@ -1,0 +1,21 @@
+[package]
+name = "sg_monitor_spectrum"
+description = "monitor-spectrum ~ real-time RF spectrum monitor with waterfall display"
+version = "0.4.0"
+authors = ["Dmitry Kalashnikov"]
+license = "MIT"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "monitor-spectrum"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+ctrlc = "3.4"

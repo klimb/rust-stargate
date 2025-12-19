@@ -137,6 +137,7 @@ feat_os_macos = [
   "scan-wifi",
   "scan-radio",
   "listen-radio",
+  "monitor-spectrum",
   "monitor-traffic",
   "record-audio",
   "record-video",
@@ -153,6 +154,7 @@ feat_os_unix = [
   "feat_require_unix_utmpx",
   "scan-radio",
   "listen-radio",
+  "monitor-spectrum",
   "scan-neighbors",
 ]
 # "feat_os_unix_musl" == set of utilities which can be built/run on targets binding to the "musl" library (ref: <https://musl.libc.org/about.html>)
@@ -456,6 +458,7 @@ list-processes = { optional = true, version = "0.4.0", package = "sg_list_proces
 scan-wifi = { optional = true, version = "0.4.0", package = "sg_scan_wifi", path = "stargate-stardust/commands/stardust-commands/scan_wifi" }
 scan-radio = { optional = true, version = "0.4.0", package = "sg_scan_radio", path = "stargate-stardust/commands/stardust-commands/scan_radio" }
 listen-radio = { optional = true, version = "0.4.0", package = "sg_listen_radio", path = "stargate-stardust/commands/stardust-commands/listen_radio" }
+monitor-spectrum = { optional = true, version = "0.4.0", package = "sg_monitor_spectrum", path = "stargate-stardust/commands/stardust-commands/monitor_spectrum" }
 printf = { optional = true, version = "0.4.0", package = "sg_printf", path = "stargate-stardust/commands/text-commands/printf" }
 ptx = { optional = true, version = "0.4.0", package = "sg_ptx", path = "stargate-stardust/commands/text-commands/ptx" }
 pwd = { optional = true, version = "0.4.0", package = "sg_pwd", path = "stargate-stardust/commands/text-commands/pwd" }
