@@ -3768,6 +3768,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_listen_radio"
+version = "0.4.0"
+dependencies = [
+ "clap",
+ "fluent",
+ "regex",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_ln"
 version = "0.4.0"
 dependencies = [
@@ -4813,6 +4824,7 @@ dependencies = [
  "sg_link",
  "sg_list_directory",
  "sg_list_processes",
+ "sg_listen_radio",
  "sg_ln",
  "sg_mkfifo",
  "sg_mknod",

@@ -1,0 +1,29 @@
+[package]
+name = "sg_listen_radio"
+description = "listen-radio ~ play audio from FM radio stations using rtl-sdr"
+repository = "https://github.com/klimb/rust-stargate"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/listen_radio.rs"
+
+[[bin]]
+name = "listen-radio"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+fluent = { workspace = true }
+serde_json = { workspace = true }
+regex = { workspace = true }
