@@ -1,4 +1,4 @@
-
+// Copyright (c) 2025 Dmitry Kalashnikov.
 
 use clap::{Arg, ArgMatches, Command as ClapCommand};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,8 @@ use crate::manufacturers::{get_manufacturer_name, decode_manufacturer_data};
 #[cfg(target_os = "linux")]
 use crate::manufacturer_capability::detect_capabilities;
 #[cfg(target_os = "linux")]
-use crate::bluetooth_specs::{decode_service_uuid, decode_appearance, rssi_to_quality};
+use crate::bluetooth_specs::{decode_service_uuid, decode_appearance, rssi_to_quality, 
+                              estimate_distance, distance_to_string, distance_to_proximity};
 
 static TIMEOUT_ARG: &str = "timeout";
 static NO_VERBOSE_ARG: &str = "no-verbose";
@@ -49,6 +50,12 @@ struct BluetoothDevice {
     rssi: Option<i16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     signal_quality: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    distance_meters: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    distance: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    proximity: Option<String>,
     #[serde(skip_serializing_if = "std::collections::HashMap::is_empty")]
     services: std::collections::HashMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -193,7 +200,14 @@ fn produce(matches: &ArgMatches) -> SGResult<()> {
         println!("no bluetooth devices found");
     } else {
         let mut devices = devices;
-        devices.sort_by(|a, b| a.address.cmp(&b.address));
+        devices.sort_by(|a, b| {
+            match (a.rssi, b.rssi) {
+                (Some(rssi_a), Some(rssi_b)) => rssi_b.cmp(&rssi_a),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.address.cmp(&b.address),
+            }
+        });
         for device in devices {
             let mut parts = vec![format!("{} ({})", device.name, device.address)];
 
@@ -202,11 +216,21 @@ fn produce(matches: &ArgMatches) -> SGResult<()> {
             }
 
             if let Some(rssi) = device.rssi {
+                let mut signal_parts = vec![format!("{} dBm", rssi)];
+                
                 if let Some(ref quality) = device.signal_quality {
-                    parts.push(format!("{} dBm ({})", rssi, quality));
-                } else {
-                    parts.push(format!("{} dBm", rssi));
+                    signal_parts.push(quality.clone());
                 }
+                
+                if let Some(ref distance) = device.distance {
+                    if let Some(ref proximity) = device.proximity {
+                        signal_parts.push(format!("{} ({})", distance, proximity));
+                    } else {
+                        signal_parts.push(distance.clone());
+                    }
+                }
+                
+                parts.push(signal_parts.join(", "));
             }
 
             if !device.services.is_empty() {
@@ -259,7 +283,14 @@ fn produce_json(matches: &ArgMatches, options: StardustOutputOptions) -> SGResul
         }
     }
 
-    result.devices.sort_by(|a, b| a.address.cmp(&b.address));
+    result.devices.sort_by(|a, b| {
+        match (a.rssi, b.rssi) {
+            (Some(rssi_a), Some(rssi_b)) => rssi_b.cmp(&rssi_a),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => a.address.cmp(&b.address),
+        }
+    });
 
     let json = if options.pretty {
         serde_json::to_string_pretty(&result).unwrap()
@@ -295,13 +326,15 @@ fn parse_not_connected_devices(not_conn_array: &serde_json::Value) -> Vec<Blueto
                         tx_power: None,
                         rssi: None,
                         signal_quality: None,
+                        distance_meters: None,
+                        distance: None,
+                        proximity: None,
                         services: std::collections::HashMap::new(),
                         manufacturer: None,
                         service_data: None,
                         appearance: None,
                         appearance_name: None,
                         capabilities: vec![],
-                        manufacturer_data_decoded: None,
                     });
                 }
             }
@@ -340,6 +373,9 @@ fn parse_cached_devices(cache_array: &serde_json::Value) -> Vec<BluetoothDevice>
                 tx_power: None,
                 rssi: None,
                 signal_quality: None,
+                distance_meters: None,
+                distance: None,
+                proximity: None,
                 services: std::collections::HashMap::new(),
                 manufacturer: None,
                 service_data: None,
@@ -382,6 +418,9 @@ fn parse_connected_devices(conn_array: &serde_json::Value) -> Vec<BluetoothDevic
                 tx_power: None,
                 rssi: None,
                 signal_quality: None,
+                distance_meters: None,
+                distance: None,
+                proximity: None,
                 services: std::collections::HashMap::new(),
                 manufacturer: None,
                 service_data: None,
@@ -449,11 +488,72 @@ fn scan_bluetooth_macos() -> SGResult<Vec<BluetoothDevice>> {
 }
 
 #[cfg(target_os = "linux")]
-fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
-    use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
-    use btleplug::platform::Manager;
+fn get_rssi_via_btmon(timeout: u32) -> std::collections::HashMap<String, i16> {
+    use std::process::{Command as ProcessCommand, Stdio};
+    use std::io::{BufRead, BufReader};
+    use std::thread;
+    use std::time::{Duration, Instant};
+    
+    let mut rssi_map = std::collections::HashMap::new();
+    
+    let mut child = match ProcessCommand::new("btmon")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn() {
+            Ok(c) => c,
+            Err(_) => {
+                eprintln!("note: btmon not available, try: sudo apt install bluez-tools");
+                return rssi_map;
+            }
+        };
+    
+    let start = Instant::now();
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        let mut current_address: Option<String> = None;
+        
+        for line in reader.lines().flatten() {
+            if start.elapsed() > Duration::from_secs(timeout as u64) {
+                break;
+            }
+            
+            let line = line.trim();
+            
+            if line.starts_with("Address: ") {
+                if let Some(addr_part) = line.split_whitespace().nth(1) {
+                    current_address = Some(addr_part.to_uppercase());
+                }
+            }
+            
+            if line.starts_with("RSSI: ") {
+                if let Some(ref addr) = current_address {
+                    if let Some(rssi_str) = line.split_whitespace().nth(1) {
+                        if let Ok(rssi) = rssi_str.parse::<i16>() {
+                            rssi_map.insert(addr.clone(), rssi);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    let _ = child.kill();
+    rssi_map
+}
 
-    eprintln!("scanning for bluetooth devices ({}s)...", timeout);
+#[cfg(target_os = "linux")]
+fn scan_bluetooth_linux(timeout_secs: u32) -> SGResult<Vec<BluetoothDevice>> {
+    use btleplug::api::{Central, CentralEvent, Manager as _, Peripheral, ScanFilter};
+    use btleplug::platform::Manager;
+    use std::collections::HashMap;
+    use futures::stream::StreamExt;
+
+    eprintln!("scanning for bluetooth devices ({}s)...", timeout_secs);
+    
+    let btmon_timeout = timeout_secs;
+    let btmon_handle = std::thread::spawn(move || {
+        get_rssi_via_btmon(btmon_timeout)
+    });
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -482,24 +582,75 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
             return Vec::new();
         }
 
-        let adapter = &adapters[0];
+        let adapter = adapters[0].clone();
+        
+        let mut events = match adapter.events().await {
+            Ok(e) => e,
+            Err(e) => {
+                eprintln!("failed to subscribe to events: {}", e);
+                return Vec::new();
+            }
+        };
+        
         if let Err(e) = adapter.start_scan(ScanFilter::default()).await {
             eprintln!("failed to start scan: {}", e);
             return Vec::new();
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(timeout as u64)).await;
-
-        let peripherals = match adapter.peripherals().await {
-            Ok(p) => p,
-            Err(e) => {
-                eprintln!("failed to get devices: {}", e);
-                return Vec::new();
+        let adapter_clone = adapter.clone();
+        let scan_task = tokio::spawn(async move {
+            let mut discovered = HashMap::new();
+            while let Some(event) = events.next().await {
+                match event {
+                    CentralEvent::DeviceDiscovered(id) | CentralEvent::DeviceUpdated(id) => {
+                        if let Ok(peripherals) = adapter_clone.peripherals().await {
+                            for p in peripherals {
+                                if p.id() == id {
+                                    if let Ok(Some(props)) = p.properties().await {
+                                        if let Some(rssi) = props.rssi {
+                                            discovered.insert(p.address().to_string(), rssi);
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
             }
+            discovered
+        });
+
+        // Poll for devices multiple times during scan to capture fresh RSSI
+        let mut all_peripherals = Vec::new();
+        let poll_interval = 2; // Poll every 2 seconds
+        let polls = (timeout_secs / poll_interval).max(1);
+        
+        for i in 0..polls {
+            tokio::time::sleep(tokio::time::Duration::from_secs(poll_interval as u64)).await;
+            if let Ok(peripherals) = adapter.peripherals().await {
+                eprintln!("poll {}/{}: found {} devices", i + 1, polls, peripherals.len());
+                all_peripherals = peripherals;
+            }
+        }
+
+        let peripherals = all_peripherals;
+
+
+        let rssi_from_events = match tokio::time::timeout(
+            tokio::time::Duration::from_secs(1),
+            scan_task
+        ).await {
+            Ok(Ok(map)) => {
+                eprintln!("captured {} RSSI values from events", map.len());
+                map
+            },
+            _ => HashMap::new(),
         };
-
+        
         adapter.stop_scan().await.ok();
-
+        
         let mut out = Vec::new();
         for peripheral in peripherals {
             let properties = peripheral.properties().await.ok().flatten();
@@ -560,8 +711,14 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
                     None
                 };
 
-                let rssi = props.rssi;
+                let rssi = rssi_from_events.get(&address)
+                    .copied()
+                    .or(props.rssi);
                 let signal_quality = rssi.map(|r| rssi_to_quality(r).to_string());
+                
+                let distance_meters = rssi.map(|r| estimate_distance(r, tx_power));
+                let distance = distance_meters.map(distance_to_string);
+                let proximity = distance_meters.map(distance_to_proximity).map(|s| s.to_string());
                 
                 let appearance = None;
                 let appearance_name = appearance.and_then(decode_appearance);
@@ -585,6 +742,9 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
                     tx_power,
                     rssi,
                     signal_quality,
+                    distance_meters,
+                    distance,
+                    proximity,
                     services: services_map,
                     manufacturer,
                     service_data,
@@ -598,8 +758,36 @@ fn scan_bluetooth_linux(timeout: u32) -> SGResult<Vec<BluetoothDevice>> {
         out
     });
 
+    let rssi_from_btmon = btmon_handle.join().unwrap_or_default();
+    eprintln!("btmon captured {} RSSI values", rssi_from_btmon.len());
+    
+    let mut enriched_devices = Vec::new();
+    for mut device in devices {
+        if device.rssi.is_none() {
+            if let Some(&rssi) = rssi_from_btmon.get(&device.address.to_uppercase()) {
+                device.rssi = Some(rssi);
+                device.signal_quality = Some(rssi_to_quality(rssi).to_string());
+                let distance_meters = estimate_distance(rssi, device.tx_power);
+                device.distance_meters = Some(distance_meters);
+                device.distance = Some(distance_to_string(distance_meters));
+                device.proximity = Some(distance_to_proximity(distance_meters).to_string());
+            }
+        }
+        enriched_devices.push(device);
+    }
+    
+    let devices = enriched_devices;
+
     if devices.is_empty() {
         eprintln!("try: sudo systemctl start bluetooth");
+    } else {
+        let rssi_count = devices.iter().filter(|d| d.rssi.is_some()).count();
+        if rssi_count == 0 {
+            eprintln!("note: no RSSI values available (bluetooth hardware/driver limitation)");
+            eprintln!("      RSSI enables distance estimation and signal quality reporting");
+        } else {
+            eprintln!("captured RSSI for {} of {} devices", rssi_count, devices.len());
+        }
     }
 
     Ok(devices)

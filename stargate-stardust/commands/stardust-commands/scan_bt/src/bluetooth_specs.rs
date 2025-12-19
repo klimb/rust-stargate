@@ -1,3 +1,4 @@
+// Copyright (c) 2025 Dmitry Kalashnikov.
 
 pub fn decode_service_uuid(uuid: &str) -> Option<String> {
     let uuid_lower = uuid.to_lowercase();
@@ -84,8 +85,6 @@ pub fn decode_service_uuid(uuid: &str) -> Option<String> {
         "0000ffe0-0000-1000-8000-00805f9b34fb" => Some("Car Diagnostic Service".to_string()),
         "0000ffe1-0000-1000-8000-00805f9b34fb" => Some("GPS Tracker Service".to_string()),
         "0000ffe5-0000-1000-8000-00805f9b34fb" => Some("ELM327 OBD Adapter".to_string()),
-        
-        // GPS Tracker specific services
         "0000ffe2-0000-1000-8000-00805f9b34fb" => Some("Vehicle GPS Tracker".to_string()),
         "0000ffe3-0000-1000-8000-00805f9b34fb" => Some("Asset Tracker".to_string()),
         "0000ffe4-0000-1000-8000-00805f9b34fb" => Some("Pet GPS Tracker".to_string()),
@@ -220,5 +219,47 @@ pub fn rssi_to_quality(rssi: i16) -> &'static str {
         -60..=-41 => "Good",
         -80..=-61 => "Fair",
         _ => "Weak",
+    }
+}
+
+pub fn estimate_distance(rssi: i16, tx_power: Option<i8>) -> f64 {
+    let measured_power = tx_power.map(|p| p as f64).unwrap_or(-59.0);
+    let n = 2.5;
+    
+    if rssi == 0 {
+        return -1.0;
+    }
+    
+    let ratio = (measured_power - (rssi as f64)) / (10.0 * n);
+    10_f64.powf(ratio)
+}
+
+pub fn distance_to_string(distance_meters: f64) -> String {
+    if distance_meters < 0.0 {
+        "Unknown".to_string()
+    } else if distance_meters < 1.0 {
+        format!("{:.0} cm", distance_meters * 100.0)
+    } else if distance_meters < 10.0 {
+        format!("{:.1} m", distance_meters)
+    } else if distance_meters < 100.0 {
+        format!("{:.0} m", distance_meters)
+    } else {
+        format!("{:.0}+ m", 100.0)
+    }
+}
+
+pub fn distance_to_proximity(distance_meters: f64) -> &'static str {
+    if distance_meters < 0.0 {
+        "Unknown"
+    } else if distance_meters < 1.0 {
+        "Immediate"
+    } else if distance_meters < 3.0 {
+        "Very Close"
+    } else if distance_meters < 10.0 {
+        "Near"
+    } else if distance_meters < 30.0 {
+        "Far"
+    } else {
+        "Very Far"
     }
 }
