@@ -116,6 +116,7 @@ PROGS       := \
 	scan-radio \
 	listen-radio \
 	monitor-spectrum \
+	detect-signals \
 	scan-wifi \
 	shred \
 	shuf \

@@ -3346,6 +3346,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg_detect_signals"
+version = "0.4.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "serde_json",
+ "sgcore",
+]
+
+[[package]]
 name = "sg_df"
 version = "0.4.0"
 dependencies = [
@@ -4801,6 +4811,7 @@ dependencies = [
  "sg_csplit",
  "sg_cut",
  "sg_dd",
+ "sg_detect_signals",
  "sg_df",
  "sg_dice_object",
  "sg_dircolors",

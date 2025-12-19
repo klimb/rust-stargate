@@ -1,0 +1,20 @@
+[package]
+name = "sg_detect_signals"
+description = "detect-signals ~ intelligent RF signal detector and classifier"
+version = "0.4.0"
+authors = ["Dmitry Kalashnikov"]
+license = "MIT"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "detect-signals"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+sgcore = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
