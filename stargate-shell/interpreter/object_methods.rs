@@ -24,7 +24,7 @@ impl Interpreter {
                 
                 while let Some(ref cls) = current_class {
                     if let Some((parent, _, methods)) = self.classes.get(cls) {
-                        for (method_name, params, _) in methods {
+                        for (_access, method_name, params, _) in methods {
                             if method_name == "to_string" && params.is_empty() {
                                 found = true;
                                 break;

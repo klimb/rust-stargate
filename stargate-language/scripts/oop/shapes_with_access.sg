@@ -1,0 +1,125 @@
+use ut;
+
+class Shape {
+    protected let x = 0;
+    protected let y = 0;
+    private let creation_time = "2025-12-19";
+    
+    public fn move_to(new_x, new_y) {
+        let x = new_x;
+        let y = new_y;
+        return this;
+    }
+    
+    public fn get_position() {
+        return "({x}, {y})";
+    }
+    
+    protected fn validate_coordinates() {
+        return x >= 0 && y >= 0;
+    }
+}
+
+class Circle extends Shape {
+    public let radius = 10;
+    private let color = "blue";
+    
+    public fn get_area() {
+        return 3.14 * radius * radius;
+    }
+    
+    public fn is_valid() {
+        return validate_coordinates() && radius > 0;
+    }
+    
+    public fn describe() {
+        let pos = get_position();
+        return "Circle at {pos} with radius {radius}";
+    }
+}
+
+class Rectangle extends Shape {
+    public let width = 20;
+    public let height = 10;
+    private let filled = true;
+    
+    public fn get_area() {
+        return width * height;
+    }
+    
+    public fn is_valid() {
+        return validate_coordinates() && width > 0 && height > 0;
+    }
+    
+    public fn resize(w, h) {
+        let width = w;
+        let height = h;
+        return this;
+    }
+}
+
+let circle = new Circle;
+let rect = new Rectangle;
+
+[test]
+fn test_circle_public_access() {
+    let r = circle.radius;
+    ut.assert_equals(r, 10, "Circle radius should be accessible");
+}
+
+[test]
+fn test_circle_inherited_method() {
+    let pos = circle.get_position();
+    ut.assert_equals(pos, "(0, 0)", "Circle should inherit get_position from Shape");
+}
+
+[test]
+fn test_circle_area() {
+    let area = circle.get_area();
+    ut.assert_equals(area, 314, "Circle area calculation should work");
+}
+
+[test]
+fn test_circle_validation() {
+    let valid = circle.is_valid();
+    ut.assert_true(valid, "Circle should be valid with positive radius and coordinates");
+}
+
+[test]
+fn test_circle_description() {
+    let desc = circle.describe();
+    ut.assert_equals(desc, "Circle at (0, 0) with radius 10", "Circle description should work");
+}
+
+[test]
+fn test_rectangle_dimensions() {
+    let w = rect.width;
+    let h = rect.height;
+    ut.assert_equals(w, 20, "Rectangle width should be accessible");
+    ut.assert_equals(h, 10, "Rectangle height should be accessible");
+}
+
+[test]
+fn test_rectangle_area() {
+    let area = rect.get_area();
+    ut.assert_equals(area, 200, "Rectangle area calculation should work");
+}
+
+[test]
+fn test_rectangle_resize() {
+    rect.resize(30, 15);
+    let new_w = rect.width;
+    let new_h = rect.height;
+    ut.assert_equals(new_w, 30, "Rectangle width should be updated");
+    ut.assert_equals(new_h, 15, "Rectangle height should be updated");
+}
+
+[test]
+fn test_move_circle() {
+    circle.move_to(5, 10);
+    let pos = circle.get_position();
+    ut.assert_equals(pos, "(5, 10)", "Circle should move to new position");
+}
+
+print ut.stats;
+exit(ut.healthy);

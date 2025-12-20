@@ -9,5 +9,5 @@ mod ast;
 mod parser;
 
 pub use value::Value;
-pub use ast::{Statement, Expression, Operator};
+pub use ast::{Statement, Expression, Operator, AccessModifier};
 pub use parser::Parser;

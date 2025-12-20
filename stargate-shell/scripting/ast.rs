@@ -4,6 +4,19 @@
 
 use super::value::Value;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum AccessModifier {
+    Public,
+    Private,
+    Protected,
+}
+
+impl Default for AccessModifier {
+    fn default() -> Self {
+        AccessModifier::Public
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Statement {
     VarDecl(String, Expression),
@@ -32,13 +45,14 @@ pub enum Statement {
         name: String,
         params: Vec<String>,
         body: Vec<Statement>,
-        annotations: Vec<String>, // e.g., ["test"]
+        annotations: Vec<String>,
+        access: AccessModifier,
     },
     ClassDef {
         name: String,
-        parent: Option<String>, // parent class name for inheritance
-        fields: Vec<(String, Expression)>, // field name and default value
-        methods: Vec<(String, Vec<String>, Vec<Statement>)>, // method name, params, body
+        parent: Option<String>,
+        fields: Vec<(AccessModifier, String, Expression)>,
+        methods: Vec<(AccessModifier, String, Vec<String>, Vec<Statement>)>,
     },
     FunctionCall {
         name: String,

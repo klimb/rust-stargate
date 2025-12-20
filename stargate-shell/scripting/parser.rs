@@ -345,6 +345,8 @@ impl Parser {
     }
 
     fn parse_function_def_with_annotations(&mut self, annotations: Vec<String>) -> Result<Statement, String> {
+        let access = self.parse_access_modifier()?;
+        
         self.expect("fn")?;
         let name = self.advance().ok_or("Expected function name")?;
         self.expect("(")?;
@@ -360,7 +362,7 @@ impl Parser {
         self.expect("{")?;
         let body = self.parse_block()?;
 
-        Ok(Statement::FunctionDef { name, params, body, annotations })
+        Ok(Statement::FunctionDef { name, params, body, annotations, access })
     }
 
     fn parse_use(&mut self) -> Result<Statement, String> {
@@ -374,9 +376,8 @@ impl Parser {
         self.expect("class")?;
         let name = self.advance().ok_or("Expected class name")?;
         
-        // Check for optional "extends ParentClass"
         let parent = if self.peek().map(|s| s.as_str()) == Some("extends") {
-            self.advance(); // consume "extends"
+            self.advance();
             Some(self.advance().ok_or("Expected parent class name")?)
         } else {
             None
@@ -392,18 +393,18 @@ impl Parser {
                 return Err("Unexpected end of class definition".to_string());
             }
             
+            let access = self.parse_access_modifier()?;
+            
             let token = self.peek().unwrap().clone();
             if token == "let" {
-                // Parse field
-                self.advance(); // consume "let"
+                self.advance();
                 let field_name = self.advance().ok_or("Expected field name")?;
                 self.expect("=")?;
                 let default_value = self.parse_expression()?;
                 self.expect(";")?;
-                fields.push((field_name, default_value));
+                fields.push((access, field_name, default_value));
             } else if token == "fn" {
-                // Parse method
-                self.advance(); // consume "fn"
+                self.advance();
                 let method_name = self.advance().ok_or("Expected method name")?;
                 self.expect("(")?;
                 
@@ -417,7 +418,7 @@ impl Parser {
                 self.expect(")")?;
                 self.expect("{")?;
                 let body = self.parse_block()?;
-                methods.push((method_name, params, body));
+                methods.push((access, method_name, params, body));
             } else {
                 return Err(format!("Unexpected token in class definition: {}", token));
             }
@@ -425,6 +426,24 @@ impl Parser {
         
         self.expect("}")?;
         Ok(Statement::ClassDef { name, parent, fields, methods })
+    }
+    
+    fn parse_access_modifier(&mut self) -> Result<AccessModifier, String> {
+        match self.peek().map(|s| s.as_str()) {
+            Some("public") => {
+                self.advance();
+                Ok(AccessModifier::Public)
+            }
+            Some("private") => {
+                self.advance();
+                Ok(AccessModifier::Private)
+            }
+            Some("protected") => {
+                self.advance();
+                Ok(AccessModifier::Protected)
+            }
+            _ => Ok(AccessModifier::Public)
+        }
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {

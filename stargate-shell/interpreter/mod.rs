@@ -14,18 +14,20 @@ mod statement_execution;
 mod expression_eval;
 mod function_class_utils;
 mod object_methods;
+mod access_control;
 
 pub struct Interpreter {
     variables: HashMap<String, Value>,
-    functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>)>,
-    classes: HashMap<String, (Option<String>, Vec<(String, Expression)>, Vec<(String, Vec<String>, Vec<Statement>)>)>,
+    functions: HashMap<String, (Vec<String>, Vec<Statement>, Vec<String>, AccessModifier)>,
+    classes: HashMap<String, (Option<String>, Vec<(AccessModifier, String, Expression)>, Vec<(AccessModifier, String, Vec<String>, Vec<Statement>)>)>,
     object_methods_cache: HashMap<String, bool>,
-    method_lookup_cache: HashMap<(String, String), Option<(Vec<String>, Vec<Statement>)>>, // (class, method) -> (params, body)
+    method_lookup_cache: HashMap<(String, String), Option<(Vec<String>, Vec<Statement>)>>,
     return_value: Option<Value>,
     exit_code: Option<i32>,
     variable_names: Option<Arc<Mutex<HashSet<String>>>>,
     test_runner: TestRunner,
     current_instance: Option<Value>,
+    current_class_context: Option<String>,
     script_path: Option<String>,
 }
 
@@ -42,6 +44,7 @@ impl Interpreter {
             variable_names: None,
             test_runner: TestRunner::new(),
             current_instance: None,
+            current_class_context: None,
             script_path: None,
         }
     }
@@ -57,6 +60,7 @@ impl Interpreter {
             variable_names: Some(variable_names),
             test_runner: TestRunner::new(),
             current_instance: None,
+            current_class_context: None,
             script_path: None,
         }
     }
@@ -160,7 +164,7 @@ impl Interpreter {
         
         while let Some(ref cls) = current_class {
             if let Some((parent, fields, _methods)) = self.classes.get(cls) {
-                for (field_name, _) in fields {
+                for (_access, field_name, _) in fields {
                     field_names.insert(field_name.clone());
                 }
                 current_class = parent.clone();

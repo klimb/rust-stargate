@@ -1,0 +1,55 @@
+use ut;
+
+class SimpleClass {
+    public let public_field = "public";
+    private let private_field = "private";
+    protected let protected_field = "protected";
+    
+    public fn get_all() {
+        return "{public_field},{private_field},{protected_field}";
+    }
+}
+
+class ChildClass extends SimpleClass {
+    public let child_field = "child";
+    
+    public fn access_protected() {
+        return protected_field;
+    }
+}
+
+let obj = new SimpleClass;
+let child = new ChildClass;
+
+[test]
+fn test_public_access() {
+    let val = obj.public_field;
+    ut.assert_equals(val, "public", "Public field accessible");
+}
+
+[test]
+fn test_public_method() {
+    let result = obj.get_all();
+    ut.assert_equals(result, "public,private,protected", "Public method works");
+}
+
+[test]
+fn test_inheritance() {
+    let val = child.public_field;
+    ut.assert_equals(val, "public", "Inherited public field accessible");
+}
+
+[test]
+fn test_child_field() {
+    let val = child.child_field;
+    ut.assert_equals(val, "child", "Child public field accessible");
+}
+
+[test]
+fn test_protected_in_child() {
+    let val = child.access_protected();
+    ut.assert_equals(val, "protected", "Child can access protected field");
+}
+
+print ut.stats;
+exit(ut.healthy);

@@ -75,6 +75,19 @@ impl Interpreter {
                 }
             }
             Expression::FunctionCall { name, args } => {
+                if let Some(instance) = &self.current_instance {
+                    if let Value::Instance { class_name, fields } = instance {
+                        if let Ok((_method_access, _params, _body)) = self.find_method_with_access(class_name, &name) {
+                            let method_call = Expression::MethodCall {
+                                object: Box::new(Expression::This),
+                                method: name.clone(),
+                                args: args.clone(),
+                            };
+                            return self.eval_expression(method_call);
+                        }
+                    }
+                }
+                
                 self.call_function(&name, args)
             }
             Expression::NewInstance { class_name } => {
@@ -152,52 +165,23 @@ impl Interpreter {
                             Err(format!("Property '{}' not found in object", property))
                         }
                     }
-                    Value::Instance { class_name, mut fields } => {
-                        // First check if it's a field
+                    Value::Instance { class_name, fields } => {
+                        if class_name == "UT" {
+                            if let Some(value) = fields.get(&property) {
+                                return Ok(value.clone());
+                            }
+                            return Err(format!("Field '{}' not found in UT module", property));
+                        }
+                        
+                        let (field_access, _field_expr) = self.find_field_with_access(&class_name, &property)?;
+                        
+                        self.can_access_field(&class_name, &property, &field_access)?;
+                        
                         if let Some(value) = fields.get(&property) {
                             return Ok(value.clone());
                         }
                         
-                        // Check if it's a method
-                        if let Some((_, _, methods)) = self.classes.get(&class_name) {
-                            for (method_name, _, _) in methods {
-                                if method_name == &property {
-                                    return Err(format!("Method calls not yet fully implemented: {}", property));
-                                }
-                            }
-                        }
-                        
-                        // Try to interpret property name as a command (e.g., "env" -> "get-environment")
-                        let potential_commands = if property.contains('_') {
-                            vec![property.replace('_', "-")]
-                        } else {
-                            // Map common abbreviations to full commands
-                            let full_name = match property.as_str() {
-                                "env" => "environment",
-                                "dir" => "directory",
-                                "pwd" => "working-directory",
-                                "host" => "hostname",
-                                "user" => "username",
-                                _ => property.as_str(),
-                            };
-                            
-                            // Try common prefixes for plain names
-                            vec![
-                                format!("get-{}", full_name),
-                                format!("list-{}", full_name),
-                                property.clone(),
-                            ]
-                        };
-                        
-                        // Try to execute the first command that succeeds
-                        for cmd in potential_commands {
-                            let cmd_expr = Expression::CommandOutput(cmd.clone());
-                            if let Ok(result) = self.eval_expression(cmd_expr) {
-                                return Ok(result);
-                            }
-                        }
-                        
-                        Err(format!("Property or method '{}' not found in class {}", property, class_name))
+                        Err(format!("Field '{}' not found in class instance {}", property, class_name))
                     }
                     _ => Err(format!("Cannot access property '{}' on non-object value", property))
                 }
@@ -401,125 +385,85 @@ impl Interpreter {
                         }
                     }
                     Value::Instance { class_name, fields} => {
-                        // Handle ut built-in object methods
                         if class_name == "UT" {
                             return call_ut_method(&method, &args, &mut |expr| self.eval_expression(expr));
                         }
                         
-                        // Check cache first
-                        let cache_key = (class_name.clone(), method.clone());
-                        let method_data = if let Some(cached) = self.method_lookup_cache.get(&cache_key) {
-                            cached.clone()
-                        } else {
-                            // Find the method in the class hierarchy
-                            let mut current_class = Some(class_name.clone());
-                            let mut found_method = None;
-                            
-                            while let Some(ref cls) = current_class {
-                                if let Some((parent, _, methods)) = self.classes.get(cls) {
-                                    // Look for the method in this class
-                                    for (method_name, params, body) in methods {
-                                        if method_name == &method {
-                                            found_method = Some((params.clone(), body.clone()));
-                                            break;
-                                        }
-                                    }
-                                    if found_method.is_some() {
-                                        break;
-                                    }
-                                    current_class = parent.clone();
-                                } else {
+                        let (method_access, params, body) = self.find_method_with_access(&class_name, &method)?;
+                        
+                        self.can_call_method(&class_name, &method, &method_access)?;
+                        
+                        let mut method_scope = HashMap::new();
+                        
+                        if args.len() != params.len() {
+                            return Err(format!(
+                                "Method {} expects {} arguments, got {}",
+                                method, params.len(), args.len()
+                            ));
+                        }
+                        
+                        for (i, arg_expr) in args.iter().enumerate() {
+                            let arg_value = self.eval_expression(arg_expr.clone())?;
+                            method_scope.insert(params[i].clone(), arg_value);
+                        }
+                        
+                        let saved_vars = self.variables.clone();
+                        let saved_instance = self.current_instance.clone();
+                        let saved_class_context = self.current_class_context.clone();
+                        
+                        for (field_name, field_value) in &fields {
+                            if !method_scope.contains_key(field_name) {
+                                method_scope.insert(field_name.clone(), field_value.clone());
+                            }
+                        }
+                        
+                        self.variables = method_scope;
+                        
+                        self.current_instance = Some(Value::Instance {
+                            class_name: class_name.clone(),
+                            fields: fields.clone(),
+                        });
+                        
+                        self.current_class_context = Some(class_name.clone());
+                        
+                        let mut return_value = Value::None;
+                        for stmt in &body {
+                            match stmt {
+                                Statement::Return(expr) => {
+                                    return_value = self.eval_expression(expr.clone())?;
                                     break;
                                 }
-                            }
-                            
-                            // Cache the result (even if None)
-                            self.method_lookup_cache.insert(cache_key, found_method.clone());
-                            found_method
-                        };
-                        
-                        if let Some((params, body)) = method_data {
-                            // Create a new scope for the method (only parameters, not fields)
-                            let mut method_scope = HashMap::new();
-                            
-                            // Evaluate and bind arguments to parameters
-                            if args.len() != params.len() {
-                                return Err(format!(
-                                    "Method {} expects {} arguments, got {}",
-                                    method, params.len(), args.len()
-                                ));
-                            }
-                            
-                            for (i, arg_expr) in args.iter().enumerate() {
-                                let arg_value = self.eval_expression(arg_expr.clone())?;
-                                method_scope.insert(params[i].clone(), arg_value);
-                            }
-                            
-                            // Save current variables and instance context
-                            let saved_vars = self.variables.clone();
-                            let saved_instance = self.current_instance.clone();
-                            
-                            // Merge fields into the method scope (so they can be accessed/modified)
-                            for (field_name, field_value) in &fields {
-                                // Don't overwrite parameters with field values
-                                if !method_scope.contains_key(field_name) {
-                                    method_scope.insert(field_name.clone(), field_value.clone());
-                                }
-                            }
-                            
-                            self.variables = method_scope;
-                            
-                            // Set current instance for 'this' keyword
-                            self.current_instance = Some(Value::Instance {
-                                class_name: class_name.clone(),
-                                fields: fields.clone(),
-                            });
-                            
-                            // Execute method body
-                            let mut return_value = Value::None;
-                            for stmt in &body {
-                                match stmt {
-                                    Statement::Return(expr) => {
-                                        return_value = self.eval_expression(expr.clone())?;
+                                _ => {
+                                    self.execute_statement(stmt.clone())?;
+                                    if let Some(ret_val) = self.return_value.take() {
+                                        return_value = ret_val;
                                         break;
                                     }
-                                    _ => {
-                                        self.execute_statement(stmt.clone())?;
-                                        // Check if a return was triggered inside the statement (e.g., in an if block)
-                                        if let Some(ret_val) = self.return_value.take() {
-                                            return_value = ret_val;
-                                            break;
-                                        }
-                                    }
                                 }
                             }
-                            
-                            // Collect modified field values from the method scope
-                            let mut updated_fields = fields.clone();
-                            for (field_name, _) in &fields {
-                                if let Some(modified_value) = self.variables.get(field_name) {
-                                    updated_fields.insert(field_name.clone(), modified_value.clone());
-                                }
-                            }
-                            
-                            // If return value is 'this', update it with modified fields
-                            if let Value::Instance { class_name: ret_class, fields: _ } = &return_value {
-                                if ret_class == &class_name {
-                                    return_value = Value::Instance {
-                                        class_name: class_name.clone(),
-                                        fields: updated_fields,
-                                    };
-                                }
-                            }
-                            
-                            // Restore variables and instance context
-                            self.variables = saved_vars;
-                            self.current_instance = saved_instance;
-                            
-                            return Ok(return_value);
-                        } else {
-                            return Err(format!("Method '{}' not found in class {}", method, class_name));
                         }
+                        
+                        let mut updated_fields = fields.clone();
+                        for (field_name, _) in &fields {
+                            if let Some(modified_value) = self.variables.get(field_name) {
+                                updated_fields.insert(field_name.clone(), modified_value.clone());
+                            }
+                        }
+                        
+                        if let Value::Instance { class_name: ret_class, fields: _ } = &return_value {
+                            if ret_class == &class_name {
+                                return_value = Value::Instance {
+                                    class_name: class_name.clone(),
+                                    fields: updated_fields,
+                                };
+                            }
+                        }
+                        
+                        self.variables = saved_vars;
+                        self.current_instance = saved_instance;
+                        self.current_class_context = saved_class_context;
+                        
+                        return Ok(return_value);
                     }
                     _ => Err(format!("Cannot call method on non-instance/non-list value"))
                 }

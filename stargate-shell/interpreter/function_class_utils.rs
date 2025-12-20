@@ -65,7 +65,7 @@ impl Interpreter {
         }
 
         // Get user-defined function definition
-        let (params, body, _annotations) = self
+        let (params, body, _annotations, _access) = self
             .functions
             .get(name)
             .cloned()
@@ -133,14 +133,12 @@ impl Interpreter {
         
         let mut field_values = HashMap::new();
         
-        // First, recursively inherit fields from parent class if exists
-        if let Some(parent_name) = parent {
-            let parent_fields = self.collect_inherited_fields(&parent_name)?;
+        if let Some(ref parent_name) = parent {
+            let parent_fields = self.collect_inherited_fields(parent_name)?;
             field_values.extend(parent_fields);
         }
         
-        // Then, add/override with current class fields
-        for (field_name, default_expr) in fields {
+        for (_access, field_name, default_expr) in fields {
             let value = self.eval_expression(default_expr)?;
             field_values.insert(field_name, value);
         }

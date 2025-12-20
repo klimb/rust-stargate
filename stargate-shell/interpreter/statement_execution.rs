@@ -325,12 +325,11 @@ impl Interpreter {
                     self.variables.insert("ut".to_string(), ut_instance);
                 }
             }
-            Statement::FunctionDef { name, params, body, annotations } => {
-                // Track test functions
+            Statement::FunctionDef { name, params, body, annotations, access } => {
                 if annotations.contains(&"test".to_string()) {
                     self.test_runner.register_test(name.clone());
                 }
-                self.functions.insert(name, (params, body, annotations));
+                self.functions.insert(name, (params, body, annotations, access));
             }
             Statement::ClassDef { name, parent, fields, methods } => {
                 self.classes.insert(name, (parent, fields, methods));

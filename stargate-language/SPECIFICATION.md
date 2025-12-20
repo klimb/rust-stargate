@@ -649,6 +649,68 @@ class Pizza {
 let pizza = new Pizza.large().add_topping("pepperoni");
 ```
 
+### 8.8 Access Modifiers
+
+Stargate supports three access modifiers for class members (fields and methods):
+
+```stargate
+class HttpClient {
+    private let connection_pool = [];
+    private let retry_count = 3;
+    protected let timeout_ms = 5000;
+    
+    public fn get(url) {
+        let conn = acquire_connection();
+        return send_request("GET", url, conn);
+    }
+    
+    public fn post(url, data) {
+        let conn = acquire_connection();
+        return send_request("POST", url, conn);
+    }
+    
+    private fn acquire_connection() {
+        return connection_pool[0];  # Simplified pool logic
+    }
+    
+    private fn send_request(method, url, conn) {
+        return "{method} {url}";    # Actual HTTP logic would go here
+    }
+}
+
+let client = new HttpClient;
+client.get("/api/data");           # ✓ OK: public method
+print client.timeout_ms;           # ✗ Error: protected
+print client.connection_pool;      # ✗ Error: private
+client.acquire_connection();       # ✗ Error: private method
+```
+
+**Access Control Matrix:**
+
+| Modifier    | Same Class | Subclass | External |
+|-------------|------------|----------|----------|
+| `public`    | ✓          | ✓        | ✓        |
+| `protected` | ✓          | ✓        | ✗        |
+| `private`   | ✓          | ✗        | ✗        |
+
+**Inheritance Example:**
+
+```stargate
+class SecureHttpClient extends HttpClient {
+    private let auth_token = "";
+    
+    fn set_timeout(ms) {
+        let timeout_ms = ms;       # ✓ OK: protected accessible in subclass
+    }
+    
+    fn get_pool() {
+        return connection_pool;    # ✗ Error: private not accessible
+    }
+}
+```
+
+**Default Behavior:** All members are `public` by default if no modifier is specified.
+
 ---
 
 ## 9. Collections
