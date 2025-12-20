@@ -859,7 +859,7 @@ fn test_bracket_syntax_version() {
 
     ucmd.arg("--version")
         .succeeds()
-        .stdout_matches(&r"\[ \(uutils coreutils\) \d+\.\d+\.\d+".parse().unwrap());
+        .stdout_matches(&r"\[ \(sgutils stardust\) \d+\.\d+\.\d+".parse().unwrap());
 }
 
 #[test]

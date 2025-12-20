@@ -23,7 +23,7 @@ CARGO  ?= cargo
 CARGOFLAGS ?=
 RUSTC_ARCH ?=
 
-PREFIX ?= /usr/local
+PREFIX ?= /usr/local/sg
 DESTDIR ?=
 BINDIR ?= $(PREFIX)/bin
 DATAROOTDIR ?= $(PREFIX)/share
@@ -310,10 +310,11 @@ endif
 
 build-stargate:
 	${CARGO} build ${CARGOFLAGS} --features "${EXES} $(BUILD_SPEC_FEATURE) $(STARGATE_FEATURES)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
+	${CARGO} build ${CARGOFLAGS} --bin stargate-shell --features "${EXES} $(BUILD_SPEC_FEATURE) $(STARGATE_FEATURES)" ${PROFILE_CMD} --no-default-features $(RUSTC_ARCH)
 
 build: build-stargate build-pkgs locales
 
-test:
+test: build
 	${CARGO} test ${CARGOFLAGS} --features "$(TESTS) $(TEST_SPEC_FEATURE)" $(PROFILE_CMD) --no-default-features $(TEST_NO_FAIL_FAST)
 
 test-scripting:
@@ -430,28 +431,18 @@ ifeq (${MULTICALL}, y)
 	)
 	$(if $(findstring test,$(INSTALLEES)), cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)stargate $(PROG_PREFIX)[)
 else
+	$(INSTALL) -m 755 $(BUILDDIR)/stargate $(INSTALLDIR_BIN)/$(PROG_PREFIX)stargate
 	$(foreach prog, $(INSTALLEES), \
-		$(INSTALL) -m 755 $(BUILDDIR)/$(prog) $(INSTALLDIR_BIN)/$(PROG_PREFIX)$(prog) $(newline) \
+		$(INSTALL) -m 755 $(BUILDDIR)/$(subst _,-,$(prog)) $(INSTALLDIR_BIN)/$(PROG_PREFIX)$(subst _,-,$(prog)) $(newline) \
 	)
 	$(foreach prog, $(HASHSUM_PROGS), \
 		cd $(INSTALLDIR_BIN) && $(LN) $(PROG_PREFIX)hashsum $(PROG_PREFIX)$(prog) $(newline) \
 	)
 	$(if $(findstring test,$(INSTALLEES)), $(INSTALL) -m 755 $(BUILDDIR)/test $(INSTALLDIR_BIN)/$(PROG_PREFIX)[)
 endif
+	$(INSTALL) -m 755 $(BUILDDIR)/stargate-shell $(INSTALLDIR_BIN)/$(PROG_PREFIX)stargate-shell
 
 uninstall:
-ifneq ($(OS),Windows_NT)
-	rm -f $(DESTDIR)$(LIBSTDBUF_DIR)/libstdbuf*
-	-rm -d $(DESTDIR)$(LIBSTDBUF_DIR) 2>/dev/null || true
-endif
-ifeq (${MULTICALL}, y)
-	rm -f $(addprefix $(INSTALLDIR_BIN)/,$(PROG_PREFIX)stargate)
-endif
-	rm -f $(addprefix $(INSTALLDIR_BIN)/$(PROG_PREFIX),$(PROGS))
-	rm -f $(INSTALLDIR_BIN)/$(PROG_PREFIX)[
-	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/zsh/site-functions/_$(PROG_PREFIX),$(PROGS))
-	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/bash-completion/completions/$(PROG_PREFIX),$(PROGS).bash)
-	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/fish/vendor_completions.d/$(PROG_PREFIX),$(addsuffix .fish,$(PROGS)))
-	rm -f $(addprefix $(DESTDIR)$(DATAROOTDIR)/man/man1/$(PROG_PREFIX),$(addsuffix .1,$(PROGS)))
+	rm -rf $(DESTDIR)$(PREFIX)
 
 .PHONY: all build build-stargate build-pkgs test test-scripting benchmark distclean clean busytest install uninstall

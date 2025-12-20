@@ -30,7 +30,7 @@ tempfile = { workspace = true }
 sgcore = { workspace = true, features = ["benchmark"] }
 
 [[bin]]
-name = "nl"
+name = "get-linenumber"
 path = "src/main.rs"
 
 [[bench]]

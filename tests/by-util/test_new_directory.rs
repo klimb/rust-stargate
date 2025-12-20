@@ -48,7 +48,7 @@ fn test_version_no_path() {
     };
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.starts_with("mkdir (uutils coreutils)"));
+    assert!(stdout.starts_with("mkdir (sgutils stardust)"));
 }
 
 #[test]
