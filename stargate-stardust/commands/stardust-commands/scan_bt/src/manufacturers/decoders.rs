@@ -26,6 +26,7 @@ const APPLE_CONTINUITY_TYPES: &[(u8, &str)] = &[
     (0x19, "Pairing Request"),
 ];
 
+#[allow(dead_code)]
 const APPLE_DEVICE_MODELS: &[(u8, &str)] = &[
     (0x01, "iPhone"),
     (0x02, "iPad"),
@@ -45,6 +46,7 @@ const APPLE_DEVICE_MODELS: &[(u8, &str)] = &[
     (0x10, "Vision Pro"),
 ];
 
+#[allow(dead_code)]
 const APPLE_COLORS: &[(u8, &str)] = &[
     (0x00, "White/Silver"),
     (0x01, "Black"),
@@ -109,7 +111,9 @@ const GOOGLE_FLAGS: &[(u8, &str)] = &[
 ];
 
 static APPLE_TYPE_MAP: OnceLock<HashMap<u8, &'static str>> = OnceLock::new();
+#[allow(dead_code)]
 static APPLE_DEVICE_MAP: OnceLock<HashMap<u8, &'static str>> = OnceLock::new();
+#[allow(dead_code)]
 static APPLE_COLOR_MAP: OnceLock<HashMap<u8, &'static str>> = OnceLock::new();
 static AIRPODS_MODEL_MAP: OnceLock<HashMap<u16, &'static str>> = OnceLock::new();
 static FAST_PAIR_MAP: OnceLock<HashMap<u32, &'static str>> = OnceLock::new();
@@ -118,10 +122,12 @@ fn get_apple_type_map() -> &'static HashMap<u8, &'static str> {
     APPLE_TYPE_MAP.get_or_init(|| APPLE_CONTINUITY_TYPES.iter().copied().collect())
 }
 
+#[allow(dead_code)]
 fn get_apple_device_map() -> &'static HashMap<u8, &'static str> {
     APPLE_DEVICE_MAP.get_or_init(|| APPLE_DEVICE_MODELS.iter().copied().collect())
 }
 
+#[allow(dead_code)]
 fn get_apple_color_map() -> &'static HashMap<u8, &'static str> {
     APPLE_COLOR_MAP.get_or_init(|| APPLE_COLORS.iter().copied().collect())
 }
@@ -485,6 +491,7 @@ fn hex_to_bytes(hex: &str) -> Option<Vec<u8>> {
     Some(bytes)
 }
 
+#[allow(dead_code)]
 pub fn identify_device_type(
     manufacturer_id: Option<u16>,
     manufacturer_data: Option<&str>,

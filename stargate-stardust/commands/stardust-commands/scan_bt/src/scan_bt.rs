@@ -491,7 +491,6 @@ fn scan_bluetooth_macos() -> SGResult<Vec<BluetoothDevice>> {
 fn get_rssi_via_btmon(timeout: u32) -> std::collections::HashMap<String, i16> {
     use std::process::{Command as ProcessCommand, Stdio};
     use std::io::{BufRead, BufReader};
-    use std::thread;
     use std::time::{Duration, Instant};
     
     let mut rssi_map = std::collections::HashMap::new();
